@@ -549,17 +549,22 @@
   function openAdd(date, ev) {
     const edit = ev || null;
     const rule = edit ? (edit.rule || '') : '';
-    const mode = !edit ? 'once' : (!edit.date ? 'undated' : (rule.indexOf('毎月') === 0 ? 'monthly' : 'once'));
+    const mode = edit && !edit.date ? 'undated' : 'once';   // 毎月の予定も、まず「この予定だけ」の形で開く
+    const shiftSel = edit ? ({ '前の平日': 'prev', 'ずらさない': 'none' }[edit.shift] || 'next') : 'next';
     const ruleDay = rule === '毎月末' ? '末' : (rule.match(/\d+/) || [''])[0];
     if (edit && edit.date && mode === 'once') date = edit.date;
     const labels = [...new Set(DATA.events.map(e => e.label))];
     const accts = DATA.balances.map(b => b.account);
     let dayOpts = '';
-    for (let d = 1; d <= 31; d++) dayOpts += '<option value="' + d + '"' + ((mode === 'monthly' ? String(d) === ruleDay : d === (date ? Number(date.slice(8)) : 27)) ? ' selected' : '') + '>' + d + '日</option>';
+    for (let d = 1; d <= 31; d++) dayOpts += '<option value="' + d + '"' + ((ruleDay ? String(d) === ruleDay : d === (date ? Number(date.slice(8)) : 27)) ? ' selected' : '') + '>' + d + '日</option>';
     dayOpts += '<option value="末"' + (ruleDay === '末' ? ' selected' : '') + '>月末</option>';
 
     openSheet(edit ? '予定を編集' : '予定を追加',
       '<form id="add-form" novalidate>' +
+      (edit && edit.recurring ? '<div class="field" id="scope-box"><span class="lbl">変更する範囲</span><div class="seg seg3">' +
+        '<label><input type="radio" name="scope" value="one" checked><span>この予定だけ</span></label>' +
+        '<label><input type="radio" name="scope" value="after"><span>これ以降</span></label>' +
+        '<label><input type="radio" name="scope" value="all"><span>すべて</span></label></div></div>' : '') +
       '<div class="field"><span class="lbl">種類</span><div class="seg">' +
         '<label><input type="radio" name="kind" value="引き落とし"' + (edit && edit.amount > 0 ? '' : ' checked') + '><span>引き落とし・支払い</span></label>' +
         '<label><input type="radio" name="kind" value="入金"' + (edit && edit.amount > 0 ? ' checked' : '') + '><span>入金</span></label></div></div>' +
@@ -574,6 +579,10 @@
         '<label><input type="radio" name="when" value="undated"' + (mode === 'undated' ? ' checked' : '') + '><span>未定</span></label></div>' +
         '<input id="f-date" name="date" type="date"' + (mode === 'once' ? '' : ' class="hidden"') + ' value="' + (date || DATA.today) + '" aria-label="日付">' +
         '<select id="f-day" name="day"' + (mode === 'monthly' ? '' : ' class="hidden"') + ' aria-label="毎月の日にち">' + dayOpts + '</select>' +
+        '<select id="f-shift" name="shift"' + (mode === 'monthly' ? '' : ' class="hidden"') + ' aria-label="土日・祝日のとき">' +
+          [['next', '土日・祝日なら次の平日にずらす'], ['prev', '土日・祝日なら前の平日にずらす'], ['none', '土日・祝日でもずらさない']]
+            .map(o => '<option value="' + o[0] + '"' + (o[0] === shiftSel ? ' selected' : '') + '>' + o[1] + '</option>').join('') +
+        '</select>' +
         '<div class="sub hidden" id="f-day-note"></div></div>' +
       '<div class="field"><label for="f-account">口座</label>' +
         '<select id="f-account" name="account">' +
@@ -581,7 +590,6 @@
           (edit && edit.account && accts.indexOf(edit.account) < 0 ? '<option value="' + esc(edit.account) + '" selected>' + esc(edit.account) + '</option>' : '') +
           '<option value=""' + (edit && !edit.account ? ' selected' : '') + '>口座なし</option></select>' +
         '<div class="sub">口座は「口座残高」の一番下から追加できます</div></div>' +
-      (edit && edit.recurring ? '<div class="sub">毎月の予定なので、ほかの月の分もまとめて変わります</div>' : '') +
       '<div class="err" role="alert"></div>' +
       '<button type="submit" class="primary">' + (edit ? '保存する' : '追加する') + '</button>' +
       '</form>');
@@ -589,17 +597,23 @@
     const form = document.getElementById('add-form');
     const note = document.getElementById('f-day-note');
     note.classList.add('hidden');
-    if (mode !== 'once') {
+    if (mode === 'undated') {
       note.textContent = mode === 'monthly' ? '土日・祝日のときは次の平日に表示します' : '日付が決まったら、「日付未定」の予定をタップして日付を入れられます';
       note.classList.remove('hidden');
     }
     form.addEventListener('change', e => {
+      if (e.target.name === 'scope') {   // 「この予定だけ」は1回きり、「これ以降・すべて」は毎月の形にする
+        const w = form.querySelector('input[name=when][value="' + (e.target.value === 'one' ? 'once' : 'monthly') + '"]');
+        if (w && !w.checked) { w.checked = true; w.dispatchEvent(new Event('change', { bubbles: true })); }
+        return;
+      }
       if (e.target.name !== 'when') return;
       const v = e.target.value;
       document.getElementById('f-date').classList.toggle('hidden', v !== 'once');
       document.getElementById('f-day').classList.toggle('hidden', v !== 'monthly');
+      document.getElementById('f-shift').classList.toggle('hidden', v !== 'monthly');
       note.textContent = v === 'monthly' ? '土日・祝日のときは次の平日に表示します' : '日付が決まったら、「日付未定」の予定をタップして日付を入れられます';
-      note.classList.toggle('hidden', v === 'once');
+      note.classList.toggle('hidden', v !== 'undated');
     });
     form.addEventListener('submit', e => {
       e.preventDefault();
@@ -611,12 +625,12 @@
       if (!monthly && !undated && !f.get('date')) { showErr('日付を選んでください'); return; }
       const item = {
         kind: f.get('kind'), label: f.get('label'), amount: amount, account: f.get('account'),
-        repeat: monthly, undated: undated, date: f.get('date'), repeatDay: f.get('day'),
+        repeat: monthly && f.get('scope') !== 'one', undated: undated, date: f.get('date'), repeatDay: f.get('day'), shift: f.get('shift'),
       };
       const btn = form.querySelector('.primary');
       busy(btn, true);
       showErr('');
-      call(edit ? 'apiUpdateSchedule' : 'apiAddSchedule', edit ? [edit.row, edit.label, edit.amount, item] : [item],
+      call(edit ? 'apiUpdateSchedule' : 'apiAddSchedule', edit ? [edit.row, edit.label, edit.amount, item, f.get('scope') || 'all', edit.occ || ''] : [item],
         d => { setData(d); closeSheet(); toast(edit ? '保存しました' : '追加しました'); },
         msg => { busy(btn, false); showErr(msg); });
     });
@@ -630,14 +644,19 @@
         '<div><span>日付</span><span>' + (d ? (d.getMonth() + 1) + '月' + d.getDate() + '日（' + WD[d.getDay()] + '）' : '未定') + '</span></div>' +
         '<div><span>種類</span><span>' + (ev.amount > 0 ? '入金' : '引き落とし・支払い') + '</span></div>' +
         (ev.account ? '<div><span>口座</span><span>' + esc(ev.account) + '</span></div>' : '') +
-        (ev.recurring ? '<div><span>くり返し</span><span>毎月</span></div>' : '') +
+        (ev.recurring ? '<div><span>くり返し</span><span>毎月・' +
+          (ev.shift === '前の平日' ? '休日は前の平日' : ev.shift === 'ずらさない' ? '休日もずらさない' : '休日は次の平日') + '</span></div>' : '') +
       '</div>' +
-      (ev.recurring ? '<div class="sub">毎月の予定なので、削除するとほかの月からも消えます</div>' : '') +
+
       (d ? '' : '<div class="field"><label for="f-setdate">日付が決まったら</label>' +
                 '<input id="f-setdate" type="date" value="' + DATA.today + '"></div>' +
                 '<button type="button" class="primary" id="set-date-btn">この日付にする</button>') +
       '<div class="err" role="alert"></div>' +
       '<button type="button" class="secondary" id="edit-btn">編集する</button>' +
+      (ev.recurring ? '<div class="field hidden" id="dscope-box"><span class="lbl">削除する範囲</span><div class="seg seg3">' +
+        '<label><input type="radio" name="dscope" value="one" checked><span>この予定だけ</span></label>' +
+        '<label><input type="radio" name="dscope" value="after"><span>これ以降</span></label>' +
+        '<label><input type="radio" name="dscope" value="all"><span>すべて</span></label></div></div>' : '') +
       '<button type="button" class="danger" id="del-btn">削除する</button>');
 
     document.getElementById('edit-btn').addEventListener('click', () => openAdd(null, ev));
@@ -657,10 +676,12 @@
       if (!btn.classList.contains('confirm')) {
         btn.classList.add('confirm');
         btn.textContent = 'もう一度押すと削除します';
+        const box = document.getElementById('dscope-box');
+        if (box) box.classList.remove('hidden');
         return;
       }
       busy(btn, true, '削除中…');
-      call('apiDeleteSchedule', [ev.row, ev.label, ev.amount],
+      call('apiDeleteSchedule', [ev.row, ev.label, ev.amount, (document.querySelector('input[name=dscope]:checked') || {}).value || 'all', ev.occ || ''],
         d => { setData(d); closeSheet(); toast('削除しました'); },
         msg => { busy(btn, false); showErr(msg); });
     });
