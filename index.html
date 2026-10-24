@@ -469,7 +469,7 @@
 
   function openAdd() {
     const labels = [...new Set(DATA.events.map(e => e.label))];
-    const accts = DATA.accounts && DATA.accounts.length ? DATA.accounts : DATA.balances.map(b => b.account);
+    const accts = DATA.balances.map(b => b.account);
     let dayOpts = '';
     for (let d = 1; d <= 31; d++) dayOpts += '<option value="' + d + '"' + (d === 27 ? ' selected' : '') + '>' + d + '日</option>';
     dayOpts += '<option value="末">月末</option>';
@@ -491,8 +491,10 @@
         '<select id="f-day" name="day" class="hidden" aria-label="毎月の日にち">' + dayOpts + '</select>' +
         '<div class="sub hidden" id="f-day-note"></div></div>' +
       '<div class="field"><label for="f-account">口座</label>' +
-        '<input id="f-account" name="account" type="text" list="dl-accts" value="' + esc(accts[0] || '') + '" autocomplete="off">' +
-        '<datalist id="dl-accts">' + accts.map(a => '<option value="' + esc(a) + '"></option>').join('') + '</datalist></div>' +
+        '<select id="f-account" name="account">' +
+          accts.map(a => '<option value="' + esc(a) + '">' + esc(a) + '</option>').join('') +
+          '<option value="">口座なし</option></select>' +
+        '<div class="sub">口座は「口座残高」の一番下から追加できます</div></div>' +
       '<div class="err" role="alert"></div>' +
       '<button type="submit" class="primary">追加する</button>' +
       '</form>');
