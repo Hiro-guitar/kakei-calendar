@@ -45,7 +45,14 @@
   .alert b { font-size: 15px; display: block; margin-bottom: 4px; }
   .alert span { font-size: 13px; }
   .ok { padding: 14px 16px; font-size: 14px; color: var(--sub); }
-  .cal { padding: 16px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .cal { padding: 8px 12px 16px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; touch-action: pan-y; }
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; }
+  .cal-title { font-size: 15px; font-weight: 700; }
+  .nav-btn { width: 44px; height: 44px; border: 0; border-radius: 22px; background: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .nav-btn:disabled { opacity: .3; cursor: default; }
+  .cal-body { display: flex; flex-direction: column; gap: 8px; will-change: transform; }
+  .head-btns { display: flex; align-items: center; gap: 8px; }
+  .today-btn { height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid var(--field); background: var(--card); font-size: 14px; font-weight: 700; cursor: pointer; }
   .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); text-align: center; }
   .wd { font-size: 12px; color: var(--sub); }
   .day { height: 54px; border: 0; background: none; padding: 4px 0 0;
@@ -191,9 +198,11 @@
   const KEY = PREVIEW ? '' : readKey();
   let DATA = null;
   let selected = null;
+  let viewY = 0, viewM = 0;   // カレンダーで表示中の年・月
 
   function setData(d) {
     DATA = d;
+    if (!viewY) { viewY = d.year; viewM = d.month; }
     document.getElementById('fab').classList.toggle('hidden', !!document.querySelector('.sheet'));
     render();
   }
@@ -234,21 +243,30 @@
     const byDate = {};
     DATA.events.forEach(ev => (byDate[ev.date] = byDate[ev.date] || []).push(ev));
     const todayD = parse(DATA.today);
-    const s = DATA.summary;
+    const ym = viewY + '-' + pad(viewM);
+    const isThisMonth = viewY === DATA.year && viewM === DATA.month;
+    let inc = 0, exp = 0;
+    DATA.events.forEach(ev => {
+      if (ev.date.slice(0, 7) !== ym) return;
+      if (ev.amount > 0) inc += ev.amount; else exp -= ev.amount;
+    });
+    const net = inc - exp;
+    const rcpt = DATA.receiptsByMonth ? DATA.receiptsByMonth[ym] : (isThisMonth ? DATA.receipts : null);
     let h = '';
 
     h += '<div class="head"><div><div class="sub">今日 ' + md(DATA.today) + '（' + WD[todayD.getDay()] + '）</div>' +
-         '<h1>' + DATA.year + '年' + DATA.month + '月</h1></div>' +
+         '<h1>' + viewY + '年' + viewM + '月</h1></div><div class="head-btns">' +
+         (isThisMonth ? '' : '<button type="button" class="today-btn" id="go-today">今月</button>') +
          (PREVIEW ? '<span class="preview">サンプル表示</span>' :
            '<button type="button" class="icon-btn" id="refresh" aria-label="最新にする">' +
            '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button>') +
-         '</div>';
+         '</div></div>';
 
-    h += '<section class="card summary"><div><div class="sub">今月の収支</div>' +
-         '<div class="net" style="color:' + (s.net >= 0 ? 'var(--in)' : 'var(--out-ink)') + '">' + signed(s.net) + '</div></div>' +
-         '<div class="pair"><div class="pill in"><span class="k">収入</span><span class="v">' + yen(s.income) + '</span></div>' +
-         '<div class="pill out"><span class="k">支出</span><span class="v">' + yen(s.expense) + '</span></div></div>' +
-         (DATA.receipts !== null && DATA.receipts !== undefined ? '<div class="receipt"><span>レシートで記録した今月の買い物</span><span>' + yen(DATA.receipts) + '</span></div>' : '') +
+    h += '<section class="card summary"><div><div class="sub">' + viewM + '月の収支</div>' +
+         '<div class="net" style="color:' + (net >= 0 ? 'var(--in)' : 'var(--out-ink)') + '">' + signed(net) + '</div></div>' +
+         '<div class="pair"><div class="pill in"><span class="k">収入</span><span class="v">' + yen(inc) + '</span></div>' +
+         '<div class="pill out"><span class="k">支出</span><span class="v">' + yen(exp) + '</span></div></div>' +
+         (rcpt !== null && rcpt !== undefined ? '<div class="receipt"><span>レシートで記録した' + viewM + '月の買い物</span><span>' + yen(rcpt) + '</span></div>' : '') +
          '</section>';
 
     if (DATA.alerts.length) {
@@ -261,35 +279,42 @@
       h += '<section class="card ok">しばらく残高は足りています</section>';
     }
 
-    // カレンダー
-    const first = new Date(DATA.year, DATA.month - 1, 1);
-    const days = new Date(DATA.year, DATA.month, 0).getDate();
-    h += '<section class="card cal"><div class="grid">' +
+    // カレンダー（左右スワイプか ‹ › で月を切り替え）
+    const first = new Date(viewY, viewM - 1, 1);
+    const days = new Date(viewY, viewM, 0).getDate();
+    const ARROW = d => '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="' + d + '"/></svg>';
+    h += '<section class="card cal" id="cal"><div class="cal-nav">' +
+         '<button type="button" class="nav-btn" id="prev-m" aria-label="前の月"' + (canGo(-1) ? '' : ' disabled') + '>' + ARROW('M15 5l-7 7 7 7') + '</button>' +
+         '<span class="cal-title">' + viewM + '月</span>' +
+         '<button type="button" class="nav-btn" id="next-m" aria-label="次の月"' + (canGo(1) ? '' : ' disabled') + '>' + ARROW('M9 5l7 7-7 7') + '</button></div>' +
+         '<div class="grid">' +
          WD.map((w, i) => '<div class="wd" style="' + (i === 0 ? 'color:var(--sun)' : i === 6 ? 'color:var(--in)' : '') + '">' + w + '</div>').join('') +
-         '</div><div class="grid">';
+         '</div><div class="cal-body"><div class="grid">';
     for (let i = 0; i < first.getDay(); i++) h += '<div></div>';
     for (let d = 1; d <= days; d++) {
-      const key = DATA.year + '-' + pad(DATA.month) + '-' + pad(d);
+      const key = ym + '-' + pad(d);
       const evs = byDate[key] || [];
       const cls = ['day'];
-      if (d === todayD.getDate()) cls.push('today'); else if (d < todayD.getDate()) cls.push('past');
+      if (key === DATA.today) cls.push('today'); else if (key < DATA.today) cls.push('past');
       if (selected === key) cls.push('sel');
       h += '<button type="button" class="' + cls.join(' ') + '" data-day="' + key + '"' + (evs.length ? '' : ' disabled') +
-           ' aria-label="' + DATA.month + '月' + d + '日' + (evs.length ? '、予定' + evs.length + '件' : '') + '">' +
+           ' aria-label="' + viewM + '月' + d + '日' + (evs.length ? '、予定' + evs.length + '件' : '') + '">' +
            '<span class="num">' + d + '</span><span class="dots">' +
            (evs.some(e => e.amount > 0) ? '<span class="dot in"></span>' : '') +
            (evs.some(e => e.amount < 0) ? '<span class="dot out"></span>' : '') +
            '</span></button>';
     }
-    h += '</div><div class="legend"><span><i style="background:var(--in)"></i>入金予定</span><span><i style="background:var(--out)"></i>引き落とし</span></div>';
+    h += '</div>';
     if (selected && byDate[selected]) {
       h += '<div class="detail"><div class="sub">' + md(selected) + '（' + WD[parse(selected).getDay()] + '）</div>' +
            byDate[selected].map(ev => lineHtml(ev, true)).join('') + '</div>';
     }
+    h += '</div><div class="legend"><span><i style="background:var(--in)"></i>入金予定</span><span><i style="background:var(--out)"></i>引き落とし</span></div>';
     h += '</section>';
 
     // これからの予定
-    const upcoming = Object.keys(byDate).filter(k => k >= DATA.today).sort();
+    const until = ymd(new Date(todayD.getFullYear(), todayD.getMonth(), todayD.getDate() + (DATA.lookahead || 45)));
+    const upcoming = Object.keys(byDate).filter(k => k >= DATA.today && k <= until).sort();
     h += '<h2>これからの予定</h2><section class="card list">';
     if (!upcoming.length) h += '<div class="empty">予定はまだありません。下の「予定を追加」から入れてください</div>';
     upcoming.forEach(k => {
@@ -319,6 +344,92 @@
 
     document.getElementById('app').innerHTML = h;
   }
+
+  /* ---------- 月の切り替え ---------- */
+
+  const REDUCE_MOTION = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  let animating = false;
+
+  function shiftYm(y, m, delta) {
+    const d = new Date(y, m - 1 + delta, 1);
+    return [d.getFullYear(), d.getMonth() + 1];
+  }
+
+  function canGo(delta) {
+    if (!DATA || !DATA.range) return true;
+    const t = shiftYm(viewY, viewM, delta);
+    const key = t[0] + '-' + pad(t[1]);
+    return key >= DATA.range.from && key <= DATA.range.to;
+  }
+
+  function slideBack(el, fromX) {
+    if (el && fromX && !REDUCE_MOTION) {
+      el.animate([{ transform: 'translateX(' + fromX + 'px)' }, { transform: 'translateX(0)' }], { duration: 200, easing: 'ease-out' });
+    }
+  }
+
+  // delta: +1 で次の月、-1 で前の月。fromX はスワイプで指が動いた分
+  function changeMonth(delta, fromX) {
+    if (animating || !delta) return;
+    const body = document.querySelector('.cal-body');
+    if (!canGo(delta)) {
+      slideBack(body, fromX);
+      toast(delta > 0 ? 'これより先の月はまだ表示できません' : 'これより前の月は表示できません');
+      return;
+    }
+    const dir = delta > 0 ? 1 : -1;
+    const show = () => {
+      const t = shiftYm(viewY, viewM, delta);
+      viewY = t[0]; viewM = t[1]; selected = null;
+      render();
+      const nb = document.querySelector('.cal-body');
+      if (nb && !REDUCE_MOTION) {
+        nb.animate([{ transform: 'translateX(' + (dir * nb.offsetWidth * 0.6) + 'px)', opacity: 0 },
+                    { transform: 'translateX(0)', opacity: 1 }],
+                   { duration: 260, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      }
+    };
+    if (!body || REDUCE_MOTION) { show(); return; }
+    animating = true;
+    const out = body.animate([{ transform: 'translateX(' + (fromX || 0) + 'px)', opacity: 1 },
+                              { transform: 'translateX(' + (-dir * body.offsetWidth * 0.6) + 'px)', opacity: 0 }],
+                             { duration: 160, easing: 'ease-in', fill: 'forwards' });
+    out.onfinish = () => { animating = false; show(); };
+  }
+
+  // カレンダーの上で指を左右に動かすと、指についてきて月が切り替わる
+  let sx = 0, sy = 0, dx = 0, swiping = false, decided = false;
+  document.addEventListener('touchstart', e => {
+    swiping = false; decided = true; dx = 0;
+    if (animating || e.touches.length !== 1 || !e.target.closest('#cal') || document.querySelector('.sheet')) return;
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY; decided = false;
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (decided && !swiping) return;
+    const x = e.touches[0].clientX - sx, y = e.touches[0].clientY - sy;
+    if (!decided) {
+      if (Math.abs(x) < 8 && Math.abs(y) < 8) return;
+      decided = true;
+      swiping = Math.abs(x) > Math.abs(y);
+      if (!swiping) return;
+    }
+    e.preventDefault();
+    dx = x;
+    const body = document.querySelector('.cal-body');
+    if (body) body.style.transform = 'translateX(' + dx + 'px)';
+  }, { passive: false });
+  function endSwipe() {
+    if (!swiping) return;
+    swiping = false;
+    const body = document.querySelector('.cal-body');
+    if (body) body.style.transform = '';
+    if (dx < -50) changeMonth(1, dx);
+    else if (dx > 50) changeMonth(-1, dx);
+    else slideBack(body, dx);
+    dx = 0;
+  }
+  document.addEventListener('touchend', endSwipe);
+  document.addEventListener('touchcancel', endSwipe);
 
   /* ---------- 下から出るパネル ---------- */
 
@@ -510,6 +621,9 @@
     if (t.dataset.close) { closeSheet(); return; }
     if (t.id === 'fab') { openAdd(); return; }
     if (t.id === 'refresh') { refresh(t); return; }
+    if (t.id === 'prev-m') { changeMonth(-1); return; }
+    if (t.id === 'next-m') { changeMonth(1); return; }
+    if (t.id === 'go-today') { changeMonth((DATA.year - viewY) * 12 + (DATA.month - viewM)); return; }
     if (t.dataset.day) { selected = selected === t.dataset.day ? null : t.dataset.day; render(); return; }
     if (t.dataset.ev !== undefined) { openEvent(DATA.events[Number(t.dataset.ev)]); return; }
     if (t.id === 'add-acct') { openAccount(null); return; }
