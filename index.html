@@ -65,6 +65,8 @@
   .dots { display: flex; gap: 4px; height: 7px; }
   .dot { width: 7px; height: 7px; border-radius: 4px; }
   .dot.in { background: var(--in); } .dot.out { background: var(--out); }
+  .day-amt { height: 12px; font-size: 10px; font-weight: 700; line-height: 12px; white-space: nowrap; letter-spacing: -.02em; }
+  .day-amt.in { color: var(--in-ink); } .day-amt.out { color: var(--out-ink); }
   .legend { display: flex; gap: 16px; justify-content: center; font-size: 12px; color: var(--sub); padding-top: 4px; }
   .legend i { display: inline-block; width: 8px; height: 8px; border-radius: 4px; margin-right: 6px; vertical-align: 1px; }
   .detail { border-top: 1px solid var(--line); margin-top: 4px; padding: 12px 4px 0; display: flex; flex-direction: column; gap: 2px; }
@@ -142,6 +144,13 @@
   const WD = ['日', '月', '火', '水', '木', '金', '土'];
   const yen = n => '¥' + Math.abs(Math.round(n)).toLocaleString('ja-JP');
   const signed = n => (n >= 0 ? '+' : '−') + yen(n);
+  // カレンダーのマス用の短い金額（+8,000 / −6.4万）
+  const shortYen = n => {
+    const a = Math.abs(n), sign = n >= 0 ? '+' : '−';
+    if (a < 10000) return sign + Math.round(a).toLocaleString('ja-JP');
+    const man = a / 10000;
+    return sign + (man >= 100 ? Math.round(man) : Math.round(man * 10) / 10) + '万';
+  };
   const pad = n => String(n).padStart(2, '0');
   const ymd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
   const parse = s => { const p = s.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); };
@@ -296,15 +305,15 @@
     for (let d = 1; d <= days; d++) {
       const key = ym + '-' + pad(d);
       const evs = byDate[key] || [];
+      const daySum = evs.reduce((t, e) => t + e.amount, 0);
       const cls = ['day'];
       if (key === DATA.today) cls.push('today'); else if (key < DATA.today) cls.push('past');
       if (selected === key) cls.push('sel');
       h += '<button type="button" class="' + cls.join(' ') + '" data-day="' + key + '"' +
            ' aria-label="' + viewM + '月' + d + '日' + (evs.length ? '、予定' + evs.length + '件' : '、予定を追加') + '">' +
-           '<span class="num">' + d + '</span><span class="dots">' +
-           (evs.some(e => e.amount > 0) ? '<span class="dot in"></span>' : '') +
-           (evs.some(e => e.amount < 0) ? '<span class="dot out"></span>' : '') +
-           '</span></button>';
+           '<span class="num">' + d + '</span>' +
+           (evs.length ? '<span class="day-amt ' + (daySum >= 0 ? 'in' : 'out') + '">' + shortYen(daySum) + '</span>' : '<span class="day-amt"></span>') +
+           '</button>';
     }
     h += '</div>';
     if (selected && byDate[selected]) {
@@ -313,7 +322,7 @@
            '<button type="button" class="add-row" data-add-day="' + selected + '">' +
            '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>この日に予定を追加</button></div>';
     }
-    h += '</div><div class="legend"><span><i style="background:var(--in)"></i>入金予定</span><span><i style="background:var(--out)"></i>引き落とし</span></div>';
+    h += '</div><div class="legend"><span><i style="background:var(--in)"></i>入金</span><span><i style="background:var(--out)"></i>出金</span><span>その日の合計</span></div>';
     h += '</section>';
 
     // これからの予定
