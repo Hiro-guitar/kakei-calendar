@@ -45,6 +45,13 @@
   .alert b { font-size: 15px; display: block; margin-bottom: 4px; }
   .alert span { font-size: 13px; }
   .ok { padding: 14px 16px; font-size: 14px; color: var(--sub); }
+  .total { padding: 16px 20px; display: flex; flex-direction: column; gap: 6px; }
+  .total-now { font-size: 26px; font-weight: 700; }
+  .total-msg { font-size: 14px; line-height: 1.6; }
+  .total-row { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--sub); border-top: 1px solid var(--line); padding-top: 8px; margin-top: 4px; }
+  .total.short { background: var(--out-bg); color: var(--warn-ink); }
+  .total.short .sub, .total.short .total-row { color: var(--warn-ink); border-color: rgba(122, 44, 8, .15); }
+  .bal-sum { cursor: default; font-weight: 700; }
   .cal { padding: 8px 12px 16px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; touch-action: pan-y; }
   .cal-nav { display: flex; align-items: center; justify-content: space-between; }
   .cal-title { font-size: 15px; font-weight: 700; }
@@ -286,8 +293,22 @@
              '<div><b>' + md(a.date) + 'の引き落としまでに、' + esc(a.account) + 'に ' + yen(a.need) + ' 入れておく</b>' +
              '<span>引き落とし ' + yen(a.outTotal) + ' ／ 今の残高 ' + yen(a.balance) + '</span></div></section>';
       });
-    } else if (DATA.balances.some(b => b.amount !== null)) {
-      h += '<section class="card ok">しばらく残高は足りています</section>';
+    }
+
+    // 全口座の見通し（全部の口座を足して、先の予定を順に足し引きする）
+    const tot = projectTotal();
+    if (tot) {
+      const money = n => (n < 0 ? '−' : '') + yen(n);
+      const short = tot.min < 0;
+      h += '<section class="card total' + (short ? ' short' : '') + '"><div class="sub">全口座の合計</div>' +
+           '<div class="total-now">' + money(tot.total) + '</div>' +
+           (short
+             ? '<div class="total-msg">' + md(tot.firstShort) + 'から足りなくなります。' + md(tot.minDate) + 'までに、全体で <b>' + yen(-tot.min) + '</b> 必要です</div>'
+             : '<div class="total-msg">' + md(tot.until) + 'までの予定を全部払っても足ります' +
+               (tot.minDate ? '（いちばん少ないのは' + md(tot.minDate) + 'の ' + money(tot.min) + '）' : '') + '</div>') +
+           '<div class="total-row"><span>' + md(tot.until) + 'の見込み</span><span>' + money(tot.end) + '</span></div>' +
+           (tot.undCount ? '<div class="sub">日付未定の' + tot.undCount + '件（' + signed(tot.undSum) + '）は入れていません</div>' : '') +
+           '</section>';
     }
 
     // カレンダー（左右スワイプか ‹ › で月を切り替え）
@@ -352,6 +373,7 @@
 
     // 口座残高
     h += '<h2>口座残高</h2><section class="card list">';
+    if (tot) h += '<div class="bal bal-sum"><span class="name"><span>合計</span></span><span class="v">' + (tot.total < 0 ? '−' : '') + yen(tot.total) + '</span></div>';
     if (!DATA.balances.length) h += '<div class="empty">口座がまだありません</div>';
     DATA.balances.forEach((b, i) => {
       h += '<button type="button" class="bal" data-bal="' + i + '"><span class="name"><span>' + esc(b.account) + '</span>' +
@@ -363,6 +385,32 @@
     h += '</section>';
 
     document.getElementById('app').innerHTML = h;
+  }
+
+  /* ---------- 全口座の見通し ---------- */
+
+  // 残高を入れた口座を全部足し、残高の更新日より後の予定（45日先まで）を日付順に足し引きする
+  function projectTotal() {
+    const known = DATA.balances.filter(b => b.amount !== null);
+    if (!known.length) return null;
+    const total = known.reduce((t, b) => t + b.amount, 0);
+    const t0 = parse(DATA.today);
+    const yest = ymd(new Date(t0.getFullYear(), t0.getMonth(), t0.getDate() - 1));
+    const until = ymd(new Date(t0.getFullYear(), t0.getMonth(), t0.getDate() + (DATA.lookahead || 45)));
+    const upd = {};
+    known.forEach(b => { upd[b.account] = b.updated || yest; });
+    const evs = DATA.events
+      .filter(ev => ev.date > (upd[ev.account] || yest) && ev.date <= until)
+      .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : b.amount - a.amount));   // 同じ日は入金を先に
+    let run = total, min = total, minDate = '', firstShort = '';
+    evs.forEach(ev => {
+      run += ev.amount;
+      if (run < min) { min = run; minDate = ev.date; }
+      if (run < 0 && !firstShort) firstShort = ev.date;
+    });
+    const und = DATA.undated || [];
+    return { total: total, min: min, minDate: minDate, firstShort: firstShort, until: until, end: run,
+             undCount: und.length, undSum: und.reduce((t, e) => t + e.amount, 0) };
   }
 
   /* ---------- 月の切り替え ---------- */
