@@ -78,6 +78,8 @@
   .bal .name { display: flex; flex-direction: column; font-size: 14px; }
   .bal .v { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
   .empty { padding: 16px 0; font-size: 14px; color: var(--sub); }
+  .add-row { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 48px; padding: 12px 0; border: 0; background: none;
+             color: var(--in-ink); font-size: 14px; font-weight: 700; text-align: left; cursor: pointer; }
   .status { padding: 64px 8px; text-align: center; color: var(--sub); font-size: 15px; line-height: 1.7; }
   .preview { font-size: 12px; color: var(--sub); background: var(--chip); border-radius: 999px; padding: 4px 10px; }
 
@@ -207,7 +209,7 @@
     return j.data;
   }
 
-  const FN = { apiGetData: 'get', apiAddSchedule: 'add', apiDeleteSchedule: 'del', apiSetBalance: 'bal' };
+  const FN = { apiGetData: 'get', apiAddSchedule: 'add', apiDeleteSchedule: 'del', apiSetBalance: 'bal', apiSaveAccount: 'acct', apiDeleteAccount: 'delAcct' };
 
   function call(fn, args, done, fail) {
     if (PREVIEW) { fail('サンプル表示なので保存できません'); return; }
@@ -311,6 +313,8 @@
            '<span class="sub" style="font-size:12px">' + esc([b.note, b.updated ? md(b.updated) + '時点' : 'タップして残高を入れる'].filter(Boolean).join('・')) + '</span></span>' +
            '<span class="v">' + (b.amount === null ? '—' : yen(b.amount)) + ICON_EDIT + '</span></button>';
     });
+    h += '<button type="button" class="add-row" id="add-acct">' +
+         '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>口座を追加</button>';
     h += '</section>';
 
     document.getElementById('app').innerHTML = h;
@@ -442,28 +446,52 @@
     });
   }
 
-  function openBalance(b) {
-    openSheet(b.account + 'の残高',
-      '<form id="bal-form" novalidate>' +
+  function openAccount(b) {
+    const isNew = !b;
+    b = b || { account: '', amount: null, note: '', updated: '' };
+    const orig = b.amount === null ? '' : String(Math.round(b.amount));
+    openSheet(isNew ? '口座を追加' : b.account,
+      '<form id="acct-form" novalidate>' +
       '<div class="field"><label for="f-bal">今の残高（円）</label>' +
-        '<input id="f-bal" name="amount" type="text" inputmode="numeric" value="' + (b.amount === null ? '' : Math.round(b.amount)) + '" placeholder="例：182000" autocomplete="off"></div>' +
-      '<div class="sub">' + (b.updated ? '前回の更新：' + md(b.updated) + '。' : '') + '保存すると今日の日付で記録します</div>' +
+        '<input id="f-bal" name="amount" type="text" inputmode="numeric" value="' + orig + '" placeholder="例：182000" autocomplete="off"></div>' +
+      '<div class="sub">' + (b.updated ? '前回の更新：' + md(b.updated) + '。' : '') + '残高を変えると今日の日付で記録します</div>' +
+      '<div class="field"><label for="f-name">口座名</label>' +
+        '<input id="f-name" name="name" type="text" value="' + esc(b.account) + '" placeholder="例：楽天銀行" autocomplete="off"></div>' +
+      '<div class="field"><label for="f-note">用途（なくてもOK）</label>' +
+        '<input id="f-note" name="note" type="text" value="' + esc(b.note) + '" placeholder="例：貯金用" autocomplete="off"></div>' +
       '<div class="err" role="alert"></div>' +
-      '<button type="submit" class="primary">保存する</button>' +
-      '</form>');
+      '<button type="submit" class="primary">' + (isNew ? '追加する' : '保存する') + '</button>' +
+      '</form>' +
+      (isNew ? '' : '<button type="button" class="danger" id="del-acct">この口座を削除</button>'));
 
-    const form = document.getElementById('bal-form');
+    const form = document.getElementById('acct-form');
     form.addEventListener('submit', e => {
       e.preventDefault();
-      const raw = document.getElementById('f-bal').value;
-      const v = toNum(raw);
-      if (String(raw).trim() === '' || isNaN(v)) { showErr('残高を数字で入れてください'); return; }
+      const raw = document.getElementById('f-bal').value.trim();
+      const name = document.getElementById('f-name').value.trim();
+      const note = document.getElementById('f-note').value.trim();
+      if (!name) { showErr('口座名を入れてください'); return; }
+      if (raw !== '' && isNaN(toNum(raw))) { showErr('残高を数字で入れてください'); return; }
+      const changed = raw !== '' && (orig === '' || toNum(raw) !== Number(orig));
       const btn = form.querySelector('.primary');
       busy(btn, true);
       showErr('');
-      call('apiSetBalance', [b.account, v],
-        d => { setData(d); closeSheet(); toast('残高を更新しました'); },
+      call('apiSaveAccount', [isNew ? '' : b.account, { name: name, note: note, amount: changed ? toNum(raw) : '' }],
+        d => { setData(d); closeSheet(); toast(isNew ? '口座を追加しました' : '保存しました'); },
         msg => { busy(btn, false); showErr(msg); });
+    });
+
+    const del = document.getElementById('del-acct');
+    if (del) del.addEventListener('click', () => {
+      if (!del.classList.contains('confirm')) {
+        del.classList.add('confirm');
+        del.textContent = 'もう一度押すと削除します（予定はそのまま残ります）';
+        return;
+      }
+      busy(del, true, '削除中…');
+      call('apiDeleteAccount', [b.account],
+        d => { setData(d); closeSheet(); toast('口座を削除しました'); },
+        msg => { busy(del, false); showErr(msg); });
     });
   }
 
@@ -484,7 +512,8 @@
     if (t.id === 'refresh') { refresh(t); return; }
     if (t.dataset.day) { selected = selected === t.dataset.day ? null : t.dataset.day; render(); return; }
     if (t.dataset.ev !== undefined) { openEvent(DATA.events[Number(t.dataset.ev)]); return; }
-    if (t.dataset.bal !== undefined) { openBalance(DATA.balances[Number(t.dataset.bal)]); return; }
+    if (t.id === 'add-acct') { openAccount(null); return; }
+    if (t.dataset.bal !== undefined) { openAccount(DATA.balances[Number(t.dataset.bal)]); return; }
   });
 
   document.addEventListener('keydown', e => {
