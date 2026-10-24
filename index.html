@@ -58,7 +58,7 @@
   .day { height: 54px; border: 0; background: none; padding: 4px 0 0;
          display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; border-radius: 10px; }
   .day:disabled { cursor: default; }
-  .day.sel { background: var(--bg); }
+  .day.sel, .day:active { background: var(--bg); }
   .num { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 14px; border-radius: 15px; }
   .day.past .num { color: var(--past); }
   .day.today .num { background: var(--ink); color: #fff; font-weight: 700; }
@@ -114,6 +114,7 @@
   .seg input:checked + span { border-color: var(--ink); background: var(--ink); color: #fff; font-weight: 700; }
   .seg input:focus-visible + span { outline: 2px solid var(--in); outline-offset: 2px; }
   .hidden { display: none !important; }
+  .seg.seg3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .err { color: #9A2A0A; font-size: 14px; min-height: 0; }
   .primary { min-height: 52px; border: 0; border-radius: 12px; background: var(--ink); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; }
   .primary:disabled, .danger:disabled { opacity: .55; }
@@ -218,7 +219,7 @@
     return j.data;
   }
 
-  const FN = { apiGetData: 'get', apiAddSchedule: 'add', apiDeleteSchedule: 'del', apiSetBalance: 'bal', apiSaveAccount: 'acct', apiDeleteAccount: 'delAcct' };
+  const FN = { apiGetData: 'get', apiAddSchedule: 'add', apiDeleteSchedule: 'del', apiSetBalance: 'bal', apiSaveAccount: 'acct', apiDeleteAccount: 'delAcct', apiSetScheduleDate: 'date' };
 
   function call(fn, args, done, fail) {
     if (PREVIEW) { fail('サンプル表示なので保存できません'); return; }
@@ -297,8 +298,8 @@
       const cls = ['day'];
       if (key === DATA.today) cls.push('today'); else if (key < DATA.today) cls.push('past');
       if (selected === key) cls.push('sel');
-      h += '<button type="button" class="' + cls.join(' ') + '" data-day="' + key + '"' + (evs.length ? '' : ' disabled') +
-           ' aria-label="' + viewM + '月' + d + '日' + (evs.length ? '、予定' + evs.length + '件' : '') + '">' +
+      h += '<button type="button" class="' + cls.join(' ') + '" data-day="' + key + '"' +
+           ' aria-label="' + viewM + '月' + d + '日' + (evs.length ? '、予定' + evs.length + '件' : '、予定を追加') + '">' +
            '<span class="num">' + d + '</span><span class="dots">' +
            (evs.some(e => e.amount > 0) ? '<span class="dot in"></span>' : '') +
            (evs.some(e => e.amount < 0) ? '<span class="dot out"></span>' : '') +
@@ -307,7 +308,9 @@
     h += '</div>';
     if (selected && byDate[selected]) {
       h += '<div class="detail"><div class="sub">' + md(selected) + '（' + WD[parse(selected).getDay()] + '）</div>' +
-           byDate[selected].map(ev => lineHtml(ev, true)).join('') + '</div>';
+           byDate[selected].map(ev => lineHtml(ev, true)).join('') +
+           '<button type="button" class="add-row" data-add-day="' + selected + '">' +
+           '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>この日に予定を追加</button></div>';
     }
     h += '</div><div class="legend"><span><i style="background:var(--in)"></i>入金予定</span><span><i style="background:var(--out)"></i>引き落とし</span></div>';
     h += '</section>';
@@ -329,6 +332,13 @@
            evs.map(e => lineHtml(e, !note)).join('') + '</div></div>';
     });
     h += '</section>';
+
+    // 日付未定
+    const und = DATA.undated || [];
+    if (und.length) {
+      h += '<h2>日付未定</h2><section class="card list"><div class="items" style="padding: 4px 0">' +
+           und.map((ev, i) => lineHtml(Object.assign({}, ev, { _i: 'u' + i }), true)).join('') + '</div></section>';
+    }
 
     // 口座残高
     h += '<h2>口座残高</h2><section class="card list">';
@@ -467,11 +477,11 @@
     else if (btn.dataset.label) btn.textContent = btn.dataset.label;
   }
 
-  function openAdd() {
+  function openAdd(date) {
     const labels = [...new Set(DATA.events.map(e => e.label))];
     const accts = DATA.balances.map(b => b.account);
     let dayOpts = '';
-    for (let d = 1; d <= 31; d++) dayOpts += '<option value="' + d + '"' + (d === 27 ? ' selected' : '') + '>' + d + '日</option>';
+    for (let d = 1; d <= 31; d++) dayOpts += '<option value="' + d + '"' + (d === (date ? Number(date.slice(8)) : 27) ? ' selected' : '') + '>' + d + '日</option>';
     dayOpts += '<option value="末">月末</option>';
 
     openSheet('予定を追加',
@@ -484,10 +494,11 @@
         '<datalist id="dl-labels">' + labels.map(l => '<option value="' + esc(l) + '"></option>').join('') + '</datalist></div>' +
       '<div class="field"><label for="f-amount">金額（円）</label>' +
         '<input id="f-amount" name="amount" type="text" inputmode="numeric" placeholder="例：98000" autocomplete="off" required></div>' +
-      '<div class="field"><span class="lbl">いつ</span><div class="seg">' +
+      '<div class="field"><span class="lbl">いつ</span><div class="seg seg3">' +
         '<label><input type="radio" name="when" value="once" checked><span>この日だけ</span></label>' +
-        '<label><input type="radio" name="when" value="monthly"><span>毎月</span></label></div>' +
-        '<input id="f-date" name="date" type="date" value="' + DATA.today + '" aria-label="日付">' +
+        '<label><input type="radio" name="when" value="monthly"><span>毎月</span></label>' +
+        '<label><input type="radio" name="when" value="undated"><span>未定</span></label></div>' +
+        '<input id="f-date" name="date" type="date" value="' + (date || DATA.today) + '" aria-label="日付">' +
         '<select id="f-day" name="day" class="hidden" aria-label="毎月の日にち">' + dayOpts + '</select>' +
         '<div class="sub hidden" id="f-day-note"></div></div>' +
       '<div class="field"><label for="f-account">口座</label>' +
@@ -504,11 +515,11 @@
     note.classList.add('hidden');
     form.addEventListener('change', e => {
       if (e.target.name !== 'when') return;
-      const monthly = e.target.value === 'monthly';
-      document.getElementById('f-date').classList.toggle('hidden', monthly);
-      document.getElementById('f-day').classList.toggle('hidden', !monthly);
-      note.textContent = '土日・祝日のときは次の平日に表示します';
-      note.classList.toggle('hidden', !monthly);
+      const v = e.target.value;
+      document.getElementById('f-date').classList.toggle('hidden', v !== 'once');
+      document.getElementById('f-day').classList.toggle('hidden', v !== 'monthly');
+      note.textContent = v === 'monthly' ? '土日・祝日のときは次の平日に表示します' : '日付が決まったら、「日付未定」の予定をタップして日付を入れられます';
+      note.classList.toggle('hidden', v === 'once');
     });
     form.addEventListener('submit', e => {
       e.preventDefault();
@@ -516,11 +527,11 @@
       const amount = toNum(f.get('amount'));
       if (!String(f.get('label')).trim()) { showErr('項目を入れてください'); return; }
       if (!amount || amount < 0) { showErr('金額を数字で入れてください'); return; }
-      const monthly = f.get('when') === 'monthly';
-      if (!monthly && !f.get('date')) { showErr('日付を選んでください'); return; }
+      const monthly = f.get('when') === 'monthly', undated = f.get('when') === 'undated';
+      if (!monthly && !undated && !f.get('date')) { showErr('日付を選んでください'); return; }
       const item = {
         kind: f.get('kind'), label: f.get('label'), amount: amount, account: f.get('account'),
-        repeat: monthly, date: f.get('date'), repeatDay: f.get('day'),
+        repeat: monthly, undated: undated, date: f.get('date'), repeatDay: f.get('day'),
       };
       const btn = form.querySelector('.primary');
       busy(btn, true);
@@ -532,18 +543,31 @@
   }
 
   function openEvent(ev) {
-    const d = parse(ev.date);
+    const d = ev.date ? parse(ev.date) : null;
     openSheet(ev.label,
       '<div class="big" style="color:' + (ev.amount > 0 ? 'var(--in-ink)' : 'var(--out-ink)') + '">' + signed(ev.amount) + '</div>' +
       '<div class="meta">' +
-        '<div><span>日付</span><span>' + (d.getMonth() + 1) + '月' + d.getDate() + '日（' + WD[d.getDay()] + '）</span></div>' +
+        '<div><span>日付</span><span>' + (d ? (d.getMonth() + 1) + '月' + d.getDate() + '日（' + WD[d.getDay()] + '）' : '未定') + '</span></div>' +
         '<div><span>種類</span><span>' + (ev.amount > 0 ? '入金' : '引き落とし・支払い') + '</span></div>' +
         (ev.account ? '<div><span>口座</span><span>' + esc(ev.account) + '</span></div>' : '') +
         (ev.recurring ? '<div><span>くり返し</span><span>毎月</span></div>' : '') +
       '</div>' +
       (ev.recurring ? '<div class="sub">毎月の予定なので、削除するとほかの月からも消えます</div>' : '') +
+      (d ? '' : '<div class="field"><label for="f-setdate">日付が決まったら</label>' +
+                '<input id="f-setdate" type="date" value="' + DATA.today + '"></div>' +
+                '<button type="button" class="primary" id="set-date-btn">この日付にする</button>') +
       '<div class="err" role="alert"></div>' +
       '<button type="button" class="danger" id="del-btn">削除する</button>');
+
+    const sd = document.getElementById('set-date-btn');
+    if (sd) sd.addEventListener('click', () => {
+      const v = document.getElementById('f-setdate').value;
+      if (!v) { showErr('日付を選んでください'); return; }
+      busy(sd, true);
+      call('apiSetScheduleDate', [ev.row, ev.label, ev.amount, v],
+        d2 => { setData(d2); closeSheet(); toast('日付を入れました'); },
+        msg => { busy(sd, false); showErr(msg); });
+    });
 
     const btn = document.getElementById('del-btn');
     btn.addEventListener('click', () => {
@@ -626,8 +650,17 @@
     if (t.id === 'prev-m') { changeMonth(-1); return; }
     if (t.id === 'next-m') { changeMonth(1); return; }
     if (t.id === 'go-today') { changeMonth((DATA.year - viewY) * 12 + (DATA.month - viewM)); return; }
-    if (t.dataset.day) { selected = selected === t.dataset.day ? null : t.dataset.day; render(); return; }
-    if (t.dataset.ev !== undefined) { openEvent(DATA.events[Number(t.dataset.ev)]); return; }
+    if (t.dataset.addDay) { openAdd(t.dataset.addDay); return; }
+    if (t.dataset.day) {
+      const k = t.dataset.day;
+      if (!DATA.events.some(ev => ev.date === k)) { openAdd(k); return; }   // 予定のない日はそのまま追加画面へ
+      selected = selected === k ? null : k; render(); return;
+    }
+    if (t.dataset.ev !== undefined) {
+      const id = t.dataset.ev;
+      openEvent(id.charAt(0) === 'u' ? DATA.undated[Number(id.slice(1))] : DATA.events[Number(id)]);
+      return;
+    }
     if (t.id === 'add-acct') { openAccount(null); return; }
     if (t.dataset.bal !== undefined) { openAccount(DATA.balances[Number(t.dataset.bal)]); return; }
   });
