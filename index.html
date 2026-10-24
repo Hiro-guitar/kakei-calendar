@@ -52,7 +52,7 @@
   .total.short { background: var(--out-bg); color: var(--warn-ink); }
   .total.short .sub, .total.short .total-row { color: var(--warn-ink); border-color: rgba(122, 44, 8, .15); }
   .bal-sum { cursor: default; font-weight: 700; }
-  .cal { padding: 8px 12px 16px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; touch-action: pan-y; }
+  .cal { padding: 8px 6px 16px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; touch-action: pan-y; }
   .cal-nav { display: flex; align-items: center; justify-content: space-between; }
   .cal-title { font-size: 15px; font-weight: 700; }
   .nav-btn { width: 44px; height: 44px; border: 0; border-radius: 22px; background: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
@@ -151,13 +151,8 @@
   const WD = ['日', '月', '火', '水', '木', '金', '土'];
   const yen = n => '¥' + Math.abs(Math.round(n)).toLocaleString('ja-JP');
   const signed = n => (n >= 0 ? '+' : '−') + yen(n);
-  // カレンダーのマス用の短い金額（+8,000 / −6.4万）
-  const shortYen = n => {
-    const a = Math.abs(n), sign = n >= 0 ? '+' : '−';
-    if (a < 10000) return sign + Math.round(a).toLocaleString('ja-JP');
-    const man = a / 10000;
-    return sign + (man >= 100 ? Math.round(man) : Math.round(man * 10) / 10) + '万';
-  };
+  // カレンダーのマス用の金額（丸めずにそのまま。¥は省く）
+  const dayYen = n => (n >= 0 ? '+' : '−') + Math.abs(n).toLocaleString('ja-JP');
   const pad = n => String(n).padStart(2, '0');
   const ymd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
   const parse = s => { const p = s.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); };
@@ -333,7 +328,7 @@
       h += '<button type="button" class="' + cls.join(' ') + '" data-day="' + key + '"' +
            ' aria-label="' + viewM + '月' + d + '日' + (evs.length ? '、予定' + evs.length + '件' : '、予定を追加') + '">' +
            '<span class="num">' + d + '</span>' +
-           (evs.length ? '<span class="day-amt ' + (daySum >= 0 ? 'in' : 'out') + '">' + shortYen(daySum) + '</span>' : '<span class="day-amt"></span>') +
+           (evs.length ? '<span class="day-amt ' + (daySum >= 0 ? 'in' : 'out') + '">' + dayYen(daySum) + '</span>' : '<span class="day-amt"></span>') +
            '</button>';
     }
     h += '</div>';
@@ -385,7 +380,23 @@
     h += '</section>';
 
     document.getElementById('app').innerHTML = h;
+    fitDayAmounts();
   }
+
+  // 金額がマスからはみ出すときだけ、収まるまで文字を小さくする（桁は省かない）
+  function fitDayAmounts() {
+    document.querySelectorAll('.day-amt').forEach(el => {
+      if (!el.textContent) return;
+      el.style.fontSize = '';
+      const max = el.parentNode.clientWidth - 2;
+      let size = 10;
+      while (el.scrollWidth > max && size > 6.5) {
+        size -= 0.5;
+        el.style.fontSize = size + 'px';
+      }
+    });
+  }
+  window.addEventListener('resize', () => { if (DATA) fitDayAmounts(); });
 
   /* ---------- 全口座の見通し ---------- */
 
