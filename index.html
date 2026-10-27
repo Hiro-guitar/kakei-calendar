@@ -138,6 +138,32 @@
   .meta div span:first-child { color: var(--sub); }
   .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(84px + env(safe-area-inset-bottom));
            background: var(--ink); color: #fff; border-radius: 999px; padding: 10px 18px; font-size: 14px; }
+  .cb { display: flex; flex-direction: column; gap: 12px; border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+  .cb-title { font-size: 15px; font-weight: 700; }
+  .bk { display: flex; flex-direction: column; }
+  .bk-line { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 8px 0; font-size: 15px; }
+  .bk-line .n { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .bk-line small { display: block; color: var(--sub); font-size: 12px; margin-top: 2px; }
+  .bk-total { border-top: 1.5px solid var(--ink); margin-top: 4px; font-size: 16px; }
+  .cat { margin-left: 12px; border-bottom: 1px solid var(--line); }
+  .cat summary { list-style: none; display: grid; grid-template-columns: 1fr auto 16px; align-items: center; gap: 4px 8px; padding: 9px 0; cursor: pointer; font-size: 14px; }
+  .cat summary::-webkit-details-marker { display: none; }
+  .cat summary .n { font-variant-numeric: tabular-nums; }
+  .cat summary svg { transition: transform .15s; color: var(--sub); }
+  .cat[open] summary svg { transform: rotate(90deg); }
+  .cat .bar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: var(--chip); overflow: hidden; }
+  .cat .bar i { display: block; height: 100%; background: var(--out); border-radius: 2px; }
+  .st { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 4px 8px; align-items: center; padding: 8px 0 8px 4px; border-top: 1px dashed var(--line); font-size: 13px; }
+  .st .nm { overflow-wrap: anywhere; }
+  .st .d { color: var(--sub); font-variant-numeric: tabular-nums; }
+  .st .n { font-variant-numeric: tabular-nums; }
+  .st select { grid-column: 2 / -1; justify-self: start; font-size: 16px; padding: 2px 6px; min-height: 34px; border: 1px solid var(--field); border-radius: 8px; background: #fff; color: var(--ink); }
+  .filebtn { display: flex; align-items: center; justify-content: center; }
+  .filebtn input { display: none; }
+  .btn2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .btn2 .secondary { font-size: 14px; min-height: 48px; padding: 0 6px; }
+  .linkbtn { align-self: center; background: none; border: 0; color: var(--sub); text-decoration: underline; font-size: 13px; padding: 6px; cursor: pointer; }
+  .how { font-size: 13px; color: var(--sub); background: var(--bg); border-radius: 10px; padding: 10px 12px; }
 </style>
 </head>
 <body>
@@ -210,7 +236,7 @@
   }
 
   const PREVIEW = /[?&]demo\b/.test(location.search);
-  const APP_VERSION = '2026-10-27a';
+  const APP_VERSION = '2026-10-27b';
   function checkUpdate() {
     if (PREVIEW) return;
     fetch(location.pathname + '?check=' + Date.now(), { cache: 'no-store' })
@@ -245,7 +271,7 @@
     return j.data;
   }
 
-  const FN = { apiGetData: 'get', apiAddSchedule: 'add', apiDeleteSchedule: 'del', apiSetBalance: 'bal', apiSaveAccount: 'acct', apiDeleteAccount: 'delAcct', apiSetScheduleDate: 'date', apiUpdateSchedule: 'edit' };
+  const FN = { apiGetData: 'get', apiAddSchedule: 'add', apiDeleteSchedule: 'del', apiSetBalance: 'bal', apiSaveAccount: 'acct', apiDeleteAccount: 'delAcct', apiSetScheduleDate: 'date', apiUpdateSchedule: 'edit', apiImportCard: 'card', apiSetCardCategory: 'cardCat', apiClearCard: 'cardClear' };
 
   function call(fn, args, done, fail) {
     if (PREVIEW) { fail('サンプル表示なので保存できません'); return; }
@@ -675,6 +701,7 @@
         (ev.recurring ? '<div><span>くり返し</span><span>毎月・' +
           (ev.shift === '前の平日' ? '休日は前の平日' : ev.shift === 'ずらさない' ? '休日もずらさない' : '休日は次の平日') + '</span></div>' : '') +
       '</div>' +
+      (isCard(ev) ? '<div class="cb" id="card-box"></div>' : '') +
 
       (d ? '' : '<div class="field"><label for="f-setdate">日付が決まったら</label>' +
                 '<input id="f-setdate" type="date" value="' + DATA.today + '"></div>' +
@@ -688,6 +715,7 @@
       '<button type="button" class="danger" id="del-btn">削除する</button>');
 
     document.getElementById('edit-btn').addEventListener('click', () => openAdd(null, ev));
+    if (isCard(ev)) renderCardBox(ev);
 
     const sd = document.getElementById('set-date-btn');
     if (sd) sd.addEventListener('click', () => {
@@ -713,6 +741,180 @@
         d => { setData(d); closeSheet(); toast('削除しました'); },
         msg => { busy(btn, false); showErr(msg); });
     });
+  }
+
+  /* ---------- カードの引き落としの内訳 ---------- */
+
+  const cardKey = ev => ev.label + '|' + String(ev.date).slice(0, 7);
+  const cardRows = ev => (DATA.cards || {})[cardKey(ev)] || null;
+  const isCard = ev => ev.amount < 0 && !!ev.date && (/カード|card/i.test(ev.label) || !!cardRows(ev));
+  const ICON_R = '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
+
+  function cardHowTo(label) {
+    if (/楽天/.test(label)) return '楽天e-NAVI →「ご利用明細」→ 引き落とし月を選んで「CSV」';
+    if (/paypay/i.test(label)) return 'PayPayカード会員メニュー →「請求明細を見る」→ 月を選んで「CSVダウンロード」';
+    if (/エポス|epos/i.test(label)) return 'エポスNet →「月別ご利用履歴照会」→「データのダウンロード」でCSV（ご利用月は前々月〜前月を選ぶ）';
+    if (/セゾン|saison/i.test(label)) return 'Netアンサー →「利用明細」→ 引き落とし月を選んで「CSV形式で保存する」';
+    return 'カード会社のサイトの「ご利用明細」から、この月に払う分のCSVを保存してください';
+  }
+
+  function renderCardBox(ev) {
+    const box = document.getElementById('card-box');
+    if (!box) return;
+    const rows = cardRows(ev);
+    const debit = -ev.amount;
+    const m = Number(ev.date.slice(5, 7));
+    const fileBtn = (mode, text) => '<label class="secondary filebtn">' + text +
+      '<input type="file" accept=".csv,text/csv,text/comma-separated-values,application/vnd.ms-excel" multiple data-mode="' + mode + '"></label>';
+    let h = '<div class="cb-title">引き落とされる額の内訳</div>';
+
+    if (!rows) {
+      h += '<div class="sub">' + m + '月に払う分の明細CSVを読み込むと、何にいくら使ったかと、リボや手数料の分が分かれて出ます。</div>' +
+        '<div class="how">' + esc(cardHowTo(ev.label)) + '</div>' +
+        fileBtn('replace', '明細CSVを読み込む');
+    } else {
+      const sum = rows.reduce((a, r) => a + r[2], 0);
+      const diff = debit - sum;
+      const cats = {};
+      rows.forEach((r, i) => { const c = cats[r[4]] = cats[r[4]] || { sum: 0, list: [] }; c.sum += r[2]; c.list.push(i); });
+      const names = Object.keys(cats).sort((a, b) => cats[b].sum - cats[a].sum);
+      const top = Math.max(1, ...names.map(n => Math.abs(cats[n].sum)));
+      const catOpts = cur => (DATA.categories || ['その他']).map(c => '<option' + (c === cur ? ' selected' : '') + '>' + esc(c) + '</option>').join('');
+
+      h += '<div class="bk">' +
+        '<div class="bk-line"><span>お買い物の分<small>明細にある ' + rows.length + '件</small></span><span class="n">' + yen(sum) + '</span></div>' +
+        names.map(n => '<details class="cat"><summary><span>' + esc(n) + '</span><span class="n">' + (cats[n].sum < 0 ? '−' : '') + yen(cats[n].sum) + '</span>' + ICON_R +
+            '<span class="bar"><i style="width:' + Math.max(2, Math.round(Math.abs(cats[n].sum) / top * 100)) + '%"></i></span></summary>' +
+            cats[n].list.map(i => { const r = rows[i]; return '<div class="st"><span class="d">' + esc(cardDay(r[0])) + '</span><span class="nm">' + esc(r[1]) +
+              (r[3] ? '<span class="d">・' + esc(r[3]) + '</span>' : '') + '</span><span class="n">' + (r[2] < 0 ? '−' : '') + yen(r[2]) + '</span>' +
+              '<select data-store="' + esc(r[1]) + '" aria-label="' + esc(r[1]) + 'のカテゴリ">' + catOpts(r[4]) + '</select></div>'; }).join('') +
+          '</details>').join('') +
+        (diff > 0 ? '<div class="bk-line"><span>＋ 明細にない分<small>リボ・分割の返済、キャッシング、手数料など</small></span><span class="n">' + yen(diff) + '</span></div>' : '') +
+        (diff < 0 ? '<div class="bk-line"><span>− 今回は払わない分<small>リボにした分、先に入金した分、ポイント払いなど</small></span><span class="n">' + yen(diff) + '</span></div>' : '') +
+        '<div class="bk-line bk-total"><span>実際に引き落とされる額</span><span class="n">' + yen(debit) + '</span></div>' +
+        '</div>' +
+        '<div class="btn2">' + fileBtn('replace', '読み込み直す') + fileBtn('add', '別のカードの分を足す') + '</div>' +
+        '<button type="button" class="linkbtn" id="card-clear">読み込んだ明細を消す</button>';
+    }
+    box.innerHTML = h + '<div class="err cb-err" role="alert"></div>';
+
+    const err = msg => { box.querySelector('.cb-err').textContent = msg || ''; };
+    box.querySelectorAll('input[type=file]').forEach(inp => inp.addEventListener('change', () => {
+      const files = Array.from(inp.files || []);
+      if (!files.length) return;
+      const btn = inp.parentNode;
+      err('');
+      btn.dataset.label = btn.firstChild.textContent;
+      btn.firstChild.textContent = '読み込み中…';
+      Promise.all(files.map(readCsvFile))
+        .then(texts => {
+          const all = [], notes = [];
+          texts.forEach(t => { const p = parseCardCsv(t, ev.date.slice(0, 7)); all.push(...p.rows); if (p.note) notes.push(p.note); });
+          return new Promise((ok, ng) => call('apiImportCard', [ev.label, ev.date.slice(0, 7), all, inp.dataset.mode], d => ok([d, all.length, notes]), ng));
+        })
+        .then(([d, n, notes]) => { setData(d); renderCardBox(ev); toast(n + '件の明細を読み込みました'); if (notes.length) err(notes.join(' ')); })
+        .catch(e => { btn.firstChild.textContent = btn.dataset.label; inp.value = ''; err(e && e.message ? e.message : String(e)); });
+    }));
+
+    box.querySelectorAll('select[data-store]').forEach(sel => sel.addEventListener('change', () => {
+      sel.disabled = true;
+      call('apiSetCardCategory', [sel.dataset.store, sel.value],
+        d => { setData(d); renderCardBox(ev); toast('「' + sel.dataset.store + '」を' + sel.value + 'にしました'); },
+        msg => { sel.disabled = false; err(msg); });
+    }));
+
+    const clr = document.getElementById('card-clear');
+    if (clr) clr.addEventListener('click', () => {
+      if (!clr.classList.contains('confirm')) { clr.classList.add('confirm'); clr.textContent = 'もう一度押すと消します'; return; }
+      clr.disabled = true;
+      call('apiClearCard', [ev.label, ev.date.slice(0, 7)],
+        d => { setData(d); renderCardBox(ev); toast('明細を消しました'); },
+        msg => { clr.disabled = false; err(msg); });
+    });
+  }
+
+  const cardDay = s => { const m = String(s).match(/^\d{4}-(\d{2})-(\d{2})$/); return m ? Number(m[1]) + '/' + Number(m[2]) : String(s); };
+
+  // CSVファイルを文字にする（UTF-8でなければShift_JISとして読む）
+  function readCsvFile(file) {
+    return file.arrayBuffer().then(buf => {
+      let t;
+      try { t = new TextDecoder('utf-8', { fatal: true }).decode(buf); }
+      catch (e) { t = new TextDecoder('shift_jis').decode(buf); }
+      return t.replace(/^\uFEFF/, '');
+    });
+  }
+
+  function csvRows(text) {
+    const out = [];
+    let row = [], cell = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) {
+        if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+        else cell += c;
+      } else if (c === '"') q = true;
+      else if (c === ',') { row.push(cell); cell = ''; }
+      else if (c === '\n' || c === '\r') {
+        if (c === '\r' && text[i + 1] === '\n') i++;
+        row.push(cell); out.push(row); row = []; cell = '';
+      } else cell += c;
+    }
+    if (cell !== '' || row.length) { row.push(cell); out.push(row); }
+    return out.map(r => r.map(x => x.trim()));
+  }
+
+  const csvAmt = x => {
+    const t = String(x || '').normalize('NFKC').replace(/[¥,円\s]/g, '').replace(/^[▲△]/, '-');
+    return /^-?\d+$/.test(t) ? Number(t) : NaN;
+  };
+  const csvDate = x => {
+    const m = String(x || '').normalize('NFKC').match(/(\d{2,4})[\/\-年.](\d{1,2})[\/\-月.](\d{1,2})/);
+    if (!m) return '';
+    const y = m[1].length === 2 ? 2000 + Number(m[1]) : Number(m[1]);
+    return y + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2);
+  };
+
+  /**
+   * 楽天・PayPay・エポス・セゾンの明細CSVから、ym（引き落とし月）に払う分の行を取り出す
+   * 戻り値 { rows: [[利用日, 店名, 今回払う額, 支払方法]], note }
+   */
+  function parseCardCsv(text, ym) {
+    const all = csvRows(text);
+    const hi = all.findIndex(r => r.some(c => /^(ご)?利用(年月)?日/.test(c)));
+    if (hi < 0) throw new Error('カードの明細CSVではないようです（「利用日」の列が見つかりません）');
+    const head = all[hi];
+    const col = (...res) => { for (const re of res) { const i = head.findIndex(h => re.test(h)); if (i >= 0) return i; } return -1; };
+    const di = col(/^(ご)?利用(年月)?日/);
+    const si = col(/店名|ご利用場所|ご利用先|利用先|内容/);
+    const mi = col(/支払区分/, /支払方法/, /決済方法/);
+    const startI = col(/お?支払開始月/);
+    let pi = col(/^\d{1,2}月支払金額$/, /^当月支払金額$/, /今回.*(支払|請求)/, /お支払金額/, /^支払金額$/);
+    const fallback = pi < 0;
+    if (fallback) pi = col(/^(ご)?利用金額/);
+    if (di < 0 || si < 0 || pi < 0) throw new Error('明細の列が読み取れませんでした');
+
+    const evM = Number(ym.slice(5, 7));
+    const mm = head[pi].match(/^(\d{1,2})月支払金額$/);
+    if (mm && Number(mm[1]) !== evM) throw new Error('このCSVは' + Number(mm[1]) + '月に払う分の明細です。' + evM + '月の明細を選んでください');
+
+    const rows = [];
+    let revo = 0, other = 0;
+    all.slice(hi + 1).forEach(r => {
+      const date = csvDate(r[di]);
+      const store = (r[si] || '').trim();
+      const amt = csvAmt(r[pi]);
+      if (!date || !store || isNaN(amt) || amt === 0) return;
+      const method = mi >= 0 ? (r[mi] || '').trim() : '';
+      if (startI >= 0) {
+        const sm = String(r[startI] || '').normalize('NFKC').match(/(?:(\d{4})\D+)?(\d{1,2})月?\s*$/);
+        if (sm && (sm[1] ? sm[1] + '-' + ('0' + sm[2]).slice(-2) !== ym : Number(sm[2]) !== evM)) { other++; return; }
+      }
+      if (fallback && /リボ|分割|ボーナス/.test(method)) { revo++; return; }
+      rows.push([date, store, amt, method]);
+    });
+    if (!rows.length) throw new Error(evM + '月に払う分の明細が見つかりませんでした。月を確かめてください');
+    return { rows: rows, note: revo ? 'リボ・分割で買った' + revo + '件は、今回払う額がCSVに出ないので「お買い物の分」には入れていません。' : '' };
   }
 
   function openAccount(b) {
