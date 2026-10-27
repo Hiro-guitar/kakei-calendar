@@ -268,7 +268,7 @@ function mealHtml(label,items,ice){
     if(tr)name='<span class="treat">★</span>'+name;
     if(kd==='kob'||kd==='side')name='<span class="kob">小鉢</span>'+name;
     if(kd==='soup')name='<span class="kob">汁物</span>'+name;
-    let amt=a; if(kd==='rice'&&ice)amt=(a==='150g'?'100g':'50g')+'（アイスの日）';
+    let amt=a; if(kd==='rice'){if(ice)amt=(a==='150g'?'100g':'50g')+'（アイスの日）';}else amt=(a.indexOf('昨日の夜の残り')===0?'昨日の夜の残り・':'')+'1人前';
     return '<li><span>'+name+'</span><span class="amt">'+esc(amt||'')+'</span></li>'}).join('');
   return '<div class="meal"><h3><span>'+label+'</span><span class="kcal">約'+kc+' kcal</span></h3><ul>'+li+'</ul></div>';
 }
@@ -280,6 +280,7 @@ function renderCard(){
   const p=PLAN[sel],d=new Date(sel+'T00:00'),card=document.getElementById('card');
   const dow=W[(d.getDay()+6)%7];
   let h='<div><h2>'+(d.getMonth()+1)+'月'+d.getDate()+'日（'+dow+'）</h2><div class="sub">'+(p.kind==='home'?'おうちごはん・'+p.week+'週目の献立':p.kind==='bento'?'お弁当期・'+p.week+'週目の献立':'お正月')+'</div></div>';
+  h+='<p class="small muted" style="margin:0">料理は全部1人前（レシピの1人分）。ごはんだけはグラムどおりに。</p>';
   h+=p.ice?'<span class="chip ice">アイスの日：300kcalくらいまで。ごはんは50gずつ減らす</span>':'<span class="chip yog">アイスなしの日：無糖ヨーグルト100g＋果物少し</span>';
   if(p.t){
     const isBento=p.kind==='bento'&&d.getDay()%6!==0;
@@ -335,11 +336,12 @@ function spark(ws){
 /* ---- 料理リスト ---- */
 function renderRecipes(){
   const el=document.getElementById('v-recipes');if(el.dataset.done)return;el.dataset.done=1;
-  const groups=[['main','主菜（＋もち麦ごはん150g）'],['one','一皿ごはん（ごはん・麺込み）'],['kob','小鉢・副菜'],['soup','汁物']];
-  let h='<div class="section"><div class="prose"><h2>料理リスト（食べる量つき）</h2><p class="small muted">献立に出てくる長谷川あかりさんのレシピ'+DATA.list.length+'品。佑理さんが1回に食べる量とkcal。（半分）＝2人分レシピの半分。名前を押すとレシピが開きます。</p></div>';
+  const groups=[['main','主菜（ごはんは別）'],['one','一皿ごはん（ごはん・麺込み）'],['kob','小鉢・副菜'],['soup','汁物']];
+  const RECIPE={'半分':'2人分','1人分':'1人分','1/3':'3人分','1/4':'4人分','2/5':'2〜3人分','2/3':'1.5人分','1/5':'5人分','1/6':'6人分'};
+  let h='<div class="section"><div class="prose"><h2>料理リスト</h2><p class="small muted">献立に出てくる長谷川あかりさんのレシピ'+DATA.list.length+'品。どれも食べるのは1人前（レシピの1人分）で、kcalも1人前の数字です。名前を押すとレシピが開きます。</p></div>';
   groups.forEach(([g,t])=>{
     const rs=DATA.list.filter(r=>(g==='kob'?(r[5]==='kob'||r[5]==='side'):r[5]===g)).sort((a,b)=>a[2]-b[2]);
-    h+='<div class="card"><h3>'+t+'（'+rs.length+'品）</h3><div class="tbl"><table><thead><tr><th>料理</th><th>食べる量</th><th class="num">kcal</th><th>出典</th></tr></thead><tbody>'+rs.map(r=>'<tr><td>'+(r[3]?'<a class="rec" href="'+esc(r[3])+'" target="_blank" rel="noopener">'+esc(r[0])+'</a>':esc(r[0]))+'</td><td class="small">'+esc(r[1])+'</td><td class="num">'+r[2]+'</td><td class="small muted">'+esc(r[4])+'</td></tr>').join('')+'</tbody></table></div></div>'});
+    h+='<div class="card"><h3>'+t+'（'+rs.length+'品）</h3><div class="tbl"><table><thead><tr><th>料理</th><th class="num">1人前</th></tr></thead><tbody>'+rs.map(r=>'<tr><td>'+(r[3]?'<a class="rec" href="'+esc(r[3])+'" target="_blank" rel="noopener">'+esc(r[0])+'</a>':esc(r[0]))+'<div class="small muted">'+esc((RECIPE[r[1]]||r[1])+'のレシピ・'+r[4])+'</div></td><td class="num">'+r[2]+' kcal</td></tr>').join('')+'</tbody></table></div></div>'});
   h+='<p class="small muted">もち麦ごはん：米2合にもち麦100gを足して、水を200ml多めにして炊く。150gで約230kcal。</p></div>';
   el.innerHTML=h;
 }
