@@ -293,7 +293,7 @@ function closeRecipe(){document.getElementById('sheet').hidden=true;document.bod
 document.addEventListener('click',e=>{const b=e.target.closest('[data-r]');if(b){e.preventDefault();openRecipe(b.dataset.r);return}
   if(e.target.id==='sheet'||e.target.id==='sheet-x')closeRecipe()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeRecipe()});
-const FREEHTML='<div class="free"><p><b>400kcalまでなら、好きなものを何でもOK。</b>超えた日は夜のごはんを50gに。余裕があれば、卵・納豆・ヨーグルトなどを1つ入れるとお腹が持ちやすい（なくても大丈夫）。</p><ul class="small"><li>おにぎり1個＋ゆで卵＋インスタント味噌汁＋ヨーグルト ≒ 340</li><li>ごはん120g＋納豆＋冷奴 ≒ 340</li><li>サラダチキン＋おにぎり1個＋サラダ ≒ 320</li><li>前の晩の残りのおかず＋ごはん100g ≒ 350〜400</li><li class="muted">要注意：菓子パン1個 300〜500、カップ麺 350〜500、コンビニパスタ 550〜700（どれも1つで上限近く）</li></ul></div>';
+const FREEHTML='<div class="free"><p><b>400kcalまでなら、好きなものを何でもOK。</b>超えた日は夜のごはんを50gに。余裕があれば、卵・納豆・ヨーグルトなどを1つ入れるとお腹が持ちやすい（なくても大丈夫）。</p></div>';
 function mealHtml(label,items,ice){
   if(items.length===1&&items[0][6]==='free') return '<div class="meal"><h3><span>'+label+'</span><span class="kcal">400 kcalまで</span></h3>'+FREEHTML+'</div>';
   const kc=items.reduce((a,x)=>a+(x[6]==='rice'&&ice?(x[1]==='150g'?153:77):x[3]),0);
