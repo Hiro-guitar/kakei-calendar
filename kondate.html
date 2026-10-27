@@ -315,12 +315,15 @@ function renderCard(){
   const dow=W[(d.getDay()+6)%7];
   let h='<div><h2>'+(d.getMonth()+1)+'月'+d.getDate()+'日（'+dow+'）</h2><div class="sub">'+(p.kind==='home'?'おうちごはん・'+p.week+'週目の献立':p.kind==='bento'?'お弁当期・'+p.week+'週目の献立':'お正月')+'</div></div>';
   h+='<p class="small muted" style="margin:0">料理は全部1人前（レシピの1人分）。ごはんだけはグラムどおりに。</p>';
-  h+=p.ice?'<span class="chip ice">アイスの日：300kcalくらいまで。ごはんは50gずつ減らす</span>':'<span class="chip yog">アイスなしの日：無糖ヨーグルト100g＋果物少し</span>';
+  h+=p.ice?'<span class="chip ice">アイスの日：300kcalくらいまで。ごはんは50gずつ減らす</span>':'<span class="chip yog">アイスなしの日：無糖ヨーグルト100g＋果物少し（約100kcal）</span>';
   if(p.t){
     const isBento=p.kind==='bento'&&d.getDay()%6!==0;
     const nx=new Date(d);nx.setDate(nx.getDate()+1);const nk=key(nx);const nextBento=PLAN[nk]&&PLAN[nk].kind==='bento'&&nx.getDay()%6!==0;
     h+=mealHtml(isBento?'昼（お弁当・昨日の夜の残り）':'昼（自由）',p.t.L,p.ice)+mealHtml(nextBento?'夜（主菜と小鉢は明日のお弁当の分も作る）':'夜',p.t.D,p.ice);
-    h+='<div class="total"><span>1日の合計（アイス・ヨーグルト込み）</span><span>約'+Math.round(p.t.v[0]).toLocaleString()+' kcal</span></div>';
+    const mk=items=>items.reduce((a,x)=>a+(x[6]==='rice'&&p.ice?(x[1]==='150g'?153:77):x[3]),0);
+    const lk=mk(p.t.L),dk=mk(p.t.D),sk=p.ice?300:100,tk=lk+dk+sk;
+    h+='<div class="total"><span>1日の合計</span><span>約'+tk.toLocaleString()+' kcal</span></div>';
+    h+='<p class="small muted" style="margin:-6px 0 0">昼 '+(p.t.L[0][6]==='free'?'400（上限）':lk)+' ＋ 夜 '+dk+' ＋ '+(p.ice?'アイス 300':'ヨーグルト＋果物 100')+' ＝ '+tk.toLocaleString()+'</p>';
     h+=nutHtml(p.t.v);
   } else h+='<p class="small" style="margin:0">お正月は献立なし。おせちやお雑煮は好きなものを、量だけ控えめに。小松菜のおひたしだけは続けると楽です。</p>';
   const dd=state.days[sel]||{};
@@ -384,7 +387,7 @@ function renderPlan(){
   const el=document.getElementById('v-plan');if(el.dataset.done)return;el.dataset.done=1;
   el.innerHTML=`<div class="cols">
 <div class="card prose"><h2>見通し</h2>
-<p>1日約1,200kcal（アイス込み）に毎日30分の自転車で、2月末は約59〜62kg（-13〜16kg）の見込み。59kgに届くのは3月上旬〜4月上旬。生理が整い始める目安の「5〜10%減」は12月中に届く。</p>
+<p>1日平均約1,200kcal（アイスの日は1,200〜1,370、ない日は1,100〜1,200）に毎日30分の自転車で、2月末は約59〜62kg（-13〜16kg）の見込み。59kgに届くのは3月上旬〜4月上旬。生理が整い始める目安の「5〜10%減」は12月中に届く。</p>
 <div class="tbl"><table><thead><tr><th>月末</th><th>見込み（食事1,200＋自転車30分）</th></tr></thead><tbody>
 <tr><td>11月</td><td>69.6〜70.4kg</td></tr><tr><td>12月</td><td>65.8〜67.3kg</td></tr><tr><td>1月</td><td>62.3〜64.5kg</td></tr><tr><td>2月</td><td>59.4〜62.1kg</td></tr><tr><td>3月</td><td>56〜59.6kg（59kgで止める）</td></tr></tbody></table></div>
 <ul class="small muted"><li>75kg・156cm・32歳と仮定。最初の2週間に水分で1.5kg減る前提。幅はふだんの動き方（家事・育児量）の違い</li><li>1,200kcalは下限。これより減らして早めるのはやらない。生理がさらに乱れて妊娠から遠ざかる</li><li>2〜3か月目は停滞しやすい。そこで焦って食事を減らさない</li></ul></div>
