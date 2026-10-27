@@ -293,7 +293,7 @@ function closeRecipe(){document.getElementById('sheet').hidden=true;document.bod
 document.addEventListener('click',e=>{const b=e.target.closest('[data-r]');if(b){e.preventDefault();openRecipe(b.dataset.r);return}
   if(e.target.id==='sheet'||e.target.id==='sheet-x')closeRecipe()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeRecipe()});
-const FREEHTML='<div class="free"><p><b>400kcalまでなら何を食べてもOK。</b>たんぱく質（卵・納豆・豆腐・サラダチキン・ツナ・ヨーグルトなど）を1つ入れる。超えた日は夜のごはんを50gに。</p><ul class="small"><li>おにぎり1個＋ゆで卵＋インスタント味噌汁＋ヨーグルト ≒ 340</li><li>ごはん120g＋納豆＋冷奴 ≒ 340</li><li>サラダチキン＋おにぎり1個＋サラダ ≒ 320</li><li>前の晩の残りのおかず＋ごはん100g ≒ 350〜400</li><li class="muted">要注意：菓子パン1個 300〜500、カップ麺 350〜500、コンビニパスタ 550〜700（どれも1つで上限近く）</li></ul></div>';
+const FREEHTML='<div class="free"><p><b>400kcalまでなら、好きなものを何でもOK。</b>超えた日は夜のごはんを50gに。余裕があれば、卵・納豆・ヨーグルトなどを1つ入れるとお腹が持ちやすい（なくても大丈夫）。</p><ul class="small"><li>おにぎり1個＋ゆで卵＋インスタント味噌汁＋ヨーグルト ≒ 340</li><li>ごはん120g＋納豆＋冷奴 ≒ 340</li><li>サラダチキン＋おにぎり1個＋サラダ ≒ 320</li><li>前の晩の残りのおかず＋ごはん100g ≒ 350〜400</li><li class="muted">要注意：菓子パン1個 300〜500、カップ麺 350〜500、コンビニパスタ 550〜700（どれも1つで上限近く）</li></ul></div>';
 function mealHtml(label,items,ice){
   if(items.length===1&&items[0][6]==='free') return '<div class="meal"><h3><span>'+label+'</span><span class="kcal">400 kcalまで</span></h3>'+FREEHTML+'</div>';
   const kc=items.reduce((a,x)=>a+(x[6]==='rice'&&ice?(x[1]==='150g'?153:77):x[3]),0);
@@ -391,7 +391,7 @@ function renderPlan(){
 <div class="card prose"><h2>1日のルール</h2>
 <div class="tbl"><table><thead><tr><th>食事</th><th>目安</th><th>中身</th></tr></thead><tbody>
 <tr><td>朝</td><td>なし</td><td>水・お茶。葉酸サプリは昼に</td></tr>
-<tr><td>昼</td><td>400kcalまで</td><td>自由。たんぱく質を1つ入れる。1月からの平日はお弁当（前の晩の主菜と小鉢の残り＋もち麦ごはん150g）</td></tr>
+<tr><td>昼</td><td>400kcalまで</td><td>好きなものでOK。1月からの平日はお弁当（前の晩の主菜と小鉢の残り＋もち麦ごはん150g）</td></tr>
 <tr><td>夜</td><td>約550〜750kcal</td><td>献立どおり。主菜＋もち麦ごはん100g＋小鉢や汁物を1〜2品。1月からは日〜木の夜に、主菜と小鉢を翌日のお弁当の分（1人分）多く作る</td></tr>
 <tr><td>間食</td><td>150kcal（2日平均）</td><td>アイス300kcalを2日に1回。ない日はヨーグルト＋果物</td></tr></tbody></table></div>
 <ul><li>飲み物は水・お茶・無糖のもの。甘い飲み物とラテはアイス枠から引く</li><li>ごはんは最初の1週間ははかりで量る</li><li>小鉢は作り置きできるもの（しぼ生漬け、おひたし、和え物など）を週末にまとめて作ると楽。小松菜は週1〜2回まで</li><li>葉酸サプリ（1日400µg）は昼ごはんと一緒に。鉄とカルシウムも入った妊活用だとなお良い</li></ul></div>
