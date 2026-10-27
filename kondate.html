@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="献立">
+<meta name="robots" content="noindex">
+<title>献立カレンダー</title>
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* Layout: sticky tab bar → one view at a time (calendar+day card / log / recipe list / plan) */
+:root{
+  --bg:#f6f7f4; --surface:#ffffff; --ink:#1f2a24; --muted:#66736b; --line:#dfe4de;
+  --leaf:#2f6b4f; --leaf-soft:#e3efe8; --ice:#b0527a; --ice-soft:#f7e6ee; --treat:#a8761c; --warn:#b5651d; --warn-soft:#faeedd;
+  --display:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif;
+  --body:"Noto Sans JP","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141a17; --surface:#1c2420; --ink:#e7ece8; --muted:#9aa8a0; --line:#2e3a34;
+  --leaf:#7cc4a0; --leaf-soft:#22362c; --ice:#e48fb3; --ice-soft:#3a2430; --treat:#e0b25a; --warn:#e3a35f; --warn-soft:#3a2d1c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141a17; --surface:#1c2420; --ink:#e7ece8; --muted:#9aa8a0; --line:#2e3a34;
+  --leaf:#7cc4a0; --leaf-soft:#22362c; --ice:#e48fb3; --ice-soft:#3a2430; --treat:#e0b25a; --warn:#e3a35f; --warn-soft:#3a2d1c; color-scheme:dark}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:1100px;margin:0 auto;padding-block:16px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
+header h1{font-family:var(--display);font-weight:700;font-size:1.55rem;margin:0;text-wrap:balance}
+header p{margin:2px 0 0;color:var(--muted);font-size:.88rem}
+nav.views{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px;display:flex;gap:6px;overflow-x:auto;border-bottom:1px solid var(--line)}
+nav.views a{flex:none;text-decoration:none;color:var(--ink);font-weight:500;padding:7px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+nav.views a[aria-current="page"]{background:var(--leaf);border-color:var(--leaf);color:var(--bg)}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
+h2{font-family:var(--display);font-size:1.25rem;margin:0}
+h3{font-size:1rem;margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.82rem}
+.status{font-size:.8rem;color:var(--muted)}
+/* calendar */
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 14px;border-radius:999px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.main{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.main{grid-template-columns:minmax(0,1fr)}}
+.phase{font-size:.85rem;color:var(--muted);margin:8px 0}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.dow{font-size:.75rem;color:var(--muted);text-align:center;letter-spacing:.05em}
+.dow.sun{color:var(--ice)}
+.cell{min-height:96px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:5px 6px;text-align:left;font:inherit;color:inherit;cursor:pointer;display:flex;flex-direction:column;gap:2px;min-width:0}
+.cell.empty{background:transparent;border-color:transparent;cursor:default}
+.cell.off{cursor:default;opacity:.5}
+.cell.sel{border-color:var(--leaf);box-shadow:inset 0 0 0 1px var(--leaf)}
+.cell .d{font-weight:700;font-variant-numeric:tabular-nums;font-size:.85rem;display:flex;justify-content:space-between;align-items:center;gap:4px}
+.cell.today .d span:first-child{background:var(--leaf);color:var(--bg);border-radius:999px;padding:0 6px}
+.ice-dot{width:7px;height:7px;border-radius:50%;background:var(--ice);flex:none;display:inline-block}
+.cell .m{font-size:.7rem;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-all}
+.cell .m b{font-weight:500;color:var(--muted);margin-right:2px}
+.cell .note{font-size:.68rem;color:var(--muted)}
+.prog{margin-top:auto;height:4px;border-radius:2px;background:var(--line);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--leaf)}
+@media (max-width:560px){.cell{min-height:54px}.cell .m{display:none}}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:grid;gap:14px}
+.daycard{position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px)}
+@media (max-width:860px){.daycard{position:static}}
+.sub{font-size:.82rem;color:var(--muted);margin-top:2px}
+.chip{display:inline-block;font-size:.78rem;padding:2px 10px;border-radius:999px;font-weight:500}
+.chip.ice{background:var(--ice-soft);color:var(--ice)}
+.chip.yog{background:var(--leaf-soft);color:var(--leaf)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.meal h3{font-size:.85rem;margin:0 0 6px;display:flex;justify-content:space-between;color:var(--muted);font-weight:500;letter-spacing:.06em}
+.meal ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.meal li{display:flex;justify-content:space-between;gap:10px;align-items:baseline;border-bottom:1px dashed var(--line);padding-bottom:5px}
+.meal li:last-child{border-bottom:0}
+a.rec{color:var(--leaf);font-weight:700;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+.plain{font-weight:700}
+.kob{font-size:.68rem;font-weight:500;color:var(--leaf);border:1px solid var(--leaf);border-radius:4px;padding:0 4px;margin-right:4px;vertical-align:1px}
+.amt{font-size:.8rem;color:var(--muted);text-align:right;flex:none;max-width:52%}
+.src{font-size:.68rem;color:var(--muted);margin-left:4px;font-weight:400}
+.treat{color:var(--treat)}
+.total span:last-child{white-space:nowrap}
+.total{display:flex;gap:8px;justify-content:space-between;font-weight:700;font-variant-numeric:tabular-nums;border-top:1px solid var(--line);padding-top:10px}
+.nut{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.nut div{background:var(--bg);border-radius:8px;padding:6px 8px}
+.nut b{display:block;font-variant-numeric:tabular-nums;font-size:.95rem}
+.nut span{font-size:.7rem;color:var(--muted)}
+.nut .low b{color:var(--warn)}
+.checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.checks label{display:flex;gap:8px;align-items:center;background:var(--bg);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:.9rem}
+.checks input{width:18px;height:18px;accent-color:var(--leaf);flex:none}
+textarea{font:inherit;width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);padding:8px;min-height:56px;resize:vertical}
+.kcal{font-variant-numeric:tabular-nums}
+/* tables */
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.78rem;color:var(--muted);font-weight:500;letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.section{display:grid;gap:10px}
+.prose{max-width:68ch;display:grid;gap:8px}
+.prose p{margin:0}
+.prose ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px;align-items:start}
+.stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.stat div{background:var(--bg);border-radius:10px;padding:10px 12px}
+.stat b{display:block;font-family:var(--display);font-size:1.5rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.78rem;color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input[type=number],input[type=date]{font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);padding:6px 8px}
+input[type=number]{width:7em}
+button.btn{font:inherit;font-weight:500;border:0;border-radius:8px;background:var(--leaf);color:var(--bg);padding:7px 16px;cursor:pointer}
+button.link{font:inherit;border:0;background:none;color:var(--muted);text-decoration:underline;cursor:pointer;padding:0}
+.ms label{display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-bottom:1px dashed var(--line)}
+.ms input{width:18px;height:18px;margin-top:3px;accent-color:var(--leaf);flex:none}
+.spark{width:100%;height:160px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>献立カレンダー</h1>
+<p>2026年11月1日〜2027年2月28日。毎日の献立・チェック・記録・料理リスト・計画をここでまとめて見られます。</p>
+</header>
+<nav class="views" aria-label="ページの切り替え">
+<a href="#calendar" data-v="calendar">カレンダー</a>
+<a href="#log" data-v="log">記録</a>
+<a href="#recipes" data-v="recipes">料理リスト</a>
+<a href="#plan" data-v="plan">計画</a>
+</nav>
+
+<section id="v-calendar" class="view">
+<div class="tabs" id="mtabs" role="group" aria-label="月"></div>
+<div class="main">
+<div>
+<p class="phase" id="phase"></p>
+<div class="grid" id="grid"></div>
+<div class="legend"><span><i class="ice-dot"></i>アイスの日</span><span>★ 日曜のご褒美</span><span><i class="prog" style="width:22px;display:inline-block;margin:0"><i style="width:60%"></i></i>その日のチェックの進み具合</span></div>
+</div>
+<aside class="card daycard" id="card" aria-live="polite"></aside>
+</div>
+</section>
+
+<section id="v-log" class="view" hidden></section>
+<section id="v-recipes" class="view" hidden></section>
+<section id="v-plan" class="view" hidden></section>
+<p class="status" id="store"></p>
+</div>
+<script>
+const DATA={"home":[{"L":[["鱈とキャベツのオレンジ煮込みショートパスタ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/75756",492,"BAILA",0,"one"]],"D":[["酒蒸しにんじんの洋風卵とじ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/62954",236,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["小松菜のおひたし","半分","https://www.youtube.com/watch?v=ZJ-Qf4FvVSE",26,"YouTube",0,"kob"],["鶏ひき肉とかぶのスープ","半分","https://lee.hpplus.jp/recipe/2874631/",187,"LEE",0,"soup"]],"v":[1320.6,67.9,10.7,698.9,18.1,505.3,575.0]},{"L":[["鶏むね肉と野菜のハーブ出汁酢マリネ","1/3","https://www.youtube.com/watch?v=sDwJwogmszY",208,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["豚肉ときゅうりの塩昆布炒め","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/55623",287,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["酒蒸しブロッコリー","半分","https://www.youtube.com/watch?v=JBvtwU_YfHY",92,"YouTube",0,"kob"],["白スンドゥブ","半分","https://www.youtube.com/watch?v=u3jlD2bm9X8",196,"YouTube",0,"soup"]],"v":[1392.1,77.2,26.2,502.6,17.9,407.8,348.3]},{"L":[["たたき長芋とぶりの梅炊き込み","半分","https://www.youtube.com/watch?v=Z40x4Sa_xCo",421,"YouTube",0,"one"],["あさりとわかめ、長ネギのガーリック醤油ワイン蒸し","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/65517",112,"BAILA",0,"kob"]],"D":[["鶏手羽とキャベツの酒鍋","2/5","https://baila.hpplus.jp/lifestyle/recipegourmet/66543",323,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["小松菜とツナの食べるしょうゆスープ","半分","https://www.kikkoman.co.jp/homecook/search/recipe/00058239/",184,"キッコーマン ホームクッキング",0,"soup"]],"v":[1419.2,65.0,10.6,576.4,12.3,385.8,335.0]},{"L":[["さけのごまムニエル","1人分","https://baila.hpplus.jp/lifestyle/recipegourmet/81280",247,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["塩麻婆豆腐","半分","https://www.youtube.com/watch?v=yRCUGLTp9Vk",250,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["牡蠣とごぼうの醤油蒸し","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/59593",145,"BAILA",0,"side"],["小松菜とツナの食べるしょうゆスープ","半分","https://www.kikkoman.co.jp/homecook/search/recipe/00058239/",184,"キッコーマン ホームクッキング",0,"soup"]],"v":[1436.1,69.7,10.4,654.7,14.7,349.1,277.5]},{"L":[["中華風トマト親子丼","半分","https://www.youtube.com/watch?v=bVqL7RSIwMM",456,"YouTube",0,"one"]],"D":[["鶏と大根の梅コチュジャン煮","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/65260",284,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["ブロッコリーとバジルのサラダ","半分","https://www.youtube.com/watch?v=pjJmTojwu8s",73,"YouTube",0,"kob"],["白スンドゥブ","半分","https://www.youtube.com/watch?v=u3jlD2bm9X8",196,"YouTube",0,"soup"]],"v":[1388.5,86.2,27.7,527.5,14.9,471.9,345.0]},{"L":[["ぶりの湯煮（カブと梅のソース）","半分","",205,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["豚肉とかぶのシンプル鍋","半分","https://maquia.hpplus.jp/diet_health/matome/93058/",346,"MAQUIA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["あさりとわかめ、長ネギのガーリック醤油ワイン蒸し","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/65517",112,"BAILA",0,"kob"],["牡蠣と長ねぎのしゃぶしゃぶ 梅ポン酢だれ","半分","https://maquia.hpplus.jp/diet_health/matome/93058/",142,"MAQUIA",0,"side"]],"v":[1415.2,72.6,9.7,523.8,16.3,331.2,340.0]},{"L":[["豚肉と白菜の生姜シチュー","半分","https://www.youtube.com/watch?v=HOVxph90TfI",561,"YouTube",0,"one"]],"D":[["フライパンいらずカルボナーラ","半分","https://lee.hpplus.jp/recipe/3228423/",515,"LEE",1,"one"],["小松菜のおひたし","半分","https://www.youtube.com/watch?v=ZJ-Qf4FvVSE",26,"YouTube",0,"kob"],["韓国風味噌玉","1人分","https://maquia.hpplus.jp/bikatsu/healthcare-diet/117764/",97,"MAQUIA",0,"soup"]],"v":[1348.7,59.9,11.7,901.2,18.6,643.4,410.0]},{"L":[["煮ない鯖味噌","半分","https://www.youtube.com/watch?v=WaZjGywZP98",284,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["茹で鶏のオクラ和え","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/72318",167,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["菜の花と卵のマヨネーズ炒め","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/53892",154,"BAILA",0,"side"],["カリフラワーとツナのスープ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/65988",172,"BAILA",0,"soup"]],"v":[1387.8,86.4,10.6,592.1,18.3,676.3,422.5]},{"L":[["もち麦のねぎトマト豚ひき肉リゾット","1人分","https://baila.hpplus.jp/lifestyle/recipegourmet/82989",492,"BAILA",0,"one"]],"D":[["鮭の湯煮 青じそクリームチーズ添え","半分","https://maquia.hpplus.jp/diet_health/matome/93058/",192,"MAQUIA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["牡蠣と長ねぎのしゃぶしゃぶ 梅ポン酢だれ","半分","https://maquia.hpplus.jp/diet_health/matome/93058/",142,"MAQUIA",0,"side"],["小松菜とツナの食べるしょうゆスープ","半分","https://www.kikkoman.co.jp/homecook/search/recipe/00058239/",184,"キッコーマン ホームクッキング",0,"soup"]],"v":[1390.2,75.3,11.3,629.5,20.3,436.1,346.5]},{"L":[["高野豆腐と鶏ひき肉とミニトマトの洋風煮","半分","https://maquia.hpplus.jp/diet_health/matome/93058/",361,"MAQUIA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["酒蒸しハンバーグ","半分","https://www.youtube.com/watch?v=ud5ReNf3nV0",424,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["春菊と海苔の豆乳おひたし","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/64065",28,"BAILA",0,"kob"],["めかぶとナンプラーとしょうがのスープ","1人分","https://baila.hpplus.jp/lifestyle/recipegourmet/83495",13,"BAILA",0,"soup"]],"v":[1436.6,66.3,9.3,579.1,13.3,272.3,300.0]},{"L":[["鶏ひき肉とアスパラガスの和風あんかけ丼","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/54411",414,"BAILA",0,"one"],["酒蒸しブロッコリー","半分","https://www.youtube.com/watch?v=JBvtwU_YfHY",92,"YouTube",0,"kob"]],"D":[["豚肉とキャベツの塩昆布豆乳煮","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/64636",267,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["白スンドゥブ","半分","https://www.youtube.com/watch?v=u3jlD2bm9X8",196,"YouTube",0,"soup"]],"v":[1348.2,75.7,26.9,530.5,15.3,454.5,230.0]},{"L":[["豚つくねと大根の柚子胡椒煮","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/60243",244,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["鯖缶サラダ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/71514",217,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["小松菜と卵の煮びたし","半分","https://www.youtube.com/watch?v=V__NprAkinY",109,"YouTube",0,"kob"],["牡蠣とごぼうの醤油蒸し","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/59593",145,"BAILA",0,"side"]],"v":[1324.8,62.4,9.8,750.9,13.8,370.9,360.0]},{"L":[["ミニトマトとスモークサーモンのパスタ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/74894",448,"BAILA",0,"one"]],"D":[["豆腐と春菊の豆乳鍋","半分","https://maquia.hpplus.jp/diet_health/matome/93058/",238,"MAQUIA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["大根と厚揚げの甘酢しょうゆ漬け","半分","https://www.kikkoman.co.jp/homecook/search/recipe/00058236/",107,"キッコーマン ホームクッキング",0,"kob"],["フライパンで目玉焼き味噌汁","半分","",154,"YouTube",0,"soup"]],"v":[1326.6,62.0,11.9,649.5,17.8,479.8,370.0]},{"L":[["豚こま切れ肉のトマト豆板醤仕立て","半分","https://maquia.hpplus.jp/bikatsu/healthcare-diet/115881/",350,"MAQUIA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["たたき長芋とぶりの梅炊き込み","半分","https://www.youtube.com/watch?v=Z40x4Sa_xCo",421,"YouTube",1,"one"],["ブロッコリーとバジルのサラダ","半分","https://www.youtube.com/watch?v=pjJmTojwu8s",73,"YouTube",0,"kob"],["菜の花と卵のマヨネーズ炒め","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/53892",154,"BAILA",0,"side"]],"v":[1377.4,58.4,7.4,378.1,14.7,635.3,320.0]},{"L":[["キャベツと鶏ひき肉の焼きそば","1人分","https://baila.hpplus.jp/lifestyle/recipegourmet/78160",566,"BAILA",0,"one"]],"D":[["長芋ともち麦の牛スープ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/80238",293,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["牡蠣と長ねぎのしゃぶしゃぶ 梅ポン酢だれ","半分","https://maquia.hpplus.jp/diet_health/matome/93058/",142,"MAQUIA",0,"side"],["梅味噌玉","1人分","https://maquia.hpplus.jp/bikatsu/healthcare-diet/117764/",44,"MAQUIA",0,"soup"]],"v":[1425.5,65.4,9.1,500.1,17.1,363.6,320.0]},{"L":[["豚肉とトマトのピリ辛炒め","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/58330",304,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["鶏肉と大根の甘酒キムチ味噌煮込み","半分","https://maquia.hpplus.jp/diet_health/matome/93058/",337,"MAQUIA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["あさりとわかめ、長ネギのガーリック醤油ワイン蒸し","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/65517",112,"BAILA",0,"kob"],["ブロッコリーとバジルのサラダ","半分","https://www.youtube.com/watch?v=pjJmTojwu8s",73,"YouTube",0,"kob"]],"v":[1436.7,60.0,8.1,408.9,18.6,467.3,375.0]},{"L":[["まるごとチキン＆ズッキーニの炊き込み","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/63193",555,"BAILA",0,"one"]],"D":[["ポークレモン","半分","https://www.youtube.com/watch?v=xBpGGmzvxkc",377,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["茹で春キャベツのオイルがけ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/62607",26,"BAILA",0,"kob"],["韓国風味噌玉","1人分","https://maquia.hpplus.jp/bikatsu/healthcare-diet/117764/",97,"MAQUIA",0,"soup"]],"v":[1434.8,70.6,5.7,358.1,12.8,448.6,250.0]},{"L":[["長いもと切り干し大根の和風ポテサラ","1人分","https://baila.hpplus.jp/lifestyle/recipegourmet/83495",379,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["鮭とキャベツの柚子胡椒煮","半分","https://www.youtube.com/watch?v=-B9ywEq9Eh8",130,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["牡蠣とごぼうの醤油蒸し","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/59593",145,"BAILA",0,"side"],["豆乳と大根とホタテ缶、豆腐のスープ","半分","https://lee.hpplus.jp/recipe/2987441/",124,"LEE",0,"soup"]],"v":[1388.2,72.5,9.3,695.8,14.7,285.1,297.5]},{"L":[["とろけるオクラのワンパンパスタ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/72892",426,"BAILA",0,"one"],["菜の花と卵のマヨネーズ炒め","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/53892",154,"BAILA",0,"side"]],"D":[["鶏肉と茄子の蕪おろし煮、梅にんにく仕立て","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/52144",378,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["梅味噌玉","1人分","https://maquia.hpplus.jp/bikatsu/healthcare-diet/117764/",44,"MAQUIA",0,"soup"]],"v":[1381.5,59.7,8.7,536.2,20.2,569.3,395.0]},{"L":[["鶏肉とカブのねぎ塩あんかけ","半分","https://www.youtube.com/watch?v=J9YI_JE5lVE",318,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["五宝菜","半分","https://www.orangepage.net/food/series-food/akarikihon/223773",300,"オレンジページnet",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["酒蒸しブロッコリー","半分","https://www.youtube.com/watch?v=JBvtwU_YfHY",92,"YouTube",0,"kob"],["ザーサイとひきわり納豆のスープ","1人分","https://baila.hpplus.jp/lifestyle/recipegourmet/78160",84,"BAILA",0,"soup"]],"v":[1404.1,62.5,7.2,394.8,18.7,506.9,355.0]},{"L":[["パセリたっぷりシンプル塩ミートソースパスタ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/57626",569,"BAILA",0,"one"]],"D":[["豚と長いもの黒ごま炒め","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/74952",402,"BAILA",1,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["白菜のくたくたしょうゆあんかけ仕立て","2/5","https://www.kikkoman.co.jp/homecook/search/recipe/00059380/",26,"キッコーマン ホームクッキング",0,"kob"],["わかめと韓国のりの即席味噌汁","1人分","https://baila.hpplus.jp/lifestyle/recipegourmet/82989",57,"BAILA",0,"soup"]],"v":[1434.1,57.5,7.2,382.2,17.1,385.4,214.5]},{"L":[["レモンバター香るチキンソテー","半分","https://www.orangepage.net/food/series-food/akarikihon/195755",297,"オレンジページnet",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["アジのコチュジャンタルタル エゴマの葉で巻いて","2/3","https://lee.hpplus.jp/recipe/3607600/",192,"LEE",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["大根と厚揚げの甘酢しょうゆ漬け","半分","https://www.kikkoman.co.jp/homecook/search/recipe/00058236/",107,"キッコーマン ホームクッキング",0,"kob"],["カリフラワーとツナのスープ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/65988",172,"BAILA",0,"soup"]],"v":[1378.1,88.0,5.9,444.1,16.3,432.0,375.8]},{"L":[["パクチーバターパスタ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/78912",527,"BAILA",0,"one"]],"D":[["ふわふわ鶏塩麻婆豆腐","半分","https://lee.hpplus.jp/recipe/2651446/",299,"LEE",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["茹でブロッコリーのしらす生姜のせ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/75756",59,"BAILA",0,"kob"],["豆乳と大根とホタテ缶、豆腐のスープ","半分","https://lee.hpplus.jp/recipe/2987441/",124,"LEE",0,"soup"]],"v":[1390.1,61.7,9.9,564.6,18.3,363.4,227.5]},{"L":[["きほんの肉野菜炒め","半分","https://www.youtube.com/watch?v=HqW4P09WxO4",280,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["鯵のアクアパッツァ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/63784",260,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["大根の卵焼きのしょうゆかけ","半分","https://www.kikkoman.co.jp/homecook/search/recipe/00059382/",161,"キッコーマン ホームクッキング",0,"side"],["韓国風味噌玉","1人分","https://maquia.hpplus.jp/bikatsu/healthcare-diet/117764/",97,"MAQUIA",0,"soup"]],"v":[1407.9,69.6,10.2,498.5,17.4,572.7,351.7]},{"L":[["納豆の焼きめし","1人分","https://baila.hpplus.jp/lifestyle/recipegourmet/70187",526,"BAILA",0,"one"]],"D":[["牛肉とにんじんの酒蒸し プルコギ風","半分","https://www.youtube.com/watch?v=lQRbXFenCsc",386,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["春菊と海苔の豆乳おひたし","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/64065",28,"BAILA",0,"kob"],["ほうれん草の豆乳味噌汁","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/61224",65,"BAILA",0,"soup"]],"v":[1385.9,54.0,10.0,433.8,18.5,454.4,370.0]},{"L":[["しば漬け入り鶏つくね","半分","https://lee.hpplus.jp/recipe/2868510/",328,"LEE",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["茄子のサルシッチャ風スープ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/64267",333,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["ブロッコリーのクルミ醤油和え","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/60243",54,"BAILA",0,"kob"],["【プラスワンメニュー】にんじん豆乳スープ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/70783",89,"BAILA",0,"soup"]],"v":[1414.5,59.9,6.0,382.2,14.1,266.9,262.5]},{"L":[["豚しゃぶとほうれん草の梅うどん","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/54389",405,"BAILA",0,"one"],["大根と厚揚げの甘酢しょうゆ漬け","半分","https://www.kikkoman.co.jp/homecook/search/recipe/00058236/",107,"キッコーマン ホームクッキング",0,"kob"]],"D":[["しょうゆのみ肉豆腐","半分","https://lee.hpplus.jp/recipe/3227059/",297,"LEE",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["鶏ひき肉とかぶのスープ","半分","https://lee.hpplus.jp/recipe/2874631/",187,"LEE",0,"soup"]],"v":[1375.5,65.9,9.2,549.1,15.4,376.2,405.0]},{"L":[["鱈と春菊、じゃがいもの白ワイン蒸し","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/60244",195,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["ほたてとセロリのライムみょうがソース和え","半分","https://hanako.tokyo/food/515857/",108,"Hanako",0,"kob"]],"D":[["牛肉とにんじんの酒蒸し プルコギ風","半分","https://www.youtube.com/watch?v=lQRbXFenCsc",386,"YouTube",1,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["豆乳とすりごまのスープ","半分","https://www.kikkoman.co.jp/homecook/search/recipe/00055417/",77,"キッコーマン ホームクッキング",0,"soup"]],"v":[1376.0,60.9,8.7,482.3,16.4,385.7,375.0]}],"bento":[{"L":[["ぶりの湯煮（カブと梅のソース）","半分","",205,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["鶏の梅にんにくクリーム煮","半分","https://www.youtube.com/watch?v=j2diY5bOcMw",427,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["小松菜のおひたし","半分","https://www.youtube.com/watch?v=ZJ-Qf4FvVSE",26,"YouTube",0,"kob"],["韓国風味噌玉","1人分","https://maquia.hpplus.jp/bikatsu/healthcare-diet/117764/",97,"MAQUIA",0,"soup"]],"v":[1364.4,69.2,10.8,664.3,17.2,581.3,325.0]},{"L":[["鯵のアクアパッツァ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/63784",260,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["豚肉とキャベツの塩昆布豆乳煮","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/64636",267,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["ブロッコリーとバジルのサラダ","半分","https://www.youtube.com/watch?v=pjJmTojwu8s",73,"YouTube",0,"kob"],["小松菜とツナの食べるしょうゆスープ","半分","https://www.kikkoman.co.jp/homecook/search/recipe/00058239/",184,"キッコーマン ホームクッキング",0,"soup"]],"v":[1393.2,70.8,12.7,639.1,19.4,653.1,436.7]},{"L":[["チキンソテーの新玉ねぎとトマトのソース（プラスワン）","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/78390",288,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["ニラとしらすのあんかけオムレツ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/52567",188,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["牡蠣と長ねぎのしゃぶしゃぶ 梅ポン酢だれ","半分","https://maquia.hpplus.jp/diet_health/matome/93058/",142,"MAQUIA",0,"side"],["小松菜とツナの食べるしょうゆスープ","半分","https://www.kikkoman.co.jp/homecook/search/recipe/00058239/",184,"キッコーマン ホームクッキング",0,"soup"]],"v":[1411.9,63.6,10.1,622.1,13.0,411.9,370.0]},{"L":[["酒蒸しハンバーグ","半分","https://www.youtube.com/watch?v=ud5ReNf3nV0",424,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["鶏むね肉とトマトの出汁煮","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/64065",142,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["あさりとわかめ、長ネギのガーリック醤油ワイン蒸し","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/65517",112,"BAILA",0,"kob"],["牡蠣とごぼうの醤油蒸し","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/59593",145,"BAILA",0,"side"]],"v":[1433.0,73.8,10.0,480.3,15.1,268.4,327.5]},{"L":[["豚と長いもの黒ごま炒め","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/74952",402,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["鱈と春菊、じゃがいもの白ワイン蒸し","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/60244",195,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["茹で春キャベツのオイルがけ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/62607",26,"BAILA",0,"kob"],["白スンドゥブ","半分","https://www.youtube.com/watch?v=u3jlD2bm9X8",196,"YouTube",0,"soup"]],"v":[1428.3,75.7,26.7,641.1,14.7,386.5,250.0]},{"L":[["ニラたまパスタ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/78390",574,"BAILA",0,"one"]],"D":[["豚しゃぶと豆腐と切り干し大根の黒酢和え","半分","https://www.youtube.com/watch?v=xUfJMm3iFzk",283,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["小松菜のおひたし","半分","https://www.youtube.com/watch?v=ZJ-Qf4FvVSE",26,"YouTube",0,"kob"],["酒蒸しブロッコリー","半分","https://www.youtube.com/watch?v=JBvtwU_YfHY",92,"YouTube",0,"kob"]],"v":[1354.5,53.7,10.9,673.2,20.9,610.9,450.0]},{"L":[["鯛と豆苗のナンプラークリーム煮","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/55622",362,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["フライパンいらずカルボナーラ","半分","https://lee.hpplus.jp/recipe/3228423/",515,"LEE",1,"one"],["あさりとわかめ、長ネギのガーリック醤油ワイン蒸し","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/65517",112,"BAILA",0,"kob"],["梅味噌玉","1人分","https://maquia.hpplus.jp/bikatsu/healthcare-diet/117764/",44,"MAQUIA",0,"soup"]],"v":[1412.3,63.7,8.8,605.8,13.4,268.0,170.0]},{"L":[["豚肉ときゅうりの塩昆布炒め","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/55623",287,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["高野豆腐と鶏ひき肉とミニトマトの洋風煮","半分","https://maquia.hpplus.jp/diet_health/matome/93058/",361,"MAQUIA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["春菊と海苔の豆乳おひたし","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/64065",28,"BAILA",0,"kob"],["牡蠣とごぼうの醤油蒸し","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/59593",145,"BAILA",0,"side"]],"v":[1431.9,69.5,10.5,655.9,17.3,327.3,327.5]},{"L":[["長いもと切り干し大根の和風ポテサラ","1人分","https://baila.hpplus.jp/lifestyle/recipegourmet/83495",379,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["鯖缶サラダ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/71514",217,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["ブロッコリーとバジルのサラダ","半分","https://www.youtube.com/watch?v=pjJmTojwu8s",73,"YouTube",0,"kob"],["小松菜と卵の煮びたし","半分","https://www.youtube.com/watch?v=V__NprAkinY",109,"YouTube",0,"kob"]],"v":[1387.5,65.0,10.4,942.8,16.6,543.4,355.0]},{"L":[["豚と白菜の梅酒蒸し","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/67015",254,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["手羽元の昆布バターポトフ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/54484",290,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["茹でブロッコリーのしらす生姜のせ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/75756",59,"BAILA",0,"kob"],["白スンドゥブ","半分","https://www.youtube.com/watch?v=u3jlD2bm9X8",196,"YouTube",0,"soup"]],"v":[1408.6,75.0,25.9,632.2,16.5,448.3,437.5]},{"L":[["さけのごまムニエル","1人分","https://baila.hpplus.jp/lifestyle/recipegourmet/81280",247,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["きほんの肉野菜炒め","半分","https://www.youtube.com/watch?v=HqW4P09WxO4",280,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["酒蒸しブロッコリー","半分","https://www.youtube.com/watch?v=JBvtwU_YfHY",92,"YouTube",0,"kob"],["白スンドゥブ","半分","https://www.youtube.com/watch?v=u3jlD2bm9X8",196,"YouTube",0,"soup"]],"v":[1424.3,81.1,25.7,497.4,15.1,442.8,245.0]},{"L":[["オレンジマーマレード風味のピリ辛エビマヨ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/65986",283,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["ささみときのこのシンプル塩炒め","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/61414",180,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["牡蠣と長ねぎのしゃぶしゃぶ 梅ポン酢だれ","半分","https://maquia.hpplus.jp/diet_health/matome/93058/",142,"MAQUIA",0,"side"],["小松菜とツナの食べるしょうゆスープ","半分","https://www.kikkoman.co.jp/homecook/search/recipe/00058239/",184,"キッコーマン ホームクッキング",0,"soup"]],"v":[1400.1,76.5,9.2,583.8,13.3,391.2,320.0]},{"L":[["中華風トマト親子丼","半分","https://www.youtube.com/watch?v=bVqL7RSIwMM",456,"YouTube",0,"one"]],"D":[["豚肉とトマトのピリ辛炒め","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/58330",304,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["牡蠣と長ねぎのしゃぶしゃぶ 梅ポン酢だれ","半分","https://maquia.hpplus.jp/diet_health/matome/93058/",142,"MAQUIA",0,"side"],["菜の花と卵のマヨネーズ炒め","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/53892",154,"BAILA",0,"side"]],"v":[1437.2,74.3,9.0,512.3,11.6,529.3,350.0]},{"L":[["しば漬け入り鶏つくね","半分","https://lee.hpplus.jp/recipe/2868510/",328,"LEE",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["かつおのたたきと玉ねぎのタルタル丼","半分","https://www.youtube.com/watch?v=oryVMvDFOI4",452,"YouTube",1,"one"],["ブロッコリーとバジルのサラダ","半分","https://www.youtube.com/watch?v=pjJmTojwu8s",73,"YouTube",0,"kob"],["菜の花と卵のマヨネーズ炒め","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/53892",154,"BAILA",0,"side"]],"v":[1386.7,76.1,9.1,436.5,14.5,613.0,245.0]},{"L":[["煮ない鯖味噌","半分","https://www.youtube.com/watch?v=WaZjGywZP98",284,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["茹で鶏のオクラ和え","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/72318",167,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["菜の花と卵のマヨネーズ炒め","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/53892",154,"BAILA",0,"side"],["カリフラワーとツナのスープ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/65988",172,"BAILA",0,"soup"]],"v":[1387.8,86.4,10.6,592.1,18.3,676.3,422.5]},{"L":[["豚こま切れ肉のトマト豆板醤仕立て","半分","https://maquia.hpplus.jp/bikatsu/healthcare-diet/115881/",350,"MAQUIA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["鮭とキャベツの柚子胡椒煮","半分","https://www.youtube.com/watch?v=-B9ywEq9Eh8",130,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["あさりとわかめ、長ネギのガーリック醤油ワイン蒸し","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/65517",112,"BAILA",0,"kob"],["牡蠣とごぼうの醤油蒸し","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/59593",145,"BAILA",0,"side"]],"v":[1346.6,65.8,9.0,456.3,15.7,314.3,327.5]},{"L":[["塩麻婆豆腐","半分","https://www.youtube.com/watch?v=yRCUGLTp9Vk",250,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["豚つくねと大根の柚子胡椒煮","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/60243",244,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["大根と厚揚げの甘酢しょうゆ漬け","半分","https://www.kikkoman.co.jp/homecook/search/recipe/00058236/",107,"キッコーマン ホームクッキング",0,"kob"],["豆乳と大根とホタテ缶、豆腐のスープ","半分","https://lee.hpplus.jp/recipe/2987441/",124,"LEE",0,"soup"]],"v":[1334.8,66.0,8.6,577.2,12.2,230.2,312.5]},{"L":[["豚肉とにんじんの甘酸っぱいからし炒め","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/82946",320,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["酒蒸しにんじんの洋風卵とじ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/62954",236,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["大根と厚揚げの甘酢しょうゆ漬け","半分","https://www.kikkoman.co.jp/homecook/search/recipe/00058236/",107,"キッコーマン ホームクッキング",0,"kob"],["韓国風味噌玉","1人分","https://maquia.hpplus.jp/bikatsu/healthcare-diet/117764/",97,"MAQUIA",0,"soup"]],"v":[1370.0,59.3,7.4,486.8,16.5,420.7,285.0]},{"L":[["サケとミニトマトのクリームチーズ煮","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/67889",207,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["鶏肉と大根の甘酒キムチ味噌煮込み","半分","https://maquia.hpplus.jp/diet_health/matome/93058/",337,"MAQUIA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["酒蒸しブロッコリー","半分","https://www.youtube.com/watch?v=JBvtwU_YfHY",92,"YouTube",0,"kob"],["豆乳と大根とホタテ缶、豆腐のスープ","半分","https://lee.hpplus.jp/recipe/2987441/",124,"LEE",0,"soup"]],"v":[1371.0,73.4,6.7,405.8,16.9,460.2,360.0]},{"L":[["もち麦のねぎトマト豚ひき肉リゾット","1人分","https://baila.hpplus.jp/lifestyle/recipegourmet/82989",492,"BAILA",0,"one"]],"D":[["茄子のサルシッチャ風スープ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/64267",333,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["大根と厚揚げの甘酢しょうゆ漬け","半分","https://www.kikkoman.co.jp/homecook/search/recipe/00058236/",107,"キッコーマン ホームクッキング",0,"kob"],["ほうれん草の豆乳味噌汁","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/61224",65,"BAILA",0,"soup"]],"v":[1377.3,66.1,9.7,520.5,19.3,351.0,325.0]},{"L":[["豚肉とズッキーニのミルフィーユオムレツ","半分","https://www.kikkoman.co.jp/homecook/search/recipe/00055416/",245,"キッコーマン ホームクッキング",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["くたくたブロッコリーとしらすとレモンの煮込みパスタ","1人分","https://nonno.hpplus.jp/lifestyle/food/367605/",474,"non-no",1,"one"],["大根の卵焼きのしょうゆかけ","半分","https://www.kikkoman.co.jp/homecook/search/recipe/00059382/",161,"キッコーマン ホームクッキング",0,"side"],["豆乳とすりごまのスープ","半分","https://www.kikkoman.co.jp/homecook/search/recipe/00055417/",77,"キッコーマン ホームクッキング",0,"soup"]],"v":[1337.3,64.3,8.6,573.8,18.0,543.0,385.0]},{"L":[["牛肉とにんじんの酒蒸し プルコギ風","半分","https://www.youtube.com/watch?v=lQRbXFenCsc",386,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["レモンバター香るチキンソテー","半分","https://www.orangepage.net/food/series-food/akarikihon/195755",297,"オレンジページnet",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["白菜のくたくたしょうゆあんかけ仕立て","2/5","https://www.kikkoman.co.jp/homecook/search/recipe/00059380/",26,"キッコーマン ホームクッキング",0,"kob"],["ザーサイとひきわり納豆のスープ","1人分","https://baila.hpplus.jp/lifestyle/recipegourmet/78160",84,"BAILA",0,"soup"]],"v":[1403.3,82.2,7.0,354.0,18.1,362.6,362.5]},{"L":[["五宝菜","半分","https://www.orangepage.net/food/series-food/akarikihon/223773",300,"オレンジページnet",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["ブリのレモンみぞれ煮","1/4","https://esse-online.jp/articles/-/30729",283,"ESSE online",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["ほたてとセロリのライムみょうがソース和え","半分","https://hanako.tokyo/food/515857/",108,"Hanako",0,"kob"],["韓国風味噌玉","1人分","https://maquia.hpplus.jp/bikatsu/healthcare-diet/117764/",97,"MAQUIA",0,"soup"]],"v":[1397.7,57.9,8.1,451.6,16.8,477.3,315.0]},{"L":[["煮ない鯖味噌","半分","https://www.youtube.com/watch?v=WaZjGywZP98",284,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["フライパンで作る梅あんかけつくね","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/71614",302,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["春にんじんの梅しょうゆみりん蒸し","半分","https://www.kikkoman.co.jp/homecook/search/recipe/00058238/",88,"キッコーマン ホームクッキング",0,"kob"],["キャベツと里芋の食べるスープ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/76469",103,"BAILA",0,"soup"]],"v":[1386.2,63.2,9.3,598.0,14.9,328.3,345.0]},{"L":[["鶏肉と茄子の蕪おろし煮、梅にんにく仕立て","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/52144",378,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["しょうゆのみ肉豆腐","半分","https://lee.hpplus.jp/recipe/3227059/",297,"LEE",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["ゆでもやしのさっぱり和え","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/65986",67,"BAILA",0,"kob"],["わかめと韓国のりの即席味噌汁","1人分","https://baila.hpplus.jp/lifestyle/recipegourmet/82989",57,"BAILA",0,"soup"]],"v":[1409.2,66.1,8.7,464.0,18.6,469.9,372.0]},{"L":[["ミニマムアクアパッツァ","半分","https://www.orangepage.net/food/series-food/akarikihon/195811",260,"オレンジページnet",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["手羽元と根菜の昆布醤油煮","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/61224",353,"BAILA",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["ピーマンと茄子の皮のバター炒め","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/64267",41,"BAILA",0,"kob"],["カリフラワーとツナのスープ","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/65988",172,"BAILA",0,"soup"]],"v":[1435.8,73.1,5.9,310.7,16.9,306.6,380.0]},{"L":[["たぶん世界一シンプルな中華丼","半分","https://www.youtube.com/watch?v=BtWiGqKWQKs",512,"YouTube",0,"one"]],"D":[["牛肉とにんじんの酒蒸し プルコギ風","半分","https://www.youtube.com/watch?v=lQRbXFenCsc",386,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"],["ブロッコリーのクルミ醤油和え","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/60243",54,"BAILA",0,"kob"],["梅味噌玉","1人分","https://maquia.hpplus.jp/bikatsu/healthcare-diet/117764/",44,"MAQUIA",0,"soup"]],"v":[1376.3,50.9,6.8,363.9,13.9,337.2,357.5]},{"L":[["鶏肉とカブのねぎ塩あんかけ","半分","https://www.youtube.com/watch?v=J9YI_JE5lVE",318,"YouTube",0,"main"],["もち麦ごはん","150g","",230,"",0,"rice"]],"D":[["もち麦のねぎトマト豚ひき肉リゾット","1人分","https://baila.hpplus.jp/lifestyle/recipegourmet/82989",492,"BAILA",1,"one"],["しらす、玉ねぎ、わかめのごま油蒸し","半分","https://baila.hpplus.jp/lifestyle/recipegourmet/74952",63,"BAILA",0,"kob"],["フライパンで目玉焼き味噌汁","半分","",154,"YouTube",0,"soup"]],"v":[1406.7,68.7,7.2,458.5,19.8,324.8,345.0]}],"list":[["鱈とキャベツのオレンジ煮込みショートパスタ","半分",492,"https://baila.hpplus.jp/lifestyle/recipegourmet/75756","BAILA","one"],["酒蒸しにんじんの洋風卵とじ","半分",236,"https://baila.hpplus.jp/lifestyle/recipegourmet/62954","BAILA","main"],["小松菜のおひたし","半分",26,"https://www.youtube.com/watch?v=ZJ-Qf4FvVSE","YouTube","kob"],["鶏ひき肉とかぶのスープ","半分",187,"https://lee.hpplus.jp/recipe/2874631/","LEE","soup"],["鶏むね肉と野菜のハーブ出汁酢マリネ","1/3",208,"https://www.youtube.com/watch?v=sDwJwogmszY","YouTube","main"],["豚肉ときゅうりの塩昆布炒め","半分",287,"https://baila.hpplus.jp/lifestyle/recipegourmet/55623","BAILA","main"],["酒蒸しブロッコリー","半分",92,"https://www.youtube.com/watch?v=JBvtwU_YfHY","YouTube","kob"],["白スンドゥブ","半分",196,"https://www.youtube.com/watch?v=u3jlD2bm9X8","YouTube","soup"],["たたき長芋とぶりの梅炊き込み","半分",421,"https://www.youtube.com/watch?v=Z40x4Sa_xCo","YouTube","one"],["あさりとわかめ、長ネギのガーリック醤油ワイン蒸し","半分",112,"https://baila.hpplus.jp/lifestyle/recipegourmet/65517","BAILA","kob"],["鶏手羽とキャベツの酒鍋","2/5",323,"https://baila.hpplus.jp/lifestyle/recipegourmet/66543","BAILA","main"],["小松菜とツナの食べるしょうゆスープ","半分",184,"https://www.kikkoman.co.jp/homecook/search/recipe/00058239/","キッコーマン ホームクッキング","soup"],["さけのごまムニエル","1人分",247,"https://baila.hpplus.jp/lifestyle/recipegourmet/81280","BAILA","main"],["塩麻婆豆腐","半分",250,"https://www.youtube.com/watch?v=yRCUGLTp9Vk","YouTube","main"],["牡蠣とごぼうの醤油蒸し","半分",145,"https://baila.hpplus.jp/lifestyle/recipegourmet/59593","BAILA","side"],["中華風トマト親子丼","半分",456,"https://www.youtube.com/watch?v=bVqL7RSIwMM","YouTube","one"],["鶏と大根の梅コチュジャン煮","半分",284,"https://baila.hpplus.jp/lifestyle/recipegourmet/65260","BAILA","main"],["ブロッコリーとバジルのサラダ","半分",73,"https://www.youtube.com/watch?v=pjJmTojwu8s","YouTube","kob"],["ぶりの湯煮（カブと梅のソース）","半分",205,"","YouTube","main"],["豚肉とかぶのシンプル鍋","半分",346,"https://maquia.hpplus.jp/diet_health/matome/93058/","MAQUIA","main"],["牡蠣と長ねぎのしゃぶしゃぶ 梅ポン酢だれ","半分",142,"https://maquia.hpplus.jp/diet_health/matome/93058/","MAQUIA","side"],["豚肉と白菜の生姜シチュー","半分",561,"https://www.youtube.com/watch?v=HOVxph90TfI","YouTube","one"],["フライパンいらずカルボナーラ","半分",515,"https://lee.hpplus.jp/recipe/3228423/","LEE","one"],["韓国風味噌玉","1人分",97,"https://maquia.hpplus.jp/bikatsu/healthcare-diet/117764/","MAQUIA","soup"],["煮ない鯖味噌","半分",284,"https://www.youtube.com/watch?v=WaZjGywZP98","YouTube","main"],["茹で鶏のオクラ和え","半分",167,"https://baila.hpplus.jp/lifestyle/recipegourmet/72318","BAILA","main"],["菜の花と卵のマヨネーズ炒め","半分",154,"https://baila.hpplus.jp/lifestyle/recipegourmet/53892","BAILA","side"],["カリフラワーとツナのスープ","半分",172,"https://baila.hpplus.jp/lifestyle/recipegourmet/65988","BAILA","soup"],["もち麦のねぎトマト豚ひき肉リゾット","1人分",492,"https://baila.hpplus.jp/lifestyle/recipegourmet/82989","BAILA","one"],["鮭の湯煮 青じそクリームチーズ添え","半分",192,"https://maquia.hpplus.jp/diet_health/matome/93058/","MAQUIA","main"],["高野豆腐と鶏ひき肉とミニトマトの洋風煮","半分",361,"https://maquia.hpplus.jp/diet_health/matome/93058/","MAQUIA","main"],["酒蒸しハンバーグ","半分",424,"https://www.youtube.com/watch?v=ud5ReNf3nV0","YouTube","main"],["春菊と海苔の豆乳おひたし","半分",28,"https://baila.hpplus.jp/lifestyle/recipegourmet/64065","BAILA","kob"],["めかぶとナンプラーとしょうがのスープ","1人分",13,"https://baila.hpplus.jp/lifestyle/recipegourmet/83495","BAILA","soup"],["鶏ひき肉とアスパラガスの和風あんかけ丼","半分",414,"https://baila.hpplus.jp/lifestyle/recipegourmet/54411","BAILA","one"],["豚肉とキャベツの塩昆布豆乳煮","半分",267,"https://baila.hpplus.jp/lifestyle/recipegourmet/64636","BAILA","main"],["豚つくねと大根の柚子胡椒煮","半分",244,"https://baila.hpplus.jp/lifestyle/recipegourmet/60243","BAILA","main"],["鯖缶サラダ","半分",217,"https://baila.hpplus.jp/lifestyle/recipegourmet/71514","BAILA","main"],["小松菜と卵の煮びたし","半分",109,"https://www.youtube.com/watch?v=V__NprAkinY","YouTube","kob"],["ミニトマトとスモークサーモンのパスタ","半分",448,"https://baila.hpplus.jp/lifestyle/recipegourmet/74894","BAILA","one"],["豆腐と春菊の豆乳鍋","半分",238,"https://maquia.hpplus.jp/diet_health/matome/93058/","MAQUIA","main"],["大根と厚揚げの甘酢しょうゆ漬け","半分",107,"https://www.kikkoman.co.jp/homecook/search/recipe/00058236/","キッコーマン ホームクッキング","kob"],["フライパンで目玉焼き味噌汁","半分",154,"","YouTube","soup"],["豚こま切れ肉のトマト豆板醤仕立て","半分",350,"https://maquia.hpplus.jp/bikatsu/healthcare-diet/115881/","MAQUIA","main"],["キャベツと鶏ひき肉の焼きそば","1人分",566,"https://baila.hpplus.jp/lifestyle/recipegourmet/78160","BAILA","one"],["長芋ともち麦の牛スープ","半分",293,"https://baila.hpplus.jp/lifestyle/recipegourmet/80238","BAILA","main"],["梅味噌玉","1人分",44,"https://maquia.hpplus.jp/bikatsu/healthcare-diet/117764/","MAQUIA","soup"],["豚肉とトマトのピリ辛炒め","半分",304,"https://baila.hpplus.jp/lifestyle/recipegourmet/58330","BAILA","main"],["鶏肉と大根の甘酒キムチ味噌煮込み","半分",337,"https://maquia.hpplus.jp/diet_health/matome/93058/","MAQUIA","main"],["まるごとチキン＆ズッキーニの炊き込み","半分",555,"https://baila.hpplus.jp/lifestyle/recipegourmet/63193","BAILA","one"],["ポークレモン","半分",377,"https://www.youtube.com/watch?v=xBpGGmzvxkc","YouTube","main"],["茹で春キャベツのオイルがけ","半分",26,"https://baila.hpplus.jp/lifestyle/recipegourmet/62607","BAILA","kob"],["長いもと切り干し大根の和風ポテサラ","1人分",379,"https://baila.hpplus.jp/lifestyle/recipegourmet/83495","BAILA","main"],["鮭とキャベツの柚子胡椒煮","半分",130,"https://www.youtube.com/watch?v=-B9ywEq9Eh8","YouTube","main"],["豆乳と大根とホタテ缶、豆腐のスープ","半分",124,"https://lee.hpplus.jp/recipe/2987441/","LEE","soup"],["とろけるオクラのワンパンパスタ","半分",426,"https://baila.hpplus.jp/lifestyle/recipegourmet/72892","BAILA","one"],["鶏肉と茄子の蕪おろし煮、梅にんにく仕立て","半分",378,"https://baila.hpplus.jp/lifestyle/recipegourmet/52144","BAILA","main"],["鶏肉とカブのねぎ塩あんかけ","半分",318,"https://www.youtube.com/watch?v=J9YI_JE5lVE","YouTube","main"],["五宝菜","半分",300,"https://www.orangepage.net/food/series-food/akarikihon/223773","オレンジページnet","main"],["ザーサイとひきわり納豆のスープ","1人分",84,"https://baila.hpplus.jp/lifestyle/recipegourmet/78160","BAILA","soup"],["パセリたっぷりシンプル塩ミートソースパスタ","半分",569,"https://baila.hpplus.jp/lifestyle/recipegourmet/57626","BAILA","one"],["豚と長いもの黒ごま炒め","半分",402,"https://baila.hpplus.jp/lifestyle/recipegourmet/74952","BAILA","main"],["白菜のくたくたしょうゆあんかけ仕立て","2/5",26,"https://www.kikkoman.co.jp/homecook/search/recipe/00059380/","キッコーマン ホームクッキング","kob"],["わかめと韓国のりの即席味噌汁","1人分",57,"https://baila.hpplus.jp/lifestyle/recipegourmet/82989","BAILA","soup"],["レモンバター香るチキンソテー","半分",297,"https://www.orangepage.net/food/series-food/akarikihon/195755","オレンジページnet","main"],["アジのコチュジャンタルタル エゴマの葉で巻いて","2/3",192,"https://lee.hpplus.jp/recipe/3607600/","LEE","main"],["パクチーバターパスタ","半分",527,"https://baila.hpplus.jp/lifestyle/recipegourmet/78912","BAILA","one"],["ふわふわ鶏塩麻婆豆腐","半分",299,"https://lee.hpplus.jp/recipe/2651446/","LEE","main"],["茹でブロッコリーのしらす生姜のせ","半分",59,"https://baila.hpplus.jp/lifestyle/recipegourmet/75756","BAILA","kob"],["きほんの肉野菜炒め","半分",280,"https://www.youtube.com/watch?v=HqW4P09WxO4","YouTube","main"],["鯵のアクアパッツァ","半分",260,"https://baila.hpplus.jp/lifestyle/recipegourmet/63784","BAILA","main"],["大根の卵焼きのしょうゆかけ","半分",161,"https://www.kikkoman.co.jp/homecook/search/recipe/00059382/","キッコーマン ホームクッキング","side"],["納豆の焼きめし","1人分",526,"https://baila.hpplus.jp/lifestyle/recipegourmet/70187","BAILA","one"],["牛肉とにんじんの酒蒸し プルコギ風","半分",386,"https://www.youtube.com/watch?v=lQRbXFenCsc","YouTube","main"],["ほうれん草の豆乳味噌汁","半分",65,"https://baila.hpplus.jp/lifestyle/recipegourmet/61224","BAILA","soup"],["しば漬け入り鶏つくね","半分",328,"https://lee.hpplus.jp/recipe/2868510/","LEE","main"],["茄子のサルシッチャ風スープ","半分",333,"https://baila.hpplus.jp/lifestyle/recipegourmet/64267","BAILA","main"],["ブロッコリーのクルミ醤油和え","半分",54,"https://baila.hpplus.jp/lifestyle/recipegourmet/60243","BAILA","kob"],["【プラスワンメニュー】にんじん豆乳スープ","半分",89,"https://baila.hpplus.jp/lifestyle/recipegourmet/70783","BAILA","soup"],["豚しゃぶとほうれん草の梅うどん","半分",405,"https://baila.hpplus.jp/lifestyle/recipegourmet/54389","BAILA","one"],["しょうゆのみ肉豆腐","半分",297,"https://lee.hpplus.jp/recipe/3227059/","LEE","main"],["鱈と春菊、じゃがいもの白ワイン蒸し","半分",195,"https://baila.hpplus.jp/lifestyle/recipegourmet/60244","BAILA","main"],["ほたてとセロリのライムみょうがソース和え","半分",108,"https://hanako.tokyo/food/515857/","Hanako","kob"],["豆乳とすりごまのスープ","半分",77,"https://www.kikkoman.co.jp/homecook/search/recipe/00055417/","キッコーマン ホームクッキング","soup"],["鶏の梅にんにくクリーム煮","半分",427,"https://www.youtube.com/watch?v=j2diY5bOcMw","YouTube","main"],["チキンソテーの新玉ねぎとトマトのソース（プラスワン）","半分",288,"https://baila.hpplus.jp/lifestyle/recipegourmet/78390","BAILA","main"],["ニラとしらすのあんかけオムレツ","半分",188,"https://baila.hpplus.jp/lifestyle/recipegourmet/52567","BAILA","main"],["鶏むね肉とトマトの出汁煮","半分",142,"https://baila.hpplus.jp/lifestyle/recipegourmet/64065","BAILA","main"],["ニラたまパスタ","半分",574,"https://baila.hpplus.jp/lifestyle/recipegourmet/78390","BAILA","one"],["豚しゃぶと豆腐と切り干し大根の黒酢和え","半分",283,"https://www.youtube.com/watch?v=xUfJMm3iFzk","YouTube","main"],["鯛と豆苗のナンプラークリーム煮","半分",362,"https://baila.hpplus.jp/lifestyle/recipegourmet/55622","BAILA","main"],["豚と白菜の梅酒蒸し","半分",254,"https://baila.hpplus.jp/lifestyle/recipegourmet/67015","BAILA","main"],["手羽元の昆布バターポトフ","半分",290,"https://baila.hpplus.jp/lifestyle/recipegourmet/54484","BAILA","main"],["オレンジマーマレード風味のピリ辛エビマヨ","半分",283,"https://baila.hpplus.jp/lifestyle/recipegourmet/65986","BAILA","main"],["ささみときのこのシンプル塩炒め","半分",180,"https://baila.hpplus.jp/lifestyle/recipegourmet/61414","BAILA","main"],["かつおのたたきと玉ねぎのタルタル丼","半分",452,"https://www.youtube.com/watch?v=oryVMvDFOI4","YouTube","one"],["豚肉とにんじんの甘酸っぱいからし炒め","半分",320,"https://baila.hpplus.jp/lifestyle/recipegourmet/82946","BAILA","main"],["サケとミニトマトのクリームチーズ煮","半分",207,"https://baila.hpplus.jp/lifestyle/recipegourmet/67889","BAILA","main"],["豚肉とズッキーニのミルフィーユオムレツ","半分",245,"https://www.kikkoman.co.jp/homecook/search/recipe/00055416/","キッコーマン ホームクッキング","main"],["くたくたブロッコリーとしらすとレモンの煮込みパスタ","1人分",474,"https://nonno.hpplus.jp/lifestyle/food/367605/","non-no","one"],["ブリのレモンみぞれ煮","1/4",283,"https://esse-online.jp/articles/-/30729","ESSE online","main"],["フライパンで作る梅あんかけつくね","半分",302,"https://baila.hpplus.jp/lifestyle/recipegourmet/71614","BAILA","main"],["春にんじんの梅しょうゆみりん蒸し","半分",88,"https://www.kikkoman.co.jp/homecook/search/recipe/00058238/","キッコーマン ホームクッキング","kob"],["キャベツと里芋の食べるスープ","半分",103,"https://baila.hpplus.jp/lifestyle/recipegourmet/76469","BAILA","soup"],["ゆでもやしのさっぱり和え","半分",67,"https://baila.hpplus.jp/lifestyle/recipegourmet/65986","BAILA","kob"],["ミニマムアクアパッツァ","半分",260,"https://www.orangepage.net/food/series-food/akarikihon/195811","オレンジページnet","main"],["手羽元と根菜の昆布醤油煮","半分",353,"https://baila.hpplus.jp/lifestyle/recipegourmet/61224","BAILA","main"],["ピーマンと茄子の皮のバター炒め","半分",41,"https://baila.hpplus.jp/lifestyle/recipegourmet/64267","BAILA","kob"],["たぶん世界一シンプルな中華丼","半分",512,"https://www.youtube.com/watch?v=BtWiGqKWQKs","YouTube","one"],["しらす、玉ねぎ、わかめのごま油蒸し","半分",63,"https://baila.hpplus.jp/lifestyle/recipegourmet/74952","BAILA","kob"]]};
+
+const URLS={B:'https://baila.hpplus.jp/lifestyle/recipegourmet/',Y:'https://www.youtube.com/watch?v=',M:'https://maquia.hpplus.jp/bikatsu/healthcare-diet/'};
+const SRC={B:'BAILA',Y:'YouTube',M:'MAQUIA'};
+const W=['月','火','水','木','金','土','日'];
+const pad=n=>String(n).padStart(2,'0');
+const key=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const href=u=>u;
+const START=new Date('2026-11-01T00:00'), END=new Date('2027-02-28T00:00');
+
+/* ---- 日付ごとの献立 ---- */
+const PLAN={};
+(function(){
+  let d=new Date(START), n=0, hi=27, bi=0;
+  while(d<=END){
+    const k=key(d), ice=n%2===0;
+    if(k>='2027-01-01'&&k<='2027-01-03') PLAN[k]={kind:'ny',ice};
+    else if(k<'2027-01-01'){PLAN[k]={kind:'home',t:DATA.home[hi%28],week:Math.floor((hi%28)/7)+1,ice};hi=(hi+1)%28;}
+    else {PLAN[k]={kind:'bento',t:DATA.bento[bi%28],week:Math.floor((bi%28)/7)+1,ice};bi++;}
+    d.setDate(d.getDate()+1);n++;
+  }
+})();
+const CHECKS=[['lunch','昼ごはん'],['dinner','夜ごはん'],['kob','小鉢'],['snack','アイス／ヨーグルト'],['bike','自転車30分'],['supp','葉酸サプリ']];
+
+/* ---- 保存：チェックとメモはスプレッドシート（Apps Script）へ。体重はこのスマホだけ ---- */
+// Apps Script をデプロイしたら、その URL をここに入れる
+const API='https://script.google.com/macros/s/AKfycbyoXqmTlAHWGtf7B9ofgI98MlRr4tRAQTj-0QRD9IjXIdsmtWijtM0fcg_SfWWL_kOq/exec';
+const state={days:{},ms:{},weights:{},mode:'local',readOnly:false};
+function lsGet(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+state.days=lsGet('kondate-days',{});state.ms=lsGet('kondate-ms',{});state.weights=lsGet('kondate-w',{});
+// 合い言葉は URL の #k=... に入っている（# 以降はどこにも送られない）
+function readKey(){const m=location.hash.match(/k=([0-9a-zA-Z]+)/);let k=m?m[1]:'';try{if(k)localStorage.setItem('kondate-key',k);else k=localStorage.getItem('kondate-key')||''}catch(e){}return k}
+const KEY=readKey();
+function storeNote(){
+  const el=document.getElementById('store');
+  el.textContent=state.mode==='sheet'?'チェックとメモは2人で共有されます。体重メモは、入力したスマホにだけ保存されます。':state.mode==='error'?'記録の読み込みに失敗しました。チェックはいったんこのスマホにだけ保存されます。':'チェックとメモは、このスマホにだけ保存されています（共有用の合い言葉付きURLで開くと2人で共有されます）。';
+}
+async function api(payload){
+  const res=payload?await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)}):await fetch(API+'?api=1&k='+encodeURIComponent(KEY),{cache:'no-store'});
+  if(!res.ok)throw new Error('通信に失敗しました（'+res.status+'）');
+  const j=await res.json(); if(!j.ok)throw new Error(j.error||'エラー'); return j.data;
+}
+async function initDb(){
+  if(!API||!KEY)return;
+  try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};state.mode='sheet';lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms)}
+  catch(e){state.mode='error'}
+  storeNote();rerender();
+}
+async function saveDay(k,obj){
+  state.days={...state.days,[k]:obj};lsSet('kondate-days',state.days);
+  if(state.mode==='sheet'){try{await api({k:KEY,fn:'day',args:[k,obj]})}catch(e){state.mode='error';storeNote()}}
+}
+async function saveMs(obj){
+  state.ms=obj;lsSet('kondate-ms',obj);
+  if(state.mode==='sheet'){try{await api({k:KEY,fn:'ms',args:[obj]})}catch(e){state.mode='error';storeNote()}}
+}
+async function saveW(obj){state.weights=obj;lsSet('kondate-w',obj)}
+
+/* ---- 表示切り替え ---- */
+const VIEWS=['calendar','log','recipes','plan'];
+let view='calendar';
+function route(){const h=location.hash.slice(1);view=VIEWS.includes(h)?h:'calendar';
+  VIEWS.forEach(v=>{document.getElementById('v-'+v).hidden=v!==view});
+  document.querySelectorAll('nav.views a').forEach(a=>a.setAttribute('aria-current',a.dataset.v===view?'page':'false'));
+  rerender();}
+window.addEventListener('hashchange',route);
+function rerender(){if(view==='calendar')renderCal();else if(view==='log')renderLog();else if(view==='recipes')renderRecipes();else renderPlan();}
+
+/* ---- カレンダー ---- */
+const MONTHS=[[2026,10],[2026,11],[2027,0],[2027,1]];
+const today=key(new Date());
+let sel=PLAN[today]?today:'2026-11-01';
+let mi=Math.max(0,MONTHS.findIndex(([y,m])=>sel.startsWith(y+'-'+pad(m+1))));
+const mt=document.getElementById('mtabs');
+MONTHS.forEach(([y,m],i)=>{const b=document.createElement('button');b.type='button';b.id='m'+i;b.textContent=(m+1)+'月';
+  b.onclick=()=>{mi=i;const p=y+'-'+pad(m+1);if(!sel.startsWith(p))sel=Object.keys(PLAN).find(k=>k.startsWith(p));renderCal()};mt.appendChild(b)});
+function mainName(meal){const it=meal.find(x=>x[6]==='main'||x[6]==='one')||meal[0];return (it[5]?'★':'')+it[0]}
+function doneCount(k){const d=state.days[k]||{};return CHECKS.filter(([c])=>d[c]).length}
+function renderCal(){
+  [...mt.children].forEach((b,i)=>b.setAttribute('aria-pressed',i===mi));
+  const [y,m]=MONTHS[mi];
+  document.getElementById('phase').textContent=m>=10?'おうちごはん期：昼も家で食べる。11/1（日）スタート':'お弁当期：平日の昼はお弁当（1/4の月曜から始める想定）。1/1〜1/3はお正月';
+  const g=document.getElementById('grid');g.innerHTML='';
+  W.forEach((w,i)=>{const h=document.createElement('div');h.className='dow'+(i===6?' sun':'');h.textContent=w;g.appendChild(h)});
+  const lead=(new Date(y,m,1).getDay()+6)%7;
+  for(let i=0;i<lead;i++){const c=document.createElement('div');c.className='cell empty';g.appendChild(c)}
+  const n=new Date(y,m+1,0).getDate();
+  for(let d=1;d<=n;d++){
+    const k=y+'-'+pad(m+1)+'-'+pad(d),p=PLAN[k];
+    const c=document.createElement('button');c.type='button';c.id='d'+k;
+    c.className='cell'+(p?'':' off')+(k===sel?' sel':'')+(k===today?' today':'');
+    let h='<span class="d"><span>'+d+'</span>'+(p&&p.ice?'<i class="ice-dot" title="アイスの日"></i>':'')+'</span>';
+    if(p&&p.t) h+='<span class="m"><b>昼</b>'+esc(mainName(p.t.L))+'</span><span class="m"><b>夜</b>'+esc(mainName(p.t.D))+'</span>';
+    else if(p) h+='<span class="note">お正月</span>';
+    else h+='<span class="note">対象外</span>';
+    if(p){const dc=doneCount(k);h+='<span class="prog" aria-label="チェック '+dc+'/6"><i style="width:'+Math.round(dc/6*100)+'%"></i></span>'}
+    c.innerHTML=h;
+    if(p)c.onclick=()=>{sel=k;renderCal();if(window.innerWidth<860)document.getElementById('card').scrollIntoView({behavior:'smooth',block:'start'})};else c.disabled=true;
+    g.appendChild(c);
+  }
+  renderCard();
+}
+function mealHtml(label,items,ice){
+  const kc=items.reduce((a,x)=>a+(x[6]==='rice'&&ice?153:x[3]),0);
+  const li=items.map(([n,a,u,k,src,tr,kd])=>{
+    let name=u?'<a class="rec" href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(n)+'</a><span class="src">'+esc(src)+'</span>':'<span class="plain">'+esc(n)+'</span>';
+    if(tr)name='<span class="treat">★</span>'+name;
+    if(kd==='kob'||kd==='side')name='<span class="kob">小鉢</span>'+name;
+    if(kd==='soup')name='<span class="kob">汁物</span>'+name;
+    let amt=a; if(kd==='rice'&&ice)amt='100g（アイスの日）';
+    return '<li><span>'+name+'</span><span class="amt">'+esc(amt||'')+'</span></li>'}).join('');
+  return '<div class="meal"><h3><span>'+label+'</span><span class="kcal">約'+kc+' kcal</span></h3><ul>'+li+'</ul></div>';
+}
+function nutHtml(v){
+  const rows=[['たんぱく質',v[1],'g',50],['鉄',v[2],'mg',10.5],['カルシウム',v[3],'mg',650],['食物繊維',v[4],'g',18],['葉酸',v[5],'µg',240],['野菜',v[6],'g',350]];
+  return '<div><h3 class="small muted" style="font-weight:500;margin-bottom:6px">この日の栄養（目安に届かないものはオレンジ）</h3><div class="nut">'+rows.map(([n,x,u,t])=>'<div class="'+(x<t?'low':'')+'"><b>'+(x<10?x.toFixed(1):Math.round(x))+u+'</b><span>'+n+'（目安'+t+u+'）</span></div>').join('')+'</div></div>';
+}
+function renderCard(){
+  const p=PLAN[sel],d=new Date(sel+'T00:00'),card=document.getElementById('card');
+  const dow=W[(d.getDay()+6)%7];
+  let h='<div><h2>'+(d.getMonth()+1)+'月'+d.getDate()+'日（'+dow+'）</h2><div class="sub">'+(p.kind==='home'?'おうちごはん・'+p.week+'週目の献立':p.kind==='bento'?'お弁当期・'+p.week+'週目の献立':'お正月')+'</div></div>';
+  h+=p.ice?'<span class="chip ice">アイスの日：300kcalくらいまで。ごはんは毎食100g</span>':'<span class="chip yog">アイスなしの日：無糖ヨーグルト100g＋果物少し</span>';
+  if(p.t){
+    const isBento=p.kind==='bento'&&d.getDay()%6!==0;
+    h+=mealHtml(isBento?'昼（お弁当）':'昼',p.t.L,p.ice)+mealHtml('夜',p.t.D,p.ice);
+    h+='<div class="total"><span>1日の合計（アイス・ヨーグルト込み）</span><span>約'+Math.round(p.t.v[0]).toLocaleString()+' kcal</span></div>';
+    h+=nutHtml(p.t.v);
+  } else h+='<p class="small" style="margin:0">お正月は献立なし。おせちやお雑煮は好きなものを、量だけ控えめに。小松菜のおひたしだけは続けると楽です。</p>';
+  const dd=state.days[sel]||{};
+  h+='<div><h3 class="small muted" style="font-weight:500;margin-bottom:6px">今日のチェック</h3><div class="checks">'+CHECKS.map(([c,l])=>'<label><input type="checkbox" id="c-'+c+'" data-c="'+c+'"'+(dd[c]?' checked':'')+(state.readOnly?' disabled':'')+'>'+l+'</label>').join('')+'</div></div>';
+  h+='<div><label for="memo" class="small muted">メモ（体調・生理・外食など）</label><textarea id="memo"'+(state.readOnly?' disabled':'')+'>'+esc(dd.memo||'')+'</textarea></div>';
+  card.innerHTML=h;
+  card.querySelectorAll('input[data-c]').forEach(i=>i.onchange=()=>{const o={...(state.days[sel]||{})};o[i.dataset.c]=i.checked;saveDay(sel,o);renderCal()});
+  const memo=card.querySelector('#memo');memo.onchange=()=>{const o={...(state.days[sel]||{})};o.memo=memo.value.slice(0,500);saveDay(sel,o)};
+}
+
+/* ---- 記録 ---- */
+const MS=[['gyn','11月中：婦人科で生理不順の原因を確認（TOKYOプレコンゼミの助成を使う）'],['blood','婦人科で貧血（鉄）も調べてもらう'],['w73','73kgを切る：BMI 30未満。11月中旬〜下旬が目安'],['w70','70kgを切る：約7%減。12月中が目安'],['w67','67kgを切る：1月中が目安'],['feb','2月末：婦人科で、妊娠に向けて続けるか一度止めるかを相談']];
+function monthStats(y,m){
+  const p=y+'-'+pad(m+1);const ks=Object.keys(PLAN).filter(k=>k.startsWith(p)&&k<=today);
+  const c=x=>ks.filter(k=>(state.days[k]||{})[x]).length;
+  const meal=ks.filter(k=>{const d=state.days[k]||{};return d.lunch&&d.dinner}).length;
+  return {n:ks.length,meal,kob:c('kob'),bike:c('bike'),supp:c('supp')};
+}
+function renderLog(){
+  const el=document.getElementById('v-log');
+  let h='<div class="cols">';
+  h+='<div class="card"><h2>月ごとのまとめ</h2><p class="small muted" style="margin:0">カレンダーのチェックから数えています（今日まで）。</p>';
+  MONTHS.forEach(([y,m])=>{const s=monthStats(y,m);if(!s.n){h+='<div><h3>'+(m+1)+'月</h3><p class="small muted" style="margin:4px 0 0">まだ始まっていません</p></div>';return}
+    h+='<div><h3>'+(m+1)+'月 <span class="small muted">（'+s.n+'日経過）</span></h3><div class="stat" style="margin-top:6px"><div><b>'+s.meal+'</b><span>昼夜とも献立どおり</span></div><div><b>'+s.kob+'</b><span>小鉢を食べた</span></div><div><b>'+s.bike+'</b><span>自転車30分</span></div><div><b>'+s.supp+'</b><span>葉酸サプリ</span></div></div></div>'});
+  h+='<p class="small muted" style="margin:0">自転車は週5日できていれば十分。雨の日は休んで、翌日に足さなくていい。</p></div>';
+  h+='<div class="card ms"><h2>節目のチェック</h2>'+MS.map(([k,l])=>'<label><input type="checkbox" id="ms-'+k+'" data-k="'+k+'"'+(state.ms[k]?' checked':'')+(state.readOnly?' disabled':'')+'><span>'+l+'</span></label>').join('')+'<p class="small muted" style="margin:0">体重の節目は佑理さんが自分で量って、超えたら教えてもらう。数字は催促しない。</p></div>';
+  const ws=Object.entries(state.weights).sort((a,b)=>a[0]<b[0]?-1:1);
+  h+='<div class="card"><h2>体重メモ（本人用）</h2><p class="small muted" style="margin:0">'+'ここに入れた体重は、入力したスマホにだけ保存され、ほかの人には見えません。'+'記録しなくても大丈夫です。</p>';
+  h+='<div class="row"><input type="date" id="wdate" value="'+(PLAN[today]?today:'2026-11-01')+'" min="2026-10-20" max="2027-03-31"><input type="number" id="wkg" step="0.1" min="30" max="150" placeholder="kg" aria-label="体重kg"><button class="btn" id="wadd" type="button">記録する</button></div>';
+  if(ws.length>=2)h+=spark(ws);
+  h+=ws.length?'<div class="tbl"><table><thead><tr><th>日付</th><th class="num">体重</th><th></th></tr></thead><tbody>'+ws.slice().reverse().map(([d,kg])=>'<tr><td>'+d.slice(5).replace('-','/')+'</td><td class="num">'+Number(kg).toFixed(1)+' kg</td><td class="num"><button class="link" type="button" data-del="'+d+'">消す</button></td></tr>').join('')+'</tbody></table></div>':'<p class="small muted" style="margin:0">まだ記録はありません。</p>';
+  h+='</div></div>';
+  el.innerHTML=h;
+  el.querySelectorAll('input[data-k]').forEach(i=>i.onchange=()=>saveMs({...state.ms,[i.dataset.k]:i.checked}));
+  el.querySelector('#wadd').onclick=()=>{const d=el.querySelector('#wdate').value,kg=parseFloat(el.querySelector('#wkg').value);if(!d||!(kg>30&&kg<150))return;saveW({...state.weights,[d]:Math.round(kg*10)/10});renderLog()};
+  el.querySelectorAll('button[data-del]').forEach(b=>b.onclick=()=>{const o={...state.weights};delete o[b.dataset.del];saveW(o);renderLog()});
+}
+function spark(ws){
+  const W_=600,H_=160,P=28;const t0=new Date(ws[0][0]).getTime(),t1=new Date(ws[ws.length-1][0]).getTime()||t0+1;
+  const vs=ws.map(x=>+x[1]);let lo=Math.floor(Math.min(...vs)-1),hi=Math.ceil(Math.max(...vs)+1);
+  const X=t=>P+(W_-2*P)*((t-t0)/((t1-t0)||1)),Y=v=>H_-P+( -(H_-2*P)*(v-lo)/(hi-lo));
+  const pts=ws.map(([d,v])=>X(new Date(d).getTime()).toFixed(1)+','+Y(+v).toFixed(1)).join(' ');
+  const last=ws[ws.length-1];
+  return '<svg class="spark" viewBox="0 0 '+W_+' '+H_+'" role="img" aria-label="体重の推移"><line x1="'+P+'" x2="'+(W_-P)+'" y1="'+Y(lo)+'" y2="'+Y(lo)+'" stroke="var(--line)"/><line x1="'+P+'" x2="'+(W_-P)+'" y1="'+Y(hi)+'" y2="'+Y(hi)+'" stroke="var(--line)"/><text x="4" y="'+(Y(hi)+4)+'" font-size="11" fill="var(--muted)">'+hi+'</text><text x="4" y="'+(Y(lo)+4)+'" font-size="11" fill="var(--muted)">'+lo+'</text><polyline points="'+pts+'" fill="none" stroke="var(--leaf)" stroke-width="2"/><circle cx="'+X(new Date(last[0]).getTime())+'" cy="'+Y(+last[1])+'" r="4" fill="var(--leaf)"/></svg>';
+}
+
+/* ---- 料理リスト ---- */
+function renderRecipes(){
+  const el=document.getElementById('v-recipes');if(el.dataset.done)return;el.dataset.done=1;
+  const groups=[['main','主菜（＋もち麦ごはん150g）'],['one','一皿ごはん（ごはん・麺込み）'],['kob','小鉢・副菜'],['soup','汁物']];
+  let h='<div class="section"><div class="prose"><h2>料理リスト（食べる量つき）</h2><p class="small muted">献立に出てくる長谷川あかりさんのレシピ'+DATA.list.length+'品。佑理さんが1回に食べる量とkcal。（半分）＝2人分レシピの半分。名前を押すとレシピが開きます。</p></div>';
+  groups.forEach(([g,t])=>{
+    const rs=DATA.list.filter(r=>(g==='kob'?(r[5]==='kob'||r[5]==='side'):r[5]===g)).sort((a,b)=>a[2]-b[2]);
+    h+='<div class="card"><h3>'+t+'（'+rs.length+'品）</h3><div class="tbl"><table><thead><tr><th>料理</th><th>食べる量</th><th class="num">kcal</th><th>出典</th></tr></thead><tbody>'+rs.map(r=>'<tr><td>'+(r[3]?'<a class="rec" href="'+esc(r[3])+'" target="_blank" rel="noopener">'+esc(r[0])+'</a>':esc(r[0]))+'</td><td class="small">'+esc(r[1])+'</td><td class="num">'+r[2]+'</td><td class="small muted">'+esc(r[4])+'</td></tr>').join('')+'</tbody></table></div></div>'});
+  h+='<p class="small muted">もち麦ごはん：米2合にもち麦100gを足して、水を200ml多めにして炊く。150gで約230kcal。</p></div>';
+  el.innerHTML=h;
+}
+/* ---- 計画 ---- */
+function renderPlan(){
+  const el=document.getElementById('v-plan');if(el.dataset.done)return;el.dataset.done=1;
+  el.innerHTML=`<div class="cols">
+<div class="card prose"><h2>見通し</h2>
+<p>1日約1,400kcal（アイス込み）に毎日30分の自転車を足すと、2月末は約61〜65kg（-10〜14kg）の見込み。BMI 30を切り、生理が整い始める目安の「5〜10%減」は12月中に届く。</p>
+<div class="tbl"><table><thead><tr><th>月末</th><th>食事だけ</th><th>食事＋自転車30分</th></tr></thead><tbody>
+<tr><td>11月</td><td>70.7〜71.5kg</td><td>70.2〜71.1kg</td></tr><tr><td>12月</td><td>68.0〜69.5kg</td><td>66.9〜68.8kg</td></tr><tr><td>1月</td><td>65.5〜67.7kg</td><td>63.9〜66.7kg</td></tr><tr><td>2月</td><td>63.3〜66.1kg</td><td>61.4〜64.8kg</td></tr></tbody></table></div>
+<ul class="small muted"><li>75kg・156cm・32歳と仮定。最初の2週間に水分で1.5kg減る前提</li><li>4か月で59kgはぎりぎり届かない見込み。59kgは3〜4月ごろ</li><li>食事を1,200kcalより減らして早めるのはやらない。生理がさらに乱れて妊娠から遠ざかる</li></ul></div>
+<div class="card prose"><h2>1日のルール</h2>
+<div class="tbl"><table><thead><tr><th>食事</th><th>目安</th><th>中身</th></tr></thead><tbody>
+<tr><td>朝</td><td>なし</td><td>水・お茶。葉酸サプリは昼に</td></tr>
+<tr><td>昼</td><td>約500〜600kcal</td><td>主菜＋もち麦ごはん150g（軽い日は小鉢つき）、または一皿ごはん。1月からはお弁当</td></tr>
+<tr><td>夜</td><td>約600〜700kcal</td><td>主菜＋もち麦ごはん150g＋小鉢や汁物を1〜2品</td></tr>
+<tr><td>間食</td><td>150kcal（2日平均）</td><td>アイス300kcalを2日に1回。ない日はヨーグルト＋果物</td></tr></tbody></table></div>
+<ul><li>飲み物は水・お茶・無糖のもの。甘い飲み物とラテはアイス枠から引く</li><li>ごはんは最初の1週間ははかりで量る</li><li>小鉢は作り置きできるもの（しぼ生漬け、おひたし、和え物など）を週末にまとめて作ると楽。小松菜は週1〜2回まで</li><li>葉酸サプリ（1日400µg）は昼ごはんと一緒に。鉄とカルシウムも入った妊活用だとなお良い</li></ul></div>
+<div class="card prose"><h2>アイスのルール</h2>
+<p>いつもの300kcalのアイスを2日に1回（カレンダーのピンクの点の日）。食べるのは夜ごはんのあと。1日2個は食べない。</p>
+<ul><li>アイスの日：昼と夜のごはんを150g→100g（約-160kcal）。おかずは減らさない</li><li>アイスのない日：無糖ヨーグルト100g＋果物少し（約100kcal）。カルシウムのためにもこれは続ける</li><li>軽いアイスに替えるなら：パピコ1本74kcal、白熊85〜89kcal、アイスの実101kcal、SUNAO 110kcal（<a class="rec" href="https://maquia.hpplus.jp/bikatsu/healthcare-diet/95830/" target="_blank" rel="noopener">MAQUIAの低カロリーアイス特集</a>より）</li></ul></div>
+<div class="card prose"><h2>自転車</h2>
+<p>毎日合計30分、ふだんの移動を自転車にする。わざわざ運動の時間は作らない。</p>
+<div class="tbl"><table><thead><tr><th>自転車</th><th>30分の消費</th><th>使う場面</th></tr></thead><tbody>
+<tr><td>ブリヂストン（アシストなし）</td><td>約170kcal</td><td>1人で出かけるとき。こちらを優先</td></tr>
+<tr><td>ギュット（電動アシスト）</td><td>約130kcal</td><td>子どもを乗せるとき、荷物が多いとき</td></tr></tbody></table></div>
+<ul class="small"><li>週5日以上が目安。往復の合計で30分でOK</li><li>1月からは通勤や送迎で使える区間を30分に数える</li><li>ヘルメットを着用。子どもを乗せる日は安全優先</li></ul>
+<p class="small muted">消費の数字は <a class="rec" href="https://oggi.jp/6752715" target="_blank" rel="noopener">Oggiのメッツ表</a> と <a class="rec" href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10348875" target="_blank" rel="noopener">ノルウェーの研究（2023年）</a> から計算。</p></div>
+<div class="card prose"><h2>栄養</h2>
+<p>献立の56日分を日本食品標準成分表の値で計算した、1日あたりの中央値。長谷川あかりさんのレシピ約290品（BAILA・MAQUIA・LEE・YouTube・Xなど）から組み直した後の数字です。</p>
+<div class="tbl"><table><thead><tr><th>栄養</th><th class="num">直す前</th><th class="num">今の献立</th><th class="num">目安</th></tr></thead><tbody>
+<tr><td>たんぱく質</td><td class="num">約70g</td><td class="num">約67g</td><td class="num">50g</td></tr>
+<tr><td>野菜</td><td class="num">約250g</td><td class="num">約350g</td><td class="num">350g</td></tr>
+<tr><td>葉酸（食事）</td><td class="num">約230µg</td><td class="num">約430µg</td><td class="num">240µg</td></tr>
+<tr><td>食物繊維</td><td class="num">約12g</td><td class="num">約17g</td><td class="num">18g</td></tr>
+<tr><td>カルシウム</td><td class="num">約450mg</td><td class="num">約540mg</td><td class="num">650mg</td></tr>
+<tr><td>鉄</td><td class="num">約8.5mg</td><td class="num">約9.5mg</td><td class="num">10.5mg</td></tr></tbody></table></div>
+<ul class="small"><li>カルシウムと鉄は食事だけだと少し足りない。ヨーグルトを毎日に近づける＋妊活用サプリで補う</li><li>妊娠に向けた葉酸は食事とは別にサプリで400µg（厚生労働省の推奨）</li><li>薬味・調味料の一部は計算に入れていないので、実際は少し多め</li></ul></div>
+<div class="card prose"><h2>ペースを落とすサイン</h2>
+<p>次のどれかが出たら、ごはんを1食180gに増やして1日1,450kcalほどに上げ、自転車は1日15分に減らして、婦人科に相談する。</p>
+<ul><li>生理が2か月以上来ない、または出血の量や周期がさらに乱れる</li><li>めまい、立ちくらみ、抜け毛が増える</li><li>1か月で4kg以上減る（最初の1か月の水分減を除く）</li></ul></div>
+</div>`;
+}
+
+storeNote();route();initDb();
+</script>
+
+</body>
+</html>
