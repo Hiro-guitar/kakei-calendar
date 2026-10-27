@@ -297,7 +297,7 @@ const f10=x=>Math.floor(x/10)*10;
 function freeHtml(label,budget,bento){
   const body=bento
     ?'<p><b>約'+budget+'kcalまで、好きなものでOK。</b>お弁当の日は残りが少ないので、小さめのアイス（パピコ1本74kcal、アイスの実101kcalなど）か、無糖ヨーグルト＋果物（約100kcal）くらい。いつものアイスは週末に。</p>'
-    :'<p><b>昼ごはんと間食（アイスなど）を合わせて、約'+budget+'kcalまで。</b>中身も配分も自由。いつものアイス（300kcal）を食べる日は、昼を軽めにすればOK。</p>';
+    :'<p><b>昼ごはんと間食（アイスなど）を合わせて、約'+budget+'kcalまで。</b>中身も配分も自由。</p>';
   return '<div class="meal"><h3><span>'+label+'</span><span class="kcal">'+budget+' kcalまで</span></h3><div class="free">'+body+'<p class="small muted" style="margin:0">超えた日は、夜のごはんを50gに（−77kcal）。</p></div></div>';
 }
 function mealHtml(label,items){
@@ -412,7 +412,7 @@ function renderPlan(){
 <ul><li>飲み物は水・お茶・無糖のもの。甘い飲み物とラテは間食に数える</li><li>ごはんは最初の1週間ははかりで量る</li><li>小鉢は作り置きできるもの（しぼ生漬け、おひたし、和え物など）を週末にまとめて作ると楽。小松菜は週1〜2回まで</li><li>葉酸サプリ（1日400µg）は昼ごはんと一緒に。鉄とカルシウムも入った妊活用だとなお良い</li></ul></div>
 <div class="card prose"><h2>間食とアイス</h2>
 <p>アイスの日は決めない。1日の合計が約1,200kcalに収まれば、いつ何を食べてもいい。</p>
-<ul><li>昼が自由の日（12月まで毎日、1月からは土日）：昼と間食を合わせて約500〜590kcal。いつものアイス（300kcal）を食べるなら、昼は200〜290kcalくらいに</li><li>お弁当の日（1月からの平日）：間食は約90〜180kcal。小さめのアイスか、無糖ヨーグルト＋果物（約100kcal）。いつものアイスは週末に回す</li><li>超えた日は夜のごはんを50gに（−77kcal）。おかずは減らさない。翌日に持ち越して減らさなくていい</li><li>アイスがない日は無糖ヨーグルトがおすすめ。カルシウムが足りない分を補える</li><li>軽いアイス：パピコ1本74kcal、白熊85〜89kcal、アイスの実101kcal、SUNAO 110kcal（<a class="rec" href="https://maquia.hpplus.jp/bikatsu/healthcare-diet/95830/" target="_blank" rel="noopener">MAQUIAの低カロリーアイス特集</a>より）</li></ul></div>
+<ul><li>昼が自由の日（12月まで毎日、1月からは土日）：昼と間食を合わせて約500〜590kcal</li><li>お弁当の日（1月からの平日）：間食は約90〜180kcal。小さめのアイスか、無糖ヨーグルト＋果物（約100kcal）。いつものアイスは週末に回す</li><li>超えた日は夜のごはんを50gに（−77kcal）。おかずは減らさない。翌日に持ち越して減らさなくていい</li><li>アイスがない日は無糖ヨーグルトがおすすめ。カルシウムが足りない分を補える</li><li>軽いアイス：パピコ1本74kcal、白熊85〜89kcal、アイスの実101kcal、SUNAO 110kcal（<a class="rec" href="https://maquia.hpplus.jp/bikatsu/healthcare-diet/95830/" target="_blank" rel="noopener">MAQUIAの低カロリーアイス特集</a>より）</li></ul></div>
 <div class="card prose"><h2>自転車</h2>
 <p>毎日合計30分、ふだんの移動を自転車にする。わざわざ運動の時間は作らない。</p>
 <div class="tbl"><table><thead><tr><th>自転車</th><th>30分の消費</th><th>使う場面</th></tr></thead><tbody>
