@@ -519,8 +519,6 @@
       '<div class="sheet-head"><h3>' + esc(title) + '</h3><button type="button" class="close" data-close="1" aria-label="閉じる">' + ICON_X + '</button></div>' +
       body + '</div>';
     document.getElementById('fab').classList.add('hidden');
-    const f = document.querySelector('.sheet input:not([type=radio]), .sheet button.primary, .sheet button.danger');
-    if (f && f.tagName === 'INPUT' && f.type !== 'date') f.focus();
   }
 
   function closeSheet() {
@@ -569,7 +567,7 @@
         '<label><input type="radio" name="kind" value="引き落とし"' + (edit && edit.amount > 0 ? '' : ' checked') + '><span>引き落とし・支払い</span></label>' +
         '<label><input type="radio" name="kind" value="入金"' + (edit && edit.amount > 0 ? ' checked' : '') + '><span>入金</span></label></div></div>' +
       '<div class="field"><label for="f-label">項目</label>' +
-        '<input id="f-label" name="label" type="text" list="dl-labels" value="' + esc(edit ? edit.label : '') + '" placeholder="例：楽天カード、家賃、事業収入" autocomplete="off" required>' +
+        '<input id="f-label" name="label" type="text" value="' + esc(edit ? edit.label : '') + '" placeholder="例：楽天カード、家賃、事業収入" autocomplete="off" required>' +
         '<datalist id="dl-labels">' + labels.map(l => '<option value="' + esc(l) + '"></option>').join('') + '</datalist></div>' +
       '<div class="field"><label for="f-amount">金額（円）</label>' +
         '<input id="f-amount" name="amount" type="text" inputmode="numeric" value="' + (edit ? Math.abs(edit.amount) : '') + '" placeholder="例：98000" autocomplete="off" required></div>' +
@@ -595,6 +593,11 @@
       '</form>');
 
     const form = document.getElementById('add-form');
+    // 候補は文字を入れ始めてから出す（開いた瞬間に一覧が出ないように）
+    const lab = document.getElementById('f-label');
+    lab.addEventListener('input', () => {
+      if (lab.value) lab.setAttribute('list', 'dl-labels'); else lab.removeAttribute('list');
+    });
     const note = document.getElementById('f-day-note');
     note.classList.add('hidden');
     if (mode === 'undated') {
