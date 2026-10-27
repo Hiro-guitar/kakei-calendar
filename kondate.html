@@ -155,7 +155,7 @@ button.link{font:inherit;border:0;background:none;color:var(--muted);text-decora
 <div>
 <p class="phase" id="phase"></p>
 <div class="grid" id="grid"></div>
-<div class="legend"><span><i class="ice-dot"></i>アイスの日</span><span>★ ご褒美の日（1月からは土曜）</span><span><i class="prog" style="width:22px;display:inline-block;margin:0"><i style="width:60%"></i></i>その日のチェックの進み具合</span></div>
+<div class="legend"><span>★ ご褒美の日（1月からは土曜）</span><span><i class="prog" style="width:22px;display:inline-block;margin:0"><i style="width:60%"></i></i>その日のチェックの進み具合</span></div>
 </div>
 <aside class="card daycard" id="card" aria-live="polite"></aside>
 </div>
@@ -183,14 +183,14 @@ const PLAN={};
 (function(){
   let d=new Date(START), n=0, hi=27, bi=0;
   while(d<=END){
-    const k=key(d), ice=n%2===0;
-    if(k>='2027-01-01'&&k<='2027-01-03') PLAN[k]={kind:'ny',ice};
-    else if(k<'2027-01-01'){PLAN[k]={kind:'home',t:DATA.home[hi%28],week:Math.floor((hi%28)/7)+1,ice};hi=(hi+1)%28;}
-    else {PLAN[k]={kind:'bento',t:DATA.bento[bi%28],week:Math.floor((bi%28)/7)+1,ice};bi++;}
+    const k=key(d);
+    if(k>='2027-01-01'&&k<='2027-01-03') PLAN[k]={kind:'ny'};
+    else if(k<'2027-01-01'){PLAN[k]={kind:'home',t:DATA.home[hi%28],week:Math.floor((hi%28)/7)+1};hi=(hi+1)%28;}
+    else {PLAN[k]={kind:'bento',t:DATA.bento[bi%28],week:Math.floor((bi%28)/7)+1};bi++;}
     d.setDate(d.getDate()+1);n++;
   }
 })();
-const CHECKS=[['lunch','昼ごはん'],['dinner','夜ごはん'],['kob','小鉢'],['snack','アイス／ヨーグルト'],['bike','自転車30分'],['supp','葉酸サプリ']];
+const CHECKS=[['lunch','昼ごはん'],['dinner','夜ごはん'],['kob','小鉢'],['snack','間食'],['bike','自転車30分'],['supp','葉酸サプリ']];
 
 /* ---- 保存：チェックとメモはスプレッドシート（Apps Script）へ。体重はこのスマホだけ ---- */
 // Apps Script をデプロイしたら、その URL をここに入れる
@@ -260,7 +260,7 @@ function renderCal(){
     const k=y+'-'+pad(m+1)+'-'+pad(d),p=PLAN[k];
     const c=document.createElement('button');c.type='button';c.id='d'+k;
     c.className='cell'+(p?'':' off')+(k===sel?' sel':'')+(k===today?' today':'');
-    let h='<span class="d"><span>'+d+'</span>'+(p&&p.ice?'<i class="ice-dot" title="アイスの日"></i>':'')+'</span>';
+    let h='<span class="d"><span>'+d+'</span>'+'</span>';
     if(p&&p.t) h+='<span class="m"><b>昼</b>'+esc(mainName(p.t.L))+'</span><span class="m"><b>夜</b>'+esc(mainName(p.t.D))+'</span>';
     else if(p) h+='<span class="note">お正月</span>';
     else h+='<span class="note">対象外</span>';
@@ -293,16 +293,21 @@ function closeRecipe(){document.getElementById('sheet').hidden=true;document.bod
 document.addEventListener('click',e=>{const b=e.target.closest('[data-r]');if(b){e.preventDefault();openRecipe(b.dataset.r);return}
   if(e.target.id==='sheet'||e.target.id==='sheet-x')closeRecipe()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeRecipe()});
-const FREEHTML='<div class="free"><p><b>400kcalまでなら、好きなものを何でもOK。</b>超えた日は夜のごはんを50gに。余裕があれば、卵・納豆・ヨーグルトなどを1つ入れるとお腹が持ちやすい（なくても大丈夫）。</p></div>';
-function mealHtml(label,items,ice){
-  if(items.length===1&&items[0][6]==='free') return '<div class="meal"><h3><span>'+label+'</span><span class="kcal">400 kcalまで</span></h3>'+FREEHTML+'</div>';
-  const kc=items.reduce((a,x)=>a+(x[6]==='rice'&&ice?(x[1]==='150g'?153:77):x[3]),0);
+const f10=x=>Math.floor(x/10)*10;
+function freeHtml(label,budget,bento){
+  const body=bento
+    ?'<p><b>約'+budget+'kcalまで、好きなものでOK。</b>お弁当の日は残りが少ないので、小さめのアイス（パピコ1本74kcal、アイスの実101kcalなど）か、無糖ヨーグルト＋果物（約100kcal）くらい。いつものアイスは週末に。</p>'
+    :'<p><b>昼ごはんと間食（アイスなど）を合わせて、約'+budget+'kcalまで。</b>中身も配分も自由。いつものアイス（300kcal）を食べる日は、昼を軽めにすればOK。</p>';
+  return '<div class="meal"><h3><span>'+label+'</span><span class="kcal">'+budget+' kcalまで</span></h3><div class="free">'+body+'<p class="small muted" style="margin:0">超えた日は、夜のごはんを50gに（−77kcal）。</p></div></div>';
+}
+function mealHtml(label,items){
+  const kc=items.reduce((a,x)=>a+x[3],0);
   const li=items.map(([n,a,u,k,src,tr,kd])=>{
     let name=kd==='rice'?'<span class="plain">'+esc(n)+'</span>':recBtn(n,u,src);
     if(tr)name='<span class="treat">★</span>'+name;
     if(kd==='kob'||kd==='side')name='<span class="kob">小鉢</span>'+name;
     if(kd==='soup')name='<span class="kob">汁物</span>'+name;
-    let amt=a; if(kd==='rice'){if(ice)amt=(a==='150g'?'100g':'50g')+'（アイスの日）';}else amt=(a.indexOf('昨日の夜の残り')===0?'昨日の夜の残り・':'')+'1人前';
+    let amt=a; if(kd!=='rice')amt=(a.indexOf('昨日の夜の残り')===0?'昨日の夜の残り・':'')+'1人前';
     return '<li><span>'+name+'</span><span class="amt">'+esc(amt||'')+'</span></li>'}).join('');
   return '<div class="meal"><h3><span>'+label+'</span><span class="kcal">約'+kc+' kcal</span></h3><ul>'+li+'</ul></div>';
 }
@@ -315,15 +320,22 @@ function renderCard(){
   const dow=W[(d.getDay()+6)%7];
   let h='<div><h2>'+(d.getMonth()+1)+'月'+d.getDate()+'日（'+dow+'）</h2><div class="sub">'+(p.kind==='home'?'おうちごはん・'+p.week+'週目の献立':p.kind==='bento'?'お弁当期・'+p.week+'週目の献立':'お正月')+'</div></div>';
   h+='<p class="small muted" style="margin:0">料理は全部1人前（レシピの1人分）。ごはんだけはグラムどおりに。</p>';
-  h+=p.ice?'<span class="chip ice">アイスの日：300kcalくらいまで。ごはんは50gずつ減らす</span>':'<span class="chip yog">アイスなしの日：無糖ヨーグルト100g＋果物少し（約100kcal）</span>';
   if(p.t){
     const isBento=p.kind==='bento'&&d.getDay()%6!==0;
     const nx=new Date(d);nx.setDate(nx.getDate()+1);const nk=key(nx);const nextBento=PLAN[nk]&&PLAN[nk].kind==='bento'&&nx.getDay()%6!==0;
-    h+=mealHtml(isBento?'昼（お弁当・昨日の夜の残り）':'昼（自由）',p.t.L,p.ice)+mealHtml(nextBento?'夜（主菜と小鉢は明日のお弁当の分も作る）':'夜',p.t.D,p.ice);
-    const mk=items=>items.reduce((a,x)=>a+(x[6]==='rice'&&p.ice?(x[1]==='150g'?153:77):x[3]),0);
-    const lk=mk(p.t.L),dk=mk(p.t.D),sk=p.ice?300:100,tk=lk+dk+sk;
-    h+='<div class="total"><span>1日の合計</span><span>約'+tk.toLocaleString()+' kcal</span></div>';
-    h+='<p class="small muted" style="margin:-6px 0 0">昼 '+(p.t.L[0][6]==='free'?'400（上限）':lk)+' ＋ 夜 '+dk+' ＋ '+(p.ice?'アイス 300':'ヨーグルト＋果物 100')+' ＝ '+tk.toLocaleString()+'</p>';
+    const sum=items=>items.reduce((a,x)=>a+x[3],0);
+    const dk=sum(p.t.D),dl=mealHtml(nextBento?'夜（主菜と小鉢は明日のお弁当の分も作る）':'夜',p.t.D);
+    if(isBento){
+      const lk=sum(p.t.L),sk=f10(1200-lk-dk);
+      h+=mealHtml('昼（お弁当・昨日の夜の残り）',p.t.L)+dl+freeHtml('間食',sk,true);
+      h+='<div class="total"><span>1日の合計</span><span>約1,200 kcal</span></div>';
+      h+='<p class="small muted" style="margin:-6px 0 0">昼 '+lk+' ＋ 夜 '+dk+' ＋ 間食 '+sk+'まで</p>';
+    } else {
+      const fk=f10(1200-dk);
+      h+=freeHtml('昼＋間食（自由）',fk,false)+dl;
+      h+='<div class="total"><span>1日の合計</span><span>約1,200 kcal</span></div>';
+      h+='<p class="small muted" style="margin:-6px 0 0">昼と間食 '+fk+'まで ＋ 夜 '+dk+'</p>';
+    }
     h+=nutHtml(p.t.v);
   } else h+='<p class="small" style="margin:0">お正月は献立なし。おせちやお雑煮は好きなものを、量だけ控えめに。小松菜のおひたしだけは続けると楽です。</p>';
   const dd=state.days[sel]||{};
@@ -387,20 +399,20 @@ function renderPlan(){
   const el=document.getElementById('v-plan');if(el.dataset.done)return;el.dataset.done=1;
   el.innerHTML=`<div class="cols">
 <div class="card prose"><h2>見通し</h2>
-<p>1日平均約1,200kcal（アイスの日は1,200〜1,370、ない日は1,100〜1,200）に毎日30分の自転車で、2月末は約59〜62kg（-13〜16kg）の見込み。59kgに届くのは3月上旬〜4月上旬。生理が整い始める目安の「5〜10%減」は12月中に届く。</p>
+<p>1日約1,200kcalに毎日30分の自転車で、2月末は約59〜62kg（-13〜16kg）の見込み。59kgに届くのは3月上旬〜4月上旬。生理が整い始める目安の「5〜10%減」は12月中に届く。</p>
 <div class="tbl"><table><thead><tr><th>月末</th><th>見込み（食事1,200＋自転車30分）</th></tr></thead><tbody>
 <tr><td>11月</td><td>69.6〜70.4kg</td></tr><tr><td>12月</td><td>65.8〜67.3kg</td></tr><tr><td>1月</td><td>62.3〜64.5kg</td></tr><tr><td>2月</td><td>59.4〜62.1kg</td></tr><tr><td>3月</td><td>56〜59.6kg（59kgで止める）</td></tr></tbody></table></div>
 <ul class="small muted"><li>75kg・156cm・32歳と仮定。最初の2週間に水分で1.5kg減る前提。幅はふだんの動き方（家事・育児量）の違い</li><li>1,200kcalは下限。これより減らして早めるのはやらない。生理がさらに乱れて妊娠から遠ざかる</li><li>2〜3か月目は停滞しやすい。そこで焦って食事を減らさない</li></ul></div>
 <div class="card prose"><h2>1日のルール</h2>
 <div class="tbl"><table><thead><tr><th>食事</th><th>目安</th><th>中身</th></tr></thead><tbody>
 <tr><td>朝</td><td>なし</td><td>水・お茶。葉酸サプリは昼に</td></tr>
-<tr><td>昼</td><td>400kcalまで</td><td>好きなものでOK。1月からの平日はお弁当（前の晩の主菜と小鉢の残り＋もち麦ごはん150g）</td></tr>
+<tr><td>昼</td><td>自由（間食と合わせて約500〜590kcal）</td><td>好きなものでOK。1月からの平日はお弁当（前の晩の主菜と小鉢の残り＋もち麦ごはん150g、約440〜600kcal）</td></tr>
 <tr><td>夜</td><td>約550〜750kcal</td><td>献立どおり。主菜＋もち麦ごはん100g＋小鉢や汁物を1〜2品。1月からは日〜木の夜に、主菜と小鉢を翌日のお弁当の分（1人分）多く作る</td></tr>
-<tr><td>間食</td><td>150kcal（2日平均）</td><td>アイス300kcalを2日に1回。ない日はヨーグルト＋果物</td></tr></tbody></table></div>
-<ul><li>飲み物は水・お茶・無糖のもの。甘い飲み物とラテはアイス枠から引く</li><li>ごはんは最初の1週間ははかりで量る</li><li>小鉢は作り置きできるもの（しぼ生漬け、おひたし、和え物など）を週末にまとめて作ると楽。小松菜は週1〜2回まで</li><li>葉酸サプリ（1日400µg）は昼ごはんと一緒に。鉄とカルシウムも入った妊活用だとなお良い</li></ul></div>
-<div class="card prose"><h2>アイスのルール</h2>
-<p>いつもの300kcalのアイスを2日に1回（カレンダーのピンクの点の日）。食べるのは夜ごはんのあと。1日2個は食べない。</p>
-<ul><li>アイスの日：ごはんを50gずつ減らす（お弁当150g→100g、夜100g→50g、昼が自由の日は夜を50gに＋昼を控えめに）。おかずは減らさない</li><li>アイスのない日：無糖ヨーグルト100g＋果物少し（約100kcal）。カルシウムのためにもこれは続ける</li><li>軽いアイスに替えるなら：パピコ1本74kcal、白熊85〜89kcal、アイスの実101kcal、SUNAO 110kcal（<a class="rec" href="https://maquia.hpplus.jp/bikatsu/healthcare-diet/95830/" target="_blank" rel="noopener">MAQUIAの低カロリーアイス特集</a>より）</li></ul></div>
+<tr><td>間食</td><td>1,200から昼と夜を引いた残り</td><td>その日のカードに数字が出る。昼が自由の日は昼と合わせて約500〜590kcal、お弁当の日は約90〜180kcal</td></tr></tbody></table></div>
+<ul><li>飲み物は水・お茶・無糖のもの。甘い飲み物とラテは間食に数える</li><li>ごはんは最初の1週間ははかりで量る</li><li>小鉢は作り置きできるもの（しぼ生漬け、おひたし、和え物など）を週末にまとめて作ると楽。小松菜は週1〜2回まで</li><li>葉酸サプリ（1日400µg）は昼ごはんと一緒に。鉄とカルシウムも入った妊活用だとなお良い</li></ul></div>
+<div class="card prose"><h2>間食とアイス</h2>
+<p>アイスの日は決めない。1日の合計が約1,200kcalに収まれば、いつ何を食べてもいい。</p>
+<ul><li>昼が自由の日（12月まで毎日、1月からは土日）：昼と間食を合わせて約500〜590kcal。いつものアイス（300kcal）を食べるなら、昼は200〜290kcalくらいに</li><li>お弁当の日（1月からの平日）：間食は約90〜180kcal。小さめのアイスか、無糖ヨーグルト＋果物（約100kcal）。いつものアイスは週末に回す</li><li>超えた日は夜のごはんを50gに（−77kcal）。おかずは減らさない。翌日に持ち越して減らさなくていい</li><li>アイスがない日は無糖ヨーグルトがおすすめ。カルシウムが足りない分を補える</li><li>軽いアイス：パピコ1本74kcal、白熊85〜89kcal、アイスの実101kcal、SUNAO 110kcal（<a class="rec" href="https://maquia.hpplus.jp/bikatsu/healthcare-diet/95830/" target="_blank" rel="noopener">MAQUIAの低カロリーアイス特集</a>より）</li></ul></div>
 <div class="card prose"><h2>自転車</h2>
 <p>毎日合計30分、ふだんの移動を自転車にする。わざわざ運動の時間は作らない。</p>
 <div class="tbl"><table><thead><tr><th>自転車</th><th>30分の消費</th><th>使う場面</th></tr></thead><tbody>
@@ -426,6 +438,4 @@ function renderPlan(){
 
 storeNote();route();initDb();
 </script>
-
-</body>
-</html>
+</body></html>
