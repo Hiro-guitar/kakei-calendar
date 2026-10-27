@@ -96,7 +96,7 @@ table.ing td.num{white-space:normal;text-align:right}
 .btnlink{display:inline-block;background:var(--leaf);color:var(--bg);text-decoration:none;border-radius:8px;padding:8px 14px;font-weight:500}
 .free{background:var(--bg);border-radius:8px;padding:8px 10px}
 .free p{margin:0 0 4px;font-size:.88rem}
-.bikein{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:.88rem}.bikein input{width:5.5em;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit}
+.bikein{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:.88rem;flex-wrap:wrap}.bikein label{min-width:8.5em}.bikein input{width:5.5em;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit}
 .free ul{margin:0;padding-left:1.1em;display:grid;gap:2px}
 .total span:last-child{white-space:nowrap}
 .total{display:flex;gap:8px;justify-content:space-between;font-weight:700;font-variant-numeric:tabular-nums;border-top:1px solid var(--line);padding-top:10px}
@@ -295,16 +295,18 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-r]');if(b)
   if(e.target.id==='sheet'||e.target.id==='sheet-x')closeRecipe()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeRecipe()});
 const f10=x=>Math.floor(x/10)*10;
-// 自転車：見通しには入れていない。乗った分だけ1分5kcal（30分150kcal：ブリヂストン約170・ギュット約130の間）食べてよい
+// 自転車：見通しには入れていない。乗った分だけ食べてよい（Oggiのメッツ表と体重75kgから：ギュット30分約130kcal、ブリヂストン30分約170kcal）
+const BK=[['g','ギュット（電動）',130/30],['b','ブリヂストン',170/30]];
 state.bike=lsGet('kondate-bike',{});
-const bikeExtra=m=>Math.max(0,Math.round(m||0))*5;
+const bikeOf=k=>{const v=state.bike[k];return typeof v==='number'?{g:v}:(v||{})};
+const bikeExtra=k=>{const v=bikeOf(k);return Math.round(BK.reduce((a,[id,,r])=>a+(v[id]||0)*r,0)/10)*10};
 function freeHtml(label,budget,bento){
-  const m=state.bike[sel]||'',ex=bikeExtra(m),tot=budget+ex;
+  const v=bikeOf(sel),ex=bikeExtra(sel),tot=budget+ex;
   const body=bento
     ?'<p>好きなものでOK。小さめのアイス（パピコ1本74kcal、アイスの実101kcalなど）か、無糖ヨーグルト＋果物（約100kcal）くらい。いつものアイスは週末に。</p>'
     :'<p>昼ごはんと間食（アイスなど）を合わせて。中身も配分も自由。</p>';
-  const bk='<div class="bikein"><label for="bikemin">今日の自転車</label><input type="number" id="bikemin" inputmode="numeric" min="0" max="300" step="5" value="'+m+'" placeholder="0"><span>分</span></div>'
-    +'<p class="small" style="margin:4px 0 0">'+(ex?m+'分ぶん <b>+'+ex+'kcal</b> → <b>約'+tot+'kcalまで</b>':'乗った分だけ、1分5kcal足せる（30分で+150kcal）')+'</p>';
+  const bk='<p class="small" style="margin:8px 0 0">今日の自転車（乗った分だけ足せる）</p>'+BK.map(([id,n,r])=>'<div class="bikein"><label for="bk-'+id+'">'+n+'</label><input type="number" id="bk-'+id+'" data-bk="'+id+'" inputmode="numeric" min="0" max="300" step="5" value="'+(v[id]||'')+'" placeholder="0"><span>分</span><span class="muted small">30分で約'+Math.round(r*30)+'kcal</span></div>').join('')
+    +(ex?'<p class="small" style="margin:4px 0 0">自転車ぶん <b>+'+ex+'kcal</b> → <b>約'+tot+'kcalまで</b></p>':'');
   return '<div class="meal"><h3><span>'+label+'</span><span class="kcal">'+tot+' kcalまで</span></h3><div class="free">'+body+bk+'<p class="small muted" style="margin:4px 0 0">超えた日は、夜のごはんを50gに（−77kcal）。</p></div></div>';
 }
 function mealHtml(label,items){
@@ -335,13 +337,13 @@ function renderCard(){
     if(isBento){
       const lk=sum(p.t.L),sk=f10(1200-lk-dk);
       h+=mealHtml('昼（お弁当・昨日の夜の残り）',p.t.L)+dl+freeHtml('間食',sk,true);
-      h+='<div class="total"><span>1日の合計</span><span>約'+(1200+bikeExtra(state.bike[sel])).toLocaleString()+' kcal</span></div>';
-      h+='<p class="small muted" style="margin:-6px 0 0">昼 '+lk+' ＋ 夜 '+dk+' ＋ 間食 '+sk+'まで'+(bikeExtra(state.bike[sel])?' ＋ 自転車 '+bikeExtra(state.bike[sel]):'')+'</p>';
+      h+='<div class="total"><span>1日の合計</span><span>約'+(1200+bikeExtra(sel)).toLocaleString()+' kcal</span></div>';
+      h+='<p class="small muted" style="margin:-6px 0 0">昼 '+lk+' ＋ 夜 '+dk+' ＋ 間食 '+sk+'まで'+(bikeExtra(sel)?' ＋ 自転車 '+bikeExtra(sel):'')+'</p>';
     } else {
       const fk=f10(1200-dk);
       h+=freeHtml('昼＋間食（自由）',fk,false)+dl;
-      h+='<div class="total"><span>1日の合計</span><span>約'+(1200+bikeExtra(state.bike[sel])).toLocaleString()+' kcal</span></div>';
-      h+='<p class="small muted" style="margin:-6px 0 0">昼と間食 '+fk+'まで ＋ 夜 '+dk+(bikeExtra(state.bike[sel])?' ＋ 自転車 '+bikeExtra(state.bike[sel]):'')+'</p>';
+      h+='<div class="total"><span>1日の合計</span><span>約'+(1200+bikeExtra(sel)).toLocaleString()+' kcal</span></div>';
+      h+='<p class="small muted" style="margin:-6px 0 0">昼と間食 '+fk+'まで ＋ 夜 '+dk+(bikeExtra(sel)?' ＋ 自転車 '+bikeExtra(sel):'')+'</p>';
     }
     h+=nutHtml(p.t.v);
   } else h+='<p class="small" style="margin:0">お正月は献立なし。おせちやお雑煮は好きなものを、量だけ控えめに。小松菜のおひたしだけは続けると楽です。</p>';
@@ -350,7 +352,7 @@ function renderCard(){
   h+='<div><label for="memo" class="small muted">メモ（体調・生理・外食など）</label><textarea id="memo"'+(state.readOnly?' disabled':'')+'>'+esc(dd.memo||'')+'</textarea></div>';
   card.innerHTML=h;
   card.querySelectorAll('input[data-c]').forEach(i=>i.onchange=()=>{const o={...(state.days[sel]||{})};o[i.dataset.c]=i.checked;saveDay(sel,o);renderCal()});
-  const bi=card.querySelector('#bikemin');if(bi)bi.onchange=()=>{const v=Math.max(0,Math.min(300,parseInt(bi.value)||0));const o={...state.bike};if(v)o[sel]=v;else delete o[sel];state.bike=o;lsSet('kondate-bike',o);if(v>0&&!(state.days[sel]||{}).bike&&!state.readOnly){saveDay(sel,{...(state.days[sel]||{}),bike:true});renderCal()}renderCard()};
+  card.querySelectorAll('input[data-bk]').forEach(bi=>bi.onchange=()=>{const val=Math.max(0,Math.min(300,parseInt(bi.value)||0));const cur={...bikeOf(sel)};if(val)cur[bi.dataset.bk]=val;else delete cur[bi.dataset.bk];const o={...state.bike};if(Object.keys(cur).length)o[sel]=cur;else delete o[sel];state.bike=o;lsSet('kondate-bike',o);if(val>0&&!(state.days[sel]||{}).bike&&!state.readOnly){saveDay(sel,{...(state.days[sel]||{}),bike:true});renderCal()}renderCard()});
   const memo=card.querySelector('#memo');memo.onchange=()=>{const o={...(state.days[sel]||{})};o.memo=memo.value.slice(0,500);saveDay(sel,o)};
 }
 
@@ -420,9 +422,9 @@ function renderPlan(){
 <ul><li>飲み物は水・お茶・無糖のもの。甘い飲み物とラテは間食に数える</li><li>ごはんは最初の1週間ははかりで量る</li><li>小鉢は作り置きできるもの（しぼ生漬け、おひたし、和え物など）を週末にまとめて作ると楽。小松菜は週1〜2回まで</li><li>葉酸サプリ（1日400µg）は昼ごはんと一緒に。鉄とカルシウムも入った妊活用だとなお良い</li></ul></div>
 <div class="card prose"><h2>間食とアイス</h2>
 <p>アイスの日は決めない。1日の合計が約1,200kcalに収まれば、いつ何を食べてもいい。</p>
-<ul><li>自転車に乗った日は、乗った分だけ1分5kcal足していい（30分で+150kcal。ブリヂストン約170・ギュット約130kcal／30分の間）。カードに分数を入れると数字が変わる。乗れなかった日も1,200kcalは食べる</li><li>昼が自由の日（12月まで毎日、1月からは土日）：昼と間食を合わせて約500〜590kcal。</li><li>お弁当の日（1月からの平日）：間食は約90〜180kcal。小さめのアイスか、無糖ヨーグルト＋果物（約100kcal）。いつものアイスは週末に回す</li><li>超えた日は夜のごはんを50gに（−77kcal）。おかずは減らさない。翌日に持ち越して減らさなくていい</li><li>アイスがない日は無糖ヨーグルトがおすすめ。カルシウムが足りない分を補える</li><li>軽いアイス：パピコ1本74kcal、白熊85〜89kcal、アイスの実101kcal、SUNAO 110kcal（<a class="rec" href="https://maquia.hpplus.jp/bikatsu/healthcare-diet/95830/" target="_blank" rel="noopener">MAQUIAの低カロリーアイス特集</a>より）</li></ul></div>
+<ul><li>自転車に乗った日は、乗った分だけ足していい（30分でギュット約130kcal、ブリヂストン約170kcal）。カードに自転車ごとの分数を入れると数字が変わる。乗れなかった日も1,200kcalは食べる</li><li>昼が自由の日（12月まで毎日、1月からは土日）：昼と間食を合わせて約500〜590kcal。</li><li>お弁当の日（1月からの平日）：間食は約90〜180kcal。小さめのアイスか、無糖ヨーグルト＋果物（約100kcal）。いつものアイスは週末に回す</li><li>超えた日は夜のごはんを50gに（−77kcal）。おかずは減らさない。翌日に持ち越して減らさなくていい</li><li>アイスがない日は無糖ヨーグルトがおすすめ。カルシウムが足りない分を補える</li><li>軽いアイス：パピコ1本74kcal、白熊85〜89kcal、アイスの実101kcal、SUNAO 110kcal（<a class="rec" href="https://maquia.hpplus.jp/bikatsu/healthcare-diet/95830/" target="_blank" rel="noopener">MAQUIAの低カロリーアイス特集</a>より）</li></ul></div>
 <div class="card prose"><h2>自転車</h2>
-<p>ふだんの移動を自転車にする。わざわざ運動の時間は作らない。乗った分は間食に足せる（1分5kcal）。食べずに残せば、そのぶん少し早く痩せる。</p>
+<p>ふだんの移動を自転車にする。わざわざ運動の時間は作らない。乗った分は間食に足せる（カードに自転車ごとの分数を入れる）。食べずに残せば、そのぶん少し早く痩せる。</p>
 <div class="tbl"><table><thead><tr><th>自転車</th><th>30分の消費</th><th>使う場面</th></tr></thead><tbody>
 <tr><td>ブリヂストン（アシストなし）</td><td>約170kcal</td><td>1人で出かけるとき。こちらを優先</td></tr>
 <tr><td>ギュット（電動アシスト）</td><td>約130kcal</td><td>子どもを乗せるとき、荷物が多いとき</td></tr></tbody></table></div>
