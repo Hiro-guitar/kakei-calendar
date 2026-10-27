@@ -163,6 +163,8 @@
   .btn2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .btn2 .secondary { font-size: 14px; min-height: 48px; padding: 0 6px; }
   .linkbtn { align-self: center; background: none; border: 0; color: var(--sub); text-decoration: underline; font-size: 13px; padding: 6px; cursor: pointer; }
+  .fee { display: flex; justify-content: space-between; gap: 12px; margin-left: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .fee .n { font-variant-numeric: tabular-nums; white-space: nowrap; }
   .how { font-size: 13px; color: var(--sub); background: var(--bg); border-radius: 10px; padding: 10px 12px; }
 </style>
 </head>
@@ -236,7 +238,7 @@
   }
 
   const PREVIEW = /[?&]demo\b/.test(location.search);
-  const APP_VERSION = '2026-10-27b';
+  const APP_VERSION = '2026-10-27c';
   function checkUpdate() {
     if (PREVIEW) return;
     fetch(location.pathname + '?check=' + Date.now(), { cache: 'no-store' })
@@ -773,16 +775,23 @@
         '<div class="how">' + esc(cardHowTo(ev.label)) + '</div>' +
         fileBtn('replace', '明細CSVを読み込む');
     } else {
-      const sum = rows.reduce((a, r) => a + r[2], 0);
-      const diff = debit - sum;
+      // 「返済」「手数料」の行は、お買い物とは別にまとめる
+      const isFee = r => r[3] === '返済' || r[3] === '手数料';
+      const shopIdx = rows.map((r, i) => i).filter(i => !isFee(rows[i]));
+      const feeRows = rows.filter(isFee);
+      const sum = shopIdx.reduce((a, i) => a + rows[i][2], 0);
+      const feeSum = feeRows.reduce((a, r) => a + r[2], 0);
+      const diff = debit - sum - feeSum;
       const cats = {};
-      rows.forEach((r, i) => { const c = cats[r[4]] = cats[r[4]] || { sum: 0, list: [] }; c.sum += r[2]; c.list.push(i); });
+      shopIdx.map(i => rows[i]).forEach((r, k) => { const i = shopIdx[k]; const c = cats[r[4]] = cats[r[4]] || { sum: 0, list: [] }; c.sum += r[2]; c.list.push(i); });
       const names = Object.keys(cats).sort((a, b) => cats[b].sum - cats[a].sum);
       const top = Math.max(1, ...names.map(n => Math.abs(cats[n].sum)));
       const catOpts = cur => (DATA.categories || ['その他']).map(c => '<option' + (c === cur ? ' selected' : '') + '>' + esc(c) + '</option>').join('');
 
       h += '<div class="bk">' +
-        '<div class="bk-line"><span>お買い物の分<small>明細にある ' + rows.length + '件</small></span><span class="n">' + yen(sum) + '</span></div>' +
+        (feeRows.length ? '<div class="bk-line"><span>リボ・分割・キャッシングの返済と手数料</span><span class="n">' + yen(feeSum) + '</span></div>' +
+          feeRows.map(r => '<div class="fee"><span>' + esc(r[1]) + '</span><span class="n">' + yen(r[2]) + '</span></div>').join('') : '') +
+        (shopIdx.length ? '<div class="bk-line"><span>' + (feeRows.length ? '＋ ' : '') + 'お買い物の分<small>明細にある ' + shopIdx.length + '件</small></span><span class="n">' + yen(sum) + '</span></div>' : '') +
         names.map(n => '<details class="cat"><summary><span>' + esc(n) + '</span><span class="n">' + (cats[n].sum < 0 ? '−' : '') + yen(cats[n].sum) + '</span>' + ICON_R +
             '<span class="bar"><i style="width:' + Math.max(2, Math.round(Math.abs(cats[n].sum) / top * 100)) + '%"></i></span></summary>' +
             cats[n].list.map(i => { const r = rows[i]; return '<div class="st"><span class="d">' + esc(cardDay(r[0])) + '</span><span class="nm">' + esc(r[1]) +
@@ -904,14 +913,15 @@
       const date = csvDate(r[di]);
       const store = (r[si] || '').trim();
       const amt = csvAmt(r[pi]);
-      if (!date || !store || isNaN(amt) || amt === 0) return;
+      if (!store || isNaN(amt) || amt === 0 || /^購入金額/.test(store)) return;
+      if (!date && !/手数料|損害金|利息/.test(store)) return;
       const method = mi >= 0 ? (r[mi] || '').trim() : '';
       if (startI >= 0) {
         const sm = String(r[startI] || '').normalize('NFKC').match(/(?:(\d{4})\D+)?(\d{1,2})月?\s*$/);
         if (sm && (sm[1] ? sm[1] + '-' + ('0' + sm[2]).slice(-2) !== ym : Number(sm[2]) !== evM)) { other++; return; }
       }
       if (fallback && /リボ|分割|ボーナス/.test(method)) { revo++; return; }
-      rows.push([date, store, amt, method]);
+      rows.push([date, store, amt, !date || /^(遅延損害金|.*再振替手数料)/.test(store) ? '手数料' : method]);
     });
     if (!rows.length) throw new Error(evM + '月に払う分の明細が見つかりませんでした。月を確かめてください');
     return { rows: rows, note: revo ? 'リボ・分割で買った' + revo + '件は、今回払う額がCSVに出ないので「お買い物の分」には入れていません。' : '' };
