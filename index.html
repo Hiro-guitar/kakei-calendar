@@ -123,6 +123,8 @@
   .seg input:checked + span { border-color: var(--ink); background: var(--ink); color: #fff; font-weight: 700; }
   .seg input:focus-visible + span { outline: 2px solid var(--in); outline-offset: 2px; }
   .hidden { display: none !important; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { min-height: 36px; padding: 0 12px; border-radius: 18px; border: 1px solid var(--field); background: #fff; font-size: 14px; cursor: pointer; }
   .seg.seg3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .err { color: #9A2A0A; font-size: 14px; min-height: 0; }
   .primary { min-height: 52px; border: 0; border-radius: 12px; background: var(--ink); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; }
@@ -208,6 +210,18 @@
   }
 
   const PREVIEW = /[?&]demo\b/.test(location.search);
+  const APP_VERSION = '2026-10-27a';
+  function checkUpdate() {
+    if (PREVIEW) return;
+    fetch(location.pathname + '?check=' + Date.now(), { cache: 'no-store' })
+      .then(r => r.text())
+      .then(t => {
+        const m = t.match(/APP_VERSION = '([^']+)'/);
+        if (m && m[1] !== APP_VERSION) location.replace(location.pathname + '?v=' + m[1] + location.hash);
+      })
+      .catch(() => {});
+  }
+  checkUpdate();
   const KEY = PREVIEW ? '' : readKey();
   let DATA = null;
   let selected = null;
@@ -551,7 +565,7 @@
     const shiftSel = edit ? ({ '前の平日': 'prev', 'ずらさない': 'none' }[edit.shift] || 'next') : 'next';
     const ruleDay = rule === '毎月末' ? '末' : (rule.match(/\d+/) || [''])[0];
     if (edit && edit.date && mode === 'once') date = edit.date;
-    const labels = [...new Set(DATA.events.map(e => e.label))];
+    const labels = [...new Set(DATA.events.concat(DATA.undated || []).map(e => e.label))];
     const accts = DATA.balances.map(b => b.account);
     let dayOpts = '';
     for (let d = 1; d <= 31; d++) dayOpts += '<option value="' + d + '"' + ((ruleDay ? String(d) === ruleDay : d === (date ? Number(date.slice(8)) : 27)) ? ' selected' : '') + '>' + d + '日</option>';
@@ -568,7 +582,7 @@
         '<label><input type="radio" name="kind" value="入金"' + (edit && edit.amount > 0 ? ' checked' : '') + '><span>入金</span></label></div></div>' +
       '<div class="field"><label for="f-label">項目</label>' +
         '<input id="f-label" name="label" type="text" value="' + esc(edit ? edit.label : '') + '" placeholder="例：楽天カード、家賃、事業収入" autocomplete="off" required>' +
-        '<datalist id="dl-labels">' + labels.map(l => '<option value="' + esc(l) + '"></option>').join('') + '</datalist></div>' +
+        '<div class="chips hidden" id="f-label-sugg"></div></div>' +
       '<div class="field"><label for="f-amount">金額（円）</label>' +
         '<input id="f-amount" name="amount" type="text" inputmode="numeric" value="' + (edit ? Math.abs(edit.amount) : '') + '" placeholder="例：98000" autocomplete="off" required></div>' +
       '<div class="field"><span class="lbl">いつ</span><div class="seg seg3">' +
@@ -593,10 +607,21 @@
       '</form>');
 
     const form = document.getElementById('add-form');
-    // 候補は文字を入れ始めてから出す（開いた瞬間に一覧が出ないように）
+    // 候補は文字を入れ始めてから、入力欄の下にボタンで出す（iPhoneの一覧は使わない）
     const lab = document.getElementById('f-label');
-    lab.addEventListener('input', () => {
-      if (lab.value) lab.setAttribute('list', 'dl-labels'); else lab.removeAttribute('list');
+    const sugg = document.getElementById('f-label-sugg');
+    const showSugg = () => {
+      const q = lab.value.trim().toLowerCase();
+      const hits = q ? labels.filter(l => l.toLowerCase().indexOf(q) >= 0 && l !== lab.value.trim()).slice(0, 6) : [];
+      sugg.innerHTML = hits.map(l => '<button type="button" class="chip" data-sugg="' + esc(l) + '">' + esc(l) + '</button>').join('');
+      sugg.classList.toggle('hidden', !hits.length);
+    };
+    lab.addEventListener('input', showSugg);
+    sugg.addEventListener('click', e => {
+      const b = e.target.closest('[data-sugg]');
+      if (!b) return;
+      lab.value = b.dataset.sugg;
+      sugg.classList.add('hidden');
     });
     const note = document.getElementById('f-day-note');
     note.classList.add('hidden');
@@ -779,6 +804,7 @@
   // アプリに戻ってきたら最新にする（もうひとりが入れた分を反映）
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible' || !DATA || PREVIEW || document.querySelector('.sheet')) return;
+    checkUpdate();
     api().then(setData).catch(() => {});
   });
 
