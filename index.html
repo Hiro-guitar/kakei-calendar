@@ -242,7 +242,7 @@
   }
 
   const PREVIEW = /[?&]demo\b/.test(location.search);
-  const APP_VERSION = '2026-10-27d';
+  const APP_VERSION = '2026-10-28a';
   function checkUpdate() {
     if (PREVIEW) return;
     fetch(location.pathname + '?check=' + Date.now(), { cache: 'no-store' })
@@ -781,7 +781,7 @@
     } else {
       // 「返済」「手数料」の行は、お買い物とは別にまとめる
       const isFee = r => r[3] === '返済' || r[3] === '手数料';
-      const isKid = r => /^(分割内訳|リボ内訳)/.test(r[3]);
+      const isKid = r => /^(分割内訳|リボ内訳|キャッシング内訳)/.test(r[3]);
       const shopIdx = rows.map((r, i) => i).filter(i => !isFee(rows[i]) && !isKid(rows[i]));
       const kidIdx = kind => rows.map((r, i) => i).filter(i => String(rows[i][3]).indexOf(kind) === 0);
       const feeRows = rows.filter(isFee);
@@ -795,6 +795,7 @@
       const catOpts = cur => (DATA.categories || ['その他']).map(c => '<option' + (c === cur ? ' selected' : '') + '>' + esc(c) + '</option>').join('');
 
       // 去年以前の日付は年も付ける（25/11/7）
+      const shop = n => String(n).replace(/^返済方法変更WEB\s*\d*\s*/, '').replace(/[(（]ヘンサイヘンコウ[)）]?$/, '').trim() || String(n);
       const dayY = d => /^\d{4}-/.test(d) && d.slice(0, 4) !== ev.date.slice(0, 4) ? d.slice(2, 4) + '/' + cardDay(d) : cardDay(d);
       // カテゴリごとにまとめた一覧（カテゴリはお店ごとに選び直せる）
       const catBlock = idx => {
@@ -804,20 +805,28 @@
         const mx = Math.max(1, ...ns.map(n => Math.abs(g[n].sum)));
         return ns.map(n => '<details class="cat"><summary><span>' + esc(n) + '<small>' + g[n].list.length + '件</small></span><span class="n">' + yen(g[n].sum) + '</span>' + ICON_R +
           '<span class="bar"><i style="width:' + Math.max(2, Math.round(Math.abs(g[n].sum) / mx * 100)) + '%"></i></span></summary>' +
-          g[n].list.map(i => { const r = rows[i]; return '<div class="st"><span class="d">' + esc(dayY(r[0])) + '</span><span class="nm">' + esc(r[1]) + '</span><span class="n">' + yen(r[2]) + '</span>' +
+          g[n].list.map(i => { const r = rows[i]; return '<div class="st"><span class="d">' + esc(dayY(r[0])) + '</span><span class="nm">' + esc(shop(r[1])) + '</span><span class="n">' + yen(r[2]) + '</span>' +
             '<select data-store="' + esc(r[1]) + '" aria-label="' + esc(r[1]) + 'のカテゴリ">' + catOpts(r[4]) + '</select></div>'; }).join('') +
           '</details>').join('');
       };
       // 返済・手数料の1行。分割とショッピングリボは、タップで中身が開く
       const feeHtml = r => {
-        const kind = /分割/.test(r[1]) ? '分割内訳' : /ショッピングリボの返済/.test(r[1]) ? 'リボ内訳' : '';
+        const kind = /分割/.test(r[1]) ? '分割内訳' : /ショッピングリボの返済/.test(r[1]) ? 'リボ内訳' : /キャッシングの返済/.test(r[1]) ? 'キャッシング内訳' : '';
         const idx = kind ? kidIdx(kind) : [];
         if (!idx.length) return '<div class="fee"><span>' + esc(r[1]) + '</span><span class="n">' + yen(r[2]) + '</span></div>';
+        if (kind === 'キャッシング内訳') {
+          idx.sort((a, b) => (rows[a][0] < rows[b][0] ? 1 : -1));
+          const lent = idx.reduce((a, i) => a + rows[i][2], 0);
+          return '<details class="cat"><summary><span>' + esc(r[1]) + '<small>借りた分 ' + idx.length + '件</small></span><span class="n">' + yen(r[2]) + '</span>' + ICON_R + '</summary>' +
+            '<div class="kid-note">キャッシングで借りた日と金額です（合計 ' + yen(lent) + '）。返済は残高全体から毎月決まった額を返す仕組みです。</div>' +
+            idx.map(i => { const k = rows[i]; return '<div class="st"><span class="d">' + esc(dayY(k[0])) + '</span><span class="nm">' + esc(shop(k[1])) + '</span><span class="n">' + yen(k[2]) + '</span></div>'; }).join('') +
+            '</details>';
+        }
         if (kind === '分割内訳') {
           idx.sort((a, b) => rows[b][2] - rows[a][2]);
           return '<details class="cat"><summary><span>' + esc(r[1]) + '<small>分割中のお買い物 ' + idx.length + '件</small></span><span class="n">' + yen(r[2]) + '</span>' + ICON_R + '</summary>' +
             '<div class="kid-note">右の金額は、今月その買い物の分として払う額です</div>' +
-            idx.map(i => { const k = rows[i]; const p = String(k[3]).split(':')[1] || ''; return '<div class="st"><span class="d">' + esc(dayY(k[0])) + '</span><span class="nm">' + esc(k[1]) +
+            idx.map(i => { const k = rows[i]; const p = String(k[3]).split(':')[1] || ''; return '<div class="st"><span class="d">' + esc(dayY(k[0])) + '</span><span class="nm">' + esc(shop(k[1])) +
               (p ? '<span class="d">・' + esc(p.replace('/', '回目／全')) + '回</span>' : '') + '</span><span class="n">' + yen(k[2]) + '</span></div>'; }).join('') +
             '</details>';
         }
