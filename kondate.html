@@ -308,9 +308,9 @@ function freeHtml(label,budget,bento){
   const body=bento
     ?'<p>好きなものでOK。小さめのアイス（パピコ1本74kcal、アイスの実101kcalなど）か、無糖ヨーグルト＋果物（約100kcal）くらい。いつものアイスは週末に。</p>'
     :'';
-  const bk='<p class="small" style="margin:'+(bento?'8px':'0')+' 0 0">今日の自転車（乗った分だけ足せる）</p>'+BK.map(([id,n,r])=>'<div class="bikein"><label for="bk-'+id+'">'+n+'</label><input type="number" id="bk-'+id+'" data-bk="'+id+'" inputmode="numeric" min="0" max="300" step="5" value="'+(v[id]||'')+'" placeholder="0"><span>分</span><span class="muted small">30分で約'+Math.round(r*30)+'kcal</span></div>').join('')
+  const bk='<p class="small" style="margin:'+(bento?'8px':'0')+' 0 0">今日の自転車乗車時間</p>'+BK.map(([id,n,r])=>'<div class="bikein"><label for="bk-'+id+'">'+n+'</label><input type="number" id="bk-'+id+'" data-bk="'+id+'" inputmode="numeric" min="0" max="300" step="5" value="'+(v[id]||'')+'" placeholder="0"><span>分</span><span class="muted small">30分で約'+Math.round(r*30)+'kcal</span></div>').join('')
     +(ex?'<p class="small" style="margin:4px 0 0">自転車ぶん <b>+'+ex+'kcal</b> → <b>約'+tot+'kcalまで</b></p>':'');
-  return '<div class="meal"><h3><span>'+label+'</span><span class="kcal">'+tot+' kcalまで</span></h3><div class="free">'+body+bk+'<p class="small muted" style="margin:4px 0 0">超えた日は、夜のごはんを50gに（−77kcal）。</p></div></div>';
+  return '<div class="meal"><h3><span>'+label+'</span><span class="kcal">'+tot+' kcalまで</span></h3><div class="free">'+body+bk+'</div></div>';
 }
 function mealHtml(label,items){
   const kc=items.reduce((a,x)=>a+x[3],0);
