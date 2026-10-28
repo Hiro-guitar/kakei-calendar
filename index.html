@@ -167,6 +167,9 @@
   .cat summary small { display: block; color: var(--sub); font-size: 12px; margin-top: 2px; }
   .cat .cat { margin-left: 4px; }
   .cat .st { grid-template-columns: minmax(38px, auto) minmax(0, 1fr) auto; }
+  .bal { display: flex; flex-direction: column; border-top: 1px solid var(--line); padding-top: 12px; }
+  .bal-title { font-size: 14px; font-weight: 700; }
+  .bal .cat { margin-left: 0; }
   .kid-note { font-size: 12px; color: var(--sub); padding: 6px 0 4px 4px; }
   .fee .n { font-variant-numeric: tabular-nums; white-space: nowrap; }
   .how { font-size: 13px; color: var(--sub); background: var(--bg); border-radius: 10px; padding: 10px 12px; }
@@ -242,7 +245,7 @@
   }
 
   const PREVIEW = /[?&]demo\b/.test(location.search);
-  const APP_VERSION = '2026-10-28a';
+  const APP_VERSION = '2026-10-28b';
   function checkUpdate() {
     if (PREVIEW) return;
     fetch(location.pathname + '?check=' + Date.now(), { cache: 'no-store' })
@@ -811,7 +814,7 @@
       };
       // 返済・手数料の1行。分割とショッピングリボは、タップで中身が開く
       const feeHtml = r => {
-        const kind = /分割/.test(r[1]) ? '分割内訳' : /ショッピングリボの返済/.test(r[1]) ? 'リボ内訳' : /キャッシングの返済/.test(r[1]) ? 'キャッシング内訳' : '';
+        const kind = /分割/.test(r[1]) ? '分割内訳' : '';
         const idx = kind ? kidIdx(kind) : [];
         if (!idx.length) return '<div class="fee"><span>' + esc(r[1]) + '</span><span class="n">' + yen(r[2]) + '</span></div>';
         if (kind === 'キャッシング内訳') {
@@ -838,6 +841,24 @@
           catBlock(idx) + '</details>';
       };
 
+      const balHtml = () => {
+        const rv = kidIdx('リボ内訳'), cs = kidIdx('キャッシング内訳');
+        if (!rv.length && !cs.length) return '';
+        const from = idx => { const d = idx.map(i => rows[i][0]).filter(Boolean).sort()[0]; return d ? d.slice(0, 4) + '年' + Number(d.slice(5, 7)) + '月以降' : ''; };
+        const sumOf = idx => idx.reduce((a, i) => a + rows[i][2], 0);
+        let b = '<div class="bal"><div class="bal-title">リボ・キャッシングの残高に入っているもの</div>' +
+          '<div class="kid-note">上の今月の内訳とは別です。リボやキャッシングは、使った分が1つの残高にまとまって、そこから毎月決まった額を返す仕組みです。なので、今月の返済額がどれの分かまでは分かれません。</div>';
+        if (rv.length) b += '<details class="cat"><summary><span>リボ払いで買ったもの<small>' + from(rv) + '・' + rv.length + '件（すでに返し終わった分も含む）</small></span><span class="n">' + yen(sumOf(rv)) + '</span>' + ICON_R + '</summary>' +
+          catBlock(rv) + '</details>';
+        if (cs.length) {
+          cs.sort((a, c) => (rows[a][0] < rows[c][0] ? 1 : -1));
+          b += '<details class="cat"><summary><span>キャッシングで借りた分<small>' + from(cs) + '・' + cs.length + '件（すでに返し終わった分も含む）</small></span><span class="n">' + yen(sumOf(cs)) + '</span>' + ICON_R + '</summary>' +
+            cs.map(i => { const k = rows[i]; return '<div class="st"><span class="d">' + esc(dayY(k[0])) + '</span><span class="nm">' + esc(shop(k[1])) + '</span><span class="n">' + yen(k[2]) + '</span></div>'; }).join('') +
+            '</details>';
+        }
+        return b + '</div>';
+      };
+
       h += '<div class="bk">' +
         (feeRows.length ? '<div class="bk-line"><span>リボ・分割・キャッシングの返済と手数料</span><span class="n">' + yen(feeSum) + '</span></div>' +
           feeRows.map(feeHtml).join('') : '') +
@@ -851,7 +872,7 @@
         (diff > 0 ? '<div class="bk-line"><span>＋ 明細にない分<small>リボ・分割の返済、キャッシング、手数料など</small></span><span class="n">' + yen(diff) + '</span></div>' : '') +
         (diff < 0 ? '<div class="bk-line"><span>− 今回は払わない分<small>リボにした分、先に入金した分、ポイント払いなど</small></span><span class="n">' + yen(diff) + '</span></div>' : '') +
         '<div class="bk-line bk-total"><span>実際に引き落とされる額</span><span class="n">' + yen(debit) + '</span></div>' +
-        '</div>' +
+        '</div>' + balHtml() +
         '<div class="btn2">' + fileBtn('replace', '読み込み直す') + fileBtn('add', '別のカードの分を足す') + '</div>' +
         '<button type="button" class="linkbtn" id="card-clear">読み込んだ明細を消す</button>';
     }
