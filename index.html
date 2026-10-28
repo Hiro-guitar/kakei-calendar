@@ -170,6 +170,20 @@
   .bal { display: flex; flex-direction: column; border-top: 1px solid var(--line); padding-top: 12px; }
   .bal-title { font-size: 14px; font-weight: 700; }
   .bal .cat { margin-left: 0; }
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--chip); border-radius: 12px; }
+  .tabs button { min-height: 40px; border: 0; border-radius: 9px; background: none; font-size: 15px; font-weight: 700; color: var(--sub); cursor: pointer; }
+  .tabs button.on { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(27, 36, 48, .1); }
+  .debt-total { padding: 18px 20px; display: flex; flex-direction: column; gap: 4px; }
+  .debt-total .v { font-size: 30px; font-weight: 700; }
+  .debt { padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+  .debt-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 6px; }
+  .debt-head b { font-size: 16px; }
+  .debt-head .n { font-size: 18px; font-weight: 700; white-space: nowrap; }
+  .debt-line { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 0; border-top: 1px solid var(--line); font-size: 15px; }
+  .debt-line small { display: block; color: var(--sub); font-size: 12px; margin-top: 2px; }
+  .debt-line .n { font-weight: 700; white-space: nowrap; }
+  .debt-line .n.unk { font-weight: 400; color: var(--sub); font-size: 13px; }
+  .debt .cat { margin-left: 0; }
   .kid-note { font-size: 12px; color: var(--sub); padding: 6px 0 4px 4px; }
   .fee .n { font-variant-numeric: tabular-nums; white-space: nowrap; }
   .how { font-size: 13px; color: var(--sub); background: var(--bg); border-radius: 10px; padding: 10px 12px; }
@@ -245,7 +259,7 @@
   }
 
   const PREVIEW = /[?&]demo\b/.test(location.search);
-  const APP_VERSION = '2026-10-28c';
+  const APP_VERSION = '2026-10-28d';
   function checkUpdate() {
     if (PREVIEW) return;
     fetch(location.pathname + '?check=' + Date.now(), { cache: 'no-store' })
@@ -259,13 +273,20 @@
   checkUpdate();
   const KEY = PREVIEW ? '' : readKey();
   let DATA = null;
+  let TAB = 'cal';
+  try { if (localStorage.getItem('kakei-tab') === 'debt') TAB = 'debt'; } catch (e) {}
+  const tabsHtml = () => '<div class="tabs" role="tablist">' +
+    '<button type="button" role="tab" data-tab="cal" aria-selected="' + (TAB === 'cal') + '" class="' + (TAB === 'cal' ? 'on' : '') + '">カレンダー</button>' +
+    '<button type="button" role="tab" data-tab="debt" aria-selected="' + (TAB === 'debt') + '" class="' + (TAB === 'debt' ? 'on' : '') + '">借入残高</button></div>';
+  const fabShow = () => document.getElementById('fab').classList.toggle('hidden', TAB === 'debt' || !!document.querySelector('.sheet'));
+
   let selected = null;
   let viewY = 0, viewM = 0;   // カレンダーで表示中の年・月
 
   function setData(d) {
     DATA = d;
     if (!viewY) { viewY = d.year; viewM = d.month; }
-    document.getElementById('fab').classList.toggle('hidden', !!document.querySelector('.sheet'));
+    fabShow();
     render();
   }
 
@@ -301,6 +322,7 @@
   }
 
   function render() {
+    if (TAB === 'debt') { renderDebt(); return; }
     DATA.events.forEach((e, i) => { e._i = i; });
     const byDate = {};
     DATA.events.forEach(ev => (byDate[ev.date] = byDate[ev.date] || []).push(ev));
@@ -314,7 +336,7 @@
     });
     const net = inc - exp;
     const rcpt = DATA.receiptsByMonth ? DATA.receiptsByMonth[ym] : (isThisMonth ? DATA.receipts : null);
-    let h = '';
+    let h = tabsHtml();
 
     h += '<div class="head"><div><div class="sub">今日 ' + md(DATA.today) + '（' + WD[todayD.getDay()] + '）</div>' +
          '<h1>' + viewY + '年' + viewM + '月</h1></div><div class="head-btns">' +
@@ -447,6 +469,64 @@
   }
   window.addEventListener('resize', () => { if (DATA) fitDayAmounts(); });
 
+  /* ---------- 借入残高のタブ ---------- */
+
+  // 各カードの、いちばん新しい引き落とし後の残高（カード明細の「残高」の行）
+  function renderDebt() {
+    const cards = DATA.cards || {};
+    const latest = {};
+    Object.keys(cards).forEach(k => {
+      if (!cards[k].some(r => r[3] === '残高')) return;
+      const [label, ym] = k.split('|');
+      if (!latest[label] || latest[label] < ym) latest[label] = ym;
+    });
+    const labels = Object.keys(latest).sort();
+    const md2 = d => Number(d.slice(5, 7)) + '/' + Number(d.slice(8, 10));
+    const dayY2 = d => /^\d{4}-/.test(d) ? (d.slice(0, 4) !== String(DATA.year) ? d.slice(2, 4) + '/' : '') + md2(d) : d;
+    const nm = n => String(n).replace(/^返済方法変更WEB\s*\d*\s*/, '').replace(/[(（]ヘンサイヘンコウ[)）]?$/, '').trim() || String(n);
+    let total = 0, unknown = 0, h = tabsHtml();
+    let body = '';
+    labels.forEach(label => {
+      const key = label + '|' + latest[label];
+      const rows = cards[key];
+      const bal = rows.filter(r => r[3] === '残高');
+      const ev = DATA.events.find(e => e.label === label && e.date.slice(0, 7) === latest[label]);
+      const sum = bal.reduce((a, r) => a + (r[2] > 0 ? r[2] : 0), 0);
+      total += sum;
+      if (bal.some(r => r[2] < 0)) unknown++;
+      body += '<section class="card debt"><div class="debt-head"><div><b>' + esc(label) + '</b><div class="sub">' + (ev ? md2(ev.date) + 'の引き落としのあと' : latest[label].replace('-', '年') + '月') + '</div></div>' +
+        '<span class="n">' + (bal.some(r => r[2] < 0) ? 'わかる分 ' : '') + yen(sum) + '</span></div>' +
+        bal.map(r => { const p = String(r[1]).split('｜'); return '<div class="debt-line"><span>' + esc(p[0]) + (p[1] ? '<small>' + esc(p[1]) + '</small>' : '') + '</span>' +
+          (r[2] < 0 ? '<span class="n unk">サイトに出ていません</span>' : '<span class="n">' + yen(r[2]) + '</span>') + '</div>'; }).join('');
+      const rv = rows.filter(r => r[3] === 'リボ内訳'), cs = rows.filter(r => r[3] === 'キャッシング内訳');
+      const since = list => { const d = list.map(r => r[0]).filter(Boolean).sort()[0]; return d ? d.slice(0, 4) + '年' + Number(d.slice(5, 7)) + '月から' : ''; };
+      if (rv.length) {
+        const g = {};
+        rv.forEach(r => { (g[r[4]] = g[r[4]] || []).push(r); });
+        const ns = Object.keys(g).sort((a, b) => g[b].reduce((x, r) => x + r[2], 0) - g[a].reduce((x, r) => x + r[2], 0));
+        body += '<details class="cat"><summary><span>リボ払いにした買い物<small>' + since(rv) + '今までの ' + rv.length + '件。返し終わった分も入っています</small></span><span class="n">' + yen(rv.reduce((a, r) => a + r[2], 0)) + '</span>' + ICON_R + '</summary>' +
+          ns.map(n => '<details class="cat"><summary><span>' + esc(n) + '<small>' + g[n].length + '件</small></span><span class="n">' + yen(g[n].reduce((a, r) => a + r[2], 0)) + '</span>' + ICON_R + '</summary>' +
+            g[n].sort((a, b) => (a[0] < b[0] ? 1 : -1)).map(r => '<div class="st"><span class="d">' + esc(dayY2(r[0])) + '</span><span class="nm">' + esc(nm(r[1])) + '</span><span class="n">' + yen(r[2]) + '</span></div>').join('') +
+            '</details>').join('') + '</details>';
+      }
+      if (cs.length) {
+        body += '<details class="cat"><summary><span>キャッシングで借りた分<small>' + since(cs) + '今までの ' + cs.length + '件。返し終わった分も入っています</small></span><span class="n">' + yen(cs.reduce((a, r) => a + r[2], 0)) + '</span>' + ICON_R + '</summary>' +
+          cs.sort((a, b) => (a[0] < b[0] ? 1 : -1)).map(r => '<div class="st"><span class="d">' + esc(dayY2(r[0])) + '</span><span class="nm">' + esc(nm(r[1])) + '</span><span class="n">' + yen(r[2]) + '</span></div>').join('') +
+          '</details>';
+      }
+      body += '</section>';
+    });
+    h += '<div class="head"><div><div class="sub">カードのリボ・分割・キャッシング</div><h1>借入残高</h1></div></div>';
+    if (!labels.length) {
+      h += '<section class="card ok">まだ残高のデータがありません</section>';
+    } else {
+      h += '<section class="card debt-total"><div class="sub">まだ返していない額の合計' + (unknown ? '（わかっている分だけ）' : '') + '</div>' +
+        '<div class="v">' + yen(total) + '</div>' +
+        (unknown ? '<div class="sub">カード会社のサイトに残高が出ていないもの（「サイトに出ていません」の分）は入っていません</div>' : '') + '</section>' + body;
+    }
+    document.getElementById('app').innerHTML = h;
+  }
+
   /* ---------- 全口座の見通し ---------- */
 
   // 残高を入れた口座を全部足し、残高の更新日より後の予定（45日先まで）を日付順に足し引きする
@@ -572,7 +652,7 @@
 
   function closeSheet() {
     document.getElementById('sheet-root').innerHTML = '';
-    document.getElementById('fab').classList.remove('hidden');
+    fabShow();
   }
 
   function toast(msg) {
@@ -784,7 +864,7 @@
     } else {
       // 「返済」「手数料」の行は、お買い物とは別にまとめる
       const isFee = r => r[3] === '返済' || r[3] === '手数料';
-      const isKid = r => /^(分割内訳|リボ内訳|キャッシング内訳)/.test(r[3]);
+      const isKid = r => /^(分割内訳|リボ内訳|キャッシング内訳|残高)/.test(r[3]);
       const shopIdx = rows.map((r, i) => i).filter(i => !isFee(rows[i]) && !isKid(rows[i]));
       const kidIdx = kind => rows.map((r, i) => i).filter(i => String(rows[i][3]).indexOf(kind) === 0);
       const feeRows = rows.filter(isFee);
@@ -1060,6 +1140,10 @@
     const t = e.target.closest('button, .backdrop');
     if (!t) return;
     if (t.dataset.close) { closeSheet(); return; }
+    if (t.dataset.tab) {
+      if (TAB !== t.dataset.tab) { TAB = t.dataset.tab; try { localStorage.setItem('kakei-tab', TAB); } catch (e) {} fabShow(); render(); window.scrollTo(0, 0); }
+      return;
+    }
     if (t.id === 'fab') { openAdd(); return; }
     if (t.id === 'refresh') { refresh(t); return; }
     if (t.id === 'prev-m') { changeMonth(-1); return; }
