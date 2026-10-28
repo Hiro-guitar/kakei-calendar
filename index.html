@@ -245,7 +245,7 @@
   }
 
   const PREVIEW = /[?&]demo\b/.test(location.search);
-  const APP_VERSION = '2026-10-28b';
+  const APP_VERSION = '2026-10-28c';
   function checkUpdate() {
     if (PREVIEW) return;
     fetch(location.pathname + '?check=' + Date.now(), { cache: 'no-store' })
@@ -872,7 +872,7 @@
         (diff > 0 ? '<div class="bk-line"><span>＋ 明細にない分<small>リボ・分割の返済、キャッシング、手数料など</small></span><span class="n">' + yen(diff) + '</span></div>' : '') +
         (diff < 0 ? '<div class="bk-line"><span>− 今回は払わない分<small>リボにした分、先に入金した分、ポイント払いなど</small></span><span class="n">' + yen(diff) + '</span></div>' : '') +
         '<div class="bk-line bk-total"><span>実際に引き落とされる額</span><span class="n">' + yen(debit) + '</span></div>' +
-        '</div>' + balHtml() +
+        '</div>' +
         '<div class="btn2">' + fileBtn('replace', '読み込み直す') + fileBtn('add', '別のカードの分を足す') + '</div>' +
         '<button type="button" class="linkbtn" id="card-clear">読み込んだ明細を消す</button>';
     }
