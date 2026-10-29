@@ -157,7 +157,7 @@ button.link{font:inherit;border:0;background:none;color:var(--muted);text-decora
 <div class="wrap">
 <header>
 <h1>細マッチョ計画</h1>
-<p>2026年11月1日〜12月31日。家で週3回の筋トレと、奥さんと同じ食事で。記録はこのスマホの中だけに保存されます。</p>
+<p>2026年11月1日〜12月31日。家で1日20分の筋トレ（日曜は休み）と、奥さんと同じ食事で。記録はこのスマホの中だけに保存されます。</p>
 </header>
 <nav class="views" aria-label="ページの切り替え">
 <a href="#calendar" data-v="calendar">カレンダー</a>
@@ -170,7 +170,7 @@ button.link{font:inherit;border:0;background:none;color:var(--muted);text-decora
 <div>
 <p class="phase" id="phase"></p>
 <div class="grid" id="grid"></div>
-<div class="legend"><span><b style="color:var(--leaf)">A</b>・<b style="color:var(--leaf)">B</b> 筋トレの日</span><span><i class="prog" style="width:22px;display:inline-block;margin:0"><i style="width:60%"></i></i>その日のチェックの進み具合</span></div>
+<div class="legend"><span><b style="color:var(--leaf)">押す・脚・引く</b> その日の筋トレ</span><span><i class="prog" style="width:22px;display:inline-block;margin:0"><i style="width:60%"></i></i>その日のチェックの進み具合</span></div>
 </div>
 <aside class="card daycard" id="card" aria-live="polite"></aside>
 </div>
@@ -200,7 +200,10 @@ const EX={
  fr:{n:'フレンチプレス',r:'10〜15回',lo:10,hi:15,kg:1,cue:'ダンベル1個を両手で持ち、頭の後ろに下ろして肘から先だけで上げる'},
  lr:{n:'レッグレイズ',r:'10〜15回',lo:10,hi:15,kg:0,cue:'あおむけで脚をそろえて上げ下げ。腰が浮くなら膝を曲げて'}
 };
-const MENU={A:['gs','pu','row','sp','ab'],B:['bs','fp','rdl','cu','fr','lr']};
+const MENU={P:['fp','sp','fr'],L1:['gs','rdl','ab'],L2:['bs','rdl','lr'],U:['row','cu','pu']};
+const TN={P:'押す（胸・肩・腕の裏）',L1:'脚・お腹',L2:'脚・お腹',U:'引く（背中・力こぶ）＋腕立て'};
+const TS={P:'押す',L1:'脚',L2:'脚',U:'引く'};
+const WEEK=['P','L1','U','P','L2','U','R'];
 const setsOn=k=>k<'2026-11-16'?2:3;
 
 /* ---- 保存（このスマホだけ） ---- */
@@ -211,11 +214,8 @@ const save=n=>lsSet('hm-'+n,S[n]);
 
 /* ---- 日ごとの予定：月・水・金に A と B を交互に ---- */
 function buildPlan(){
-  const P={};let d=new Date(START),n=0;
-  while(d<=END){const k=key(d),wd=(d.getDay()+6)%7;let t='R';
-    if(S.ovr[k])t=S.ovr[k];
-    else if(wd===0||wd===2||wd===4){t=n%2===0?'A':'B'}
-    if(t==='A'||t==='B')n++;
+  const P={};let d=new Date(START);
+  while(d<=END){const k=key(d),wd=(d.getDay()+6)%7;let t=S.ovr[k]||WEEK[wd];if(!MENU[t]&&t!=='R')t=WEEK[wd];
     P[k]=t;d.setDate(d.getDate()+1)}
   return P;
 }
@@ -255,7 +255,7 @@ function renderCal(){
     const c=document.createElement('button');c.type='button';
     c.className='cell'+(k===sel?' sel':'')+(k===today?' today':'');
     const dc=doneCount(k),tot=CHK(k).length;
-    c.innerHTML='<span class="d"><span>'+d+'</span></span>'+(t==='R'?'<span class="t rest">休み</span>':'<span class="t">'+t+'</span>')+'<span class="prog" aria-label="チェック '+dc+'/'+tot+'"><i style="width:'+Math.round(dc/tot*100)+'%"></i></span>';
+    c.innerHTML='<span class="d"><span>'+d+'</span></span>'+(t==='R'?'<span class="t rest">休み</span>':'<span class="t">'+TS[t]+'</span>')+'<span class="prog" aria-label="チェック '+dc+'/'+tot+'"><i style="width:'+Math.round(dc/tot*100)+'%"></i></span>';
     c.onclick=()=>{sel=k;renderCal();if(window.innerWidth<860)document.getElementById('card').scrollIntoView({behavior:'smooth',block:'start'})};
     g.appendChild(c);
   }
@@ -280,9 +280,9 @@ function renderCard(){
   const k=sel,t=PLAN[k],d=new Date(k+'T00:00'),card=document.getElementById('card');
   let h='<div><h2>'+(d.getMonth()+1)+'月'+d.getDate()+'日（'+W[(d.getDay()+6)%7]+'）</h2></div>';
   if(t==='R'){
-    h+='<div class="row"><span class="small muted">休み。散歩や自転車はいつもどおり。</span><button class="link small" type="button" data-sw="A">今日Aをやる</button><button class="link small" type="button" data-sw="B">今日Bをやる</button></div>';
+    h+='<div class="row"><span class="small muted">休み。散歩や自転車はいつもどおり。代わりにやるなら：</span>'+['P','L1','U'].map(x=>'<button class="link small" type="button" data-sw="'+x+'">'+TS[x]+'</button>').join('')+'</div>';
   } else {
-    h+='<div class="meal"><h3><span>筋トレ'+t+'（約40分）</span><span><button class="link small" type="button" data-sw="R">今日は休みにする</button></span></h3><p class="small muted" style="margin:0 0 8px">ダンベルの重さは片手1個あたり。セットの間は1〜2分休む。'+(t==='A'?'':'')+'</p>'+MENU[t].map(id=>exHtml(id,k)).join('')+'</div>';
+    h+='<div class="meal"><h3><span>筋トレ：'+TN[t]+'（約'+(setsOn(k)===2?15:20)+'分）</span><span><button class="link small" type="button" data-sw="R">今日は休みにする</button></span></h3><p class="small muted" style="margin:0 0 8px">ダンベルの重さは片手1個あたり。セットの間は1〜2分休む。</p>'+MENU[t].map(id=>exHtml(id,k)).join('')+'</div>';
   }
   h+='<div class="meal"><h3><span>食事</span><span class="kcal">約2,100〜2,200 kcal・たんぱく質約120g</span></h3><div class="tbl"><table class="food"><tbody>'+
     '<tr><td>朝</td><td>プロテイン1杯＋ごはん150g＋納豆＋卵2個</td></tr>'+
@@ -350,14 +350,16 @@ function renderPlan(){
 <tr><td>筋トレ後</td><td>プロテイン1杯</td><td class="num">約120kcal</td></tr></tbody></table></div>
 <ul class="small"><li>プロテインは一般的なホエイで1杯約110〜120kcal・たんぱく質20〜24g。VERIFYSTの袋の1食分の表示で確かめる</li><li>夜がパスタなどごはんのない日は、おかずと別にごはん100gか、卵・豆腐を足す</li><li>お酒や甘いものを食べた日は、昼か夜のごはんを少し減らす</li></ul></div>
 <div class="card prose"><h2>筋トレのルール</h2>
-<p>月・水・金の週3回、AとBを交互に。1回40分くらい。できなかった日は、次の休みの日にずらしてOK（カードの「今日Aをやる」で入れ替えられる）。</p>
-<ul><li>最初の2週間（11/15まで）は各種目2セット。「あと3〜4回できる」重さでフォームを覚える</li><li>11/16からは3セット。毎セット「あと1〜2回できる」所まで追い込む</li><li><b>重さの上げ方</b>：全セットで回数の上限（12回や15回）に届いたら、次回は1〜2kg重くする。カードに「重さを上げる」と出る</li><li>同じ筋肉は中1日以上あける。痛みが出たら、その種目は休む</li><li>握力の道具は、テレビや動画を見ながらのついででOK</li></ul></div>
+<p>1回20分・3種目だけ。月〜土に「押す→脚→引く」を2周して、日曜は休み。1回を短くして回数を増やすので、週の合計量は1回40分×週3回と同じくらい。できなかった日は日曜にずらしてOK（休みの日のカードから選べる）。</p>
+<ul><li>最初の2週間（11/15まで）は各種目2セット。「あと3〜4回できる」重さでフォームを覚える</li><li>11/16からは3セット。毎セット「あと1〜2回できる」所まで追い込む</li><li><b>重さの上げ方</b>：全セットで回数の上限（12回や15回）に届いたら、次回は1〜2kg重くする。カードに「重さを上げる」と出る</li><li>同じ筋肉を続けて使わない順番にしてある。痛みが出たら、その種目は休む</li><li>握力の道具は、テレビや動画を見ながらのついででOK</li></ul></div>
 <div class="card prose"><h2>メニュー</h2>
-<h3>A（下半身・押す・引く・お腹）</h3>${list('A')}
-<h3>B（下半身・押す・腕・お腹）</h3>${list('B')}
+<h3>月・木：押す（胸・肩・腕の裏）</h3>${list('P')}
+<h3>火：脚・お腹</h3>${list('L1')}
+<h3>金：脚・お腹</h3>${list('L2')}
+<h3>水・土：引く（背中・力こぶ）＋腕立て</h3>${list('U')}
 <p class="small muted">ダンベルは片手1個ずつで使う。バーベルの形には組み替えなくていい。</p></div>
 <div class="card prose"><h2>見直すタイミング</h2>
-<ul><li>体重が1週間で0.7kg以上落ちる：筋肉も落ちやすいので、ごはんを1日100g増やす</li><li>2週間たっても体重もお腹まわりも変わらない：昼を100〜200kcal減らす</li><li>同じ重さ・回数から3回続けて伸びない：その種目だけ1週間軽くしてから戻す</li><li>サッカーの日は筋トレを休みにしてOK。前日の下半身（スクワット）は軽めに</li></ul></div>
+<ul><li>体重が1週間で0.7kg以上落ちる：筋肉も落ちやすいので、ごはんを1日100g増やす</li><li>2週間たっても体重もお腹まわりも変わらない：昼を100〜200kcal減らす</li><li>同じ重さ・回数から3回続けて伸びない：その種目だけ1週間軽くしてから戻す</li><li>サッカーの日は筋トレを休みにしてOK。前日が脚の日なら軽めに</li></ul></div>
 </div>`;
 }
 route();
