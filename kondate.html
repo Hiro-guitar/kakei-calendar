@@ -242,7 +242,8 @@ function rerender(){if(view==='calendar')renderCal();else if(view==='log')render
 /* ---- カレンダー ---- */
 const MONTHS=[[2026,10],[2026,11],[2027,0],[2027,1]];
 const today=key(new Date());
-let sel=PLAN[today]?today:'2026-11-01';
+const QD=new URLSearchParams(location.search).get('d');
+let sel=QD&&PLAN[QD]?QD:(PLAN[today]?today:'2026-11-01');
 let mi=Math.max(0,MONTHS.findIndex(([y,m])=>sel.startsWith(y+'-'+pad(m+1))));
 const mt=document.getElementById('mtabs');
 MONTHS.forEach(([y,m],i)=>{const b=document.createElement('button');b.type='button';b.id='m'+i;b.textContent=(m+1)+'月';
@@ -449,5 +450,6 @@ function renderPlan(){
 }
 
 storeNote();route();initDb();
+if(QD&&PLAN[QD]&&window.innerWidth<860)setTimeout(()=>{const c=document.getElementById('card');if(c)c.scrollIntoView({block:'start'})},300);
 </script>
 </body></html>
