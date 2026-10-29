@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="細マッチョ">
+<meta name="robots" content="noindex">
+<title>細マッチョ計画</title>
+<link rel="apple-touch-icon" href="hosomacho-icon.png">
+<link rel="icon" href="hosomacho-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* Layout: sticky tab bar → one view at a time (calendar+day card / log / recipe list / plan) */
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --ink:#1d2330; --muted:#636b7a; --line:#dde1e8;
+  --leaf:#2b4c7e; --leaf-soft:#e3eaf5; --ice:#b0527a; --ice-soft:#f7e6ee; --treat:#a8761c; --warn:#b5651d; --warn-soft:#faeedd;
+  --display:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif;
+  --body:"Noto Sans JP","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#13161c; --surface:#1b2029; --ink:#e6e9ef; --muted:#9aa2b1; --line:#2c3341;
+  --leaf:#8fb3e8; --leaf-soft:#1f2a3a; --ice:#e48fb3; --ice-soft:#3a2430; --treat:#e0b25a; --warn:#e3a35f; --warn-soft:#3a2d1c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#13161c; --surface:#1b2029; --ink:#e6e9ef; --muted:#9aa2b1; --line:#2c3341;
+  --leaf:#8fb3e8; --leaf-soft:#1f2a3a; --ice:#e48fb3; --ice-soft:#3a2430; --treat:#e0b25a; --warn:#e3a35f; --warn-soft:#3a2d1c; color-scheme:dark}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:1100px;margin:0 auto;padding-block:16px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
+header h1{font-family:var(--display);font-weight:700;font-size:1.55rem;margin:0;text-wrap:balance}
+header p{margin:2px 0 0;color:var(--muted);font-size:.88rem}
+nav.views{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px;display:flex;gap:6px;overflow-x:auto;border-bottom:1px solid var(--line)}
+nav.views a{flex:none;text-decoration:none;color:var(--ink);font-weight:500;padding:7px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+nav.views a[aria-current="page"]{background:var(--leaf);border-color:var(--leaf);color:var(--bg)}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
+h2{font-family:var(--display);font-size:1.25rem;margin:0}
+h3{font-size:1rem;margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.82rem}
+.status{font-size:.8rem;color:var(--muted)}
+/* calendar */
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 14px;border-radius:999px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.main{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.main{grid-template-columns:minmax(0,1fr)}}
+.phase{font-size:.85rem;color:var(--muted);margin:8px 0}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.dow{font-size:.75rem;color:var(--muted);text-align:center;letter-spacing:.05em}
+.dow.sun{color:var(--ice)}
+.cell{min-height:96px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:5px 6px;text-align:left;font:inherit;color:inherit;cursor:pointer;display:flex;flex-direction:column;gap:2px;min-width:0}
+.cell.empty{background:transparent;border-color:transparent;cursor:default}
+.cell.off{cursor:default;opacity:.5}
+.cell.sel{border-color:var(--leaf);box-shadow:inset 0 0 0 1px var(--leaf)}
+.cell .d{font-weight:700;font-variant-numeric:tabular-nums;font-size:.85rem;display:flex;justify-content:space-between;align-items:center;gap:4px}
+.cell.today .d span:first-child{background:var(--leaf);color:var(--bg);border-radius:999px;padding:0 6px}
+.ice-dot{width:7px;height:7px;border-radius:50%;background:var(--ice);flex:none;display:inline-block}
+.cell .m{font-size:.7rem;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-all}
+.cell .m b{font-weight:500;color:var(--muted);margin-right:2px}
+.cell .note{font-size:.68rem;color:var(--muted)}
+.prog{margin-top:auto;height:4px;border-radius:2px;background:var(--line);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--leaf)}
+@media (max-width:560px){.cell{min-height:54px}.cell .m{display:none}}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:grid;gap:14px}
+.daycard{position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px)}
+@media (max-width:860px){.daycard{position:static}}
+.sub{font-size:.82rem;color:var(--muted);margin-top:2px}
+.chip{display:inline-block;font-size:.78rem;padding:2px 10px;border-radius:999px;font-weight:500}
+.chip.ice{background:var(--ice-soft);color:var(--ice)}
+.chip.yog{background:var(--leaf-soft);color:var(--leaf)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.meal h3{font-size:.85rem;margin:0 0 6px;display:flex;justify-content:space-between;color:var(--muted);font-weight:500;letter-spacing:.06em}
+.meal ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.meal li{display:flex;justify-content:space-between;gap:10px;align-items:baseline;border-bottom:1px dashed var(--line);padding-bottom:5px}
+.meal li:last-child{border-bottom:0}
+a.rec{color:var(--leaf);font-weight:700;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+.plain{font-weight:700}
+.kob{font-size:.68rem;font-weight:500;color:var(--leaf);border:1px solid var(--leaf);border-radius:4px;padding:0 4px;margin-right:4px;vertical-align:1px}
+.amt{font-size:.8rem;color:var(--muted);text-align:right;flex:none;max-width:52%}
+.src{font-size:.68rem;color:var(--muted);margin-left:4px;font-weight:400}
+.treat{color:var(--treat)}
+.recbtn{font:inherit;font-weight:700;color:var(--leaf);background:none;border:0;padding:0;text-align:left;cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;padding-top:calc(env(safe-area-inset-top,0px) + 24px)}
+.sheet[hidden]{display:none}
+.sheet-in{background:var(--surface);color:var(--ink);width:100%;max-width:560px;max-height:85vh;overflow:auto;border-radius:16px 16px 0 0;padding:18px max(18px,env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px));position:relative}
+@media (min-width:700px){.sheet{align-items:center}.sheet-in{border-radius:16px}}
+.sheet-x{position:sticky;top:0;float:right;font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+.sheet h2{margin:0;padding-right:70px;font-size:1.15rem}
+table.ing td{padding:6px 4px}
+table.ing td.num{white-space:normal;text-align:right}
+.ext{font-size:.72rem;color:var(--muted);white-space:nowrap;margin-left:2px}
+.btnlink{display:inline-block;background:var(--leaf);color:var(--bg);text-decoration:none;border-radius:8px;padding:8px 14px;font-weight:500}
+.free{background:var(--bg);border-radius:8px;padding:8px 10px}
+.free p{margin:0 0 4px;font-size:.88rem}
+.kid{display:block;font-size:.78rem;color:var(--muted);margin-top:3px}.kidtag{display:inline-block;font-size:.7rem;padding:0 6px;margin-right:5px;border-radius:999px;background:var(--warn-soft);color:var(--warn)}
+.bikein{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:.88rem;flex-wrap:wrap}.bikein label{min-width:8.5em}.bikein input{width:5.5em;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit}
+.free ul{margin:0;padding-left:1.1em;display:grid;gap:2px}
+.total span:last-child{white-space:nowrap}
+.total{display:flex;gap:8px;justify-content:space-between;font-weight:700;font-variant-numeric:tabular-nums;border-top:1px solid var(--line);padding-top:10px}
+.nut{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.nut div{background:var(--bg);border-radius:8px;padding:6px 8px}
+.nut b{display:block;font-variant-numeric:tabular-nums;font-size:.95rem}
+.nut span{font-size:.7rem;color:var(--muted)}
+.nut .low b{color:var(--warn)}
+.checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.checks label{display:flex;gap:8px;align-items:center;background:var(--bg);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:.9rem}
+.checks input{width:18px;height:18px;accent-color:var(--leaf);flex:none}
+textarea{font:inherit;width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);padding:8px;min-height:56px;resize:vertical}
+.kcal{font-variant-numeric:tabular-nums}
+/* tables */
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.78rem;color:var(--muted);font-weight:500;letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.section{display:grid;gap:10px}
+.prose{max-width:68ch;display:grid;gap:8px}
+.prose p{margin:0}
+.prose ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px;align-items:start}
+.stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.stat div{background:var(--bg);border-radius:10px;padding:10px 12px}
+.stat b{display:block;font-family:var(--display);font-size:1.5rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.78rem;color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input[type=number],input[type=date]{font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);padding:6px 8px}
+input[type=number]{width:7em}
+button.btn{font:inherit;font-weight:500;border:0;border-radius:8px;background:var(--leaf);color:var(--bg);padding:7px 16px;cursor:pointer}
+button.link{font:inherit;border:0;background:none;color:var(--muted);text-decoration:underline;cursor:pointer;padding:0}
+.ms label{display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-bottom:1px dashed var(--line)}
+.ms input{width:18px;height:18px;margin-top:3px;accent-color:var(--leaf);flex:none}
+.spark{width:100%;height:160px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.ex{border-bottom:1px dashed var(--line);padding-bottom:10px;display:grid;gap:6px}
+.ex:last-child{border-bottom:0}
+.ex h4{margin:0;font-size:.95rem;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.ex h4 span{font-size:.8rem;color:var(--muted);font-weight:400;white-space:nowrap}
+.ex .cue{font-size:.8rem;color:var(--muted);margin:0}
+.ex .prev{font-size:.78rem;margin:0}
+.ex .prev b{color:var(--leaf)}
+.sets{display:grid;gap:4px}
+.set{display:flex;align-items:center;gap:6px;font-size:.85rem;flex-wrap:wrap}
+.set .n{width:4.2em;color:var(--muted);white-space:nowrap}
+.set input{width:4.6em!important;padding:5px 6px!important}
+.up{font-size:.72rem;padding:1px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn);font-weight:500}
+.cell .t{font-size:.8rem;font-weight:700;color:var(--leaf)}
+.cell .t.rest{color:var(--muted);font-weight:400}
+.food td:first-child{white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>細マッチョ計画</h1>
+<p>2026年11月1日〜12月31日。家で週3回の筋トレと、奥さんと同じ食事で。記録はこのスマホの中だけに保存されます。</p>
+</header>
+<nav class="views" aria-label="ページの切り替え">
+<a href="#calendar" data-v="calendar">カレンダー</a>
+<a href="#log" data-v="log">記録</a>
+<a href="#plan" data-v="plan">計画</a>
+</nav>
+<section id="v-calendar" class="view">
+<div class="tabs" id="mtabs" role="group" aria-label="月"></div>
+<div class="main">
+<div>
+<p class="phase" id="phase"></p>
+<div class="grid" id="grid"></div>
+<div class="legend"><span><b style="color:var(--leaf)">A</b>・<b style="color:var(--leaf)">B</b> 筋トレの日</span><span><i class="prog" style="width:22px;display:inline-block;margin:0"><i style="width:60%"></i></i>その日のチェックの進み具合</span></div>
+</div>
+<aside class="card daycard" id="card" aria-live="polite"></aside>
+</div>
+</section>
+<section id="v-log" class="view" hidden></section>
+<section id="v-plan" class="view" hidden></section>
+</div>
+<script>
+const W=['月','火','水','木','金','土','日'];
+const pad=n=>String(n).padStart(2,'0');
+const key=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const START=new Date('2026-11-01T00:00'),END=new Date('2026-12-31T00:00');
+const MONTHS=[[2026,10],[2026,11]];
+
+/* ---- 種目 ---- */
+const EX={
+ gs:{n:'ゴブレットスクワット',r:'8〜12回',lo:8,hi:12,kg:1,cue:'ダンベル1個を胸の前で縦に持つ。足は肩幅で、太ももが床と平行になるまでしゃがむ。かかとは浮かせない'},
+ pu:{n:'腕立て伏せ',r:'限界の2回手前まで',lo:0,hi:20,kg:0,cue:'頭からかかとまで一直線。胸が床に近づくまで下ろす。きつければ膝つきでOK。全セット20回を超えたら足を椅子に乗せる'},
+ row:{n:'ダンベルロウ（片手ずつ）',r:'左右8〜12回',lo:8,hi:12,kg:1,cue:'片手と片ひざを椅子かソファについて、背中を平らに。ダンベルを脇腹に向かって引き上げる'},
+ sp:{n:'ショルダープレス（座って）',r:'8〜12回',lo:8,hi:12,kg:1,cue:'ダンベルを肩の高さから真上に押し上げる。腰は反らせない'},
+ ab:{n:'腹筋ローラー（膝つき）',r:'8〜12回',lo:8,hi:12,kg:0,cue:'お腹に力を入れたまま、腰が反らない所まで転がして戻る。全セット12回できたら転がす距離を伸ばす'},
+ bs:{n:'ブルガリアンスクワット',r:'左右8〜12回',lo:8,hi:12,kg:1,cue:'後ろ足の甲を椅子に乗せ、前足で上下する。最初はダンベルなし（0kg）でOK'},
+ fp:{n:'ダンベルフロアプレス',r:'8〜12回',lo:8,hi:12,kg:1,cue:'床にあおむけで膝を立てる。肘が床に軽く触れるまで下ろし、真上に押し上げる'},
+ rdl:{n:'ルーマニアンデッドリフト',r:'8〜12回',lo:8,hi:12,kg:1,cue:'膝を軽く曲げたまま、お尻を後ろに引いて上体を倒す。背中は丸めない。太ももの裏が伸びる所まで'},
+ cu:{n:'ダンベルカール',r:'10〜15回',lo:10,hi:15,kg:1,cue:'肘を脇につけたまま持ち上げる。反動は使わない'},
+ fr:{n:'フレンチプレス',r:'10〜15回',lo:10,hi:15,kg:1,cue:'ダンベル1個を両手で持ち、頭の後ろに下ろして肘から先だけで上げる'},
+ lr:{n:'レッグレイズ',r:'10〜15回',lo:10,hi:15,kg:0,cue:'あおむけで脚をそろえて上げ下げ。腰が浮くなら膝を曲げて'}
+};
+const MENU={A:['gs','pu','row','sp','ab'],B:['bs','fp','rdl','cu','fr','lr']};
+const setsOn=k=>k<'2026-11-16'?2:3;
+
+/* ---- 保存（このスマホだけ） ---- */
+function lsGet(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+const S={days:lsGet('hm-days',{}),lift:lsGet('hm-lift',{}),ovr:lsGet('hm-ovr',{}),body:lsGet('hm-body',{})};
+const save=n=>lsSet('hm-'+n,S[n]);
+
+/* ---- 日ごとの予定：月・水・金に A と B を交互に ---- */
+function buildPlan(){
+  const P={};let d=new Date(START),n=0;
+  while(d<=END){const k=key(d),wd=(d.getDay()+6)%7;let t='R';
+    if(S.ovr[k])t=S.ovr[k];
+    else if(wd===0||wd===2||wd===4){t=n%2===0?'A':'B'}
+    if(t==='A'||t==='B')n++;
+    P[k]=t;d.setDate(d.getDate()+1)}
+  return P;
+}
+let PLAN=buildPlan();
+const CHK=k=>[...(PLAN[k]!=='R'?[['train','筋トレ']]:[]),['bfast','朝：卵・納豆'],['prot','プロテイン'],['rice','夜ごはん200g'],['walk','散歩・自転車'],['sleep','7時間寝た'],['grip','握力（ついでに）']];
+const doneCount=k=>{const d=S.days[k]||{};return CHK(k).filter(([c])=>d[c]).length};
+
+const today=key(new Date());
+let sel=PLAN[today]?today:'2026-11-01',view='calendar',mi=sel<'2026-12-01'?0:1;
+
+/* ---- 表示切り替え ---- */
+const VIEWS=['calendar','log','plan'];
+function route(){const h=location.hash.slice(1);view=VIEWS.includes(h)?h:'calendar';
+  VIEWS.forEach(v=>{document.getElementById('v-'+v).hidden=v!==view;const a=document.querySelector('nav a[data-v="'+v+'"]');if(v===view)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
+  if(view==='calendar')renderCal();else if(view==='log')renderLog();else renderPlan();}
+window.addEventListener('hashchange',route);
+
+/* ---- カレンダー ---- */
+function renderTabs(){const t=document.getElementById('mtabs');t.innerHTML='';
+  MONTHS.forEach(([y,m],i)=>{const b=document.createElement('button');b.type='button';b.textContent=(m+1)+'月';b.setAttribute('aria-pressed',i===mi);
+    b.onclick=()=>{mi=i;const p=y+'-'+pad(m+1);if(!sel.startsWith(p))sel=Object.keys(PLAN).find(k=>k.startsWith(p));renderCal()};t.appendChild(b)})}
+function phaseText(k){
+  if(k<'2026-11-16')return '最初の2週間は慣らし：各種目2セット。重さは「あと3〜4回できる」くらいで、フォームを覚える';
+  if(k>='2026-12-28')return '年末：できる日にやればOK。体重とお腹まわりを測って、ここまでを振り返る';
+  return '3週目から本番：各種目3セット。毎回、前回より1回でも多く、または少し重く';
+}
+function renderCal(){
+  renderTabs();
+  const [y,m]=MONTHS[mi],g=document.getElementById('grid');g.innerHTML='';
+  document.getElementById('phase').textContent=phaseText(sel);
+  W.forEach((w,i)=>{const h=document.createElement('div');h.className='dow'+(i===6?' sun':'');h.textContent=w;g.appendChild(h)});
+  const lead=(new Date(y,m,1).getDay()+6)%7;
+  for(let i=0;i<lead;i++){const c=document.createElement('div');c.className='cell empty';g.appendChild(c)}
+  const n=new Date(y,m+1,0).getDate();
+  for(let d=1;d<=n;d++){
+    const k=y+'-'+pad(m+1)+'-'+pad(d),t=PLAN[k];
+    const c=document.createElement('button');c.type='button';
+    c.className='cell'+(k===sel?' sel':'')+(k===today?' today':'');
+    const dc=doneCount(k),tot=CHK(k).length;
+    c.innerHTML='<span class="d"><span>'+d+'</span></span>'+(t==='R'?'<span class="t rest">休み</span>':'<span class="t">'+t+'</span>')+'<span class="prog" aria-label="チェック '+dc+'/'+tot+'"><i style="width:'+Math.round(dc/tot*100)+'%"></i></span>';
+    c.onclick=()=>{sel=k;renderCal();if(window.innerWidth<860)document.getElementById('card').scrollIntoView({behavior:'smooth',block:'start'})};
+    g.appendChild(c);
+  }
+  renderCard();
+}
+/* 前回の記録（同じ種目で sel より前の最新日） */
+function prevOf(id,k){const ds=Object.keys(S.lift).filter(d=>d<k&&S.lift[d][id]&&S.lift[d][id].some(s=>s&&s[1])).sort();return ds.length?{d:ds[ds.length-1],s:S.lift[ds[ds.length-1]][id]}:null}
+const fmtSet=(e,s)=>s.filter(x=>x&&x[1]).map(x=>(e.kg?(x[0]||0)+'kg×':'')+x[1]).join('、');
+function exHtml(id,k){
+  const e=EX[id],ns=setsOn(k),cur=(S.lift[k]||{})[id]||[],pv=prevOf(id,k);
+  let tip='';
+  if(pv){const ok=pv.s.filter(x=>x&&x[1]).length>=ns&&pv.s.slice(0,ns).every(x=>x&&+x[1]>=e.hi);
+    tip='<p class="prev">前回（'+pv.d.slice(5).replace('-','/')+'）：<b>'+fmtSet(e,pv.s)+'</b> '+(ok?'<span class="up">'+(e.kg?'重さを1〜2kg上げる':'次の段階へ')+'</span>':'')+'</p>'}
+  const lastKg=pv?(pv.s.find(x=>x&&x[0])||[''])[0]:'';
+  let rows='';
+  for(let i=0;i<ns;i++){const s=cur[i]||[];
+    rows+='<div class="set"><span class="n">'+(i+1)+'セット</span>'+(e.kg?'<input type="number" inputmode="decimal" step="0.5" min="0" max="80" data-ex="'+id+'" data-i="'+i+'" data-f="0" value="'+(s[0]??'')+'" placeholder="'+(lastKg||'kg')+'" aria-label="'+e.n+' '+(i+1)+'セット目の重さ">kg ':'')+
+      '<input type="number" inputmode="numeric" min="0" max="100" data-ex="'+id+'" data-i="'+i+'" data-f="1" value="'+(s[1]??'')+'" placeholder="回" aria-label="'+e.n+' '+(i+1)+'セット目の回数">回</div>'}
+  return '<div class="ex"><h4>'+esc(e.n)+'<span>'+ns+'セット・'+e.r+'</span></h4><p class="cue">'+esc(e.cue)+'</p>'+tip+'<div class="sets">'+rows+'</div></div>';
+}
+function renderCard(){
+  const k=sel,t=PLAN[k],d=new Date(k+'T00:00'),card=document.getElementById('card');
+  let h='<div><h2>'+(d.getMonth()+1)+'月'+d.getDate()+'日（'+W[(d.getDay()+6)%7]+'）</h2></div>';
+  if(t==='R'){
+    h+='<div class="row"><span class="small muted">休み。散歩や自転車はいつもどおり。</span><button class="link small" type="button" data-sw="A">今日Aをやる</button><button class="link small" type="button" data-sw="B">今日Bをやる</button></div>';
+  } else {
+    h+='<div class="meal"><h3><span>筋トレ'+t+'（約40分）</span><span><button class="link small" type="button" data-sw="R">今日は休みにする</button></span></h3><p class="small muted" style="margin:0 0 8px">ダンベルの重さは片手1個あたり。セットの間は1〜2分休む。'+(t==='A'?'':'')+'</p>'+MENU[t].map(id=>exHtml(id,k)).join('')+'</div>';
+  }
+  h+='<div class="meal"><h3><span>食事</span><span class="kcal">約2,100〜2,200 kcal・たんぱく質約120g</span></h3><div class="tbl"><table class="food"><tbody>'+
+    '<tr><td>朝</td><td>プロテイン1杯＋ごはん150g＋納豆＋卵2個</td></tr>'+
+    '<tr><td>昼</td><td>約600kcalまで。たんぱく質20g以上（サラダチキン、鮭おにぎり＋ゆで卵など）</td></tr>'+
+    '<tr><td>夜</td><td>奥さんと同じおかず1人前＋もち麦ごはん200g</td></tr>'+
+    (t!=='R'?'<tr><td>筋トレ後</td><td>プロテイン1杯</td></tr>':'')+'</tbody></table></div></div>';
+  const dd=S.days[k]||{};
+  h+='<div><h3 class="small muted" style="font-weight:500;margin-bottom:6px">今日のチェック</h3><div class="checks">'+CHK(k).map(([c,l])=>'<label><input type="checkbox" data-c="'+c+'"'+(dd[c]?' checked':'')+'>'+l+'</label>').join('')+'</div></div>';
+  h+='<div><label for="memo" class="small muted">メモ（体調・痛み・サッカーなど）</label><textarea id="memo">'+esc(dd.memo||'')+'</textarea></div>';
+  card.innerHTML=h;
+  card.querySelectorAll('input[data-c]').forEach(i=>i.onchange=()=>{S.days[k]={...(S.days[k]||{}),[i.dataset.c]:i.checked};save('days');renderCal()});
+  card.querySelector('#memo').onchange=e=>{S.days[k]={...(S.days[k]||{}),memo:e.target.value.slice(0,500)};save('days')};
+  card.querySelectorAll('input[data-ex]').forEach(i=>i.onchange=()=>{
+    const id=i.dataset.ex,ix=+i.dataset.i,f=+i.dataset.f,v=i.value===''?null:Math.max(0,parseFloat(i.value));
+    const day={...(S.lift[k]||{})},arr=(day[id]||[]).slice();const s=(arr[ix]||[null,null]).slice();s[f]=v;arr[ix]=s;day[id]=arr;S.lift[k]=day;
+    if(f===1&&v&&!(S.days[k]||{}).train){S.days[k]={...(S.days[k]||{}),train:true};save('days')}
+    save('lift');renderCal()});
+  card.querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>{S.ovr={...S.ovr,[k]:b.dataset.sw};save('ovr');PLAN=buildPlan();renderCal()});
+}
+
+/* ---- 記録 ---- */
+function spark(ws){
+  const W_=600,H_=160,P=28;const t0=new Date(ws[0][0]).getTime(),t1=new Date(ws[ws.length-1][0]).getTime();
+  const vs=ws.map(x=>+x[1]);let lo=Math.floor(Math.min(...vs)-0.5),hi=Math.ceil(Math.max(...vs)+0.5);
+  const X=t=>P+(W_-2*P)*((t-t0)/((t1-t0)||1)),Y=v=>H_-P-(H_-2*P)*(v-lo)/((hi-lo)||1);
+  const pts=ws.map(([d,v])=>X(new Date(d).getTime()).toFixed(1)+','+Y(+v).toFixed(1)).join(' ');
+  return '<svg class="spark" viewBox="0 0 '+W_+' '+H_+'" role="img" aria-label="体重の推移"><line x1="'+P+'" x2="'+(W_-P)+'" y1="'+Y(lo)+'" y2="'+Y(lo)+'" stroke="var(--line)"/><line x1="'+P+'" x2="'+(W_-P)+'" y1="'+Y(hi)+'" y2="'+Y(hi)+'" stroke="var(--line)"/><text x="2" y="'+(Y(hi)+4)+'" font-size="11" fill="var(--muted)">'+hi+'</text><text x="2" y="'+(Y(lo)+4)+'" font-size="11" fill="var(--muted)">'+lo+'</text><polyline points="'+pts+'" fill="none" stroke="var(--leaf)" stroke-width="2"/></svg>';
+}
+function renderLog(){
+  const el=document.getElementById('v-log');
+  const bs=Object.entries(S.body).sort((a,b)=>a[0]<b[0]?-1:1);
+  let h='<div class="cols"><div class="card"><h2>体重とお腹まわり</h2><p class="small muted" style="margin:0">週1回、日曜の朝（起きてトイレのあと・食べる前）に。お腹まわりはおへその高さで。最初の記録：65.7kg（10月末）。</p>';
+  h+='<div class="row"><input type="date" id="bdate" value="'+(PLAN[today]?today:'2026-11-01')+'" min="2026-10-25" max="2027-01-10"><input type="number" id="bkg" step="0.1" min="40" max="120" placeholder="kg" aria-label="体重kg"><input type="number" id="bcm" step="0.5" min="50" max="130" placeholder="お腹cm" aria-label="お腹まわりcm"><button class="btn" id="badd" type="button">記録する</button></div>';
+  const ws=[['2026-10-29',65.7],...bs.filter(([,v])=>v.kg).map(([d,v])=>[d,v.kg])];
+  if(ws.length>=2)h+=spark(ws);
+  h+=bs.length?'<div class="tbl"><table><thead><tr><th>日付</th><th class="num">体重</th><th class="num">お腹</th><th></th></tr></thead><tbody>'+bs.slice().reverse().map(([d,v])=>'<tr><td>'+d.slice(5).replace('-','/')+'</td><td class="num">'+(v.kg?v.kg.toFixed(1)+' kg':'')+'</td><td class="num">'+(v.cm?v.cm+' cm':'')+'</td><td class="num"><button class="link" type="button" data-del="'+d+'">消す</button></td></tr>').join('')+'</tbody></table></div>':'<p class="small muted" style="margin:0">まだ記録はありません。</p>';
+  h+='</div><div class="card"><h2>種目ごとの伸び</h2><p class="small muted" style="margin:0">いちばん良かったセット（重さ×回数）。最初と最新を比べます。</p><div class="tbl"><table><thead><tr><th>種目</th><th class="num">最初</th><th class="num">最新</th></tr></thead><tbody>';
+  Object.entries(EX).forEach(([id,e])=>{
+    const ds=Object.keys(S.lift).filter(d=>S.lift[d][id]&&S.lift[d][id].some(s=>s&&s[1])).sort();
+    const best=d=>{const s=S.lift[d][id].filter(x=>x&&x[1]).sort((a,b)=>((b[0]||0)-(a[0]||0))||(b[1]-a[1]))[0];return (e.kg?(s[0]||0)+'kg×':'')+s[1]+'回'};
+    h+='<tr><td>'+esc(e.n)+'</td><td class="num">'+(ds.length?best(ds[0]):'—')+'</td><td class="num">'+(ds.length>1?best(ds[ds.length-1]):'—')+'</td></tr>'});
+  h+='</tbody></table></div>';
+  const tr=Object.keys(PLAN).filter(k=>k<=today&&(S.days[k]||{}).train).length,pl=Object.keys(PLAN).filter(k=>k<=today&&PLAN[k]!=='R').length;
+  h+='<div class="stat"><div><b>'+tr+'</b><span>筋トレした日</span></div><div><b>'+pl+'</b><span>今日までの予定の回数</span></div></div></div></div>';
+  el.innerHTML=h;
+  el.querySelector('#badd').onclick=()=>{const d=el.querySelector('#bdate').value,kg=parseFloat(el.querySelector('#bkg').value),cm=parseFloat(el.querySelector('#bcm').value);if(!d||!(kg>40||cm>50))return;
+    S.body={...S.body,[d]:{...(S.body[d]||{}),...(kg>40&&kg<120?{kg:Math.round(kg*10)/10}:{}),...(cm>50&&cm<130?{cm:Math.round(cm*2)/2}:{})}};save('body');renderLog()};
+  el.querySelectorAll('button[data-del]').forEach(b=>b.onclick=()=>{const o={...S.body};delete o[b.dataset.del];S.body=o;save('body');renderLog()});
+}
+
+/* ---- 計画 ---- */
+function renderPlan(){
+  const el=document.getElementById('v-plan');if(el.dataset.done)return;el.dataset.done=1;
+  const list=t=>'<ul>'+MENU[t].map(id=>'<li><b>'+EX[id].n+'</b>（'+EX[id].r+'）</li>').join('')+'</ul>';
+  el.innerHTML=`<div class="cols">
+<div class="card prose"><h2>見通し</h2>
+<p>年末までの2か月で、脂肪を2〜3kg落としながら筋肉をつける。体重は65.7kgから63〜64kgくらい、お腹まわりは2〜3cm細くなる見込み。肩・胸・腕にハリが出て、Tシャツ姿が変わるのが年末の目標。</p>
+<ul class="small muted"><li>身長172cm・体重65.7kg・30代と仮定。1日の消費は、ふだんの散歩込みで約2,500〜2,600kcal</li><li>腹筋がはっきり割れて見えるのは体脂肪率10〜12%くらいから。そこまでは続けて4〜6か月（来年3〜4月）が目安</li><li>筋トレを始めて最初の数か月は、いちばん筋肉がつきやすい時期</li></ul></div>
+<div class="card prose"><h2>食事</h2>
+<p>1日約2,100〜2,200kcal、たんぱく質は約120g（体重1kgあたり1.8g）。おかずは奥さんと同じ1人前のまま、ごはんとたんぱく質を足す。</p>
+<div class="tbl"><table><thead><tr><th>食事</th><th>中身</th><th class="num">目安</th></tr></thead><tbody>
+<tr><td>朝</td><td>プロテイン1杯＋ごはん150g＋納豆＋卵2個</td><td class="num">約650kcal</td></tr>
+<tr><td>昼</td><td>好きなもの。たんぱく質20g以上</td><td class="num">約600kcal</td></tr>
+<tr><td>夜</td><td>奥さんと同じおかず1人前＋もち麦ごはん200g</td><td class="num">約700〜850kcal</td></tr>
+<tr><td>筋トレ後</td><td>プロテイン1杯</td><td class="num">約120kcal</td></tr></tbody></table></div>
+<ul class="small"><li>プロテインは一般的なホエイで1杯約110〜120kcal・たんぱく質20〜24g。VERIFYSTの袋の1食分の表示で確かめる</li><li>夜がパスタなどごはんのない日は、おかずと別にごはん100gか、卵・豆腐を足す</li><li>お酒や甘いものを食べた日は、昼か夜のごはんを少し減らす</li></ul></div>
+<div class="card prose"><h2>筋トレのルール</h2>
+<p>月・水・金の週3回、AとBを交互に。1回40分くらい。できなかった日は、次の休みの日にずらしてOK（カードの「今日Aをやる」で入れ替えられる）。</p>
+<ul><li>最初の2週間（11/15まで）は各種目2セット。「あと3〜4回できる」重さでフォームを覚える</li><li>11/16からは3セット。毎セット「あと1〜2回できる」所まで追い込む</li><li><b>重さの上げ方</b>：全セットで回数の上限（12回や15回）に届いたら、次回は1〜2kg重くする。カードに「重さを上げる」と出る</li><li>同じ筋肉は中1日以上あける。痛みが出たら、その種目は休む</li><li>握力の道具は、テレビや動画を見ながらのついででOK</li></ul></div>
+<div class="card prose"><h2>メニュー</h2>
+<h3>A（下半身・押す・引く・お腹）</h3>${list('A')}
+<h3>B（下半身・押す・腕・お腹）</h3>${list('B')}
+<p class="small muted">ダンベルは片手1個ずつで使う。バーベルの形には組み替えなくていい。</p></div>
+<div class="card prose"><h2>見直すタイミング</h2>
+<ul><li>体重が1週間で0.7kg以上落ちる：筋肉も落ちやすいので、ごはんを1日100g増やす</li><li>2週間たっても体重もお腹まわりも変わらない：昼を100〜200kcal減らす</li><li>同じ重さ・回数から3回続けて伸びない：その種目だけ1週間軽くしてから戻す</li><li>サッカーの日は筋トレを休みにしてOK。前日の下半身（スクワット）は軽めに</li></ul></div>
+</div>`;
+}
+route();
+</script>
+</body></html>
