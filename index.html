@@ -167,9 +167,6 @@
   .cat summary small { display: block; color: var(--sub); font-size: 12px; margin-top: 2px; }
   .cat .cat { margin-left: 4px; }
   .cat .st { grid-template-columns: minmax(38px, auto) minmax(0, 1fr) auto; }
-  .bal { display: flex; flex-direction: column; border-top: 1px solid var(--line); padding-top: 12px; }
-  .bal-title { font-size: 14px; font-weight: 700; }
-  .bal .cat { margin-left: 0; }
   .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--chip); border-radius: 12px; }
   .tabs button { min-height: 40px; border: 0; border-radius: 9px; background: none; font-size: 15px; font-weight: 700; color: var(--sub); cursor: pointer; }
   .tabs button.on { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(27, 36, 48, .1); }
@@ -184,6 +181,16 @@
   .debt-line .n { font-weight: 700; white-space: nowrap; }
   .debt-line .n.unk { font-weight: 400; color: var(--sub); font-size: 13px; }
   .debt .cat { margin-left: 0; }
+  .chk { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 9px; background: #2E7D4F; color: #fff; margin-right: 6px; flex: none; vertical-align: -3px; }
+  .late { display: inline-block; font-size: 11px; font-weight: 700; color: #fff; background: #B42318; border-radius: 6px; padding: 1px 6px; margin-left: 6px; vertical-align: 1px; }
+  .line.done .amt { opacity: .55; }
+  .day.late-day .num { box-shadow: inset 0 0 0 2px #B42318; }
+  .overdue { background: #FDECEA; border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+  .overdue b { color: #8A1C12; font-size: 15px; }
+  .overdue .sub { color: #8A1C12; }
+  .overdue .line { border-top: 1px solid rgba(138, 28, 18, .12); }
+  .done-btn { min-height: 52px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; border: 0; background: #2E7D4F; color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .done-btn.is-done { background: #EAF5EE; color: #1F5E3A; border: 1px solid #A9D3B7; }
   .kid-note { font-size: 12px; color: var(--sub); padding: 6px 0 4px 4px; }
   .fee .n { font-variant-numeric: tabular-nums; white-space: nowrap; }
   .how { font-size: 13px; color: var(--sub); background: var(--bg); border-radius: 10px; padding: 10px 12px; }
@@ -259,7 +266,7 @@
   }
 
   const PREVIEW = /[?&]demo\b/.test(location.search);
-  const APP_VERSION = '2026-10-28d';
+  const APP_VERSION = '2026-10-29a';
   function checkUpdate() {
     if (PREVIEW) return;
     fetch(location.pathname + '?check=' + Date.now(), { cache: 'no-store' })
@@ -301,7 +308,7 @@
     return j.data;
   }
 
-  const FN = { apiGetData: 'get', apiAddSchedule: 'add', apiDeleteSchedule: 'del', apiSetBalance: 'bal', apiSaveAccount: 'acct', apiDeleteAccount: 'delAcct', apiSetScheduleDate: 'date', apiUpdateSchedule: 'edit', apiImportCard: 'card', apiSetCardCategory: 'cardCat', apiClearCard: 'cardClear' };
+  const FN = { apiGetData: 'get', apiAddSchedule: 'add', apiDeleteSchedule: 'del', apiSetBalance: 'bal', apiSaveAccount: 'acct', apiDeleteAccount: 'delAcct', apiSetScheduleDate: 'date', apiUpdateSchedule: 'edit', apiImportCard: 'card', apiSetCardCategory: 'cardCat', apiClearCard: 'cardClear', apiSetDone: 'done' };
 
   function call(fn, args, done, fail) {
     if (PREVIEW) { fail('サンプル表示なので保存できません'); return; }
@@ -314,9 +321,19 @@
 
   /* ---------- メイン画面 ---------- */
 
+  const DONE_FROM = '2026-10-01';
+  const ICON_CHK = '<svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  const doneKey = ev => ev.date + '|' + ev.row + '|' + ev.label;
+  const isDone = ev => !!ev.date && (DATA.done || []).indexOf(doneKey(ev)) >= 0;
+  const isLate = ev => !!ev.date && ev.date < DATA.today && ev.date >= DONE_FROM && !isDone(ev);
+  const doneWord = ev => ev.amount > 0 ? '入金済み' : '支払い済み';
+  const lateWord = ev => ev.amount > 0 ? '未入金' : '未払い';
+
   function lineHtml(ev, showAccount) {
     const cls = ev.amount > 0 ? 'in' : 'out';
-    return '<button type="button" class="line" data-ev="' + ev._i + '"><span>' + esc(ev.label) +
+    return '<button type="button" class="line' + (isDone(ev) ? ' done' : '') + '" data-ev="' + ev._i + '"><span>' +
+      (isDone(ev) ? '<span class="chk" aria-label="' + doneWord(ev) + '">' + ICON_CHK + '</span>' : '') + esc(ev.label) +
+      (isLate(ev) ? '<span class="late">' + lateWord(ev) + '</span>' : '') +
       (showAccount && ev.account ? ' <span class="acct">' + esc(ev.account) + '</span>' : '') +
       '</span><span class="amt ' + cls + '">' + signed(ev.amount) + '</span></button>';
   }
@@ -352,6 +369,13 @@
          '<div class="pill out"><span class="k">支出</span><span class="v">' + yen(exp) + '</span></div></div>' +
          (rcpt !== null && rcpt !== undefined ? '<div class="receipt"><span>レシートで記録した' + viewM + '月の買い物</span><span>' + yen(rcpt) + '</span></div>' : '') +
          '</section>';
+
+    const late = DATA.events.filter(isLate).sort((a, b) => (a.date < b.date ? -1 : 1));
+    if (late.length) {
+      h += '<section class="overdue"><b>期日を過ぎて、まだチェックがないもの</b>' +
+           '<span class="sub">払った（入った）ものは、タップしてチェックを入れてください</span>' +
+           late.map(ev => '<div>' + lineHtml(ev, true).replace('<span>', '<span>' + md(ev.date) + ' ') + '</div>').join('') + '</section>';
+    }
 
     if (DATA.alerts.length) {
       DATA.alerts.forEach(a => {
@@ -396,6 +420,7 @@
       const cls = ['day'];
       if (key === DATA.today) cls.push('today'); else if (key < DATA.today) cls.push('past');
       if (selected === key) cls.push('sel');
+      if (evs.some(isLate)) cls.push('late-day');
       h += '<button type="button" class="' + cls.join(' ') + '" data-day="' + key + '"' +
            ' aria-label="' + viewM + '月' + d + '日' + (evs.length ? '、予定' + evs.length + '件' : '、予定を追加') + '">' +
            '<span class="num">' + d + '</span>' +
@@ -790,6 +815,8 @@
         (ev.recurring ? '<div><span>くり返し</span><span>毎月・' +
           (ev.shift === '前の平日' ? '休日は前の平日' : ev.shift === 'ずらさない' ? '休日もずらさない' : '休日は次の平日') + '</span></div>' : '') +
       '</div>' +
+      (d ? '<button type="button" class="done-btn' + (isDone(ev) ? ' is-done' : '') + '" id="done-btn">' +
+        (isDone(ev) ? ICON_CHK + doneWord(ev) + '（タップで取り消す）' : doneWord(ev) + 'にする') + '</button>' : '') +
       (isCard(ev) ? '<div class="cb" id="card-box"></div>' : '') +
 
       (d ? '' : '<div class="field"><label for="f-setdate">日付が決まったら</label>' +
@@ -804,6 +831,14 @@
       '<button type="button" class="danger" id="del-btn">削除する</button>');
 
     document.getElementById('edit-btn').addEventListener('click', () => openAdd(null, ev));
+    const db = document.getElementById('done-btn');
+    if (db) db.addEventListener('click', () => {
+      const was = isDone(ev);
+      busy(db, true, '保存中…');
+      call('apiSetDone', [ev.date, ev.row, ev.label, ev.amount, !was],
+        d2 => { setData(d2); closeSheet(); toast(was ? 'チェックを外しました' : doneWord(ev) + 'にしました'); },
+        msg => { busy(db, false); showErr(msg); });
+    });
     if (isCard(ev)) renderCardBox(ev);
 
     const sd = document.getElementById('set-date-btn');
