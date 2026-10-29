@@ -97,6 +97,10 @@ table.ing td.num{white-space:normal;text-align:right}
 .free{background:var(--bg);border-radius:8px;padding:8px 10px}
 .free p{margin:0 0 4px;font-size:.88rem}
 .kid{display:block;font-size:.78rem;color:var(--muted);margin-top:3px}.kidtag{display:inline-block;font-size:.7rem;padding:0 6px;margin-right:5px;border-radius:999px;background:var(--warn-soft);color:var(--warn)}
+.eatlist{list-style:none;margin:0 0 6px;padding:0;display:grid;gap:3px;font-size:.88rem}.eatlist li{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--line);padding-bottom:3px}
+.eatin{display:flex;gap:6px;flex-wrap:wrap}.eatin input[type=text]{flex:1 1 9em;min-width:0;font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:6px 8px}.eatin input[type=number]{width:5.5em;background:var(--surface)}
+.eatq{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.eatq button{font:inherit;font-size:.78rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:3px 10px;cursor:pointer}
+.eatleft{margin:8px 0 0;font-size:.95rem;display:flex;flex-wrap:wrap;gap:6px;align-items:baseline}.eatleft b{color:var(--leaf);font-size:1.05rem}.eatleft.over b{color:var(--warn)}
 .bikein{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:.88rem;flex-wrap:wrap}.bikein label{min-width:8.5em}.bikein input{width:5.5em;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit}
 .free ul{margin:0;padding-left:1.1em;display:grid;gap:2px}
 .total span:last-child{white-space:nowrap}
@@ -311,8 +315,17 @@ function freeHtml(label,budget,bento){
     :'';
   const bk='<p class="small" style="margin:'+(bento?'8px':'0')+' 0 0">今日の自転車乗車時間</p>'+BK.map(([id,n,r])=>'<div class="bikein"><label for="bk-'+id+'">'+n+'</label><input type="number" id="bk-'+id+'" data-bk="'+id+'" inputmode="numeric" min="0" max="300" step="5" value="'+(v[id]||'')+'" placeholder="0"><span>分</span><span class="muted small">30分で約'+Math.round(r*30)+'kcal</span></div>').join('')
     +(ex?'<p class="small" style="margin:4px 0 0">自転車ぶん <b>+'+ex+'kcal</b> → <b>約'+tot+'kcalまで</b></p>':'');
-  return '<div class="meal"><h3><span>'+label+'</span><span class="kcal">'+tot+' kcalまで</span></h3><div class="free">'+body+bk+'</div></div>';
+  const eats=state.eat[sel]||[],used=eats.reduce((s,x)=>s+(+x[1]||0),0),left=tot-used;
+  const eh='<div class="eat"><p class="small" style="margin:10px 0 4px">'+(bento?'食べた間食':'食べたもの（昼・間食）')+'</p>'
+    +(eats.length?'<ul class="eatlist">'+eats.map((x,i)=>'<li><span>'+esc(x[0]||'（名前なし）')+'</span><span class="kcal">'+x[1]+' kcal <button type="button" class="link" data-eatdel="'+i+'" aria-label="消す">×</button></span></li>').join('')+'</ul>':'')
+    +'<div class="eatin"><input type="text" id="eat-n" placeholder="例：おにぎり" aria-label="食べたもの"><input type="number" id="eat-k" inputmode="numeric" min="0" max="3000" placeholder="kcal" aria-label="カロリー"><button type="button" class="btn" id="eat-add">追加</button></div>'
+    +'<div class="eatq">'+EATQ.map(([n,k],i)=>'<button type="button" data-eatq="'+i+'">'+esc(n)+' '+k+'</button>').join('')+'</div>'
+    +'<p class="eatleft'+(left<0?' over':'')+'">'+(left>=0?'あと <b>約'+left+'kcal</b> 食べられる':'<b>'+(-left)+'kcal</b> オーバー')+'<span class="small muted">（'+tot+' − 食べた分 '+used+'）</span></p></div>';
+  return '<div class="meal"><h3><span>'+label+'</span><span class="kcal">'+tot+' kcalまで</span></h3><div class="free">'+body+bk+eh+'</div></div>';
 }
+const EATQ=[['いつものアイス',300],['ヨーグルト＋果物',100],['パピコ1本',74],['おにぎり1個',180]];
+state.eat=lsGet('kondate-eat',{});
+function addEat(n,k){k=Math.round(+k);if(!(k>0&&k<5000))return;const o={...state.eat};o[sel]=[...(o[sel]||[]),[String(n||'').slice(0,40),k]];state.eat=o;lsSet('kondate-eat',o);renderCard();const e=document.getElementById('eat-n');}
 function mealHtml(label,items){
   const kc=items.reduce((a,x)=>a+x[3],0);
   const li=items.map(([n,a,u,k,src,tr,kd])=>{
@@ -355,6 +368,9 @@ function renderCard(){
   h+='<div><label for="memo" class="small muted">メモ（体調・生理・外食など）</label><textarea id="memo"'+(state.readOnly?' disabled':'')+'>'+esc(dd.memo||'')+'</textarea></div>';
   card.innerHTML=h;
   card.querySelectorAll('input[data-c]').forEach(i=>i.onchange=()=>{const o={...(state.days[sel]||{})};o[i.dataset.c]=i.checked;saveDay(sel,o);renderCal()});
+  const ea=card.querySelector('#eat-add');if(ea){ea.onclick=()=>addEat(card.querySelector('#eat-n').value,card.querySelector('#eat-k').value);card.querySelector('#eat-k').onkeydown=e=>{if(e.key==='Enter')ea.click()};}
+  card.querySelectorAll('[data-eatq]').forEach(b=>b.onclick=()=>{const [n,k]=EATQ[+b.dataset.eatq];addEat(n,k)});
+  card.querySelectorAll('[data-eatdel]').forEach(b=>b.onclick=()=>{const o={...state.eat};const l=(o[sel]||[]).slice();l.splice(+b.dataset.eatdel,1);if(l.length)o[sel]=l;else delete o[sel];state.eat=o;lsSet('kondate-eat',o);renderCard()});
   card.querySelectorAll('input[data-bk]').forEach(bi=>bi.onchange=()=>{const val=Math.max(0,Math.min(300,parseInt(bi.value)||0));const cur={...bikeOf(sel)};if(val)cur[bi.dataset.bk]=val;else delete cur[bi.dataset.bk];const o={...state.bike};if(Object.keys(cur).length)o[sel]=cur;else delete o[sel];state.bike=o;lsSet('kondate-bike',o);if(val>0&&!(state.days[sel]||{}).bike&&!state.readOnly){saveDay(sel,{...(state.days[sel]||{}),bike:true});renderCal()}renderCard()});
   const memo=card.querySelector('#memo');memo.onchange=()=>{const o={...(state.days[sel]||{})};o.memo=memo.value.slice(0,500);saveDay(sel,o)};
 }
