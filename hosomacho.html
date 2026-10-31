@@ -287,7 +287,7 @@ function renderCard(){
   h+='<div class="meal"><h3><span>食事</span><span class="kcal">約2,100〜2,200 kcal・たんぱく質約120g</span></h3><div class="tbl"><table class="food"><tbody>'+
     '<tr><td>朝</td><td>プロテイン1杯＋ごはん150g＋納豆＋卵2個</td></tr>'+
     '<tr><td>昼</td><td>約600kcalまで。たんぱく質20g以上（サラダチキン、鮭おにぎり＋ゆで卵など）</td></tr>'+
-    '<tr><td>夜</td><td>奥さんと同じおかず1人前＋もち麦ごはん200g</td></tr>'+
+    '<tr><td>夜</td><td>奥さんと同じおかず1人前＋ごはん200g</td></tr>'+
     (t!=='R'?'<tr><td>筋トレ後</td><td>プロテイン1杯</td></tr>':'')+'</tbody></table></div></div>';
   const dd=S.days[k]||{};
   h+='<div><h3 class="small muted" style="font-weight:500;margin-bottom:6px">今日のチェック</h3><div class="checks">'+CHK(k).map(([c,l])=>'<label><input type="checkbox" data-c="'+c+'"'+(dd[c]?' checked':'')+'>'+l+'</label>').join('')+'</div></div>';
@@ -346,7 +346,7 @@ function renderPlan(){
 <div class="tbl"><table><thead><tr><th>食事</th><th>中身</th><th class="num">目安</th></tr></thead><tbody>
 <tr><td>朝</td><td>プロテイン1杯＋ごはん150g＋納豆＋卵2個</td><td class="num">約650kcal</td></tr>
 <tr><td>昼</td><td>好きなもの。たんぱく質20g以上</td><td class="num">約600kcal</td></tr>
-<tr><td>夜</td><td>奥さんと同じおかず1人前＋もち麦ごはん200g</td><td class="num">約700〜850kcal</td></tr>
+<tr><td>夜</td><td>奥さんと同じおかず1人前＋ごはん200g</td><td class="num">約700〜850kcal</td></tr>
 <tr><td>筋トレ後</td><td>プロテイン1杯</td><td class="num">約120kcal</td></tr></tbody></table></div>
 <ul class="small"><li>プロテインは一般的なホエイで1杯約110〜120kcal・たんぱく質20〜24g。VERIFYSTの袋の1食分の表示で確かめる</li><li>夜がパスタなどごはんのない日は、おかずと別にごはん100gか、卵・豆腐を足す</li><li>お酒や甘いものを食べた日は、昼か夜のごはんを少し減らす</li></ul></div>
 <div class="card prose"><h2>筋トレのルール</h2>
