@@ -355,7 +355,7 @@ async function refreshDb(){
   if(state.mode!=='sheet')return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
 }
-const BUILD='1793571700';
+const BUILD='1793572041';
 async function checkUpdate(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});const s=await r.text();const m=s.match(/const BUILD='([0-9]+)'/);if(m&&m[1]!==BUILD){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))location.reload()}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshDb();checkUpdate()}});
 setTimeout(checkUpdate,3000);
@@ -476,7 +476,10 @@ function budgetOf(k){const p=PLAN[k];if(!p||!p.t)return null;const d=new Date(k+
   const free=DAY-lk-dk;
   return {bento,dk,lk,free,lunchB:bento?0:free-SNACK,snackB:bento?free:SNACK}}
 const usedOf=k=>eatOf(k).reduce((s,x)=>s+(+x[1]||0),0);
-const dinpOf=k=>{const v=(state.days[k]||{}).dinp;return v==null?1:+v};
+// dinp は「実際に食べた人前」（0.1刻み）。計算用には献立の人前に対する倍率にする
+const dinpOf=k=>{const v=(state.days[k]||{}).dinp;return v==null?1:+v/baseP(k)};
+// 献立側ですでに人前が決まっている日（例：11/1は0.3人前）は、その人前を基準に表示する
+const baseP=k=>{const p=PLAN[k];if(!p||!p.t)return 1;const it=p.t.D.find(x=>x[6]==='main'||x[6]==='one');const m=it&&it[7]&&String(it[7]).match(/^([\d.]+)人前$/);return m?+m[1]:1};
 function dayCalc(k){const b=budgetOf(k);if(!b)return null;const e=eatOf(k);
   const bfE=e.filter(x=>slotOf(x)==='b').reduce((s,x)=>s+(+x[1]||0),0),lunchE=e.filter(x=>slotOf(x)==='l').reduce((s,x)=>s+(+x[1]||0),0),snackE=e.filter(x=>slotOf(x)==='s').reduce((s,x)=>s+(+x[1]||0),0);
   const dinp=dinpOf(k),dinnerK=Math.round(b.dk*dinp),ex=bikeExtra(k),target=DAY+ex,eaten=bfE+b.lk+lunchE+dinnerK+snackE;
@@ -730,8 +733,8 @@ function renderCard(){
     if(addSlot==='l')h+=addForm();
     h+='</section>';
     // 夜
-    const dv=Math.round(c.dinp*10)/10;
-    const seg2='<div class="portion" role="group" aria-label="夜ごはんを食べた量"><span class="plabel">食べた量</span><button type="button" class="pm" data-dstep="-0.1" aria-label="0.1人前減らす">−</button><input type="number" id="dinp" inputmode="decimal" min="0" max="3" step="0.1" value="'+dv.toFixed(1)+'" aria-label="夜ごはんを何人前食べたか"><span>人前</span><button type="button" class="pm" data-dstep="0.1" aria-label="0.1人前増やす">＋</button>'+(dv!==1?'<button type="button" class="link small" data-dset="1">献立どおりに戻す</button>':'')+'</div>';
+    const bp=baseP(sel),dv=Math.round(c.dinp*bp*10)/10;
+    const seg2='<div class="portion" role="group" aria-label="夜ごはんを食べた量"><span class="plabel">食べた量</span><button type="button" class="pm" data-dstep="-0.1" aria-label="0.1人前減らす">−</button><input type="number" id="dinp" inputmode="decimal" min="0" max="3" step="0.1" value="'+dv.toFixed(1)+'" aria-label="夜ごはんを何人前食べたか"><span>人前</span><button type="button" class="pm" data-dstep="0.1" aria-label="0.1人前増やす">＋</button>'+(Math.abs(c.dinp-1)>0.001?'<button type="button" class="link small" data-dset="'+bp+'">献立どおりに戻す</button>':'')+'</div>';
     h+='<section class="mrow">'+slotHead(nextBento?'夜ごはん（明日のお弁当の分も作る）':'夜ごはん',c.dinnerK,null,null,seg2)+mealHtml('',p.t.D)+'</section>';
     // おやつ
     h+='<section class="mrow">'+slotHead('夜のおやつ',c.snackE,c.snackB,'s');
@@ -750,8 +753,9 @@ function renderCard(){
   card.innerHTML=h;
   card.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{if(b.dataset.go){sel=b.dataset.go;addSlot=null;renderCard();window.scrollTo(0,0)}});
   card.querySelectorAll('[data-slot]').forEach(b=>b.onclick=()=>{addSlot=b.dataset.slot;renderCard();const n=card.querySelector('#eat-n');if(n)n.focus()});
-  const setDinp=v=>{v=Math.max(0,Math.min(3,Math.round((+v||0)*10)/10));setDayField(sel,'dinp',v===1?null:v);renderCard()};
-  card.querySelectorAll('[data-dstep]').forEach(b=>b.onclick=()=>setDinp(dinpOf(sel)+ +b.dataset.dstep));
+  const bp=baseP(sel);
+  const setDinp=v=>{v=Math.max(0,Math.min(3,Math.round((+v||0)*10)/10));setDayField(sel,'dinp',Math.abs(v-bp)<0.001?null:v);renderCard()};
+  card.querySelectorAll('[data-dstep]').forEach(b=>b.onclick=()=>setDinp(Math.round(dinpOf(sel)*bp*10)/10+ +b.dataset.dstep));
   card.querySelectorAll('[data-dset]').forEach(b=>b.onclick=()=>setDinp(+b.dataset.dset));
   const di=card.querySelector('#dinp');if(di)di.onchange=()=>setDinp(di.value);
   const ea=card.querySelector('#eat-add');if(ea){ea.onclick=()=>addEat(card.querySelector('#eat-n').value,card.querySelector('#eat-k').value);card.querySelector('#eat-k').onkeydown=e=>{if(e.key==='Enter')ea.click()};}
