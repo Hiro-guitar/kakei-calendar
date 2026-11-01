@@ -235,7 +235,10 @@ async function refreshDb(){
   const ae=document.activeElement;if(ae&&/INPUT|TEXTAREA/.test(ae.tagName))return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
 }
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshDb()});
+const BUILD='1793495963';
+async function checkUpdate(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});const s=await r.text();const m=s.match(/const BUILD='([0-9]+)'/);if(m&&m[1]!==BUILD){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))location.reload()}}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshDb();checkUpdate()}});
+setTimeout(checkUpdate,3000);
 window.addEventListener('focus',refreshDb);
 setInterval(()=>{if(document.visibilityState==='visible')refreshDb()},60000);
 async function saveDay(k,obj){
