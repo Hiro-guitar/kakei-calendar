@@ -230,6 +230,14 @@ async function initDb(){
     if(state.mode==='sheet'){state.eat={};state.bike={};lsSet('kondate-eat',{});lsSet('kondate-bike',{})}}
   storeNote();rerender();
 }
+async function refreshDb(){
+  if(!API||!KEY||state.mode!=='sheet')return;
+  const ae=document.activeElement;if(ae&&/INPUT|TEXTAREA/.test(ae.tagName))return;
+  try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshDb()});
+window.addEventListener('focus',refreshDb);
+setInterval(()=>{if(document.visibilityState==='visible')refreshDb()},60000);
 async function saveDay(k,obj){
   state.days={...state.days,[k]:obj};lsSet('kondate-days',state.days);
   if(state.mode==='sheet'){try{await api({k:KEY,fn:'day',args:[k,obj]})}catch(e){state.mode='error';storeNote()}}
