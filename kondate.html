@@ -221,13 +221,13 @@ async function api(payload){
 async function initDb(){
   if(!API||!KEY)return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};state.mode='sheet';lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms)}
+  catch(e){state.mode='error'}
   if(state.mode==='sheet'){const ks=new Set([...Object.keys(state.eat||{}),...Object.keys(state.bike||{})]);
     for(const k of ks){const d=state.days[k]||{};const o={...d};let ch=false;
       if(!d.eat&&state.eat[k]&&state.eat[k].length){o.eat=state.eat[k];ch=true}
       if(!d.bikemin&&state.bike[k]){const v=state.bike[k];o.bikemin=typeof v==='number'?{g:v}:v;ch=true}
       if(ch)await saveDay(k,o)}
     if(state.mode==='sheet'){state.eat={};state.bike={};lsSet('kondate-eat',{});lsSet('kondate-bike',{})}}
-  catch(e){state.mode='error'}
   storeNote();rerender();
 }
 async function saveDay(k,obj){
