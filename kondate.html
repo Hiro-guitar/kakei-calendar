@@ -208,15 +208,15 @@ function lsGet(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 state.days=lsGet('kondate-days',{});state.ms=lsGet('kondate-ms',{});state.weights=lsGet('kondate-w',{});
 // 合い言葉は URL の #k=... に入っている（# 以降はどこにも送られない）
-function readKey(){const m=location.hash.match(/k=([0-9a-zA-Z]+)/);let k=m?m[1]:'';try{if(k)localStorage.setItem('kondate-key',k);else k=localStorage.getItem('kondate-key')||''}catch(e){}return k}
-const KEY=readKey();
+function readKey(){const m=location.hash.match(/k=([^&]+)/);let k='';try{k=m?decodeURIComponent(m[1]):''}catch(e){k=m?m[1]:''}try{if(k)localStorage.setItem('kondate-key',k);else k=localStorage.getItem('kondate-key')||''}catch(e){}return k}
+let KEY=readKey();
 function storeNote(){
   const el=document.getElementById('store');
   if(state.mode==='sheet'){el.textContent='チェック・メモ・食べたもの・自転車は2人で共有されます。体重メモは、入力したスマホにだけ保存されます。';return}
   if(state.mode==='error'){el.textContent='共有の通信に失敗しています。入力はこのスマホに保存し、つながったら自動で共有します。';return}
-  el.innerHTML='<b>このスマホは共有されていません。</b>入力はこのスマホにだけ保存されています。共有の合い言葉（または合い言葉付きURL）を貼り付けると、2人で共有されます。<span class="keyin"><input id="keyin" placeholder="合い言葉かURLを貼り付け" autocomplete="off"><button type="button" id="keybtn">共有する</button></span>';
-  document.getElementById('keybtn').onclick=()=>{const v=document.getElementById('keyin').value.trim();const m=v.match(/k=([0-9a-zA-Z]+)/);const k=m?m[1]:(/^[0-9a-zA-Z]{8,}$/.test(v)?v:'');
-    if(!k){alert('合い言葉が読み取れませんでした');return}
+  el.innerHTML=(state.mode==='badkey'?'<b>合い言葉が変わりました。</b>新しい合い言葉を入れてください。入力はそれまでこのスマホに保存されます。':'<b>このスマホは共有されていません。</b>入力はこのスマホにだけ保存されています。共有の合い言葉を入れると、2人で共有されます。')+'<span class="keyin"><input id="keyin" placeholder="合い言葉" autocomplete="off"><button type="button" id="keybtn">共有する</button></span>';
+  document.getElementById('keybtn').onclick=()=>{const v=document.getElementById('keyin').value.trim();const m=v.match(/k=([^&]+)/);let k=v;if(m){try{k=decodeURIComponent(m[1])}catch(e){k=m[1]}}
+    if(!k)return;
     try{localStorage.setItem('kondate-key',k)}catch(e){}location.reload()};
 }
 async function api(payload){
@@ -228,7 +228,8 @@ async function initDb(){
   if(!API||!KEY)return;
   const localDays=state.days||{};const pend=lsGet('kondate-pend',{});const synced=lsGet('kondate-synced',false);
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};state.mode='sheet'}
-  catch(e){state.mode='error'}
+  catch(e){state.mode=/合い言葉/.test(e.message||'')?'badkey':'error'}
+  if(state.mode==='badkey'){try{localStorage.removeItem('kondate-key')}catch(e){}KEY=''}
   if(state.mode==='sheet'){
     const push={};
     /* 通信失敗中に入力した日は、このスマホの内容で上書き */
@@ -256,7 +257,7 @@ async function refreshDb(){
   if(state.mode!=='sheet')return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
 }
-const BUILD='1793539899';
+const BUILD='1793540257';
 async function checkUpdate(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});const s=await r.text();const m=s.match(/const BUILD='([0-9]+)'/);if(m&&m[1]!==BUILD){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))location.reload()}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshDb();checkUpdate()}});
 setTimeout(checkUpdate,3000);
@@ -264,8 +265,8 @@ window.addEventListener('focus',refreshDb);
 setInterval(()=>{if(document.visibilityState==='visible')refreshDb()},60000);
 async function saveDay(k,obj){
   state.days={...state.days,[k]:obj};lsSet('kondate-days',state.days);
-  if(state.mode==='sheet'){try{await api({k:KEY,fn:'day',args:[k,obj]})}catch(e){state.mode='error';storeNote()}}
-  if(state.mode==='error'){const p=lsGet('kondate-pend',{});p[k]=1;lsSet('kondate-pend',p)}
+  if(state.mode==='sheet'){try{await api({k:KEY,fn:'day',args:[k,obj]})}catch(e){state.mode=/合い言葉/.test(e.message||'')?'badkey':'error';if(state.mode==='badkey'){try{localStorage.removeItem('kondate-key')}catch(_){}KEY=''}storeNote()}}
+  if(state.mode==='error'||state.mode==='badkey'){const p=lsGet('kondate-pend',{});p[k]=1;lsSet('kondate-pend',p)}
 }
 async function saveMs(obj){
   state.ms=obj;lsSet('kondate-ms',obj);
