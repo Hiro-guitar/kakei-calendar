@@ -115,10 +115,10 @@ details.more textarea{margin-top:6px}
 .left .bank{background:var(--olive-soft);border-radius:10px;padding:6px 12px;display:grid;text-align:right}
 .bar{display:flex;gap:2px}
 .bar i{display:block;height:100%;border-radius:0}
-.bar i.sl{background:#d9a06b}.bar i.sd{background:var(--leaf)}.bar i.ss{background:var(--ice)}
+.bar i.sb{background:#e8c27a}.bar i.sl{background:#d9a06b}.bar i.sd{background:var(--leaf)}.bar i.ss{background:var(--ice)}
 .left.over .bar i{opacity:.85}
 .k{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:3px;vertical-align:0}
-.k.sl{background:#d9a06b}.k.sd{background:var(--leaf)}.k.ss{background:var(--ice)}
+.k.sb{background:#e8c27a}.k.sl{background:#d9a06b}.k.sd{background:var(--leaf)}.k.ss{background:var(--ice)}
 .mrow{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:8px}
 .mh{display:flex;align-items:center;gap:8px}
 .mh h3{flex:1;font-family:var(--display);font-weight:600;font-size:1.02rem;margin:0}
@@ -351,7 +351,7 @@ async function refreshDb(){
   if(state.mode!=='sheet')return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
 }
-const BUILD='1793543610';
+const BUILD='1793543947';
 async function checkUpdate(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});const s=await r.text();const m=s.match(/const BUILD='([0-9]+)'/);if(m&&m[1]!==BUILD){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))location.reload()}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshDb();checkUpdate()}});
 setTimeout(checkUpdate,3000);
@@ -447,7 +447,7 @@ const bikeExtra=k=>{const v=bikeOf(k);return Math.round(BK.reduce((a,[id,,r])=>a
 state.fav=lsGet('kondate-fav',[]);
 function saveFav(o){state.fav=o;lsSet('kondate-fav',o);renderCard()}
 let addSlot=null;
-const slotOf=x=>x[2]==='s'?'s':'l';
+const slotOf=x=>x[2]==='s'||x[2]==='b'?x[2]:'l';
 function addEat(n,k,sl){k=Math.round(+k);if(!(k>0&&k<5000))return;setDayField(sel,'eat',[...eatOf(sel),[String(n||'').slice(0,40),k,sl||addSlot||'l']]);renderCard()}
 function mealHtml(label,items){
   const kc=items.reduce((a,x)=>a+x[3],0);
@@ -474,9 +474,9 @@ function budgetOf(k){const p=PLAN[k];if(!p||!p.t)return null;const d=new Date(k+
 const usedOf=k=>eatOf(k).reduce((s,x)=>s+(+x[1]||0),0);
 const dinpOf=k=>{const v=(state.days[k]||{}).dinp;return v==null?1:+v};
 function dayCalc(k){const b=budgetOf(k);if(!b)return null;const e=eatOf(k);
-  const lunchE=e.filter(x=>slotOf(x)==='l').reduce((s,x)=>s+(+x[1]||0),0),snackE=e.filter(x=>slotOf(x)==='s').reduce((s,x)=>s+(+x[1]||0),0);
-  const dinp=dinpOf(k),dinnerK=Math.round(b.dk*dinp),ex=bikeExtra(k),target=DAY+ex,eaten=b.lk+lunchE+dinnerK+snackE;
-  return {...b,lunchE,snackE,dinp,dinnerK,ex,target,eaten,left:target-eaten,rec:e.length>0}}
+  const bfE=e.filter(x=>slotOf(x)==='b').reduce((s,x)=>s+(+x[1]||0),0),lunchE=e.filter(x=>slotOf(x)==='l').reduce((s,x)=>s+(+x[1]||0),0),snackE=e.filter(x=>slotOf(x)==='s').reduce((s,x)=>s+(+x[1]||0),0);
+  const dinp=dinpOf(k),dinnerK=Math.round(b.dk*dinp),ex=bikeExtra(k),target=DAY+ex,eaten=bfE+b.lk+lunchE+dinnerK+snackE;
+  return {...b,bfE,lunchE,snackE,dinp,dinnerK,ex,target,eaten,left:target-eaten,rec:e.length>0}}
 function deltaOf(k){const c=dayCalc(k);if(!c||!c.rec)return null;return c.left}
 const CAP=150;
 function bankUntil(end){let b=0;for(const k of Object.keys(PLAN).sort()){if(k>=end)break;const d=deltaOf(k);if(d!=null)b=Math.max(0,b+Math.min(CAP,d))}return b}
@@ -484,27 +484,49 @@ function iceGoal(b){const ices=state.fav.filter(([n])=>/アイス|ice|パピコ|
   if(!ices.length)return '';const got=ices.filter(x=>x[1]<=b);
   if(got.length){const x=got[got.length-1];return esc(x[0])+'が食べられるくらい貯まっています'}
   const x=ices[0];return esc(x[0])+'（'+x[1]+'kcal）まで、あと'+(x[1]-b)+'kcal'}
-/* 1日のふりかえり（あすけんの「健康度」と栄養士コメントを参考にした、100点満点と一言） */
+/* 1日のふりかえり（あすけんの「健康度」と栄養士コメントを参考にした、100点満点と一言）
+   一言は条件ごとにたくさんの言い回しから、日付で選ぶ（同じ日は同じ文、日が変わると変わる） */
+const RV={
+ dinner:['夜ごはんをしっかり食べられました','夜ごはん、ちゃんと1人前。えらい！','今日の夜ごはんは満点の食べっぷり','夜をしっかり食べた日は、あとのおやつが自然と落ち着きます','夜ごはんで体の材料がちゃんと入りました','主菜までしっかり。今日の体はよろこんでます','夜ごはんを抜かずに食べたのが、いちばんのファインプレー','しっかり食べて痩せる、の見本みたいな夜ごはん','夜ごはん完食、おつかれさまでした','たんぱく質もしっかり入った夜ごはんでした'],
+ snackOk:['おやつが枠の中に収まりました','おやつ、ちょうどいい量で楽しめました','テレビのお供、上手に量を合わせられました','甘いものを我慢せずに、枠の中。理想的です','おやつも食べて、枠も守れた。最高の組み合わせ','おやつタイム、きれいに着地しました','好きなものを食べて、ちゃんと収まってます','今日のおやつは100点の量'],
+ exact:['1日の量がぴったりでした','今日の量、目標どんぴしゃ','ちょうどいい1日でした。これを続けるだけでOK','狙いどおりの1日。この感じです','食べすぎず、我慢しすぎず。ちょうどいい日でした','目標にぴったり。お見事です'],
+ saved:['枠を少し残せて、アイス貯金が増えます','ちょっと残せたので、貯金が増えました','今日の残りはアイス貯金へ。週末が楽しみ','少しずつ貯まっていくのがいい感じ','残した分は、ちゃんとあとで食べられます','貯金がまた増えました。次のアイスに一歩前進'],
+ bike:['自転車にも乗れました','自転車、おつかれさま！','自転車に乗った分、ちゃんと体が動いてます','自転車でひと汗。いい1日です','ペダルをこいだ分、ちゃんと効いてます'],
+ rec:['記録できました。続けるのがいちばん大事です','今日も記録できました。それだけで十分えらい','記録を続けているだけで、もう半分成功です','書き残せた日は、あとで振り返る宝物になります','今日もちゃんと向き合えました','記録おつかれさまでした。明日もこの調子で'],
+ lowDinSnack:['夜ごはんが少なめで、おやつが多めでした。夜を1人前食べると、あとのおやつが自然と減りやすいです','おやつが主役の日でした。夜ごはんをしっかり食べると、甘いものの欲が落ち着きやすいです','夜が軽めだと、夜中に甘いものが欲しくなりがち。次は夜をもう少し','夜ごはんをおやつに回した日でした。順番を逆にすると、満足感が変わります'],
+ lowDin:['夜ごはんが少なめでした。主菜のたんぱく質は、体を守るのに大事です','夜が軽めの日でした。主菜だけでも食べておくと、筋肉が落ちにくいです','夜ごはんは減らさないのがコツ。減らすならおやつの方から','夜を少なめにすると、翌日お腹が空きやすくなります'],
+ snackOver:['おやつが多めの日でした。袋のものは器に1回分だけ出すと、量を合わせやすいです','おやつが盛り上がった日でした。温かいお茶を一緒にすると、2個目に手が伸びにくいです','テレビが面白い日は、おやつも進みますよね。1個ずつのアイスだと合わせやすいです','おやつ多め。次は最初に食べる分だけ出しておくのがおすすめ','たまにはこんな日も。続けて多い日が来なければ大丈夫です'],
+ under:['今日は少なめでした。食べなさすぎは続かないので、おやつも楽しんで大丈夫です','かなり少なめの日でした。食べなさすぎると、あとで反動が来やすいです','残しすぎもよくないので、明日はもう少し食べて大丈夫','少なすぎる日が続くと代謝が下がります。適度に食べましょう'],
+ over:['超えた分はアイス貯金から。明日はいつもどおりで大丈夫です','ちょっと超えましたが、1日で体重は変わりません。明日も普通に','超えた日も記録できたのがえらい。明日はいつもどおりで','たまに超えるのは計算のうち。取り戻そうとしなくて大丈夫です','超えた分は気にしすぎず。続けることのほうがずっと大事です'],
+ extra:['今夜の{dish}、おいしかったかな','{n}日目の記録です','アイス貯金は今{bank}kcal','明日の夜は{tomorrow}','{dow}曜日もおつかれさまでした'],
+};
+function pick(arr,k,tag){let h=0;const s=k+tag;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return arr[h%arr.length]}
 function review(k){const c=dayCalc(k);if(!c||!c.rec)return null;
   const r=Math.abs(c.eaten-c.target)/c.target;
   const kc=r<=0.05?40:Math.max(0,Math.round(40*(1-(r-0.05)/0.25)));
   const full=c.dinnerK>=400; // 夜ごはんは400kcal以上で「しっかり」
   const dn=full?25:c.dinnerK>=300?15:5;
   const sn=c.snackE<=c.snackB?20:c.snackE<=c.snackB+100?12:5;
-  const lr=(c.bento||c.lunchE>0)?15:5;
+  const lr=(c.bento||c.lunchE>0||c.bfE>0)?15:5;
   const score=kc+dn+sn+lr;
   const good=[],tip=[];
-  if(full)good.push('夜ごはんをしっかり食べられました');
-  if(c.snackE>0&&c.snackE<=c.snackB)good.push('おやつが枠の中に収まりました');
-  if(Math.abs(c.left)<=c.target*0.05)good.push('1日の量がぴったりでした');
-  else if(c.left>0&&c.left<=CAP)good.push('枠を少し残せて、アイス貯金が増えます');
-  if(c.ex)good.push('自転車にも乗れました');
-  if(!full&&c.snackE>c.snackB)tip.push('夜ごはんが少なめで、おやつが多めでした。夜を1人前食べると、あとのおやつが自然と減りやすいです');
-  else if(!full)tip.push('夜ごはんが少なめでした。主菜のたんぱく質は、体を守るのに大事です');
-  else if(c.snackE>c.snackB+100)tip.push('おやつが多めの日でした。袋のものは器に1回分だけ出すと、量を合わせやすいです');
-  if(c.left>CAP*2)tip.push('今日は少なめでした。食べなさすぎは続かないので、おやつも楽しんで大丈夫です');
-  if(c.left<0)tip.push('超えた分はアイス貯金から。明日はいつもどおりで大丈夫です');
-  return {score,good:good[0]||'記録できました。続けるのがいちばん大事です',tip:tip[0]||''}}
+  if(full)good.push('dinner');
+  if(c.snackE>0&&c.snackE<=c.snackB)good.push('snackOk');
+  if(Math.abs(c.left)<=c.target*0.05)good.push('exact');
+  else if(c.left>0&&c.left<=CAP)good.push('saved');
+  if(c.ex)good.push('bike');
+  if(!full&&c.snackE>c.snackB)tip.push('lowDinSnack');
+  else if(!full)tip.push('lowDin');
+  else if(c.snackE>c.snackB+100)tip.push('snackOver');
+  if(c.left>CAP*2)tip.push('under');
+  if(c.left<0)tip.push('over');
+  const g=good.length?pick(good,k,'g'):'rec';
+  const t=tip[0]||'';
+  // おまけの一文
+  const p=PLAN[k],d=new Date(k+'T00:00'),nx=new Date(d);nx.setDate(d.getDate()+1);const pn=PLAN[key(nx)];
+  const n=Object.keys(state.days).filter(x=>x<=k&&eatOf(x).length).length;
+  const ex=pick(RV.extra,k,'x').replace('{dish}',p.t?mainName(p.t.D).replace('★',''):'ごはん').replace('{n}',n).replace('{bank}',bankUntil(k)).replace('{tomorrow}',pn&&pn.t?mainName(pn.t.D).replace('★',''):'お楽しみ').replace('{dow}',W[(d.getDay()+6)%7]);
+  return {score,good:pick(RV[g],k,g),tip:t?pick(RV[t],k,t):'',extra:ex}}
 function slotHead(name,used,bud,sl,extra){
   return '<div class="mh"><h3>'+name+'</h3><span class="mk">'+used+(bud!=null?'<small> / '+bud+'</small>':'')+'<small> kcal</small></span>'+(sl?'<button type="button" class="addb'+(addSlot===sl?' on':'')+'" data-slot="'+sl+'" aria-label="'+name+'に追加">＋</button>':'')+'</div>'+(extra||'')}
 function eatRows(sl){const e=eatOf(sel);return e.map((x,i)=>[x,i]).filter(([x])=>slotOf(x)===sl).map(([x,i])=>{const fv=state.fav.some(f=>f[0]===x[0]&&f[1]===x[1]);return '<li><button type="button" class="star'+(fv?' on':'')+'" data-fav="'+i+'" aria-label="'+(fv?'よく食べるものから外す':'よく食べるものに登録')+'">'+(fv?'★':'☆')+'</button><span class="en">'+esc(x[0]||'（名前なし）')+'</span><span class="kcal">'+x[1]+'</span><button type="button" class="del" data-eatdel="'+i+'" aria-label="消す">×</button></li>'}).join('')}
@@ -524,19 +546,24 @@ function renderCard(){
   const bank=bankUntil(today<=sel?today:sel);
   if(p.t){
     const c=dayCalc(sel);
-    if(addSlot==null)addSlot=(sel===today&&new Date().getHours()>=17)||c.bento?'s':'l';
+    if(addSlot==null){const hr=new Date().getHours();addSlot=sel!==today?'l':hr<10?'b':(hr>=17||c.bento)?'s':'l'}
     const seg=(v,cls)=>'<i class="'+cls+'" style="width:'+Math.max(0,Math.min(100,v/c.target*100))+'%"></i>';
     // 残り
     h+='<section class="left'+(c.left<0?' over':'')+'"><div class="lrow"><div><p class="left-l">'+(c.left>=0?'今日あと':'今日は')+'</p><p class="big">'+Math.abs(c.left)+'<small>kcal'+(c.left<0?' オーバー':'')+'</small></p></div>'
       +'<div class="bank"><span class="bank-l">アイス貯金</span><b>'+bank+'<small>kcal</small></b></div></div>'
-      +'<div class="bar">'+seg(c.lk+c.lunchE,'sl')+seg(c.dinnerK,'sd')+seg(c.snackE,'ss')+'</div>'
-      +'<p class="left-s"><span class="k sl"></span>昼 '+(c.lk+c.lunchE)+'　<span class="k sd"></span>夜 '+c.dinnerK+'　<span class="k ss"></span>おやつ '+c.snackE+'　／ 目標 '+c.target.toLocaleString()+'</p>';
+      +'<div class="bar">'+seg(c.bfE,'sb')+seg(c.lk+c.lunchE,'sl')+seg(c.dinnerK,'sd')+seg(c.snackE,'ss')+'</div>'
+      +'<p class="left-s">'+(c.bfE?'<span class="k sb"></span>朝 '+c.bfE+'　':'')+'<span class="k sl"></span>昼 '+(c.lk+c.lunchE)+'　<span class="k sd"></span>夜 '+c.dinnerK+'　<span class="k ss"></span>おやつ '+c.snackE+'　／ 目標 '+c.target.toLocaleString()+'</p>';
     const g=iceGoal(bank);if(g)h+='<p class="hint">'+g+'</p>';
     if(c.left>0&&c.rec&&sel===today)h+='<p class="hint">このまま終われば +'+Math.min(CAP,c.left)+'kcal 貯金</p>';
     h+='</section>';
+    // 朝
+    h+='<section class="mrow">'+slotHead('朝ごはん',c.bfE,null,'b');
+    const br=eatRows('b');if(br)h+='<ul class="eatlist">'+br+'</ul>';
+    if(addSlot==='b')h+=addForm();
+    h+='</section>';
     // 昼
     const nx=new Date(d);nx.setDate(nx.getDate()+1);const nk=key(nx);const nextBento=PLAN[nk]&&PLAN[nk].kind==='bento'&&nx.getDay()%6!==0;
-    h+='<section class="mrow">'+slotHead(c.bento?'昼のお弁当':'昼ごはん',c.lk+c.lunchE,c.bento?null:c.lunchB,'l');
+    h+='<section class="mrow">'+slotHead(c.bento?'昼のお弁当':'昼ごはん',c.lk+c.lunchE,c.bento?null:c.lunchB-c.bfE,'l',(!c.bento&&c.bfE)?'<p class="empty" style="margin:-4px 0 0">朝に食べた分、昼の目安を減らしています</p>':'');
     if(c.bento)h+=mealHtml('',p.t.L);
     const lr=eatRows('l');if(lr)h+='<ul class="eatlist">'+lr+'</ul>';else if(!c.bento&&addSlot!=='l')h+='<p class="empty">まだ記録がありません</p>';
     if(addSlot==='l')h+=addForm();
@@ -552,7 +579,7 @@ function renderCard(){
     h+='</section>';
     // ふりかえり
     const rv=review(sel);
-    if(rv)h+='<section class="review"><div class="score"><b>'+rv.score+'</b><small>点</small></div><div><p class="rv-g">'+rv.good+'</p>'+(rv.tip?'<p class="rv-t">'+rv.tip+'</p>':'')+(sel===today?'<p class="rv-n">今日の途中経過です</p>':'')+'</div></section>';
+    if(rv)h+='<section class="review"><div class="score"><b>'+rv.score+'</b><small>点</small></div><div><p class="rv-g">'+rv.good+'</p>'+(rv.tip?'<p class="rv-t">'+rv.tip+'</p>':'')+'<p class="rv-n">'+esc(rv.extra)+'</p>'+(sel===today?'<p class="rv-n">今日の途中経過です</p>':'')+'</div></section>';
     const v=bikeOf(sel);
     h+='<details class="bike"><summary><span>自転車</span><span class="muted">'+(c.ex?'+'+c.ex+'kcal':'乗った分を足す')+'</span></summary>'+BK.map(([id,n,r])=>'<div class="bikein"><label for="bk-'+id+'">'+n+'</label><input type="number" id="bk-'+id+'" data-bk="'+id+'" inputmode="numeric" min="0" max="300" step="5" value="'+(v[id]||'')+'" placeholder="0"><span>分</span><span class="muted small">30分で+'+Math.round(r*30*BIKE_SHARE)+'kcal</span></div>').join('')+'</details>';
     h+='<details class="more"><summary>この日の栄養（献立から）</summary>'+nutHtml(p.t.v)+'</details>';
@@ -654,8 +681,7 @@ function renderPlan(){
 <ul class="small muted"><li>75kg・156cm・32歳、家ではほとんど横になっている（1日に使うのは約1,650〜1,800kcal）と仮定。最初の2週間に水分で1〜1.5kg減る前提</li><li>1月からは復職で動く分、少しペースが上がる見込み</li><li>1,200kcalより減らして早めるのはやらない。生理がさらに乱れて妊娠から遠ざかる</li><li>体重計に乗るのは、乗りたくなってからでいい。それまでは服のきつさで見る</li><li>1か月たっても服のきつさが変わらなければ、量を見直す</li></ul></div>
 <div class="card prose"><h2>1日のルール</h2>
 <div class="tbl"><table><thead><tr><th>食事</th><th>目安</th><th>中身</th></tr></thead><tbody>
-<tr><td>朝</td><td>なし</td><td>水・お茶。葉酸サプリは昼に</td></tr>
-<tr><td>昼</td><td>自由（約380〜560kcal）</td><td>好きなものでOK。1月からの平日はお弁当（前の晩の主菜と小鉢の残り＋ごはん150g）</td></tr>
+<tr><td>朝＋昼</td><td>自由（合わせて約380〜560kcal）</td><td>好きなものでOK。朝に食べた分は昼の目安から引く。1月からの平日はお弁当（前の晩の主菜と小鉢の残り＋ごはん150g）</td></tr>
 <tr><td>夜</td><td>約550〜720kcal</td><td>献立どおり、ちゃんと1人前食べる。減らしておやつに回さない</td></tr>
 <tr><td>夜のおやつ</td><td>200kcal</td><td>テレビを見ながらのおやつは毎日OK。お弁当の日は、1,300から昼と夜を引いた残り（約150〜300kcal）</td></tr></tbody></table></div>
 <ul><li>飲み物は水・お茶・無糖のもの。甘い飲み物とラテはおやつに数える</li><li>ごはんは最初の1週間ははかりで量る</li><li>葉酸サプリ（1日400µg）は昼ごはんと一緒に。鉄とカルシウムも入った妊活用だとなお良い</li></ul></div>
