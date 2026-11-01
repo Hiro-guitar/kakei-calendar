@@ -208,7 +208,12 @@ function lsGet(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 state.days=lsGet('kondate-days',{});state.ms=lsGet('kondate-ms',{});state.weights=lsGet('kondate-w',{});
 // 合い言葉は URL の #k=... に入っている（# 以降はどこにも送られない）
-function readKey(){const m=location.hash.match(/k=([^&]+)/);let k='';try{k=m?decodeURIComponent(m[1]):''}catch(e){k=m?m[1]:''}try{if(k)localStorage.setItem('kondate-key',k);else k=localStorage.getItem('kondate-key')||''}catch(e){}return k}
+function readKey(){const m=location.hash.match(/k=([^&]+)/);let h='';try{h=m?decodeURIComponent(m[1]):''}catch(e){h=m?m[1]:''}
+  const bad=lsGet('kondate-badkeys',[]);let k='';try{k=localStorage.getItem('kondate-key')||''}catch(e){}
+  /* ホーム画面アプリのURLに古い合い言葉が付いていても、変更後の合い言葉を優先する */
+  if(h&&!bad.includes(h)&&h!==k){k=h;try{localStorage.setItem('kondate-key',k)}catch(e){}}
+  return k}
+function markBadKey(){const b=lsGet('kondate-badkeys',[]);if(KEY&&!b.includes(KEY)){b.push(KEY);lsSet('kondate-badkeys',b)}try{localStorage.removeItem('kondate-key')}catch(e){}KEY=''}
 let KEY=readKey();
 function storeNote(){
   const el=document.getElementById('store');
@@ -218,7 +223,7 @@ function storeNote(){
   document.getElementById('keybtn').onclick=()=>setKey(document.getElementById('keyin').value);
 }
 function setKey(v){v=(v||'').trim();const m=v.match(/k=([^&]+)/);let k=v;if(m){try{k=decodeURIComponent(m[1])}catch(e){k=m[1]}}
-  if(!k)return;try{localStorage.setItem('kondate-key',k)}catch(e){}location.reload()}
+  if(!k)return;try{localStorage.setItem('kondate-key',k)}catch(e){}const b=lsGet('kondate-badkeys',[]).filter(x=>x!==k);lsSet('kondate-badkeys',b);if(/k=/.test(location.hash))history.replaceState(null,'',location.pathname+location.search);location.reload()}
 document.addEventListener('click',e=>{if(e.target&&e.target.id==='keybtn2')setKey(document.getElementById('keyin2').value)});
 async function api(payload){
   const res=payload?await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)}):await fetch(API+'?api=1&k='+encodeURIComponent(KEY),{cache:'no-store'});
@@ -230,7 +235,7 @@ async function initDb(){
   const localDays=state.days||{};const pend=lsGet('kondate-pend',{});const synced=lsGet('kondate-synced',false);
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};state.mode='sheet'}
   catch(e){state.mode=/合い言葉/.test(e.message||'')?'badkey':'error'}
-  if(state.mode==='badkey'){try{localStorage.removeItem('kondate-key')}catch(e){}KEY=''}
+  if(state.mode==='badkey')markBadKey();
   if(state.mode==='sheet'){
     const push={};
     /* 通信失敗中に入力した日は、このスマホの内容で上書き */
@@ -258,7 +263,7 @@ async function refreshDb(){
   if(state.mode!=='sheet')return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
 }
-const BUILD='1793540458';
+const BUILD='1793540526';
 async function checkUpdate(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});const s=await r.text();const m=s.match(/const BUILD='([0-9]+)'/);if(m&&m[1]!==BUILD){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))location.reload()}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshDb();checkUpdate()}});
 setTimeout(checkUpdate,3000);
@@ -266,7 +271,7 @@ window.addEventListener('focus',refreshDb);
 setInterval(()=>{if(document.visibilityState==='visible')refreshDb()},60000);
 async function saveDay(k,obj){
   state.days={...state.days,[k]:obj};lsSet('kondate-days',state.days);
-  if(state.mode==='sheet'){try{await api({k:KEY,fn:'day',args:[k,obj]})}catch(e){state.mode=/合い言葉/.test(e.message||'')?'badkey':'error';if(state.mode==='badkey'){try{localStorage.removeItem('kondate-key')}catch(_){}KEY=''}storeNote()}}
+  if(state.mode==='sheet'){try{await api({k:KEY,fn:'day',args:[k,obj]})}catch(e){state.mode=/合い言葉/.test(e.message||'')?'badkey':'error';if(state.mode==='badkey')markBadKey();storeNote()}}
   if(state.mode==='error'||state.mode==='badkey'){const p=lsGet('kondate-pend',{});p[k]=1;lsSet('kondate-pend',p)}
 }
 async function saveMs(obj){
