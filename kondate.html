@@ -211,7 +211,7 @@ function readKey(){const m=location.hash.match(/k=([0-9a-zA-Z]+)/);let k=m?m[1]:
 const KEY=readKey();
 function storeNote(){
   const el=document.getElementById('store');
-  el.textContent=state.mode==='sheet'?'チェックとメモは2人で共有されます。体重メモは、入力したスマホにだけ保存されます。':state.mode==='error'?'記録の読み込みに失敗しました。チェックはいったんこのスマホにだけ保存されます。':'チェックとメモは、このスマホにだけ保存されています（共有用の合い言葉付きURLで開くと2人で共有されます）。';
+  el.textContent=state.mode==='sheet'?'チェック・メモ・食べたもの・自転車は2人で共有されます。体重メモは、入力したスマホにだけ保存されます。':state.mode==='error'?'記録の読み込みに失敗しました。チェックはいったんこのスマホにだけ保存されます。':'チェックとメモは、このスマホにだけ保存されています（共有用の合い言葉付きURLで開くと2人で共有されます）。';
 }
 async function api(payload){
   const res=payload?await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)}):await fetch(API+'?api=1&k='+encodeURIComponent(KEY),{cache:'no-store'});
@@ -221,6 +221,12 @@ async function api(payload){
 async function initDb(){
   if(!API||!KEY)return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};state.mode='sheet';lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms)}
+  if(state.mode==='sheet'){const ks=new Set([...Object.keys(state.eat||{}),...Object.keys(state.bike||{})]);
+    for(const k of ks){const d=state.days[k]||{};const o={...d};let ch=false;
+      if(!d.eat&&state.eat[k]&&state.eat[k].length){o.eat=state.eat[k];ch=true}
+      if(!d.bikemin&&state.bike[k]){const v=state.bike[k];o.bikemin=typeof v==='number'?{g:v}:v;ch=true}
+      if(ch)await saveDay(k,o)}
+    if(state.mode==='sheet'){state.eat={};state.bike={};lsSet('kondate-eat',{});lsSet('kondate-bike',{})}}
   catch(e){state.mode='error'}
   storeNote();rerender();
 }
@@ -306,8 +312,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeRecipe()});
 const f10=x=>Math.floor(x/10)*10;
 // 自転車：見通しには入れていない。乗った分だけ食べてよい（Oggiのメッツ表と体重75kgから：ギュット30分約130kcal、ブリヂストン30分約170kcal）
 const BK=[['g','ギュット（電動）',130/30],['b','ブリヂストン',170/30]];
-state.bike=lsGet('kondate-bike',{});
-const bikeOf=k=>{const v=state.bike[k];return typeof v==='number'?{g:v}:(v||{})};
+state.bike=lsGet('kondate-bike',{});state.eat=lsGet('kondate-eat',{});
+const bikeOf=k=>{const d=(state.days[k]||{}).bikemin;if(d)return d;const v=state.bike[k];return typeof v==='number'?{g:v}:(v||{})};
+const eatOf=k=>(state.days[k]||{}).eat||state.eat[k]||[];
+function setDayField(k,f,val){const o={...(state.days[k]||{})};if(val==null)delete o[f];else o[f]=val;saveDay(k,o)}
 const bikeExtra=k=>{const v=bikeOf(k);return Math.round(BK.reduce((a,[id,,r])=>a+(v[id]||0)*r,0)/10)*10};
 function freeHtml(label,budget,bento){
   const v=bikeOf(sel),ex=bikeExtra(sel),tot=budget+ex;
@@ -316,7 +324,7 @@ function freeHtml(label,budget,bento){
     :'';
   const bk='<p class="small" style="margin:'+(bento?'8px':'0')+' 0 0">今日の自転車乗車時間</p>'+BK.map(([id,n,r])=>'<div class="bikein"><label for="bk-'+id+'">'+n+'</label><input type="number" id="bk-'+id+'" data-bk="'+id+'" inputmode="numeric" min="0" max="300" step="5" value="'+(v[id]||'')+'" placeholder="0"><span>分</span><span class="muted small">30分で約'+Math.round(r*30)+'kcal</span></div>').join('')
     +(ex?'<p class="small" style="margin:4px 0 0">自転車ぶん <b>+'+ex+'kcal</b> → <b>約'+tot+'kcalまで</b></p>':'');
-  const eats=state.eat[sel]||[],used=eats.reduce((s,x)=>s+(+x[1]||0),0),left=tot-used;
+  const eats=eatOf(sel),used=eats.reduce((s,x)=>s+(+x[1]||0),0),left=tot-used;
   const eh='<div class="eat"><p class="small" style="margin:10px 0 4px">'+(bento?'食べた間食':'食べたもの（昼・間食）')+'</p>'
     +(eats.length?'<ul class="eatlist">'+eats.map((x,i)=>'<li><span>'+esc(x[0]||'（名前なし）')+'</span><span class="kcal">'+x[1]+' kcal '+(x[0]&&!state.fav.some(f=>f[0]===x[0]&&f[1]===x[1])?'<button type="button" class="link small" data-favadd="'+i+'">よく食べるものに登録</button> ':'')+'<button type="button" class="link" data-eatdel="'+i+'" aria-label="消す">×</button></span></li>').join('')+'</ul>':'')
     +'<div class="eatin"><input type="text" id="eat-n" placeholder="例：おにぎり" aria-label="食べたもの"><input type="number" id="eat-k" inputmode="numeric" min="0" max="3000" placeholder="kcal" aria-label="カロリー"><button type="button" class="btn" id="eat-add">追加</button></div>'
@@ -326,8 +334,7 @@ function freeHtml(label,budget,bento){
 }
 state.fav=lsGet('kondate-fav',[]);
 function saveFav(o){state.fav=o;lsSet('kondate-fav',o);renderCard()}
-state.eat=lsGet('kondate-eat',{});
-function addEat(n,k){k=Math.round(+k);if(!(k>0&&k<5000))return;const o={...state.eat};o[sel]=[...(o[sel]||[]),[String(n||'').slice(0,40),k]];state.eat=o;lsSet('kondate-eat',o);renderCard();const e=document.getElementById('eat-n');}
+function addEat(n,k){k=Math.round(+k);if(!(k>0&&k<5000))return;setDayField(sel,'eat',[...eatOf(sel),[String(n||'').slice(0,40),k]]);renderCard()}
 function mealHtml(label,items){
   const kc=items.reduce((a,x)=>a+x[3],0);
   const li=items.map(([n,a,u,k,src,tr,kd])=>{
@@ -372,10 +379,10 @@ function renderCard(){
   card.querySelectorAll('input[data-c]').forEach(i=>i.onchange=()=>{const o={...(state.days[sel]||{})};o[i.dataset.c]=i.checked;saveDay(sel,o);renderCal()});
   const ea=card.querySelector('#eat-add');if(ea){ea.onclick=()=>addEat(card.querySelector('#eat-n').value,card.querySelector('#eat-k').value);card.querySelector('#eat-k').onkeydown=e=>{if(e.key==='Enter')ea.click()};}
   card.querySelectorAll('[data-eatq]').forEach(b=>b.onclick=()=>{const [n,k]=state.fav[+b.dataset.eatq];addEat(n,k)});
-  card.querySelectorAll('[data-favadd]').forEach(b=>b.onclick=()=>{const x=(state.eat[sel]||[])[+b.dataset.favadd];if(x)saveFav([...state.fav,[x[0],x[1]]])});
+  card.querySelectorAll('[data-favadd]').forEach(b=>b.onclick=()=>{const x=eatOf(sel)[+b.dataset.favadd];if(x)saveFav([...state.fav,[x[0],x[1]]])});
   card.querySelectorAll('[data-favdel]').forEach(b=>b.onclick=()=>{const o=state.fav.slice();o.splice(+b.dataset.favdel,1);saveFav(o)});
-  card.querySelectorAll('[data-eatdel]').forEach(b=>b.onclick=()=>{const o={...state.eat};const l=(o[sel]||[]).slice();l.splice(+b.dataset.eatdel,1);if(l.length)o[sel]=l;else delete o[sel];state.eat=o;lsSet('kondate-eat',o);renderCard()});
-  card.querySelectorAll('input[data-bk]').forEach(bi=>bi.onchange=()=>{const val=Math.max(0,Math.min(300,parseInt(bi.value)||0));const cur={...bikeOf(sel)};if(val)cur[bi.dataset.bk]=val;else delete cur[bi.dataset.bk];const o={...state.bike};if(Object.keys(cur).length)o[sel]=cur;else delete o[sel];state.bike=o;lsSet('kondate-bike',o);if(val>0&&!(state.days[sel]||{}).bike&&!state.readOnly){saveDay(sel,{...(state.days[sel]||{}),bike:true});renderCal()}renderCard()});
+  card.querySelectorAll('[data-eatdel]').forEach(b=>b.onclick=()=>{const l=eatOf(sel).slice();l.splice(+b.dataset.eatdel,1);setDayField(sel,'eat',l.length?l:null);renderCard()});
+  card.querySelectorAll('input[data-bk]').forEach(bi=>bi.onchange=()=>{const val=Math.max(0,Math.min(300,parseInt(bi.value)||0));const cur={...bikeOf(sel)};if(val)cur[bi.dataset.bk]=val;else delete cur[bi.dataset.bk];const o={...(state.days[sel]||{})};if(Object.keys(cur).length)o.bikemin=cur;else delete o.bikemin;if(val>0)o.bike=true;saveDay(sel,o);renderCal();renderCard()});
   const memo=card.querySelector('#memo');memo.onchange=()=>{const o={...(state.days[sel]||{})};o.memo=memo.value.slice(0,500);saveDay(sel,o)};
 }
 
