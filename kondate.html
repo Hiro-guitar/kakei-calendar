@@ -143,6 +143,10 @@ details.more textarea{margin-top:6px}
 .rv-u{margin:4px 0 0;font-size:.88rem;color:var(--olive)}
 .rv-n{margin:4px 0 0;font-size:.75rem;color:var(--muted)}
 .stat b small{font-size:.55em;margin-left:2px}
+.istep{display:inline-flex;align-items:center;gap:2px;flex:none;font-size:.8rem;color:var(--muted)}
+.istep b{min-width:3.6em;text-align:center;font-weight:500;font-variant-numeric:tabular-nums}
+.istep.chg b{color:var(--olive);font-weight:700}
+.istep button{font:inherit;font-size:.95rem;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;line-height:1;padding:0}
 /* calendar */
 .tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tabs button{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 14px;border-radius:999px;cursor:pointer}
@@ -355,7 +359,7 @@ async function refreshDb(){
   if(state.mode!=='sheet')return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
 }
-const BUILD='1793573441';
+const BUILD='1793573748';
 async function checkUpdate(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});const s=await r.text();const m=s.match(/const BUILD='([0-9]+)'/);if(m&&m[1]!==BUILD){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))location.reload()}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshDb();checkUpdate()}});
 setTimeout(checkUpdate,3000);
@@ -453,15 +457,18 @@ function saveFav(o){state.fav=o;lsSet('kondate-fav',o);renderCard()}
 let addSlot=null;
 const slotOf=x=>x[2]==='s'||x[2]==='b'?x[2]:'l';
 function addEat(n,k,sl){k=Math.round(+k);if(!(k>0&&k<5000))return;setDayField(sel,'eat',[...eatOf(sel),[String(n||'').slice(0,40),k,sl||addSlot||'l']]);renderCard()}
-function mealHtml(label,items){
+function mealHtml(label,items,fs){
   const kc=items.reduce((a,x)=>a+x[3],0);
-  const li=items.map(([n,a,u,k,src,tr,kd,ov])=>{
+  const li=items.map(([n,a,u,k,src,tr,kd,ov],ix)=>{
     let name=(kd==='rice'||!u)?'<span class="plain">'+esc(n)+'</span>':'<button type="button" class="recbtn" data-r="'+esc(n)+'">'+esc(n)+'</button>';
     if(tr)name='<span class="treat">★</span>'+name;
     if(kd==='kob'||kd==='side')name='<span class="kob">小鉢</span>'+name;
     if(kd==='soup')name='<span class="kob">汁物</span>'+name;
     let amt=a; if(kd!=='rice')amt=(a.indexOf('昨日の夜の残り')===0?'昨日の夜の残り・':'')+'1人前';if(ov)amt=ov;
-    return '<li><span>'+name+(CHILD[n]?'<span class="kid"><span class="kidtag">子ども</span>'+esc(CHILD[n])+'</span>':'')+'</span><span class="amt">'+esc(amt||'')+'</span></li>'}).join('');
+    let right='<span class="amt">'+esc(amt||'')+'</span>';
+    if(fs){const ib=itemBase(items[ix]),v=Math.round(fs[ix]*ib.base/ib.step)*ib.step,txt=ib.unit==='g'?Math.round(v)+'g':(Math.round(v*10)/10).toFixed(1)+'人前';
+      right='<span class="istep'+(Math.abs(fs[ix]-1)>0.001?' chg':'')+'"><button type="button" data-istep="'+ix+':-1" aria-label="'+esc(n)+'を減らす">−</button><b>'+txt+'</b><button type="button" data-istep="'+ix+':1" aria-label="'+esc(n)+'を増やす">＋</button></span>'}
+    return '<li><span>'+name+(CHILD[n]?'<span class="kid"><span class="kidtag">子ども</span>'+esc(CHILD[n])+'</span>':'')+'</span>'+right+'</li>'}).join('');
   return '<div class="meal">'+(label?'<h3><span>'+label+'</span><span class="kcal">約'+kc+' kcal</span></h3>':'')+'<ul>'+li+'</ul></div>';
 }
 function nutHtml(v){
@@ -478,11 +485,14 @@ function budgetOf(k){const p=PLAN[k];if(!p||!p.t)return null;const d=new Date(k+
 const usedOf=k=>eatOf(k).reduce((s,x)=>s+(+x[1]||0),0);
 // dinp は「実際に食べた人前」（0.1刻み）。計算用には献立の人前に対する倍率にする
 const dinpOf=k=>{const v=(state.days[k]||{}).dinp;return v==null?1:+v/baseP(k)};
+// 料理ごとの食べた量（献立の量に対する倍率）。dinpi が無ければ、前の「夜ごはん全体」の値を全部の料理に使う
+const itemBase=it=>{if(it[6]==='rice'){const m=String(it[1]).match(/(\d+)g/);return {base:m?+m[1]:100,unit:'g',step:10}}const m=it[7]&&String(it[7]).match(/^([\d.]+)人前$/);return {base:m?+m[1]:1,unit:'人前',step:0.1}};
+const factorsOf=k=>{const p=PLAN[k];if(!p||!p.t)return [];const a=(state.days[k]||{}).dinpi,d=dinpOf(k);return p.t.D.map((_,i)=>a&&a[i]!=null?+a[i]:d)};
 // 献立側ですでに人前が決まっている日（例：11/1は0.3人前）は、その人前を基準に表示する
 const baseP=k=>{const p=PLAN[k];if(!p||!p.t)return 1;const it=p.t.D.find(x=>x[6]==='main'||x[6]==='one');const m=it&&it[7]&&String(it[7]).match(/^([\d.]+)人前$/);return m?+m[1]:1};
 function dayCalc(k){const b=budgetOf(k);if(!b)return null;const e=eatOf(k);
   const bfE=e.filter(x=>slotOf(x)==='b').reduce((s,x)=>s+(+x[1]||0),0),lunchE=e.filter(x=>slotOf(x)==='l').reduce((s,x)=>s+(+x[1]||0),0),snackE=e.filter(x=>slotOf(x)==='s').reduce((s,x)=>s+(+x[1]||0),0);
-  const dinp=dinpOf(k),dinnerK=Math.round(b.dk*dinp),ex=bikeExtra(k),target=DAY+ex,eaten=bfE+b.lk+lunchE+dinnerK+snackE;
+  const fs=factorsOf(k),dinp=dinpOf(k),dinnerK=Math.round(PLAN[k].t.D.reduce((a,it,i)=>a+it[3]*fs[i],0)),ex=bikeExtra(k),target=DAY+ex,eaten=bfE+b.lk+lunchE+dinnerK+snackE;
   return {...b,bfE,lunchE,snackE,dinp,dinnerK,ex,target,eaten,left:target-eaten,rec:e.length>0}}
 function deltaOf(k){const c=dayCalc(k);if(!c||!c.rec)return null;return c.left}
 const CAP=150;
@@ -655,8 +665,8 @@ const RV={
 /* 夜ごはんの栄養のいいところ（料理ごとの栄養は献立の材料から食品成分表で計算。1人前あたり） */
 const NUT=[[1,'たんぱく質','g',50,'筋肉を守って、代謝を落とさないのに大事です'],[2,'鉄','mg',10.5,'貧血の予防に大事です'],[3,'カルシウム','mg',650,'骨を丈夫にしてくれます'],[4,'食物繊維','g',18,'お腹の調子と、おやつ欲を整えてくれます'],[5,'葉酸','µg',240,'体の調子を整える、大事なビタミンです'],[6,'野菜','g',350,'ビタミンもたっぷり入っています']];
 const NUTT=['今夜は{dish}などで、{nut}が1日の目安の{pct}取れました','{nut}がたっぷりの夜ごはんでした。{benefit}','{dish}をはじめ、{nut}が1日の目安の{pct}。{benefit}','今日の夜は{nut}の優等生。1日の目安の{pct}です','夜ごはんで{nut}を{amt}取れました（1日の目安の{pct}）','{nut}が{amt}。特に{dish}がいい仕事してます','{benefit}。今夜は{nut}が{pct}入りました'];
-function dinnerNut(k){const p=PLAN[k];if(!p||!p.t||!DATA.nut)return null;const dp=dinpOf(k);const tot=[0,0,0,0,0,0,0],top={};
-  p.t.D.forEach(it=>{const n=DATA.nut[it[0]];if(!n||!n[0])return;const f=it[3]/n[0]*dp;n.forEach((v,i)=>{const x=v*f;tot[i]+=x;if(it[6]!=='rice'&&(!top[i]||x>top[i][1]))top[i]=[it[0],x]})});
+function dinnerNut(k){const p=PLAN[k];if(!p||!p.t||!DATA.nut)return null;const fs=factorsOf(k);const tot=[0,0,0,0,0,0,0],top={};
+  p.t.D.forEach((it,ii)=>{const n=DATA.nut[it[0]];if(!n||!n[0])return;const f=it[3]/n[0]*fs[ii];n.forEach((v,i)=>{const x=v*f;tot[i]+=x;if(it[6]!=='rice'&&(!top[i]||x>top[i][1]))top[i]=[it[0],x]})});
   const c=NUT.map(([i,name,u,t,b])=>({r:tot[i]/t,name,u,amt:tot[i],benefit:b,dish:top[i]?top[i][0]:''})).filter(x=>x.r>=0.3);
   return c.length?pick(c,k,'nn'):null}
 function nutLine(k){const b=dinnerNut(k);if(!b)return '';const amt=(b.amt<10?b.amt.toFixed(1):Math.round(b.amt))+b.u;
@@ -733,9 +743,9 @@ function renderCard(){
     if(addSlot==='l')h+=addForm();
     h+='</section>';
     // 夜
-    const bp=baseP(sel),dv=Math.round(c.dinp*bp*10)/10;
-    const seg2='<div class="portion" role="group" aria-label="夜ごはんを食べた量"><span class="plabel">食べた量</span><button type="button" class="pm" data-dstep="-0.1" aria-label="0.1人前減らす">−</button><input type="number" id="dinp" inputmode="decimal" min="0" max="3" step="0.1" value="'+dv.toFixed(1)+'" aria-label="夜ごはんを何人前食べたか"><span>人前</span><button type="button" class="pm" data-dstep="0.1" aria-label="0.1人前増やす">＋</button>'+(Math.abs(c.dinp-1)>0.001?'<button type="button" class="link small" data-dset="'+bp+'">献立どおりに戻す</button>':'')+'</div>';
-    h+='<section class="mrow">'+slotHead(nextBento?'夜ごはん（明日のお弁当の分も作る）':'夜ごはん',c.dinnerK,null,null,seg2)+mealHtml('',p.t.D)+'</section>';
+    const fs=factorsOf(sel),changed=fs.some(f=>Math.abs(f-1)>0.001);
+    const seg2=changed?'<button type="button" class="link small" data-ireset="1" style="justify-self:start">食べた量を献立どおりに戻す</button>':'<p class="empty" style="margin:-4px 0 0">料理ごとに、食べた量を −／＋ で直せます</p>';
+    h+='<section class="mrow">'+slotHead(nextBento?'夜ごはん（明日のお弁当の分も作る）':'夜ごはん',c.dinnerK,null,null,seg2)+mealHtml('',p.t.D,fs)+'</section>';
     // おやつ
     h+='<section class="mrow">'+slotHead('夜のおやつ',c.snackE,c.snackB,'s');
     const sr=eatRows('s');if(sr)h+='<ul class="eatlist">'+sr+'</ul>';else if(addSlot!=='s')h+='<p class="empty">テレビのお供は'+c.snackB+'kcalまで</p>';
@@ -753,11 +763,11 @@ function renderCard(){
   card.innerHTML=h;
   card.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{if(b.dataset.go){sel=b.dataset.go;addSlot=null;renderCard();window.scrollTo(0,0)}});
   card.querySelectorAll('[data-slot]').forEach(b=>b.onclick=()=>{addSlot=b.dataset.slot;renderCard();const n=card.querySelector('#eat-n');if(n)n.focus()});
-  const bp=baseP(sel);
-  const setDinp=v=>{v=Math.max(0,Math.min(3,Math.round((+v||0)*10)/10));setDayField(sel,'dinp',Math.abs(v-bp)<0.001?null:v);renderCard()};
-  card.querySelectorAll('[data-dstep]').forEach(b=>b.onclick=()=>setDinp(Math.round(dinpOf(sel)*bp*10)/10+ +b.dataset.dstep));
-  card.querySelectorAll('[data-dset]').forEach(b=>b.onclick=()=>setDinp(+b.dataset.dset));
-  const di=card.querySelector('#dinp');if(di)di.onchange=()=>setDinp(di.value);
+  const setItem=(ix,dir)=>{const p=PLAN[sel],it=p.t.D[ix],ib=itemBase(it),fs=factorsOf(sel);
+    let v=Math.round(fs[ix]*ib.base/ib.step)*ib.step+dir*ib.step;v=Math.max(0,Math.min(ib.base*3,v));fs[ix]=Math.round(v/ib.base*100)/100;
+    const o={...(state.days[sel]||{})};delete o.dinp;if(fs.every(f=>Math.abs(f-1)<0.001))delete o.dinpi;else o.dinpi=fs;saveDay(sel,o);renderCard()};
+  card.querySelectorAll('[data-istep]').forEach(b=>b.onclick=()=>{const [ix,dir]=b.dataset.istep.split(':');setItem(+ix,+dir)});
+  card.querySelectorAll('[data-ireset]').forEach(b=>b.onclick=()=>{const o={...(state.days[sel]||{})};delete o.dinp;delete o.dinpi;saveDay(sel,o);renderCard()});
   const ea=card.querySelector('#eat-add');if(ea){ea.onclick=()=>addEat(card.querySelector('#eat-n').value,card.querySelector('#eat-k').value);card.querySelector('#eat-k').onkeydown=e=>{if(e.key==='Enter')ea.click()};}
   card.querySelectorAll('[data-eatq]').forEach(b=>b.onclick=()=>{const [n,k]=state.fav[+b.dataset.eatq];addEat(n,k)});
   card.querySelectorAll('[data-fav]').forEach(b=>b.onclick=()=>{const x=eatOf(sel)[+b.dataset.fav];if(!x||!x[0])return;const i=state.fav.findIndex(f=>f[0]===x[0]&&f[1]===x[1]);saveFav(i>=0?state.fav.filter((_,j)=>j!==i):[...state.fav,[x[0],x[1]]])});
@@ -768,7 +778,7 @@ function renderCard(){
 
 /* スワイプで前後の日へ */
 (function(){const el=document.getElementById('card');let x0=null,y0=0,t0=0;
-  el.addEventListener('touchstart',e=>{if(e.touches.length!==1||e.target.closest('input,textarea,.eatq,.portion'))return x0=null;x0=e.touches[0].clientX;y0=e.touches[0].clientY;t0=Date.now()},{passive:true});
+  el.addEventListener('touchstart',e=>{if(e.touches.length!==1||e.target.closest('input,textarea,.eatq,.portion,.istep'))return x0=null;x0=e.touches[0].clientX;y0=e.touches[0].clientY;t0=Date.now()},{passive:true});
   el.addEventListener('touchend',e=>{if(x0==null)return;const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;x0=null;
     if(Math.abs(dx)<60||Math.abs(dy)>Math.abs(dx)*0.6||Date.now()-t0>800)return;
     const ks=Object.keys(PLAN).sort(),i=ks.indexOf(sel),n=ks[i+(dx<0?1:-1)];if(!n)return;
