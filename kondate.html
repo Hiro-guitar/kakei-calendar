@@ -40,6 +40,7 @@ h3{font-size:1rem;margin:0}
 .muted{color:var(--muted)}
 .small{font-size:.82rem}
 .status{font-size:.8rem;color:var(--muted)}
+.keyin{display:flex;gap:6px;margin-top:6px}.keyin input{flex:1;min-width:0;font-size:16px;padding:6px 8px;border:1px solid var(--line,#ccc);border-radius:8px;background:transparent;color:inherit}.keyin button{font-size:.9rem;padding:6px 12px;border-radius:8px}
 /* calendar */
 .tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tabs button{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 14px;border-radius:999px;cursor:pointer}
@@ -211,7 +212,12 @@ function readKey(){const m=location.hash.match(/k=([0-9a-zA-Z]+)/);let k=m?m[1]:
 const KEY=readKey();
 function storeNote(){
   const el=document.getElementById('store');
-  el.textContent=state.mode==='sheet'?'チェック・メモ・食べたもの・自転車は2人で共有されます。体重メモは、入力したスマホにだけ保存されます。':state.mode==='error'?'記録の読み込みに失敗しました。チェックはいったんこのスマホにだけ保存されます。':'チェックとメモは、このスマホにだけ保存されています（共有用の合い言葉付きURLで開くと2人で共有されます）。';
+  if(state.mode==='sheet'){el.textContent='チェック・メモ・食べたもの・自転車は2人で共有されます。体重メモは、入力したスマホにだけ保存されます。';return}
+  if(state.mode==='error'){el.textContent='共有の通信に失敗しています。入力はこのスマホに保存し、つながったら自動で共有します。';return}
+  el.innerHTML='<b>このスマホは共有されていません。</b>入力はこのスマホにだけ保存されています。共有の合い言葉（または合い言葉付きURL）を貼り付けると、2人で共有されます。<span class="keyin"><input id="keyin" placeholder="合い言葉かURLを貼り付け" autocomplete="off"><button type="button" id="keybtn">共有する</button></span>';
+  document.getElementById('keybtn').onclick=()=>{const v=document.getElementById('keyin').value.trim();const m=v.match(/k=([0-9a-zA-Z]+)/);const k=m?m[1]:(/^[0-9a-zA-Z]{8,}$/.test(v)?v:'');
+    if(!k){alert('合い言葉が読み取れませんでした');return}
+    try{localStorage.setItem('kondate-key',k)}catch(e){}location.reload()};
 }
 async function api(payload){
   const res=payload?await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)}):await fetch(API+'?api=1&k='+encodeURIComponent(KEY),{cache:'no-store'});
@@ -220,22 +226,37 @@ async function api(payload){
 }
 async function initDb(){
   if(!API||!KEY)return;
-  try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};state.mode='sheet';lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms)}
+  const localDays=state.days||{};const pend=lsGet('kondate-pend',{});const synced=lsGet('kondate-synced',false);
+  try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};state.mode='sheet'}
   catch(e){state.mode='error'}
-  if(state.mode==='sheet'){const ks=new Set([...Object.keys(state.eat||{}),...Object.keys(state.bike||{})]);
-    for(const k of ks){const d=state.days[k]||{};const o={...d};let ch=false;
+  if(state.mode==='sheet'){
+    const push={};
+    /* 通信失敗中に入力した日は、このスマホの内容で上書き */
+    for(const k of Object.keys(pend))if(localDays[k])push[k]=localDays[k];
+    /* 共有前にこのスマホだけで入力していた食べたもの・自転車を引き継ぐ */
+    if(!synced)for(const [k,ld] of Object.entries(localDays)){if(push[k])continue;const d=state.days[k]||{};const o={...d};let ch=false;
+      if(!d.eat&&ld.eat&&ld.eat.length){o.eat=ld.eat;ch=true}
+      if(!d.bikemin&&ld.bikemin){o.bikemin=ld.bikemin;ch=true}
+      if(ch)push[k]=o}
+    const ks=new Set([...Object.keys(state.eat||{}),...Object.keys(state.bike||{})]);
+    for(const k of ks){const d=push[k]||state.days[k]||{};const o={...d};let ch=false;
       if(!d.eat&&state.eat[k]&&state.eat[k].length){o.eat=state.eat[k];ch=true}
       if(!d.bikemin&&state.bike[k]){const v=state.bike[k];o.bikemin=typeof v==='number'?{g:v}:v;ch=true}
-      if(ch)await saveDay(k,o)}
-    if(state.mode==='sheet'){state.eat={};state.bike={};lsSet('kondate-eat',{});lsSet('kondate-bike',{})}}
+      if(ch)push[k]=o}
+    lsSet('kondate-pend',{});
+    for(const [k,o] of Object.entries(push))await saveDay(k,o);
+    if(state.mode==='sheet'){lsSet('kondate-synced',true);state.eat={};state.bike={};lsSet('kondate-eat',{});lsSet('kondate-bike',{})}
+    lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms)}
   storeNote();rerender();
 }
 async function refreshDb(){
-  if(!API||!KEY||state.mode!=='sheet')return;
+  if(!API||!KEY)return;
   const ae=document.activeElement;if(ae&&/INPUT|TEXTAREA/.test(ae.tagName))return;
+  if(state.mode==='error'){await initDb();return}
+  if(state.mode!=='sheet')return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
 }
-const BUILD='1793539587';
+const BUILD='1793539899';
 async function checkUpdate(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});const s=await r.text();const m=s.match(/const BUILD='([0-9]+)'/);if(m&&m[1]!==BUILD){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))location.reload()}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshDb();checkUpdate()}});
 setTimeout(checkUpdate,3000);
@@ -244,6 +265,7 @@ setInterval(()=>{if(document.visibilityState==='visible')refreshDb()},60000);
 async function saveDay(k,obj){
   state.days={...state.days,[k]:obj};lsSet('kondate-days',state.days);
   if(state.mode==='sheet'){try{await api({k:KEY,fn:'day',args:[k,obj]})}catch(e){state.mode='error';storeNote()}}
+  if(state.mode==='error'){const p=lsGet('kondate-pend',{});p[k]=1;lsSet('kondate-pend',p)}
 }
 async function saveMs(obj){
   state.ms=obj;lsSet('kondate-ms',obj);
@@ -337,6 +359,7 @@ function freeHtml(label,budget,bento){
     +(ex?'<p class="small" style="margin:4px 0 0">自転車ぶん <b>+'+ex+'kcal</b> → <b>約'+tot+'kcalまで</b></p>':'');
   const eats=eatOf(sel),used=eats.reduce((s,x)=>s+(+x[1]||0),0),left=tot-used;
   const eh='<div class="eat"><p class="small" style="margin:10px 0 4px">'+(bento?'食べた間食':'食べたもの（昼・間食）')+'</p>'
+    +(state.mode==='sheet'?'':'<p class="small" style="margin:0 0 6px;color:#d9822b">'+(state.mode==='error'?'⚠ 共有の通信に失敗中。つながったら自動で共有します':'⚠ このスマホの記録は共有されていません（ページのいちばん下で設定）')+'</p>')
     +(eats.length?'<ul class="eatlist">'+eats.map((x,i)=>'<li><span>'+esc(x[0]||'（名前なし）')+'</span><span class="kcal">'+x[1]+' kcal '+(x[0]&&!state.fav.some(f=>f[0]===x[0]&&f[1]===x[1])?'<button type="button" class="link small" data-favadd="'+i+'">よく食べるものに登録</button> ':'')+'<button type="button" class="link" data-eatdel="'+i+'" aria-label="消す">×</button></span></li>').join('')+'</ul>':'')
     +'<div class="eatin"><input type="text" id="eat-n" placeholder="例：おにぎり" aria-label="食べたもの"><input type="number" id="eat-k" inputmode="numeric" min="0" max="3000" placeholder="kcal" aria-label="カロリー"><button type="button" class="btn" id="eat-add">追加</button></div>'
     +(state.fav.length?'<div class="eatq">'+state.fav.map(([n,k],i)=>'<span class="fav"><button type="button" data-eatq="'+i+'">'+esc(n)+' '+k+'</button><button type="button" class="favx" data-favdel="'+i+'" aria-label="'+esc(n)+'を登録から外す">×</button></span>').join('')+'</div>':'')
