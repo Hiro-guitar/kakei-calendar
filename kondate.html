@@ -53,6 +53,57 @@ h3{font-size:1rem;margin:0}
 .tonight .dish{font-family:var(--display);font-weight:600;font-size:clamp(1.45rem,6vw,1.9rem);line-height:1.35;margin:0;text-wrap:balance}
 .tonight .dish span{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 8' preserveAspectRatio='none'%3E%3Cpath d='M1 5 Q 15 1 30 4.5 T 60 4 T 90 4.6 T 119 3.5' fill='none' stroke='%23b5573c' stroke-opacity='.45' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-size:100% .38em;background-position:0 100%;padding-bottom:.12em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 .tonight .free-day{font-family:var(--display);font-size:1.1rem;margin:6px 0 0}
+/* today */
+.today{max-width:560px;margin:0 auto;width:100%;display:grid;gap:18px}
+.daynav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.daynav h2{font-size:1.15rem;display:flex;align-items:center;gap:8px}
+.todaytag{font-family:var(--body);font-size:.72rem;font-weight:500;color:var(--olive);border:1px solid var(--olive);border-radius:999px;padding:0 8px}
+.navb{font:inherit;font-size:1.4rem;line-height:1;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.navb:disabled{opacity:.3;cursor:default}
+.backtoday{justify-self:center;margin-top:-10px}
+.today .tonight{border-bottom:0;padding:0}
+.bank{display:flex;align-items:center;gap:14px;background:var(--olive-soft);border-radius:10px;padding:10px 14px}
+.bank div{display:grid;flex:none}
+.bank-l{font-size:.75rem;color:var(--olive)}
+.bank b{font-family:var(--display);font-weight:600;font-size:1.5rem;line-height:1.1;color:var(--olive);font-variant-numeric:tabular-nums}
+.bank b small,.big small,.bigbank small{font-size:.5em;margin-left:2px;font-weight:500}
+.bank p{margin:0;font-size:.85rem;line-height:1.5}
+.left{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px 12px}
+.left-l{margin:0;font-size:.85rem;color:var(--muted)}
+.big{margin:0;font-family:var(--display);font-weight:600;font-size:2.6rem;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--ink)}
+.left.over .big{color:var(--warn)}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin:8px 0 6px}
+.bar i{display:block;height:100%;background:var(--olive);border-radius:3px}
+.left.over .bar i{background:var(--warn)}
+.left-s{margin:0;font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.hint{margin:8px 0 0;font-size:.82rem;color:var(--olive)}
+.left.over .hint{color:var(--muted)}
+.eat{display:grid;gap:10px}
+.warnline{margin:0;font-size:.85rem;color:var(--warn)}
+.eatq{display:flex;gap:6px;flex-wrap:wrap;margin:0}
+.chipbtn{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;cursor:pointer}
+.chipbtn span{color:var(--muted);font-size:.78rem;font-variant-numeric:tabular-nums}
+.eatin{display:flex;gap:6px}
+.eatin input[type=text]{flex:1;min-width:0;font-size:16px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:8px 10px}
+.eatin input[type=number]{width:5.2em;font-size:16px;background:var(--surface);padding:8px}
+.eatlist{list-style:none;margin:0;padding:0;display:grid;font-size:.92rem}
+.eatlist li{display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--line);padding:6px 0}
+.eatlist li:last-child{border-bottom:0}
+.eatlist .en{flex:1;min-width:0}
+.eatlist .kcal{color:var(--muted);font-size:.85rem}
+.star,.del{font:inherit;border:0;background:none;color:var(--muted);cursor:pointer;padding:2px 4px;font-size:1rem;line-height:1}
+.star.on{color:var(--treat)}
+.empty{margin:0;font-size:.82rem;color:var(--muted)}
+details.bike,details.more{border-top:1px solid var(--line);padding-top:8px}
+details summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;font-size:.92rem;padding:4px 0}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"＋";color:var(--muted);margin-left:8px}
+details[open] summary::after{content:"－"}
+details.bike summary span:first-child{flex:1}
+details.more textarea{margin-top:6px}
+.save-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--olive);margin-right:4px;vertical-align:1px}
+.cell .d .save-dot{margin:0}
+.bigbank{margin:0;font-family:var(--display);font-weight:600;font-size:2.4rem;color:var(--olive);line-height:1.1}
 /* calendar */
 .tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tabs button{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 14px;border-radius:999px;cursor:pointer}
@@ -96,7 +147,7 @@ a.rec{color:var(--leaf);font-weight:700;text-decoration:underline;text-underline
 .amt{font-size:.8rem;color:var(--muted);text-align:right;flex:none;max-width:52%}
 .src{font-size:.68rem;color:var(--muted);margin-left:4px;font-weight:400}
 .treat{color:var(--treat)}
-.recbtn{font:inherit;font-weight:700;color:var(--leaf);background:none;border:0;padding:0;text-align:left;cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+.recbtn{display:inline;font:inherit;font-weight:700;color:var(--leaf);background:none;border:0;padding:0;text-align:left;cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
 .sheet{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;padding-top:calc(env(safe-area-inset-top,0px) + 24px)}
 .sheet[hidden]{display:none}
 .sheet-in{background:var(--surface);color:var(--ink);width:100%;max-width:560px;max-height:85vh;overflow:auto;border-radius:16px 16px 0 0;padding:18px max(18px,env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px));position:relative}
@@ -157,28 +208,20 @@ button.link{font:inherit;border:0;background:none;color:var(--muted);text-decora
 </head>
 <body>
 <div class="wrap">
-<header>
-<h1>献立カレンダー</h1>
-<p>11月〜2月の、毎日の献立と食べたものの記録帳。</p>
-</header>
 <nav class="views" aria-label="ページの切り替え">
+<a href="#today" data-v="today">今日</a>
 <a href="#calendar" data-v="calendar">カレンダー</a>
 <a href="#log" data-v="log">記録</a>
-<a href="#recipes" data-v="recipes">料理リスト</a>
-<a href="#plan" data-v="plan">計画</a>
+<a href="#recipes" data-v="recipes">レシピ</a>
 </nav>
 
 <div id="sheet" class="sheet" hidden role="dialog" aria-modal="true" aria-label="レシピ"><div class="sheet-in"><button type="button" id="sheet-x" class="sheet-x">閉じる</button><div id="sheet-body"></div></div></div>
-<section id="v-calendar" class="view">
+<section id="v-today" class="view"><div id="card" class="today" aria-live="polite"></div></section>
+<section id="v-calendar" class="view" hidden>
 <div class="tabs" id="mtabs" role="group" aria-label="月"></div>
-<div class="main">
-<div>
 <p class="phase" id="phase"></p>
 <div class="grid" id="grid"></div>
-<div class="legend"><span>★ ご褒美の日（1月からは土曜）</span><span><i class="prog" style="width:22px;display:inline-block;margin:0"><i style="width:60%"></i></i>その日のチェックの進み具合</span></div>
-</div>
-<aside class="card daycard" id="card" aria-live="polite"></aside>
-</div>
+<div class="legend"><span><i class="save-dot"></i>アイス貯金できた日</span><span>★ ご褒美の日</span><span>日付を押すと、その日の献立が開きます</span></div>
 </section>
 
 <section id="v-log" class="view" hidden></section>
@@ -210,7 +253,6 @@ const PLAN={};
     d.setDate(d.getDate()+1);n++;
   }
 })();
-const CHECKS=[['lunch','昼ごはん'],['dinner','夜ごはん'],['kob','小鉢'],['snack','間食'],['bike','自転車'],['supp','葉酸サプリ']];
 
 /* ---- 保存：チェックとメモはスプレッドシート（Apps Script）へ。体重はこのスマホだけ ---- */
 // Apps Script をデプロイしたら、その URL をここに入れる
@@ -231,8 +273,7 @@ function storeNote(){
   const el=document.getElementById('store');
   if(state.mode==='sheet'){el.textContent='チェック・メモ・食べたもの・自転車は2人で共有されます。体重メモは、入力したスマホにだけ保存されます。';return}
   if(state.mode==='error'){el.textContent='共有の通信に失敗しています。入力はこのスマホに保存し、つながったら自動で共有します。';return}
-  el.innerHTML=(state.mode==='badkey'?'<b>合い言葉が変わりました。</b>新しい合い言葉を入れてください。入力はそれまでこのスマホに保存されます。':'<b>このスマホは共有されていません。</b>入力はこのスマホにだけ保存されています。共有の合い言葉を入れると、2人で共有されます。')+'<span class="keyin"><input id="keyin" placeholder="合い言葉" autocomplete="off"><button type="button" id="keybtn">共有する</button></span>';
-  document.getElementById('keybtn').onclick=()=>setKey(document.getElementById('keyin').value);
+  el.textContent=state.mode==='badkey'?'合い言葉が変わりました。「今日」の画面で新しい合い言葉を入れてください。':'このスマホは共有されていません。「今日」の画面で合い言葉を入れると、2人で共有されます。';
 }
 function setKey(v){v=(v||'').trim();const m=v.match(/k=([^&]+)/);let k=v;if(m){try{k=decodeURIComponent(m[1])}catch(e){k=m[1]}}
   if(!k)return;try{localStorage.setItem('kondate-key',k)}catch(e){}const b=lsGet('kondate-badkeys',[]).filter(x=>x!==k);lsSet('kondate-badkeys',b);if(/k=/.test(location.hash))history.replaceState(null,'',location.pathname+location.search);location.reload()}
@@ -275,7 +316,7 @@ async function refreshDb(){
   if(state.mode!=='sheet')return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
 }
-const BUILD='1793541044';
+const BUILD='1793542136';
 async function checkUpdate(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});const s=await r.text();const m=s.match(/const BUILD='([0-9]+)'/);if(m&&m[1]!==BUILD){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))location.reload()}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshDb();checkUpdate()}});
 setTimeout(checkUpdate,3000);
@@ -293,14 +334,15 @@ async function saveMs(obj){
 async function saveW(obj){state.weights=obj;lsSet('kondate-w',obj)}
 
 /* ---- 表示切り替え ---- */
-const VIEWS=['calendar','log','recipes','plan'];
-let view='calendar';
-function route(){const h=location.hash.slice(1);view=VIEWS.includes(h)?h:'calendar';
+const VIEWS=['today','calendar','log','recipes','plan'];
+let view='today';
+function route(){const h=location.hash.slice(1);view=VIEWS.includes(h)?h:'today';
   VIEWS.forEach(v=>{document.getElementById('v-'+v).hidden=v!==view});
-  document.querySelectorAll('nav.views a').forEach(a=>a.setAttribute('aria-current',a.dataset.v===view?'page':'false'));
-  rerender();}
+  const nv=view==='plan'?'log':view;
+  document.querySelectorAll('nav.views a').forEach(a=>a.setAttribute('aria-current',a.dataset.v===nv?'page':'false'));
+  rerender();if(view!=='today')window.scrollTo(0,0);}
 window.addEventListener('hashchange',route);
-function rerender(){if(view==='calendar')renderCal();else if(view==='log')renderLog();else if(view==='recipes')renderRecipes();else renderPlan();}
+function rerender(){if(view==='today')renderCard();else if(view==='calendar')renderCal();else if(view==='log')renderLog();else if(view==='recipes')renderRecipes();else renderPlan();}
 
 /* ---- カレンダー ---- */
 const MONTHS=[[2026,10],[2026,11],[2027,0],[2027,1]];
@@ -312,11 +354,10 @@ const mt=document.getElementById('mtabs');
 MONTHS.forEach(([y,m],i)=>{const b=document.createElement('button');b.type='button';b.id='m'+i;b.textContent=(m+1)+'月';
   b.onclick=()=>{mi=i;const p=y+'-'+pad(m+1);if(!sel.startsWith(p))sel=Object.keys(PLAN).find(k=>k.startsWith(p));renderCal()};mt.appendChild(b)});
 function mainName(meal){if(meal[0][6]==='free')return '自由（400kcalまで）';const it=meal.find(x=>x[6]==='main'||x[6]==='one')||meal[0];return (it[5]?'★':'')+it[0]}
-function doneCount(k){const d=state.days[k]||{};return CHECKS.filter(([c])=>d[c]).length}
 function renderCal(){
   [...mt.children].forEach((b,i)=>b.setAttribute('aria-pressed',i===mi));
   const [y,m]=MONTHS[mi];
-  document.getElementById('phase').textContent=m>=10?'おうちごはん期：昼も家で食べる。11/1（日）スタート':'お弁当期：平日の昼はお弁当（1/4の月曜から始める想定）。1/1〜1/3はお正月';
+  document.getElementById('phase').textContent=m>=10?'おうちごはん期：昼も家で食べる':'お弁当期：平日の昼はお弁当（1/4から）。1/1〜1/3はお正月';
   const g=document.getElementById('grid');g.innerHTML='';
   W.forEach((w,i)=>{const h=document.createElement('div');h.className='dow'+(i===6?' sun':'');h.textContent=w;g.appendChild(h)});
   const lead=(new Date(y,m,1).getDay()+6)%7;
@@ -324,18 +365,16 @@ function renderCal(){
   const n=new Date(y,m+1,0).getDate();
   for(let d=1;d<=n;d++){
     const k=y+'-'+pad(m+1)+'-'+pad(d),p=PLAN[k];
-    const c=document.createElement('button');c.type='button';c.id='d'+k;
-    c.className='cell'+(p?'':' off')+(k===sel?' sel':'')+(k===today?' today':'');
-    let h='<span class="d"><span>'+d+'</span>'+'</span>';
-    if(p&&p.t) h+='<span class="m"><b>昼</b>'+esc(mainName(p.t.L))+'</span><span class="m"><b>夜</b>'+esc(mainName(p.t.D))+'</span>';
+    const c=document.createElement('button');c.type='button';
+    const dl=k<today?deltaOf(k):null;
+    c.className='cell'+(p?'':' off')+(k===today?' today':'');
+    let h='<span class="d"><span>'+d+'</span>'+(dl!=null&&dl>=0?'<i class="save-dot" title="貯金できた日"></i>':'')+'</span>';
+    if(p&&p.t) h+='<span class="m">'+esc(mainName(p.t.D))+'</span>';
     else if(p) h+='<span class="note">お正月</span>';
-    else h+='<span class="note">対象外</span>';
-    if(p){const dc=doneCount(k);h+='<span class="prog" aria-label="チェック '+dc+'/6"><i style="width:'+Math.round(dc/6*100)+'%"></i></span>'}
     c.innerHTML=h;
-    if(p)c.onclick=()=>{sel=k;renderCal();if(window.innerWidth<860)document.getElementById('card').scrollIntoView({behavior:'smooth',block:'start'})};else c.disabled=true;
+    if(p)c.onclick=()=>{sel=k;location.hash='#today'};else c.disabled=true;
     g.appendChild(c);
   }
-  renderCard();
 }
 function recBtn(n,u,src){
   return '<button type="button" class="recbtn" data-r="'+esc(n)+'">'+esc(n)+'</button>'+(u?' <a class="ext" href="'+esc(u)+'" target="_blank" rel="noopener" aria-label="元のレシピを開く">元レシピ↗</a>':'')+(src?'<span class="src">'+esc(src)+'</span>':'');
@@ -369,29 +408,13 @@ const bikeOf=k=>{const d=(state.days[k]||{}).bikemin;if(d)return d;const v=state
 const eatOf=k=>(state.days[k]||{}).eat||state.eat[k]||[];
 function setDayField(k,f,val){const o={...(state.days[k]||{})};if(val==null)delete o[f];else o[f]=val;saveDay(k,o)}
 const bikeExtra=k=>{const v=bikeOf(k);return Math.round(BK.reduce((a,[id,,r])=>a+(v[id]||0)*r,0)/10)*10};
-function freeHtml(label,budget,bento){
-  const v=bikeOf(sel),ex=bikeExtra(sel),tot=budget+ex;
-  const body=bento
-    ?'<p>好きなものでOK。小さめのアイス（パピコ1本74kcal、アイスの実101kcalなど）か、無糖ヨーグルト＋果物（約100kcal）くらい。いつものアイスは週末に。</p>'
-    :'';
-  const bk='<p class="small" style="margin:'+(bento?'8px':'0')+' 0 0">今日の自転車乗車時間</p>'+BK.map(([id,n,r])=>'<div class="bikein"><label for="bk-'+id+'">'+n+'</label><input type="number" id="bk-'+id+'" data-bk="'+id+'" inputmode="numeric" min="0" max="300" step="5" value="'+(v[id]||'')+'" placeholder="0"><span>分</span><span class="muted small">30分で約'+Math.round(r*30)+'kcal</span></div>').join('')
-    +(ex?'<p class="small" style="margin:4px 0 0">自転車ぶん <b>+'+ex+'kcal</b> → <b>約'+tot+'kcalまで</b></p>':'');
-  const eats=eatOf(sel),used=eats.reduce((s,x)=>s+(+x[1]||0),0),left=tot-used;
-  const eh='<div class="eat"><p class="small" style="margin:10px 0 4px">'+(bento?'食べた間食':'食べたもの（昼・間食）')+'</p>'
-    +(state.mode==='sheet'?'':'<p class="small" style="margin:0 0 6px;color:var(--warn)">'+(state.mode==='error'?'⚠ 共有の通信に失敗中。つながったら自動で共有します':(state.mode==='badkey'?'⚠ 合い言葉が変わりました。新しい合い言葉を入れてください':'⚠ このスマホの記録は共有されていません。合い言葉を入れると共有されます'))+'</p>'+(state.mode==='error'?'':'<span class="keyin" style="margin:0 0 8px"><input id="keyin2" placeholder="合い言葉" autocomplete="off"><button type="button" id="keybtn2">共有する</button></span>'))
-    +(eats.length?'<ul class="eatlist">'+eats.map((x,i)=>'<li><span>'+esc(x[0]||'（名前なし）')+'</span><span class="kcal">'+x[1]+' kcal '+(x[0]&&!state.fav.some(f=>f[0]===x[0]&&f[1]===x[1])?'<button type="button" class="link small" data-favadd="'+i+'">よく食べるものに登録</button> ':'')+'<button type="button" class="link" data-eatdel="'+i+'" aria-label="消す">×</button></span></li>').join('')+'</ul>':'')
-    +'<div class="eatin"><input type="text" id="eat-n" placeholder="例：おにぎり" aria-label="食べたもの"><input type="number" id="eat-k" inputmode="numeric" min="0" max="3000" placeholder="kcal" aria-label="カロリー"><button type="button" class="btn" id="eat-add">追加</button></div>'
-    +(state.fav.length?'<div class="eatq">'+state.fav.map(([n,k],i)=>'<span class="fav"><button type="button" data-eatq="'+i+'">'+esc(n)+' '+k+'</button><button type="button" class="favx" data-favdel="'+i+'" aria-label="'+esc(n)+'を登録から外す">×</button></span>').join('')+'</div>':'')
-    +'<p class="eatleft'+(left<0?' over':'')+'">'+(left>=0?'あと <b>約'+left+'kcal</b> 食べられる':'<b>'+(-left)+'kcal</b> オーバー')+'<span class="small muted">（'+tot+' − 食べた分 '+used+'）</span></p></div>';
-  return '<div class="meal"><h3><span>'+label+'</span><span class="kcal">'+tot+' kcalまで</span></h3><div class="free">'+body+bk+eh+'</div></div>';
-}
 state.fav=lsGet('kondate-fav',[]);
 function saveFav(o){state.fav=o;lsSet('kondate-fav',o);renderCard()}
 function addEat(n,k){k=Math.round(+k);if(!(k>0&&k<5000))return;setDayField(sel,'eat',[...eatOf(sel),[String(n||'').slice(0,40),k]]);renderCard()}
 function mealHtml(label,items){
   const kc=items.reduce((a,x)=>a+x[3],0);
   const li=items.map(([n,a,u,k,src,tr,kd,ov])=>{
-    let name=(kd==='rice'||!u)?'<span class="plain">'+esc(n)+'</span>':recBtn(n,u,src);
+    let name=(kd==='rice'||!u)?'<span class="plain">'+esc(n)+'</span>':'<button type="button" class="recbtn" data-r="'+esc(n)+'">'+esc(n)+'</button>';
     if(tr)name='<span class="treat">★</span>'+name;
     if(kd==='kob'||kd==='side')name='<span class="kob">小鉢</span>'+name;
     if(kd==='soup')name='<span class="kob">汁物</span>'+name;
@@ -403,66 +426,92 @@ function nutHtml(v){
   const rows=[['たんぱく質',v[1],'g',50],['鉄',v[2],'mg',10.5],['カルシウム',v[3],'mg',650],['食物繊維',v[4],'g',18],['葉酸',v[5],'µg',240],['野菜',v[6],'g',350]];
   return '<div><h3 class="small muted" style="font-weight:500;margin-bottom:6px">この日の栄養（目安に届かないものはオレンジ）</h3><div class="nut">'+rows.map(([n,x,u,t])=>'<div class="'+(x<t?'low':'')+'"><b>'+(x<10?x.toFixed(1):Math.round(x))+u+'</b><span>'+n+'（目安'+t+u+'）</span></div>').join('')+'</div></div>';
 }
+/* ---- 今日の枠とアイス貯金 ---- */
+const sumK=items=>items.reduce((a,x)=>a+x[3],0);
+function budgetOf(k){const p=PLAN[k];if(!p||!p.t)return null;const d=new Date(k+'T00:00');
+  const bento=p.kind==='bento'&&d.getDay()%6!==0&&p.t.L[0][6]!=='free';
+  const dk=sumK(p.t.D),lk=bento?sumK(p.t.L):0;
+  return {bento,dk,lk,free:f10(1200-lk-dk),label:bento?'間食':'昼＋間食'}}
+const usedOf=k=>eatOf(k).reduce((s,x)=>s+(+x[1]||0),0);
+function deltaOf(k){const b=budgetOf(k);if(!b||!eatOf(k).length)return null;return b.free+bikeExtra(k)-usedOf(k)}
+const CAP=150;
+function bankUntil(end){let b=0;for(const k of Object.keys(PLAN).sort()){if(k>=end)break;const d=deltaOf(k);if(d!=null)b=Math.max(0,b+Math.min(CAP,d))}return b}
+function iceGoal(b){const ices=state.fav.filter(([n])=>/アイス|ice|パピコ|ジャイアント|ハーゲン|ピノ|雪見|爽|ガリガリ|モナカ|パルム|チョコモナカ|サンデー/i.test(n)).sort((a,c)=>a[1]-c[1]);
+  if(!ices.length)return '';const got=ices.filter(x=>x[1]<=b);
+  if(got.length){const x=got[got.length-1];return esc(x[0])+'が食べられるくらい貯まっています'}
+  const x=ices[0];return esc(x[0])+'（'+x[1]+'kcal）まで、あと'+(x[1]-b)+'kcal'}
 function renderCard(){
   const p=PLAN[sel],d=new Date(sel+'T00:00'),card=document.getElementById('card');
   const dow=W[(d.getDay()+6)%7];
+  const ks=Object.keys(PLAN).sort(),ix=ks.indexOf(sel);
+  let h='<div class="daynav"><button type="button" class="navb" data-go="'+(ks[ix-1]||'')+'"'+(ix>0?'':' disabled')+' aria-label="前の日">‹</button><h2>'+(d.getMonth()+1)+'月'+d.getDate()+'日（'+dow+'）'+(sel===today?'<span class="todaytag">今日</span>':'')+'</h2><button type="button" class="navb" data-go="'+(ks[ix+1]||'')+'"'+(ix<ks.length-1?'':' disabled')+' aria-label="次の日">›</button></div>';
+  if(sel!==today&&PLAN[today])h+='<button type="button" class="link small backtoday" data-go="'+today+'">今日に戻る</button>';
   const dn=p.t?mainName(p.t.D):'';
-  let h='<div class="tonight"><h2 class="date">'+(d.getMonth()+1)+'月'+d.getDate()+'日（'+dow+'）</h2>'
-    +(p.t?(p.t.D[0][6]==='free'?'<p class="free-day">今夜は好きなものを</p>':'<p class="lead">今夜は</p><p class="dish"><span>'+esc(dn)+'</span></p>'):'')+'</div>';
+  h+='<div class="tonight">'+(p.t?(p.t.D[0][6]==='free'?'<p class="free-day">今夜は好きなものを</p>':'<p class="lead">今夜は</p><p class="dish"><span>'+esc(dn)+'</span></p>'):'<p class="free-day">お正月</p>')+'</div>';
+  // アイス貯金
+  const bank=bankUntil(today<=sel?today:sel);
+  const goal=iceGoal(bank);
+  h+='<div class="bank"><div><span class="bank-l">アイス貯金</span><b>'+bank+'<small>kcal</small></b></div>'+(goal?'<p>'+goal+'</p>':'<p class="muted">枠を残した日は、残りが貯まります</p>')+'</div>';
   if(p.t){
-    const isBento=p.kind==='bento'&&d.getDay()%6!==0&&p.t.L[0][6]!=='free';
+    const b=budgetOf(sel),ex=bikeExtra(sel),tot=b.free+ex,used=usedOf(sel),left=tot-used,eats=eatOf(sel);
+    const pct=Math.max(0,Math.min(100,used/tot*100));
+    h+='<section class="left'+(left<0?' over':'')+'"><p class="left-l">'+b.label+'　'+(left>=0?'あと':'')+'</p><p class="big">'+(left>=0?left:-left)+'<small>kcal'+(left<0?' オーバー':'')+'</small></p>'
+      +'<div class="bar"><i style="width:'+pct+'%"></i></div>'
+      +'<p class="left-s">枠 '+b.free+(ex?' ＋ 自転車 '+ex:'')+'　食べた '+used+'</p>';
+    if(left>0&&eats.length&&sel===today)h+='<p class="hint">このまま終われば、今日は +'+Math.min(CAP,left)+'kcal 貯金</p>';
+    if(left<0)h+='<p class="hint">'+(bank>0?'超えた分はアイス貯金から使います。':'')+'明日は気にせず、いつもどおりで大丈夫</p>';
+    h+='</section>';
+    // 食べたもの
+    h+='<section class="eat">';
+    if(state.mode!=='sheet')h+='<p class="warnline">'+(state.mode==='error'?'共有の通信に失敗中。つながったら自動で共有します':(state.mode==='badkey'?'合い言葉が変わりました。新しい合い言葉を入れてください':'このスマホの記録は共有されていません。合い言葉を入れると共有されます'))+'</p>'+(state.mode==='error'?'':'<span class="keyin"><input id="keyin2" placeholder="合い言葉" autocomplete="off"><button type="button" id="keybtn2">共有する</button></span>');
+    if(state.fav.length)h+='<div class="eatq">'+state.fav.map(([n,k],i)=>'<button type="button" class="chipbtn" data-eatq="'+i+'">＋ '+esc(n)+' <span>'+k+'</span></button>').join('')+'</div>';
+    h+='<div class="eatin"><input type="text" id="eat-n" placeholder="食べたもの" aria-label="食べたもの" autocomplete="off"><input type="number" id="eat-k" inputmode="numeric" min="0" max="3000" placeholder="kcal" aria-label="カロリー"><button type="button" class="btn" id="eat-add">追加</button></div>';
+    if(eats.length)h+='<ul class="eatlist">'+eats.map((x,i)=>{const fv=state.fav.some(f=>f[0]===x[0]&&f[1]===x[1]);return '<li><button type="button" class="star'+(fv?' on':'')+'" data-fav="'+i+'" aria-label="'+(fv?'よく食べるものから外す':'よく食べるものに登録')+'">'+(fv?'★':'☆')+'</button><span class="en">'+esc(x[0]||'（名前なし）')+'</span><span class="kcal">'+x[1]+'</span><button type="button" class="del" data-eatdel="'+i+'" aria-label="消す">×</button></li>'}).join('')+'</ul>';
+    else h+='<p class="empty">食べたものを入れると、残りと貯金が計算されます。☆を押すと「よく食べるもの」に入り、次から1タップで入れられます。</p>';
+    const v=bikeOf(sel);
+    h+='<details class="bike"'+(ex?'':'')+'><summary><span>自転車</span><span class="muted">'+(ex?'+'+ex+'kcal':'乗った分を足す')+'</span></summary>'+BK.map(([id,n,r])=>'<div class="bikein"><label for="bk-'+id+'">'+n+'</label><input type="number" id="bk-'+id+'" data-bk="'+id+'" inputmode="numeric" min="0" max="300" step="5" value="'+(v[id]||'')+'" placeholder="0"><span>分</span><span class="muted small">30分で約'+Math.round(r*30)+'kcal</span></div>').join('')+'</details>';
+    h+='</section>';
+    // 献立
     const nx=new Date(d);nx.setDate(nx.getDate()+1);const nk=key(nx);const nextBento=PLAN[nk]&&PLAN[nk].kind==='bento'&&nx.getDay()%6!==0;
-    const sum=items=>items.reduce((a,x)=>a+x[3],0);
-    const dk=sum(p.t.D),dl=mealHtml(nextBento?'夜（主菜と小鉢は明日のお弁当の分も作る）':'夜',p.t.D);
-    if(isBento){
-      const lk=sum(p.t.L),sk=f10(1200-lk-dk);
-      h+=mealHtml('昼（お弁当・昨日の夜の残り）',p.t.L)+dl+freeHtml('間食',sk,true);
-      h+='<div class="total"><span>1日の合計</span><span>約'+(1200+bikeExtra(sel)).toLocaleString()+' kcal</span></div>';
-      h+='<p class="small muted" style="margin:-6px 0 0">昼 '+lk+' ＋ 夜 '+dk+' ＋ 間食 '+sk+'まで'+(bikeExtra(sel)?' ＋ 自転車 '+bikeExtra(sel):'')+'</p>';
-    } else {
-      const fk=f10(1200-dk);
-      h+=freeHtml('昼＋間食',fk,false)+dl;
-      h+='<div class="total"><span>1日の合計</span><span>約'+(1200+bikeExtra(sel)).toLocaleString()+' kcal</span></div>';
-      h+='<p class="small muted" style="margin:-6px 0 0">昼と間食 '+fk+'まで ＋ 夜 '+dk+(bikeExtra(sel)?' ＋ 自転車 '+bikeExtra(sel):'')+'</p>';
-    }
-    h+=nutHtml(p.t.v);
-  } else h+='<p class="small" style="margin:0">お正月は献立なし。おせちやお雑煮は好きなものを、量だけ控えめに。小松菜のおひたしだけは続けると楽です。</p>';
+    if(b.bento)h+=mealHtml('昼のお弁当',p.t.L);
+    h+=mealHtml(nextBento?'夜（主菜と小鉢は明日のお弁当の分も作る）':'夜ごはん',p.t.D);
+    h+='<details class="more"><summary>この日の栄養</summary>'+nutHtml(p.t.v)+'</details>';
+  } else h+='<p class="small" style="margin:0">お正月は献立なし。おせちやお雑煮は好きなものを、量だけ控えめに。</p>';
   const dd=state.days[sel]||{};
-  h+='<div><h3 class="small muted" style="font-weight:500;margin-bottom:6px">今日のチェック</h3><div class="checks">'+CHECKS.map(([c,l])=>'<label><input type="checkbox" id="c-'+c+'" data-c="'+c+'"'+(dd[c]?' checked':'')+(state.readOnly?' disabled':'')+'>'+l+'</label>').join('')+'</div></div>';
-  h+='<div><label for="memo" class="small muted">メモ（体調・生理・外食など）</label><textarea id="memo"'+(state.readOnly?' disabled':'')+'>'+esc(dd.memo||'')+'</textarea></div>';
+  h+='<details class="more"'+(dd.memo?' open':'')+'><summary>メモ</summary><textarea id="memo" aria-label="メモ" placeholder="体調・外食など">'+esc(dd.memo||'')+'</textarea></details>';
   card.innerHTML=h;
-  card.querySelectorAll('input[data-c]').forEach(i=>i.onchange=()=>{const o={...(state.days[sel]||{})};o[i.dataset.c]=i.checked;saveDay(sel,o);renderCal()});
+  card.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{if(b.dataset.go){sel=b.dataset.go;renderCard();window.scrollTo(0,0)}});
   const ea=card.querySelector('#eat-add');if(ea){ea.onclick=()=>addEat(card.querySelector('#eat-n').value,card.querySelector('#eat-k').value);card.querySelector('#eat-k').onkeydown=e=>{if(e.key==='Enter')ea.click()};}
   card.querySelectorAll('[data-eatq]').forEach(b=>b.onclick=()=>{const [n,k]=state.fav[+b.dataset.eatq];addEat(n,k)});
-  card.querySelectorAll('[data-favadd]').forEach(b=>b.onclick=()=>{const x=eatOf(sel)[+b.dataset.favadd];if(x)saveFav([...state.fav,[x[0],x[1]]])});
-  card.querySelectorAll('[data-favdel]').forEach(b=>b.onclick=()=>{const o=state.fav.slice();o.splice(+b.dataset.favdel,1);saveFav(o)});
+  card.querySelectorAll('[data-fav]').forEach(b=>b.onclick=()=>{const x=eatOf(sel)[+b.dataset.fav];if(!x||!x[0])return;const i=state.fav.findIndex(f=>f[0]===x[0]&&f[1]===x[1]);saveFav(i>=0?state.fav.filter((_,j)=>j!==i):[...state.fav,[x[0],x[1]]])});
   card.querySelectorAll('[data-eatdel]').forEach(b=>b.onclick=()=>{const l=eatOf(sel).slice();l.splice(+b.dataset.eatdel,1);setDayField(sel,'eat',l.length?l:null);renderCard()});
-  card.querySelectorAll('input[data-bk]').forEach(bi=>bi.onchange=()=>{const val=Math.max(0,Math.min(300,parseInt(bi.value)||0));const cur={...bikeOf(sel)};if(val)cur[bi.dataset.bk]=val;else delete cur[bi.dataset.bk];const o={...(state.days[sel]||{})};if(Object.keys(cur).length)o.bikemin=cur;else delete o.bikemin;if(val>0)o.bike=true;saveDay(sel,o);renderCal();renderCard()});
+  card.querySelectorAll('input[data-bk]').forEach(bi=>bi.onchange=()=>{const val=Math.max(0,Math.min(300,parseInt(bi.value)||0));const cur={...bikeOf(sel)};if(val)cur[bi.dataset.bk]=val;else delete cur[bi.dataset.bk];const o={...(state.days[sel]||{})};if(Object.keys(cur).length)o.bikemin=cur;else delete o.bikemin;saveDay(sel,o);renderCard();const dt=document.querySelector('details.bike');if(dt)dt.open=true});
   const memo=card.querySelector('#memo');memo.onchange=()=>{const o={...(state.days[sel]||{})};o.memo=memo.value.slice(0,500);saveDay(sel,o)};
 }
 
 /* ---- 記録 ---- */
 const MS=[['gyn','11月中：婦人科で生理不順の原因を確認（TOKYOプレコンゼミの助成を使う）'],['blood','婦人科で貧血（鉄）も調べてもらう'],['w73','73kgを切る：BMI 30未満。11月中旬〜下旬が目安'],['w70','70kgを切る：約7%減。12月中が目安'],['w67','67kgを切る：1月中が目安'],['feb','2月末：婦人科で、妊娠に向けて続けるか一度止めるかを相談']];
 function monthStats(y,m){
-  const p=y+'-'+pad(m+1);const ks=Object.keys(PLAN).filter(k=>k.startsWith(p)&&k<=today);
-  const c=x=>ks.filter(k=>(state.days[k]||{})[x]).length;
-  const meal=ks.filter(k=>{const d=state.days[k]||{};return d.lunch&&d.dinner}).length;
-  return {n:ks.length,meal,kob:c('kob'),bike:c('bike'),supp:c('supp')};
+  const p=y+'-'+pad(m+1);const ks=Object.keys(PLAN).filter(k=>k.startsWith(p)&&k<today);
+  let rec=0,saved=0,sum=0;ks.forEach(k=>{const d=deltaOf(k);if(d==null)return;rec++;if(d>=0){saved++;sum+=Math.min(CAP,d)}});
+  return {n:ks.length,rec,saved,sum};
 }
 function renderLog(){
   const el=document.getElementById('v-log');
+  const bank=bankUntil(today);
   let h='<div class="cols">';
-  h+='<div class="card"><h2>月ごとのまとめ</h2><p class="small muted" style="margin:0">カレンダーのチェックから数えています（今日まで）。</p>';
-  MONTHS.forEach(([y,m])=>{const s=monthStats(y,m);if(!s.n){h+='<div><h3>'+(m+1)+'月</h3><p class="small muted" style="margin:4px 0 0">まだ始まっていません</p></div>';return}
-    h+='<div><h3>'+(m+1)+'月 <span class="small muted">（'+s.n+'日経過）</span></h3><div class="stat" style="margin-top:6px"><div><b>'+s.meal+'</b><span>昼夜とも献立どおり</span></div><div><b>'+s.kob+'</b><span>小鉢を食べた</span></div><div><b>'+s.bike+'</b><span>自転車に乗った</span></div><div><b>'+s.supp+'</b><span>葉酸サプリ</span></div></div></div>'});
-  h+='<p class="small muted" style="margin:0">自転車は乗れる日だけでOK。雨の日は休んで、翌日に足さなくていい。</p></div>';
+  h+='<div class="card"><h2>アイス貯金</h2><p class="bigbank">'+bank+'<small>kcal</small></p>';
+  const g=iceGoal(bank);if(g)h+='<p class="small" style="margin:0">'+g+'</p>';
+  h+='<div class="tbl"><table><thead><tr><th>月</th><th class="num">記録した日</th><th class="num">貯金できた日</th><th class="num">貯まった分</th></tr></thead><tbody>';
+  MONTHS.forEach(([y,m])=>{const s=monthStats(y,m);h+='<tr><td>'+(m+1)+'月</td><td class="num">'+(s.n?s.rec:'—')+'</td><td class="num">'+(s.n?s.saved:'—')+'</td><td class="num">'+(s.n?'+'+s.sum:'—')+'</td></tr>'});
+  h+='</tbody></table></div><ul class="small muted" style="margin:0;padding-left:1.1em"><li>食べたものを入れた日だけ数えます（昨日まで）</li><li>枠が残った日は、残りが貯まります。1日に貯まるのは'+CAP+'kcalまで（食べなさすぎ防止）</li><li>アイスを食べて枠を超えた日は、超えた分が貯金から減ります。0より下にはなりません</li></ul></div>';
   h+='<div class="card ms"><h2>節目のチェック</h2>'+MS.map(([k,l])=>'<label><input type="checkbox" id="ms-'+k+'" data-k="'+k+'"'+(state.ms[k]?' checked':'')+(state.readOnly?' disabled':'')+'><span>'+l+'</span></label>').join('')+'<p class="small muted" style="margin:0">体重の節目は佑理さんが自分で量って、超えたら教えてもらう。数字は催促しない。</p></div>';
   const ws=Object.entries(state.weights).sort((a,b)=>a[0]<b[0]?-1:1);
   h+='<div class="card"><h2>体重メモ（本人用）</h2><p class="small muted" style="margin:0">'+'ここに入れた体重は、入力したスマホにだけ保存され、ほかの人には見えません。'+'記録しなくても大丈夫です。</p>';
   h+='<div class="row"><input type="date" id="wdate" value="'+(PLAN[today]?today:'2026-11-01')+'" min="2026-10-20" max="2027-03-31"><input type="number" id="wkg" step="0.1" min="30" max="150" placeholder="kg" aria-label="体重kg"><button class="btn" id="wadd" type="button">記録する</button></div>';
   if(ws.length>=2)h+=spark(ws);
   h+=ws.length?'<div class="tbl"><table><thead><tr><th>日付</th><th class="num">体重</th><th></th></tr></thead><tbody>'+ws.slice().reverse().map(([d,kg])=>'<tr><td>'+d.slice(5).replace('-','/')+'</td><td class="num">'+Number(kg).toFixed(1)+' kg</td><td class="num"><button class="link" type="button" data-del="'+d+'">消す</button></td></tr>').join('')+'</tbody></table></div>':'<p class="small muted" style="margin:0">まだ記録はありません。</p>';
-  h+='</div></div>';
+  h+='</div></div><p style="margin:16px 0 0"><a class="rec" href="#plan">ルールと見通し（1日の目安・自転車・栄養）を見る</a></p>';
   el.innerHTML=h;
   el.querySelectorAll('input[data-k]').forEach(i=>i.onchange=()=>saveMs({...state.ms,[i.dataset.k]:i.checked}));
   el.querySelector('#wadd').onclick=()=>{const d=el.querySelector('#wdate').value,kg=parseFloat(el.querySelector('#wkg').value);if(!d||!(kg>30&&kg<150))return;saveW({...state.weights,[d]:Math.round(kg*10)/10});renderLog()};
@@ -492,7 +541,7 @@ function renderRecipes(){
 /* ---- 計画 ---- */
 function renderPlan(){
   const el=document.getElementById('v-plan');if(el.dataset.done)return;el.dataset.done=1;
-  el.innerHTML=`<div class="cols">
+  el.innerHTML=`<p style="margin:0 0 12px"><a class="rec" href="#log">‹ 記録に戻る</a></p><div class="cols">
 <div class="card prose"><h2>見通し</h2>
 <p>1日約1,200kcal（自転車に乗った分は食べてよいので、見通しには入れていない）で、2月末は約61〜63kg（-12〜14kg）の見込み。59kgに届くのは3月下旬〜5月上旬。生理が整い始める目安の「5〜10%減」は12月中に届く。</p>
 <div class="tbl"><table><thead><tr><th>月末</th><th>見込み（食事1,200）</th></tr></thead><tbody>
@@ -503,13 +552,13 @@ function renderPlan(){
 <tr><td>朝</td><td>なし</td><td>水・お茶。葉酸サプリは昼に</td></tr>
 <tr><td>昼</td><td>自由（間食と合わせて約500〜590kcal）</td><td>好きなものでOK。1月からの平日はお弁当（前の晩の主菜と小鉢の残り＋ごはん150g、約440〜600kcal）</td></tr>
 <tr><td>夜</td><td>約550〜750kcal</td><td>献立どおり。主菜＋ごはん100g＋小鉢や汁物を1〜2品。1月からは日〜木の夜に、主菜と小鉢を翌日のお弁当の分（1人分）多く作る</td></tr>
-<tr><td>間食</td><td>1,200から昼と夜を引いた残り</td><td>その日のカードに数字が出る。昼が自由の日は昼と合わせて約500〜590kcal、お弁当の日は約90〜180kcal</td></tr></tbody></table></div>
+<tr><td>間食</td><td>1,200から昼と夜を引いた残り</td><td>「今日」の画面に数字が出る。昼が自由の日は昼と合わせて約500〜590kcal、お弁当の日は約90〜180kcal</td></tr></tbody></table></div>
 <ul><li>飲み物は水・お茶・無糖のもの。甘い飲み物とラテは間食に数える</li><li>ごはんは最初の1週間ははかりで量る</li><li>小鉢は作り置きできるもの（しぼ生漬け、おひたし、和え物など）を週末にまとめて作ると楽。小松菜は週1〜2回まで</li><li>葉酸サプリ（1日400µg）は昼ごはんと一緒に。鉄とカルシウムも入った妊活用だとなお良い</li></ul></div>
 <div class="card prose"><h2>間食とアイス</h2>
 <p>アイスの日は決めない。1日の合計が約1,200kcalに収まれば、いつ何を食べてもいい。</p>
-<ul><li>自転車に乗った日は、乗った分だけ足していい（30分でギュット約130kcal、ブリヂストン約170kcal）。カードに自転車ごとの分数を入れると数字が変わる。乗れなかった日も1,200kcalは食べる</li><li>昼が自由の日（12月まで毎日、1月からは土日）：昼と間食を合わせて約500〜590kcal。</li><li>お弁当の日（1月からの平日）：間食は約90〜180kcal。小さめのアイスか、無糖ヨーグルト＋果物（約100kcal）。いつものアイスは週末に回す</li><li>超えた日は、夜のごはんを50gに（−77kcal）。パスタなどごはんがない日は、パスタを2割くらい少なめに。おかずは減らさない。翌日に持ち越して減らさなくていい</li><li>アイスがない日は無糖ヨーグルトがおすすめ。カルシウムが足りない分を補える</li><li>軽いアイス：パピコ1本74kcal、白熊85〜89kcal、アイスの実101kcal、SUNAO 110kcal（<a class="rec" href="https://maquia.hpplus.jp/bikatsu/healthcare-diet/95830/" target="_blank" rel="noopener">MAQUIAの低カロリーアイス特集</a>より）</li></ul></div>
+<ul><li>自転車に乗った日は、乗った分だけ足していい（30分でギュット約130kcal、ブリヂストン約170kcal）。「今日」の自転車に分数を入れると数字が変わる。乗れなかった日も1,200kcalは食べる</li><li>昼が自由の日（12月まで毎日、1月からは土日）：昼と間食を合わせて約500〜590kcal。</li><li>お弁当の日（1月からの平日）：間食は約90〜180kcal。小さめのアイスか、無糖ヨーグルト＋果物（約100kcal）。いつものアイスは週末に回す</li><li>超えた日は、夜のごはんを50gに（−77kcal）。パスタなどごはんがない日は、パスタを2割くらい少なめに。おかずは減らさない。翌日に持ち越して減らさなくていい</li><li>アイスがない日は無糖ヨーグルトがおすすめ。カルシウムが足りない分を補える</li><li>軽いアイス：パピコ1本74kcal、白熊85〜89kcal、アイスの実101kcal、SUNAO 110kcal（<a class="rec" href="https://maquia.hpplus.jp/bikatsu/healthcare-diet/95830/" target="_blank" rel="noopener">MAQUIAの低カロリーアイス特集</a>より）</li></ul></div>
 <div class="card prose"><h2>自転車</h2>
-<p>ふだんの移動を自転車にする。わざわざ運動の時間は作らない。乗った分は間食に足せる（カードに自転車ごとの分数を入れる）。食べずに残せば、そのぶん少し早く痩せる。</p>
+<p>ふだんの移動を自転車にする。わざわざ運動の時間は作らない。乗った分は間食に足せる（「今日」の自転車に分数を入れる）。食べずに残せば、そのぶん少し早く痩せる。</p>
 <div class="tbl"><table><thead><tr><th>自転車</th><th>30分の消費</th><th>使う場面</th></tr></thead><tbody>
 <tr><td>ブリヂストン（アシストなし）</td><td>約170kcal</td><td>1人で出かけるとき。こちらを優先</td></tr>
 <tr><td>ギュット（電動アシスト）</td><td>約130kcal</td><td>子どもを乗せるとき、荷物が多いとき</td></tr></tbody></table></div>
@@ -532,6 +581,5 @@ function renderPlan(){
 }
 
 storeNote();route();initDb();
-if(QD&&PLAN[QD]&&window.innerWidth<860)setTimeout(()=>{const c=document.getElementById('card');if(c)c.scrollIntoView({block:'start'})},300);
 </script>
 </body></html>
