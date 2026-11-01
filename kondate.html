@@ -104,6 +104,11 @@ details.more textarea{margin-top:6px}
 .save-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--olive);margin-right:4px;vertical-align:1px}
 .cell .d .save-dot{margin:0}
 .bigbank{margin:0;font-family:var(--display);font-weight:600;font-size:2.4rem;color:var(--olive);line-height:1.1}
+@keyframes swl{from{opacity:.4;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes swr{from{opacity:.4;transform:translateX(-28px)}to{opacity:1;transform:none}}
+.today.swl{animation:swl .22s ease-out}.today.swr{animation:swr .22s ease-out}
+@media (prefers-reduced-motion:reduce){.today.swl,.today.swr{animation:none}}
+.today{touch-action:pan-y}
 /* calendar */
 .tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tabs button{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 14px;border-radius:999px;cursor:pointer}
@@ -316,7 +321,7 @@ async function refreshDb(){
   if(state.mode!=='sheet')return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
 }
-const BUILD='1793542136';
+const BUILD='1793542298';
 async function checkUpdate(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});const s=await r.text();const m=s.match(/const BUILD='([0-9]+)'/);if(m&&m[1]!==BUILD){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))location.reload()}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshDb();checkUpdate()}});
 setTimeout(checkUpdate,3000);
@@ -488,6 +493,16 @@ function renderCard(){
   card.querySelectorAll('input[data-bk]').forEach(bi=>bi.onchange=()=>{const val=Math.max(0,Math.min(300,parseInt(bi.value)||0));const cur={...bikeOf(sel)};if(val)cur[bi.dataset.bk]=val;else delete cur[bi.dataset.bk];const o={...(state.days[sel]||{})};if(Object.keys(cur).length)o.bikemin=cur;else delete o.bikemin;saveDay(sel,o);renderCard();const dt=document.querySelector('details.bike');if(dt)dt.open=true});
   const memo=card.querySelector('#memo');memo.onchange=()=>{const o={...(state.days[sel]||{})};o.memo=memo.value.slice(0,500);saveDay(sel,o)};
 }
+
+/* スワイプで前後の日へ */
+(function(){const el=document.getElementById('card');let x0=null,y0=0,t0=0;
+  el.addEventListener('touchstart',e=>{if(e.touches.length!==1||e.target.closest('input,textarea,.eatq'))return x0=null;x0=e.touches[0].clientX;y0=e.touches[0].clientY;t0=Date.now()},{passive:true});
+  el.addEventListener('touchend',e=>{if(x0==null)return;const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;x0=null;
+    if(Math.abs(dx)<60||Math.abs(dy)>Math.abs(dx)*0.6||Date.now()-t0>800)return;
+    const ks=Object.keys(PLAN).sort(),i=ks.indexOf(sel),n=ks[i+(dx<0?1:-1)];if(!n)return;
+    sel=n;renderCard();window.scrollTo(0,0);
+    el.classList.remove('swl','swr');void el.offsetWidth;el.classList.add(dx<0?'swl':'swr')},{passive:true});
+})();
 
 /* ---- 記録 ---- */
 const MS=[['gyn','11月中：婦人科で生理不順の原因を確認（TOKYOプレコンゼミの助成を使う）'],['blood','婦人科で貧血（鉄）も調べてもらう'],['w73','73kgを切る：BMI 30未満。11月中旬〜下旬が目安'],['w70','70kgを切る：約7%減。12月中が目安'],['w67','67kgを切る：1月中が目安'],['feb','2月末：婦人科で、妊娠に向けて続けるか一度止めるかを相談']];
