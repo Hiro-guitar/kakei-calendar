@@ -321,7 +321,7 @@ async function refreshDb(){
   if(state.mode!=='sheet')return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
 }
-const BUILD='1793542298';
+const BUILD='1793543115';
 async function checkUpdate(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});const s=await r.text();const m=s.match(/const BUILD='([0-9]+)'/);if(m&&m[1]!==BUILD){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))location.reload()}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshDb();checkUpdate()}});
 setTimeout(checkUpdate,3000);
@@ -408,11 +408,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeRecipe()});
 const f10=x=>Math.floor(x/10)*10;
 // 自転車：見通しには入れていない。乗った分だけ食べてよい（Oggiのメッツ表と体重75kgから：ギュット30分約130kcal、ブリヂストン30分約170kcal）
 const BK=[['g','ギュット（電動）',130/30],['b','ブリヂストン',170/30]];
+const DAY=1300,SNACK=200,BIKE_SHARE=0.5; // 1日1,300kcal。夜のおやつ200を含む。自転車は消費の半分だけ枠に足す
 state.bike=lsGet('kondate-bike',{});state.eat=lsGet('kondate-eat',{});
 const bikeOf=k=>{const d=(state.days[k]||{}).bikemin;if(d)return d;const v=state.bike[k];return typeof v==='number'?{g:v}:(v||{})};
 const eatOf=k=>(state.days[k]||{}).eat||state.eat[k]||[];
 function setDayField(k,f,val){const o={...(state.days[k]||{})};if(val==null)delete o[f];else o[f]=val;saveDay(k,o)}
-const bikeExtra=k=>{const v=bikeOf(k);return Math.round(BK.reduce((a,[id,,r])=>a+(v[id]||0)*r,0)/10)*10};
+const bikeExtra=k=>{const v=bikeOf(k);return Math.round(BK.reduce((a,[id,,r])=>a+(v[id]||0)*r,0)*BIKE_SHARE/10)*10};
 state.fav=lsGet('kondate-fav',[]);
 function saveFav(o){state.fav=o;lsSet('kondate-fav',o);renderCard()}
 function addEat(n,k){k=Math.round(+k);if(!(k>0&&k<5000))return;setDayField(sel,'eat',[...eatOf(sel),[String(n||'').slice(0,40),k]]);renderCard()}
@@ -436,7 +437,7 @@ const sumK=items=>items.reduce((a,x)=>a+x[3],0);
 function budgetOf(k){const p=PLAN[k];if(!p||!p.t)return null;const d=new Date(k+'T00:00');
   const bento=p.kind==='bento'&&d.getDay()%6!==0&&p.t.L[0][6]!=='free';
   const dk=sumK(p.t.D),lk=bento?sumK(p.t.L):0;
-  return {bento,dk,lk,free:f10(1200-lk-dk),label:bento?'間食':'昼＋間食'}}
+  return {bento,dk,lk,free:f10(DAY-lk-dk),label:bento?'夜のおやつ':'昼＋夜のおやつ'}}
 const usedOf=k=>eatOf(k).reduce((s,x)=>s+(+x[1]||0),0);
 function deltaOf(k){const b=budgetOf(k);if(!b||!eatOf(k).length)return null;return b.free+bikeExtra(k)-usedOf(k)}
 const CAP=150;
@@ -463,6 +464,7 @@ function renderCard(){
     h+='<section class="left'+(left<0?' over':'')+'"><p class="left-l">'+b.label+'　'+(left>=0?'あと':'')+'</p><p class="big">'+(left>=0?left:-left)+'<small>kcal'+(left<0?' オーバー':'')+'</small></p>'
       +'<div class="bar"><i style="width:'+pct+'%"></i></div>'
       +'<p class="left-s">枠 '+b.free+(ex?' ＋ 自転車 '+ex:'')+'　食べた '+used+'</p>';
+    if(!b.bento&&left>SNACK)h+='<p class="left-s">うち夜のおやつ '+SNACK+' は取っておく → 昼に使えるのは あと '+(left-SNACK)+'</p>';
     if(left>0&&eats.length&&sel===today)h+='<p class="hint">このまま終われば、今日は +'+Math.min(CAP,left)+'kcal 貯金</p>';
     if(left<0)h+='<p class="hint">'+(bank>0?'超えた分はアイス貯金から使います。':'')+'明日は気にせず、いつもどおりで大丈夫</p>';
     h+='</section>';
@@ -474,7 +476,7 @@ function renderCard(){
     if(eats.length)h+='<ul class="eatlist">'+eats.map((x,i)=>{const fv=state.fav.some(f=>f[0]===x[0]&&f[1]===x[1]);return '<li><button type="button" class="star'+(fv?' on':'')+'" data-fav="'+i+'" aria-label="'+(fv?'よく食べるものから外す':'よく食べるものに登録')+'">'+(fv?'★':'☆')+'</button><span class="en">'+esc(x[0]||'（名前なし）')+'</span><span class="kcal">'+x[1]+'</span><button type="button" class="del" data-eatdel="'+i+'" aria-label="消す">×</button></li>'}).join('')+'</ul>';
     else h+='<p class="empty">食べたものを入れると、残りと貯金が計算されます。☆を押すと「よく食べるもの」に入り、次から1タップで入れられます。</p>';
     const v=bikeOf(sel);
-    h+='<details class="bike"'+(ex?'':'')+'><summary><span>自転車</span><span class="muted">'+(ex?'+'+ex+'kcal':'乗った分を足す')+'</span></summary>'+BK.map(([id,n,r])=>'<div class="bikein"><label for="bk-'+id+'">'+n+'</label><input type="number" id="bk-'+id+'" data-bk="'+id+'" inputmode="numeric" min="0" max="300" step="5" value="'+(v[id]||'')+'" placeholder="0"><span>分</span><span class="muted small">30分で約'+Math.round(r*30)+'kcal</span></div>').join('')+'</details>';
+    h+='<details class="bike"'+(ex?'':'')+'><summary><span>自転車</span><span class="muted">'+(ex?'+'+ex+'kcal':'乗った分を足す')+'</span></summary>'+BK.map(([id,n,r])=>'<div class="bikein"><label for="bk-'+id+'">'+n+'</label><input type="number" id="bk-'+id+'" data-bk="'+id+'" inputmode="numeric" min="0" max="300" step="5" value="'+(v[id]||'')+'" placeholder="0"><span>分</span><span class="muted small">30分で+'+Math.round(r*30*BIKE_SHARE)+'kcal</span></div>').join('')+'</details>';
     h+='</section>';
     // 献立
     const nx=new Date(d);nx.setDate(nx.getDate()+1);const nk=key(nx);const nextBento=PLAN[nk]&&PLAN[nk].kind==='bento'&&nx.getDay()%6!==0;
@@ -505,7 +507,7 @@ function renderCard(){
 })();
 
 /* ---- 記録 ---- */
-const MS=[['gyn','11月中：婦人科で生理不順の原因を確認（TOKYOプレコンゼミの助成を使う）'],['blood','婦人科で貧血（鉄）も調べてもらう'],['w73','73kgを切る：BMI 30未満。11月中旬〜下旬が目安'],['w70','70kgを切る：約7%減。12月中が目安'],['w67','67kgを切る：1月中が目安'],['feb','2月末：婦人科で、妊娠に向けて続けるか一度止めるかを相談']];
+const MS=[['gyn','11月中：婦人科で生理不順の原因を確認（TOKYOプレコンゼミの助成を使う）'],['blood','婦人科で貧血（鉄）も調べてもらう'],['w73','73kgを切る：BMI 30未満。11月下旬〜12月上旬が目安'],['w70','70kgを切る：約7%減。12月下旬〜1月が目安'],['w67','67kgを切る：約10%減。1月下旬〜2月が目安'],['feb','2月末：婦人科で、妊娠に向けて続けるか一度止めるかを相談']];
 function monthStats(y,m){
   const p=y+'-'+pad(m+1);const ks=Object.keys(PLAN).filter(k=>k.startsWith(p)&&k<today);
   let rec=0,saved=0,sum=0;ks.forEach(k=>{const d=deltaOf(k);if(d==null)return;rec++;if(d>=0){saved++;sum+=Math.min(CAP,d)}});
@@ -558,22 +560,22 @@ function renderPlan(){
   const el=document.getElementById('v-plan');if(el.dataset.done)return;el.dataset.done=1;
   el.innerHTML=`<p style="margin:0 0 12px"><a class="rec" href="#log">‹ 記録に戻る</a></p><div class="cols">
 <div class="card prose"><h2>見通し</h2>
-<p>1日約1,200kcal（自転車に乗った分は食べてよいので、見通しには入れていない）で、2月末は約61〜63kg（-12〜14kg）の見込み。59kgに届くのは3月下旬〜5月上旬。生理が整い始める目安の「5〜10%減」は12月中に届く。</p>
-<div class="tbl"><table><thead><tr><th>月末</th><th>見込み（食事1,200）</th></tr></thead><tbody>
-<tr><td>11月</td><td>70.1〜70.8kg</td></tr><tr><td>12月</td><td>66.9〜68.1kg</td></tr><tr><td>1月</td><td>63.8〜65.6kg</td></tr><tr><td>2月</td><td>61.2〜63.4kg</td></tr><tr><td>3月</td><td>58.5〜61.2kg</td></tr><tr><td>4月</td><td>56〜59.1kg（59kgで止める）</td></tr></tbody></table></div>
-<ul class="small muted"><li>75kg・156cm・32歳と仮定。最初の2週間に水分で1.5kg減る前提。幅はふだんの動き方（家事・育児量）の違い</li><li>1,200kcalは下限。これより減らして早めるのはやらない。生理がさらに乱れて妊娠から遠ざかる</li><li>2〜3か月目は停滞しやすい。そこで焦って食事を減らさない</li></ul></div>
+<p>1日約1,300kcal（夜のおやつ200kcalを含む）で、2月末は約63〜67kg（-8〜12kg）の見込み。生理が整い始める目安の「5%減」は12月上旬ごろ、「10%減」は1月下旬〜2月ごろに届く。</p>
+<div class="tbl"><table><thead><tr><th>月末</th><th>見込み（食事1,300）</th></tr></thead><tbody>
+<tr><td>11月</td><td>71.2〜72.3kg</td></tr><tr><td>12月</td><td>68.9〜70.6kg</td></tr><tr><td>1月</td><td>66.0〜68.5kg</td></tr><tr><td>2月</td><td>63.4〜66.6kg</td></tr></tbody></table></div>
+<ul class="small muted"><li>75kg・156cm・32歳、家ではほとんど横になっている（1日に使うのは約1,650〜1,800kcal）と仮定。最初の2週間に水分で1〜1.5kg減る前提</li><li>1月からは復職で動く分、少しペースが上がる見込み</li><li>1,200kcalより減らして早めるのはやらない。生理がさらに乱れて妊娠から遠ざかる</li><li>体重計に乗るのは、乗りたくなってからでいい。それまでは服のきつさで見る</li><li>1か月たっても服のきつさが変わらなければ、量を見直す</li></ul></div>
 <div class="card prose"><h2>1日のルール</h2>
 <div class="tbl"><table><thead><tr><th>食事</th><th>目安</th><th>中身</th></tr></thead><tbody>
 <tr><td>朝</td><td>なし</td><td>水・お茶。葉酸サプリは昼に</td></tr>
-<tr><td>昼</td><td>自由（間食と合わせて約500〜590kcal）</td><td>好きなものでOK。1月からの平日はお弁当（前の晩の主菜と小鉢の残り＋ごはん150g、約440〜600kcal）</td></tr>
-<tr><td>夜</td><td>約550〜750kcal</td><td>献立どおり。主菜＋ごはん100g＋小鉢や汁物を1〜2品。1月からは日〜木の夜に、主菜と小鉢を翌日のお弁当の分（1人分）多く作る</td></tr>
-<tr><td>間食</td><td>1,200から昼と夜を引いた残り</td><td>「今日」の画面に数字が出る。昼が自由の日は昼と合わせて約500〜590kcal、お弁当の日は約90〜180kcal</td></tr></tbody></table></div>
-<ul><li>飲み物は水・お茶・無糖のもの。甘い飲み物とラテは間食に数える</li><li>ごはんは最初の1週間ははかりで量る</li><li>小鉢は作り置きできるもの（しぼ生漬け、おひたし、和え物など）を週末にまとめて作ると楽。小松菜は週1〜2回まで</li><li>葉酸サプリ（1日400µg）は昼ごはんと一緒に。鉄とカルシウムも入った妊活用だとなお良い</li></ul></div>
-<div class="card prose"><h2>間食とアイス</h2>
-<p>アイスの日は決めない。1日の合計が約1,200kcalに収まれば、いつ何を食べてもいい。</p>
-<ul><li>自転車に乗った日は、乗った分だけ足していい（30分でギュット約130kcal、ブリヂストン約170kcal）。「今日」の自転車に分数を入れると数字が変わる。乗れなかった日も1,200kcalは食べる</li><li>昼が自由の日（12月まで毎日、1月からは土日）：昼と間食を合わせて約500〜590kcal。</li><li>お弁当の日（1月からの平日）：間食は約90〜180kcal。小さめのアイスか、無糖ヨーグルト＋果物（約100kcal）。いつものアイスは週末に回す</li><li>超えた日は、夜のごはんを50gに（−77kcal）。パスタなどごはんがない日は、パスタを2割くらい少なめに。おかずは減らさない。翌日に持ち越して減らさなくていい</li><li>アイスがない日は無糖ヨーグルトがおすすめ。カルシウムが足りない分を補える</li><li>軽いアイス：パピコ1本74kcal、白熊85〜89kcal、アイスの実101kcal、SUNAO 110kcal（<a class="rec" href="https://maquia.hpplus.jp/bikatsu/healthcare-diet/95830/" target="_blank" rel="noopener">MAQUIAの低カロリーアイス特集</a>より）</li></ul></div>
+<tr><td>昼</td><td>自由（約380〜560kcal）</td><td>好きなものでOK。1月からの平日はお弁当（前の晩の主菜と小鉢の残り＋ごはん150g）</td></tr>
+<tr><td>夜</td><td>約550〜720kcal</td><td>献立どおり、ちゃんと1人前食べる。減らしておやつに回さない</td></tr>
+<tr><td>夜のおやつ</td><td>200kcal</td><td>テレビを見ながらのおやつは毎日OK。お弁当の日は、1,300から昼と夜を引いた残り（約150〜300kcal）</td></tr></tbody></table></div>
+<ul><li>飲み物は水・お茶・無糖のもの。甘い飲み物とラテはおやつに数える</li><li>ごはんは最初の1週間ははかりで量る</li><li>葉酸サプリ（1日400µg）は昼ごはんと一緒に。鉄とカルシウムも入った妊活用だとなお良い</li></ul></div>
+<div class="card prose"><h2>おやつとアイス</h2>
+<p>夜のおやつは200kcalまで毎日食べていい。もっと食べたい日は、アイス貯金を使う。</p>
+<ul><li>袋のお菓子は、先に器に1回分だけ出す。アイスは1個ずつのもの（ピノ、雪見だいふく、パピコなど）が量を合わせやすい</li><li>温かいお茶を一緒に出すと、2個目に手が伸びにくい</li><li>超えた日は、翌日に減らして取り戻さなくていい。アイス貯金から使ったことになるだけ</li><li>軽いアイス：パピコ1本74kcal、白熊85〜89kcal、アイスの実101kcal、SUNAO 110kcal（<a class="rec" href="https://maquia.hpplus.jp/bikatsu/healthcare-diet/95830/" target="_blank" rel="noopener">MAQUIAの低カロリーアイス特集</a>より）</li></ul></div>
 <div class="card prose"><h2>自転車</h2>
-<p>ふだんの移動を自転車にする。わざわざ運動の時間は作らない。乗った分は間食に足せる（「今日」の自転車に分数を入れる）。食べずに残せば、そのぶん少し早く痩せる。</p>
+<p>ふだんの移動を自転車にする。わざわざ運動の時間は作らない。乗った分の半分を、その日の枠に足せる（「今日」の自転車に分数を入れる）。残りの半分は、そのまま痩せる分になる。</p>
 <div class="tbl"><table><thead><tr><th>自転車</th><th>30分の消費</th><th>使う場面</th></tr></thead><tbody>
 <tr><td>ブリヂストン（アシストなし）</td><td>約170kcal</td><td>1人で出かけるとき。こちらを優先</td></tr>
 <tr><td>ギュット（電動アシスト）</td><td>約130kcal</td><td>子どもを乗せるとき、荷物が多いとき</td></tr></tbody></table></div>
