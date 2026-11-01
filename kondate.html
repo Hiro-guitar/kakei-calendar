@@ -355,7 +355,7 @@ async function refreshDb(){
   if(state.mode!=='sheet')return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
 }
-const BUILD='1793571503';
+const BUILD='1793571700';
 async function checkUpdate(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});const s=await r.text();const m=s.match(/const BUILD='([0-9]+)'/);if(m&&m[1]!==BUILD){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))location.reload()}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshDb();checkUpdate()}});
 setTimeout(checkUpdate,3000);
@@ -612,7 +612,7 @@ const RV={
 "残しすぎもよくないので、明日はもう少し食べて大丈夫",
 "少なすぎる日が続くと代謝が下がります。適度に食べましょう",
 "記録し忘れがあったら、あとから足しても大丈夫です",
-"食べなさすぎは生理にもよくありません。ちゃんと食べてOK"
+"食べなさすぎると、肌や髪にも響きます。ちゃんと食べてOK"
 ],
 "over": [
 "超えた分はアイス貯金から。明日はいつもどおりで大丈夫です",
@@ -650,7 +650,7 @@ const RV={
 ]
 };
 /* 夜ごはんの栄養のいいところ（料理ごとの栄養は献立の材料から食品成分表で計算。1人前あたり） */
-const NUT=[[1,'たんぱく質','g',50,'筋肉を守って、代謝を落とさないのに大事です'],[2,'鉄','mg',10.5,'貧血の予防と、これからの妊娠に大事です'],[3,'カルシウム','mg',650,'骨と、これからの妊娠に大事です'],[4,'食物繊維','g',18,'お腹の調子と、おやつ欲を整えてくれます'],[5,'葉酸','µg',240,'妊娠に向けて、いちばん大事な栄養のひとつです'],[6,'野菜','g',350,'ビタミンもたっぷり入っています']];
+const NUT=[[1,'たんぱく質','g',50,'筋肉を守って、代謝を落とさないのに大事です'],[2,'鉄','mg',10.5,'貧血の予防に大事です'],[3,'カルシウム','mg',650,'骨を丈夫にしてくれます'],[4,'食物繊維','g',18,'お腹の調子と、おやつ欲を整えてくれます'],[5,'葉酸','µg',240,'体の調子を整える、大事なビタミンです'],[6,'野菜','g',350,'ビタミンもたっぷり入っています']];
 const NUTT=['今夜は{dish}などで、{nut}が1日の目安の{pct}取れました','{nut}がたっぷりの夜ごはんでした。{benefit}','{dish}をはじめ、{nut}が1日の目安の{pct}。{benefit}','今日の夜は{nut}の優等生。1日の目安の{pct}です','夜ごはんで{nut}を{amt}取れました（1日の目安の{pct}）','{nut}が{amt}。特に{dish}がいい仕事してます','{benefit}。今夜は{nut}が{pct}入りました'];
 function dinnerNut(k){const p=PLAN[k];if(!p||!p.t||!DATA.nut)return null;const dp=dinpOf(k);const tot=[0,0,0,0,0,0,0],top={};
   p.t.D.forEach(it=>{const n=DATA.nut[it[0]];if(!n||!n[0])return;const f=it[3]/n[0]*dp;n.forEach((v,i)=>{const x=v*f;tot[i]+=x;if(it[6]!=='rice'&&(!top[i]||x>top[i][1]))top[i]=[it[0],x]})});
@@ -773,7 +773,7 @@ function renderCard(){
 })();
 
 /* ---- 記録 ---- */
-const MS=[['gyn','11月中：婦人科で生理不順の原因を確認（TOKYOプレコンゼミの助成を使う）'],['blood','婦人科で貧血（鉄）も調べてもらう'],['w73','73kgを切る：BMI 30未満。11月下旬〜12月上旬が目安'],['w70','70kgを切る：約7%減。12月下旬〜1月が目安'],['w67','67kgを切る：約10%減。1月下旬〜2月が目安'],['feb','2月末：婦人科で、妊娠に向けて続けるか一度止めるかを相談']];
+const MS=[['gyn','11月中：婦人科で生理不順の原因を確認（TOKYOプレコンゼミの助成を使う）'],['blood','婦人科で貧血（鉄）も調べてもらう'],['w73','73kgを切る：BMI 30未満。11月下旬〜12月上旬が目安'],['w70','70kgを切る：約7%減。12月下旬〜1月が目安'],['w67','67kgを切る：約10%減。1月下旬〜2月が目安'],['feb','2月末：婦人科で、この先の続け方を相談']];
 function monthStats(y,m){
   const p=y+'-'+pad(m+1);const ks=Object.keys(PLAN).filter(k=>k.startsWith(p)&&k<today);
   let rec=0,saved=0,sum=0;ks.forEach(k=>{const d=deltaOf(k);if(d==null)return;rec++;if(d>=0){saved++;sum+=Math.min(CAP,d)}});
@@ -842,13 +842,13 @@ function renderPlan(){
 <p>1日約1,300kcal（夜のおやつ200kcalを含む）で、2月末は約63〜67kg（-8〜12kg）の見込み。生理が整い始める目安の「5%減」は12月上旬ごろ、「10%減」は1月下旬〜2月ごろに届く。</p>
 <div class="tbl"><table><thead><tr><th>月末</th><th>見込み（食事1,300）</th></tr></thead><tbody>
 <tr><td>11月</td><td>71.2〜72.3kg</td></tr><tr><td>12月</td><td>68.9〜70.6kg</td></tr><tr><td>1月</td><td>66.0〜68.5kg</td></tr><tr><td>2月</td><td>63.4〜66.6kg</td></tr></tbody></table></div>
-<ul class="small muted"><li>75kg・156cm・32歳、家ではほとんど横になっている（1日に使うのは約1,650〜1,800kcal）と仮定。最初の2週間に水分で1〜1.5kg減る前提</li><li>1月からは復職で動く分、少しペースが上がる見込み</li><li>1,200kcalより減らして早めるのはやらない。生理がさらに乱れて妊娠から遠ざかる</li><li>体重計に乗るのは、乗りたくなってからでいい。それまでは服のきつさで見る</li><li>1か月たっても服のきつさが変わらなければ、量を見直す</li></ul></div>
+<ul class="small muted"><li>75kg・156cm・32歳、家ではほとんど横になっている（1日に使うのは約1,650〜1,800kcal）と仮定。最初の2週間に水分で1〜1.5kg減る前提</li><li>1月からは復職で動く分、少しペースが上がる見込み</li><li>1,200kcalより減らして早めるのはやらない。体調や生理が乱れやすくなる</li><li>体重計に乗るのは、乗りたくなってからでいい。それまでは服のきつさで見る</li><li>1か月たっても服のきつさが変わらなければ、量を見直す</li></ul></div>
 <div class="card prose"><h2>1日のルール</h2>
 <div class="tbl"><table><thead><tr><th>食事</th><th>目安</th><th>中身</th></tr></thead><tbody>
 <tr><td>朝＋昼</td><td>自由（合わせて約380〜560kcal）</td><td>好きなものでOK。朝に食べた分は昼の目安から引く。1月からの平日はお弁当（前の晩の主菜と小鉢の残り＋ごはん150g）</td></tr>
 <tr><td>夜</td><td>約550〜720kcal</td><td>献立どおり、ちゃんと1人前食べる。減らしておやつに回さない</td></tr>
 <tr><td>夜のおやつ</td><td>200kcal</td><td>テレビを見ながらのおやつは毎日OK。お弁当の日は、1,300から昼と夜を引いた残り（約150〜300kcal）</td></tr></tbody></table></div>
-<ul><li>飲み物は水・お茶・無糖のもの。甘い飲み物とラテはおやつに数える</li><li>ごはんは最初の1週間ははかりで量る</li><li>葉酸サプリ（1日400µg）は昼ごはんと一緒に。鉄とカルシウムも入った妊活用だとなお良い</li></ul></div>
+<ul><li>飲み物は水・お茶・無糖のもの。甘い飲み物とラテはおやつに数える</li><li>ごはんは最初の1週間ははかりで量る</li><li>葉酸サプリ（1日400µg）は昼ごはんと一緒に。鉄とカルシウムも入ったものだとなお良い</li></ul></div>
 <div class="card prose"><h2>おやつとアイス</h2>
 <p>夜のおやつは200kcalまで毎日食べていい。もっと食べたい日は、アイス貯金を使う。</p>
 <ul><li>袋のお菓子は、先に器に1回分だけ出す。アイスは1個ずつのもの（ピノ、雪見だいふく、パピコなど）が量を合わせやすい</li><li>温かいお茶を一緒に出すと、2個目に手が伸びにくい</li><li>超えた日は、翌日に減らして取り戻さなくていい。アイス貯金から使ったことになるだけ</li><li>軽いアイス：パピコ1本74kcal、白熊85〜89kcal、アイスの実101kcal、SUNAO 110kcal（<a class="rec" href="https://maquia.hpplus.jp/bikatsu/healthcare-diet/95830/" target="_blank" rel="noopener">MAQUIAの低カロリーアイス特集</a>より）</li></ul></div>
@@ -868,7 +868,7 @@ function renderPlan(){
 <tr><td>食物繊維</td><td class="num">約12g</td><td class="num">約13g</td><td class="num">18g</td></tr>
 <tr><td>カルシウム</td><td class="num">約450mg</td><td class="num">約530mg</td><td class="num">650mg</td></tr>
 <tr><td>鉄</td><td class="num">約8.5mg</td><td class="num">約9mg</td><td class="num">10.5mg</td></tr></tbody></table></div>
-<ul class="small"><li>カルシウムと鉄は食事だけだと少し足りない。ヨーグルトを毎日に近づける＋妊活用サプリで補う</li><li>妊娠に向けた葉酸は食事とは別にサプリで400µg（厚生労働省の推奨）</li><li>薬味・調味料の一部は計算に入れていないので、実際は少し多め</li></ul></div>
+<ul class="small"><li>カルシウムと鉄は食事だけだと少し足りない。ヨーグルトを毎日に近づける＋サプリで補う</li><li>薬味・調味料の一部は計算に入れていないので、実際は少し多め</li></ul></div>
 <div class="card prose"><h2>ペースを落とすサイン</h2>
 <p>次のどれかが出たら、夜のごはんを150gに（パスタなどの日はパスタを2割くらい多めに）、昼の上限を500kcalに戻して1日1,400kcalほどに上げ、自転車は1日15分に減らして、婦人科に相談する。</p>
 <ul><li>生理が2か月以上来ない、または出血の量や周期がさらに乱れる</li><li>めまい、立ちくらみ、抜け毛が増える</li><li>1か月で4kg以上減る（最初の1か月の水分減を除く）</li></ul></div>
