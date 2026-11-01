@@ -215,10 +215,11 @@ function storeNote(){
   if(state.mode==='sheet'){el.textContent='チェック・メモ・食べたもの・自転車は2人で共有されます。体重メモは、入力したスマホにだけ保存されます。';return}
   if(state.mode==='error'){el.textContent='共有の通信に失敗しています。入力はこのスマホに保存し、つながったら自動で共有します。';return}
   el.innerHTML=(state.mode==='badkey'?'<b>合い言葉が変わりました。</b>新しい合い言葉を入れてください。入力はそれまでこのスマホに保存されます。':'<b>このスマホは共有されていません。</b>入力はこのスマホにだけ保存されています。共有の合い言葉を入れると、2人で共有されます。')+'<span class="keyin"><input id="keyin" placeholder="合い言葉" autocomplete="off"><button type="button" id="keybtn">共有する</button></span>';
-  document.getElementById('keybtn').onclick=()=>{const v=document.getElementById('keyin').value.trim();const m=v.match(/k=([^&]+)/);let k=v;if(m){try{k=decodeURIComponent(m[1])}catch(e){k=m[1]}}
-    if(!k)return;
-    try{localStorage.setItem('kondate-key',k)}catch(e){}location.reload()};
+  document.getElementById('keybtn').onclick=()=>setKey(document.getElementById('keyin').value);
 }
+function setKey(v){v=(v||'').trim();const m=v.match(/k=([^&]+)/);let k=v;if(m){try{k=decodeURIComponent(m[1])}catch(e){k=m[1]}}
+  if(!k)return;try{localStorage.setItem('kondate-key',k)}catch(e){}location.reload()}
+document.addEventListener('click',e=>{if(e.target&&e.target.id==='keybtn2')setKey(document.getElementById('keyin2').value)});
 async function api(payload){
   const res=payload?await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)}):await fetch(API+'?api=1&k='+encodeURIComponent(KEY),{cache:'no-store'});
   if(!res.ok)throw new Error('通信に失敗しました（'+res.status+'）');
@@ -257,7 +258,7 @@ async function refreshDb(){
   if(state.mode!=='sheet')return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
 }
-const BUILD='1793540257';
+const BUILD='1793540458';
 async function checkUpdate(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});const s=await r.text();const m=s.match(/const BUILD='([0-9]+)'/);if(m&&m[1]!==BUILD){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))location.reload()}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshDb();checkUpdate()}});
 setTimeout(checkUpdate,3000);
@@ -360,7 +361,7 @@ function freeHtml(label,budget,bento){
     +(ex?'<p class="small" style="margin:4px 0 0">自転車ぶん <b>+'+ex+'kcal</b> → <b>約'+tot+'kcalまで</b></p>':'');
   const eats=eatOf(sel),used=eats.reduce((s,x)=>s+(+x[1]||0),0),left=tot-used;
   const eh='<div class="eat"><p class="small" style="margin:10px 0 4px">'+(bento?'食べた間食':'食べたもの（昼・間食）')+'</p>'
-    +(state.mode==='sheet'?'':'<p class="small" style="margin:0 0 6px;color:#d9822b">'+(state.mode==='error'?'⚠ 共有の通信に失敗中。つながったら自動で共有します':'⚠ このスマホの記録は共有されていません（ページのいちばん下で設定）')+'</p>')
+    +(state.mode==='sheet'?'':'<p class="small" style="margin:0 0 6px;color:#d9822b">'+(state.mode==='error'?'⚠ 共有の通信に失敗中。つながったら自動で共有します':(state.mode==='badkey'?'⚠ 合い言葉が変わりました。新しい合い言葉を入れてください':'⚠ このスマホの記録は共有されていません。合い言葉を入れると共有されます'))+'</p>'+(state.mode==='error'?'':'<span class="keyin" style="margin:0 0 8px"><input id="keyin2" placeholder="合い言葉" autocomplete="off"><button type="button" id="keybtn2">共有する</button></span>'))
     +(eats.length?'<ul class="eatlist">'+eats.map((x,i)=>'<li><span>'+esc(x[0]||'（名前なし）')+'</span><span class="kcal">'+x[1]+' kcal '+(x[0]&&!state.fav.some(f=>f[0]===x[0]&&f[1]===x[1])?'<button type="button" class="link small" data-favadd="'+i+'">よく食べるものに登録</button> ':'')+'<button type="button" class="link" data-eatdel="'+i+'" aria-label="消す">×</button></span></li>').join('')+'</ul>':'')
     +'<div class="eatin"><input type="text" id="eat-n" placeholder="例：おにぎり" aria-label="食べたもの"><input type="number" id="eat-k" inputmode="numeric" min="0" max="3000" placeholder="kcal" aria-label="カロリー"><button type="button" class="btn" id="eat-add">追加</button></div>'
     +(state.fav.length?'<div class="eatq">'+state.fav.map(([n,k],i)=>'<span class="fav"><button type="button" data-eatq="'+i+'">'+esc(n)+' '+k+'</button><button type="button" class="favx" data-favdel="'+i+'" aria-label="'+esc(n)+'を登録から外す">×</button></span>').join('')+'</div>':'')
