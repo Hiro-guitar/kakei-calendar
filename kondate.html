@@ -359,7 +359,7 @@ async function refreshDb(){
   if(state.mode!=='sheet')return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
 }
-const BUILD='1793625064';
+const BUILD='1793626311';
 async function checkUpdate(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});const s=await r.text();const m=s.match(/const BUILD='([0-9]+)'/);if(m&&m[1]!==BUILD){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))location.reload()}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshDb();checkUpdate()}});
 setTimeout(checkUpdate,3000);
@@ -753,7 +753,7 @@ function renderCard(){
     h+='</section>';
     // ふりかえり
     const rv=review(sel);
-    if(rv)h+='<section class="review"><div class="score"><b>'+rv.score+'</b><small>点</small></div><div><p class="rv-g">'+(sel===today?'今日の点数（途中経過）':'この日の点数')+'</p><p class="rv-n">量40・夜ごはん25・おやつ20・記録15の合計</p></div></section>';
+    if(rv)h+='<section class="review"><div class="score"><b>'+rv.score+'</b><small>点</small></div><div><p class="rv-g">'+(sel===today?'今日の点数（途中経過）':'この日の点数')+'</p></div></section>';
     const v=bikeOf(sel);
     h+='<details class="bike"><summary><span>自転車</span><span class="muted">'+(c.ex?'+'+c.ex+'kcal':'乗った分を足す')+'</span></summary>'+BK.map(([id,n,r])=>'<div class="bikein"><label for="bk-'+id+'">'+n+'</label><input type="number" id="bk-'+id+'" data-bk="'+id+'" inputmode="numeric" min="0" max="300" step="5" value="'+(v[id]||'')+'" placeholder="0"><span>分</span><span class="muted small">30分で+'+Math.round(r*30*BIKE_SHARE)+'kcal</span></div>').join('')+'</details>';
     h+='<details class="more"><summary>この日の栄養（献立から）</summary>'+nutHtml(p.t.v)+'</details>';
