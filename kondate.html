@@ -147,6 +147,15 @@ details.more textarea{margin-top:6px}
 .istep b{min-width:3.6em;text-align:center;font-weight:500;font-variant-numeric:tabular-nums}
 .istep.chg b{color:var(--olive);font-weight:700}
 .istep button{font:inherit;font-size:.95rem;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;line-height:1;padding:0}
+.eatlist button.edit{font:inherit;background:none;border:0;padding:2px 0;color:inherit;text-align:left;cursor:pointer}
+.eatlist button.en.edit{flex:1;min-width:0}
+.eatlist button.kcal.edit{color:var(--muted);font-size:.85rem;text-decoration:underline dotted;text-underline-offset:3px}
+.editrow{flex-wrap:wrap;gap:6px!important}
+.editrow input[type=text]{flex:1 1 9em;min-width:0;font-size:16px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.editrow input[type=number]{width:5em;font-size:16px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.edslot{display:flex;gap:4px}.edslot button{font:inherit;font-size:.82rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:3px 10px;cursor:pointer}
+.edslot button[aria-pressed="true"]{background:var(--olive);border-color:var(--olive);color:var(--surface)}
+.edbtns{display:flex;gap:10px;align-items:center;margin-left:auto}
 /* calendar */
 .tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tabs button{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 14px;border-radius:999px;cursor:pointer}
@@ -359,7 +368,7 @@ async function refreshDb(){
   if(state.mode!=='sheet')return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
 }
-const BUILD='1793626311';
+const BUILD='1793673446';
 async function checkUpdate(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});const s=await r.text();const m=s.match(/const BUILD='([0-9]+)'/);if(m&&m[1]!==BUILD){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))location.reload()}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshDb();checkUpdate()}});
 setTimeout(checkUpdate,3000);
@@ -703,9 +712,15 @@ function review(k){const c=dayCalc(k);if(!c||!c.rec)return null;
   return {score,good:pick(RV[g],k,g),nut:nutLine(k),tip:t?pick(RV[t],k,t):'',extra:ex}}
 function slotHead(name,used,bud,sl,extra){
   return '<div class="mh"><h3>'+name+'</h3><span class="mk">'+used+(bud!=null?'<small> / '+bud+'</small>':'')+'<small> kcal</small></span>'+(sl?'<button type="button" class="addb'+(addSlot===sl?' on':'')+'" data-slot="'+sl+'" aria-label="'+name+'に追加">＋</button>':'')+'</div>'+(extra||'')}
-function eatRows(sl){const e=eatOf(sel);return e.map((x,i)=>[x,i]).filter(([x])=>slotOf(x)===sl).map(([x,i])=>{const fv=state.fav.some(f=>f[0]===x[0]&&f[1]===x[1]);return '<li><button type="button" class="star'+(fv?' on':'')+'" data-fav="'+i+'" aria-label="'+(fv?'よく食べるものから外す':'よく食べるものに登録')+'">'+(fv?'★':'☆')+'</button><span class="en">'+esc(x[0]||'（名前なし）')+'</span><span class="kcal">'+x[1]+'</span><button type="button" class="del" data-eatdel="'+i+'" aria-label="消す">×</button></li>'}).join('')}
+let editIx=null,favEdit=false;
+const SLOTS=[['b','朝'],['l','昼'],['s','おやつ']];
+function eatRows(sl){const e=eatOf(sel);return e.map((x,i)=>[x,i]).filter(([x])=>slotOf(x)===sl).map(([x,i])=>{
+  if(editIx===i)return '<li class="editrow"><input type="text" id="ed-n" value="'+esc(x[0]||'')+'" aria-label="名前"><input type="number" id="ed-k" inputmode="numeric" min="1" max="4999" value="'+x[1]+'" aria-label="カロリー"><span class="edslot" role="group" aria-label="食事">'+SLOTS.map(([v,l])=>'<button type="button" data-edslot="'+v+'" aria-pressed="'+(slotOf(x)===v)+'">'+l+'</button>').join('')+'</span><span class="edbtns"><button type="button" class="btn" data-edsave="'+i+'">保存</button><button type="button" class="link" data-edcancel="1">やめる</button></span></li>';
+  const fv=state.fav.some(f=>f[0]===x[0]&&f[1]===x[1]);return '<li><button type="button" class="star'+(fv?' on':'')+'" data-fav="'+i+'" aria-label="'+(fv?'よく食べるものから外す':'よく食べるものに登録')+'">'+(fv?'★':'☆')+'</button><button type="button" class="en edit" data-edit="'+i+'" aria-label="'+esc(x[0]||'')+'を直す">'+esc(x[0]||'（名前なし）')+'</button><button type="button" class="kcal edit" data-edit="'+i+'">'+x[1]+'</button><button type="button" class="del" data-eatdel="'+i+'" aria-label="消す">×</button></li>'}).join('')}
 function addForm(){
-  return '<div class="addform">'+(state.fav.length?'<div class="eatq">'+state.fav.map(([n,k],i)=>'<button type="button" class="chipbtn" data-eatq="'+i+'">＋ '+esc(n)+' <span>'+k+'</span></button>').join('')+'</div>':'')
+  const fl=favEdit?'<ul class="eatlist favlist">'+state.fav.map(([n,k],i)=>'<li class="editrow"><input type="text" data-fn="'+i+'" value="'+esc(n)+'" aria-label="名前"><input type="number" data-fk="'+i+'" inputmode="numeric" min="1" max="4999" value="'+k+'" aria-label="カロリー"><button type="button" class="del" data-favdel2="'+i+'" aria-label="'+esc(n)+'を外す">×</button></li>').join('')+'</ul><button type="button" class="btn" data-favdone="1">保存</button>'
+    :'<div class="eatq">'+state.fav.map(([n,k],i)=>'<button type="button" class="chipbtn" data-eatq="'+i+'">＋ '+esc(n)+' <span>'+k+'</span></button>').join('')+'</div><button type="button" class="link small" data-favedit="1" style="justify-self:start">よく食べるものを直す</button>';
+  return '<div class="addform">'+(state.fav.length?fl:'')
     +'<div class="eatin"><input type="text" id="eat-n" placeholder="食べたもの" aria-label="食べたもの" autocomplete="off"><input type="number" id="eat-k" inputmode="numeric" min="0" max="3000" placeholder="kcal" aria-label="カロリー"><button type="button" class="btn" id="eat-add">追加</button></div>'
     +(state.fav.length?'':'<p class="empty">入れたものの☆を押すと「よく食べるもの」になり、次から1タップで入れられます</p>')+'</div>'}
 function renderCard(){
@@ -761,7 +776,7 @@ function renderCard(){
   const dd=state.days[sel]||{};
   h+='<details class="more"'+(dd.memo?' open':'')+'><summary>メモ</summary><textarea id="memo" aria-label="メモ" placeholder="体調・外食など">'+esc(dd.memo||'')+'</textarea></details>';
   card.innerHTML=h;
-  card.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{if(b.dataset.go){sel=b.dataset.go;addSlot=null;renderCard();window.scrollTo(0,0)}});
+  card.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{if(b.dataset.go){sel=b.dataset.go;addSlot=null;editIx=null;favEdit=false;renderCard();window.scrollTo(0,0)}});
   card.querySelectorAll('[data-slot]').forEach(b=>b.onclick=()=>{addSlot=b.dataset.slot;renderCard();const n=card.querySelector('#eat-n');if(n)n.focus()});
   const setItem=(ix,dir)=>{const p=PLAN[sel],it=p.t.D[ix],ib=itemBase(it),fs=factorsOf(sel);
     let v=Math.round(fs[ix]*ib.base/ib.step)*ib.step+dir*ib.step;v=Math.max(0,Math.min(ib.base*3,v));fs[ix]=Math.round(v/ib.base*100)/100;
@@ -771,6 +786,15 @@ function renderCard(){
   const ea=card.querySelector('#eat-add');if(ea){ea.onclick=()=>addEat(card.querySelector('#eat-n').value,card.querySelector('#eat-k').value);card.querySelector('#eat-k').onkeydown=e=>{if(e.key==='Enter')ea.click()};}
   card.querySelectorAll('[data-eatq]').forEach(b=>b.onclick=()=>{const [n,k]=state.fav[+b.dataset.eatq];addEat(n,k)});
   card.querySelectorAll('[data-fav]').forEach(b=>b.onclick=()=>{const x=eatOf(sel)[+b.dataset.fav];if(!x||!x[0])return;const i=state.fav.findIndex(f=>f[0]===x[0]&&f[1]===x[1]);saveFav(i>=0?state.fav.filter((_,j)=>j!==i):[...state.fav,[x[0],x[1]]])});
+  card.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{editIx=+b.dataset.edit;renderCard();const n=card.querySelector('#ed-k');if(n)n.focus()});
+  card.querySelectorAll('[data-edslot]').forEach(b=>b.onclick=()=>card.querySelectorAll('[data-edslot]').forEach(x=>x.setAttribute('aria-pressed',x===b)));
+  card.querySelectorAll('[data-edcancel]').forEach(b=>b.onclick=()=>{editIx=null;renderCard()});
+  card.querySelectorAll('[data-edsave]').forEach(b=>b.onclick=()=>{const i=+b.dataset.edsave,l=eatOf(sel).slice(),k=Math.round(+card.querySelector('#ed-k').value);if(!(k>0&&k<5000))return;
+    const sb=card.querySelector('[data-edslot][aria-pressed="true"]');l[i]=[card.querySelector('#ed-n').value.trim().slice(0,40),k,sb?sb.dataset.edslot:slotOf(l[i])];editIx=null;setDayField(sel,'eat',l);renderCard()});
+  card.querySelectorAll('#ed-n,#ed-k').forEach(x=>x.onkeydown=e=>{if(e.key==='Enter'){const b=card.querySelector('[data-edsave]');if(b)b.click()}});
+  card.querySelectorAll('[data-favedit]').forEach(b=>b.onclick=()=>{favEdit=true;renderCard()});
+  card.querySelectorAll('[data-favdel2]').forEach(b=>b.onclick=()=>{b.closest('li').remove()});
+  card.querySelectorAll('[data-favdone]').forEach(b=>b.onclick=()=>{const o=[];card.querySelectorAll('.favlist li').forEach(li=>{const n=li.querySelector('[data-fn]').value.trim().slice(0,40),k=Math.round(+li.querySelector('[data-fk]').value);if(n&&k>0&&k<5000)o.push([n,k])});favEdit=false;saveFav(o)});
   card.querySelectorAll('[data-eatdel]').forEach(b=>b.onclick=()=>{const l=eatOf(sel).slice();l.splice(+b.dataset.eatdel,1);setDayField(sel,'eat',l.length?l:null);renderCard()});
   card.querySelectorAll('input[data-bk]').forEach(bi=>bi.onchange=()=>{const val=Math.max(0,Math.min(300,parseInt(bi.value)||0));const cur={...bikeOf(sel)};if(val)cur[bi.dataset.bk]=val;else delete cur[bi.dataset.bk];const o={...(state.days[sel]||{})};if(Object.keys(cur).length)o.bikemin=cur;else delete o.bikemin;saveDay(sel,o);renderCard();const dt=document.querySelector('details.bike');if(dt)dt.open=true});
   const memo=card.querySelector('#memo');memo.onchange=()=>{const o={...(state.days[sel]||{})};o.memo=memo.value.slice(0,500);saveDay(sel,o)};
@@ -778,11 +802,11 @@ function renderCard(){
 
 /* スワイプで前後の日へ */
 (function(){const el=document.getElementById('card');let x0=null,y0=0,t0=0;
-  el.addEventListener('touchstart',e=>{if(e.touches.length!==1||e.target.closest('input,textarea,.eatq,.portion,.istep'))return x0=null;x0=e.touches[0].clientX;y0=e.touches[0].clientY;t0=Date.now()},{passive:true});
+  el.addEventListener('touchstart',e=>{if(e.touches.length!==1||e.target.closest('input,textarea,.eatq,.portion,.istep,.editrow'))return x0=null;x0=e.touches[0].clientX;y0=e.touches[0].clientY;t0=Date.now()},{passive:true});
   el.addEventListener('touchend',e=>{if(x0==null)return;const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;x0=null;
     if(Math.abs(dx)<60||Math.abs(dy)>Math.abs(dx)*0.6||Date.now()-t0>800)return;
     const ks=Object.keys(PLAN).sort(),i=ks.indexOf(sel),n=ks[i+(dx<0?1:-1)];if(!n)return;
-    sel=n;renderCard();window.scrollTo(0,0);
+    sel=n;editIx=null;favEdit=false;renderCard();window.scrollTo(0,0);
     el.classList.remove('swl','swr');void el.offsetWidth;el.classList.add(dx<0?'swl':'swr')},{passive:true});
 })();
 
