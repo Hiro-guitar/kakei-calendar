@@ -7,7 +7,7 @@ X-WR-CALNAME:献立
 X-WR-TIMEZONE:Asia/Tokyo
 BEGIN:VEVENT
 UID:kondate-2026-11-01@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261101
 DTEND;VALUE=DATE:20261102
 SUMMARY:くたくたブロッコリーとしらすとレモンの煮込
@@ -21,7 +21,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-02@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261102
 DTEND;VALUE=DATE:20261103
 SUMMARY:ささみときのこのシンプル塩炒め
@@ -33,7 +33,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-03@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261103
 DTEND;VALUE=DATE:20261104
 SUMMARY:はま寿司
@@ -43,7 +43,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-04@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261104
 DTEND;VALUE=DATE:20261105
 SUMMARY:青椒肉絲（チンジャオロウスー）
@@ -56,7 +56,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-05@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261105
 DTEND;VALUE=DATE:20261106
 SUMMARY:好きなもの
@@ -67,7 +67,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-06@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261106
 DTEND;VALUE=DATE:20261107
 SUMMARY:豚肉とキャベツの塩昆布豆乳煮
@@ -79,687 +79,687 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-07@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261107
 DTEND;VALUE=DATE:20261108
-SUMMARY:サバ缶パエリア
-DESCRIPTION:【夜】\n・サバ缶パエリア\n・酒蒸しブロッコ
- リー\n・洋風味噌玉\n\n献立カレンダーで開く\nhttps://hi
- ro-guitar.github.io/kakei-calendar/kondate.html?d=2026-11-07
+SUMMARY:豚肉とキャベツの塩昆布豆乳煮
+DESCRIPTION:【夜】\n・豚肉とキャベツの塩昆布豆乳煮\n・
+ ごはん 100g\n・ブロッコリーとバジルのサラダ\n・白ス
+ ンドゥブ\n\n献立カレンダーで開く\nhttps://hiro-guitar.gith
+ ub.io/kakei-calendar/kondate.html?d=2026-11-07
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-08@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261108
 DTEND;VALUE=DATE:20261109
+SUMMARY:サバ缶パエリア
+DESCRIPTION:【夜】\n・サバ缶パエリア\n・酒蒸しブロッコ
+ リー\n・洋風味噌玉\n\n献立カレンダーで開く\nhttps://hi
+ ro-guitar.github.io/kakei-calendar/kondate.html?d=2026-11-08
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:kondate-2026-11-09@hiro-guitar.github.io
+DTSTAMP:20261107T002952Z
+DTSTART;VALUE=DATE:20261109
+DTEND;VALUE=DATE:20261110
 SUMMARY:トマトと牛肉の甘辛炒め
 DESCRIPTION:【夜】\n・トマトと牛肉の甘辛炒め\n・ごはん
   100g\n・あさりとわかめ、長ネギのガーリック醤油ワ
  イン蒸し\n・ブロッコリーとバジルのサラダ\n\n献立カ
  レンダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/kond
- ate.html?d=2026-11-08
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
-UID:kondate-2026-11-09@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
-DTSTART;VALUE=DATE:20261109
-DTEND;VALUE=DATE:20261110
-SUMMARY:豆腐と春菊の豆乳鍋
-DESCRIPTION:【夜】\n・豆腐と春菊の豆乳鍋\n・ごはん 100g\
- n・牡蠣とごぼうの醤油蒸し\n・キャベツと里芋の食べ
- るスープ\n\n献立カレンダーで開く\nhttps://hiro-guitar.gith
- ub.io/kakei-calendar/kondate.html?d=2026-11-09
+ ate.html?d=2026-11-09
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-10@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261110
 DTEND;VALUE=DATE:20261111
-SUMMARY:くたくた菜の花と鶏肉のパスタ
-DESCRIPTION:【夜】\n・★くたくた菜の花と鶏肉のパスタ\n
- ・小松菜のおひたし\n・菜の花と卵のマヨネーズ炒め\
- n\n献立カレンダーで開く\nhttps://hiro-guitar.github.io/kakei-c
- alendar/kondate.html?d=2026-11-10
+SUMMARY:豆腐と春菊の豆乳鍋
+DESCRIPTION:【夜】\n・豆腐と春菊の豆乳鍋\n・ごはん 100g\
+ n・牡蠣とごぼうの醤油蒸し\n・キャベツと里芋の食べ
+ るスープ\n\n献立カレンダーで開く\nhttps://hiro-guitar.gith
+ ub.io/kakei-calendar/kondate.html?d=2026-11-10
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-11@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261111
 DTEND;VALUE=DATE:20261112
-SUMMARY:ミニマムアクアパッツァ
-DESCRIPTION:【夜】\n・ミニマムアクアパッツァ\n・ごはん
-  100g\n・酒蒸しブロッコリー\n・洋風味噌玉\n\n献立カ
- レンダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/kond
- ate.html?d=2026-11-11
+SUMMARY:くたくた菜の花と鶏肉のパスタ
+DESCRIPTION:【夜】\n・★くたくた菜の花と鶏肉のパスタ\n
+ ・小松菜のおひたし\n・菜の花と卵のマヨネーズ炒め\
+ n\n献立カレンダーで開く\nhttps://hiro-guitar.github.io/kakei-c
+ alendar/kondate.html?d=2026-11-11
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-12@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261112
 DTEND;VALUE=DATE:20261113
-SUMMARY:豚しゃぶの梅バター和え
-DESCRIPTION:【夜】\n・豚しゃぶの梅バター和え\n・ごはん
-  100g\n・ブロッコリーとバジルのサラダ\n・白スンドゥ
- ブ\n\n献立カレンダーで開く\nhttps://hiro-guitar.github.io/kak
- ei-calendar/kondate.html?d=2026-11-12
+SUMMARY:ミニマムアクアパッツァ
+DESCRIPTION:【夜】\n・ミニマムアクアパッツァ\n・ごはん
+  100g\n・酒蒸しブロッコリー\n・洋風味噌玉\n\n献立カ
+ レンダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/kond
+ ate.html?d=2026-11-12
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-13@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261113
 DTEND;VALUE=DATE:20261114
-SUMMARY:煮ない鯖味噌
-DESCRIPTION:【夜】\n・煮ない鯖味噌\n・ごはん 100g\n・牡
- 蠣とごぼうの醤油蒸し\n・韓国風味噌玉\n\n献立カレン
- ダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/kondate.ht
- ml?d=2026-11-13
+SUMMARY:豚しゃぶの梅バター和え
+DESCRIPTION:【夜】\n・豚しゃぶの梅バター和え\n・ごはん
+  100g\n・ブロッコリーとバジルのサラダ\n・白スンドゥ
+ ブ\n\n献立カレンダーで開く\nhttps://hiro-guitar.github.io/kak
+ ei-calendar/kondate.html?d=2026-11-13
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-14@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261114
 DTEND;VALUE=DATE:20261115
-SUMMARY:豚ひき肉となすのとろけるハーブ煮込み
-DESCRIPTION:【夜】\n・豚ひき肉となすのとろけるハーブ
- 煮込み\n・ごはん 100g\n・小松菜のおひたし\n・菜の花
- と卵のマヨネーズ炒め\n\n献立カレンダーで開く\nhttps:
- //hiro-guitar.github.io/kakei-calendar/kondate.html?d=2026-11-14
+SUMMARY:煮ない鯖味噌
+DESCRIPTION:【夜】\n・煮ない鯖味噌\n・ごはん 100g\n・牡
+ 蠣とごぼうの醤油蒸し\n・韓国風味噌玉\n\n献立カレン
+ ダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/kondate.ht
+ ml?d=2026-11-14
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-15@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261115
 DTEND;VALUE=DATE:20261116
+SUMMARY:豚ひき肉となすのとろけるハーブ煮込み
+DESCRIPTION:【夜】\n・豚ひき肉となすのとろけるハーブ
+ 煮込み\n・ごはん 100g\n・小松菜のおひたし\n・菜の花
+ と卵のマヨネーズ炒め\n\n献立カレンダーで開く\nhttps:
+ //hiro-guitar.github.io/kakei-calendar/kondate.html?d=2026-11-15
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:kondate-2026-11-16@hiro-guitar.github.io
+DTSTAMP:20261107T002952Z
+DTSTART;VALUE=DATE:20261116
+DTEND;VALUE=DATE:20261117
 SUMMARY:きほんの肉野菜炒め
 DESCRIPTION:【夜】\n・きほんの肉野菜炒め\n・ごはん 100g\
  n・あさりとわかめ、長ネギのガーリック醤油ワイン
  蒸し\n・あさりとれんこん、玉ねぎの塩スープ\n\n献立
  カレンダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/k
- ondate.html?d=2026-11-15
+ ondate.html?d=2026-11-16
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:kondate-2026-11-16@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
-DTSTART;VALUE=DATE:20261116
-DTEND;VALUE=DATE:20261117
+UID:kondate-2026-11-17@hiro-guitar.github.io
+DTSTAMP:20261107T002952Z
+DTSTART;VALUE=DATE:20261117
+DTEND;VALUE=DATE:20261118
 SUMMARY:豚しゃぶと豆腐と切り干し大根の黒酢和え
 DESCRIPTION:【夜】\n・豚しゃぶと豆腐と切り干し大根の
  黒酢和え\n・ごはん 100g\n・あさりとわかめ、長ネギの
  ガーリック醤油ワイン蒸し\n・韓国風味噌玉\n\n献立カ
  レンダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/kond
- ate.html?d=2026-11-16
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
-UID:kondate-2026-11-17@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
-DTSTART;VALUE=DATE:20261117
-DTEND;VALUE=DATE:20261118
-SUMMARY:とろけるオクラのワンパンパスタ
-DESCRIPTION:【夜】\n・★とろけるオクラのワンパンパス
- タ\n・ニンジンの梅しらす蒸し\n・あさりとれんこん
- 、玉ねぎの塩スープ\n\n献立カレンダーで開く\nhttps://h
- iro-guitar.github.io/kakei-calendar/kondate.html?d=2026-11-17
+ ate.html?d=2026-11-17
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-18@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261118
 DTEND;VALUE=DATE:20261119
-SUMMARY:豚肉とかぶのシンプル鍋
-DESCRIPTION:【夜】\n・豚肉とかぶのシンプル鍋\n・ごはん
-  100g\n・牡蠣とごぼうの醤油蒸し\n・梅味噌玉\n\n献立
- カレンダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/k
- ondate.html?d=2026-11-18
+SUMMARY:とろけるオクラのワンパンパスタ
+DESCRIPTION:【夜】\n・★とろけるオクラのワンパンパス
+ タ\n・ニンジンの梅しらす蒸し\n・あさりとれんこん
+ 、玉ねぎの塩スープ\n\n献立カレンダーで開く\nhttps://h
+ iro-guitar.github.io/kakei-calendar/kondate.html?d=2026-11-18
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-19@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261119
 DTEND;VALUE=DATE:20261120
-SUMMARY:長芋ともち麦の牛スープ
-DESCRIPTION:【夜】\n・長芋ともち麦の牛スープ\n・ごはん
-  100g\n・菜の花と卵のマヨネーズ炒め\n・酒蒸しブロッ
- コリー\n\n献立カレンダーで開く\nhttps://hiro-guitar.github.
- io/kakei-calendar/kondate.html?d=2026-11-19
+SUMMARY:豚肉とかぶのシンプル鍋
+DESCRIPTION:【夜】\n・豚肉とかぶのシンプル鍋\n・ごはん
+  100g\n・牡蠣とごぼうの醤油蒸し\n・梅味噌玉\n\n献立
+ カレンダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/k
+ ondate.html?d=2026-11-19
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-20@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261120
 DTEND;VALUE=DATE:20261121
-SUMMARY:手羽元の昆布バターポトフ
-DESCRIPTION:【夜】\n・手羽元の昆布バターポトフ\n・ごは
- ん 100g\n・ニンジンの梅しらす蒸し\n・韓国風味噌玉\n\
- n献立カレンダーで開く\nhttps://hiro-guitar.github.io/kakei-cal
- endar/kondate.html?d=2026-11-20
+SUMMARY:長芋ともち麦の牛スープ
+DESCRIPTION:【夜】\n・長芋ともち麦の牛スープ\n・ごはん
+  100g\n・菜の花と卵のマヨネーズ炒め\n・酒蒸しブロッ
+ コリー\n\n献立カレンダーで開く\nhttps://hiro-guitar.github.
+ io/kakei-calendar/kondate.html?d=2026-11-20
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-21@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261121
 DTEND;VALUE=DATE:20261122
-SUMMARY:鯵のアクアパッツァ
-DESCRIPTION:【夜】\n・鯵のアクアパッツァ\n・ごはん 100g\
- n・赤パプリカのくたくた\n・豆乳と大根とホタテ缶、
- 豆腐のスープ\n\n献立カレンダーで開く\nhttps://hiro-guita
- r.github.io/kakei-calendar/kondate.html?d=2026-11-21
+SUMMARY:手羽元の昆布バターポトフ
+DESCRIPTION:【夜】\n・手羽元の昆布バターポトフ\n・ごは
+ ん 100g\n・ニンジンの梅しらす蒸し\n・韓国風味噌玉\n\
+ n献立カレンダーで開く\nhttps://hiro-guitar.github.io/kakei-cal
+ endar/kondate.html?d=2026-11-21
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-22@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261122
 DTEND;VALUE=DATE:20261123
+SUMMARY:鯵のアクアパッツァ
+DESCRIPTION:【夜】\n・鯵のアクアパッツァ\n・ごはん 100g\
+ n・赤パプリカのくたくた\n・豆乳と大根とホタテ缶、
+ 豆腐のスープ\n\n献立カレンダーで開く\nhttps://hiro-guita
+ r.github.io/kakei-calendar/kondate.html?d=2026-11-22
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:kondate-2026-11-23@hiro-guitar.github.io
+DTSTAMP:20261107T002952Z
+DTSTART;VALUE=DATE:20261123
+DTEND;VALUE=DATE:20261124
 SUMMARY:和風酒蒸しハンバーグ
 DESCRIPTION:【夜】\n・和風酒蒸しハンバーグ\n・ごはん 10
  0g\n・茹でブロッコリーのしらす生姜のせ\n・あさりと
  れんこん、玉ねぎの塩スープ\n\n献立カレンダーで開
  く\nhttps://hiro-guitar.github.io/kakei-calendar/kondate.html?d=2026-11
- -22
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
-UID:kondate-2026-11-23@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
-DTSTART;VALUE=DATE:20261123
-DTEND;VALUE=DATE:20261124
-SUMMARY:豚肉ときゅうりの塩昆布炒め
-DESCRIPTION:【夜】\n・豚肉ときゅうりの塩昆布炒め\n・ご
- はん 100g\n・春菊と海苔の豆乳おひたし\n・鶏ひき肉と
- かぶのスープ\n\n献立カレンダーで開く\nhttps://hiro-guita
- r.github.io/kakei-calendar/kondate.html?d=2026-11-23
+ -23
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-24@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261124
 DTEND;VALUE=DATE:20261125
+SUMMARY:豚肉ときゅうりの塩昆布炒め
+DESCRIPTION:【夜】\n・豚肉ときゅうりの塩昆布炒め\n・ご
+ はん 100g\n・春菊と海苔の豆乳おひたし\n・鶏ひき肉と
+ かぶのスープ\n\n献立カレンダーで開く\nhttps://hiro-guita
+ r.github.io/kakei-calendar/kondate.html?d=2026-11-24
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:kondate-2026-11-25@hiro-guitar.github.io
+DTSTAMP:20261107T002952Z
+DTSTART;VALUE=DATE:20261125
+DTEND;VALUE=DATE:20261126
 SUMMARY:鶏肉と茄子の蕪おろし煮、梅にんにく仕立て
 DESCRIPTION:【夜】\n・★鶏肉と茄子の蕪おろし煮、梅に
  んにく仕立て\n・ごはん 100g\n・しらす、玉ねぎ、わか
  めのごま油蒸し\n・ザーサイとひきわり納豆のスープ\
  n\n献立カレンダーで開く\nhttps://hiro-guitar.github.io/kakei-c
- alendar/kondate.html?d=2026-11-24
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
-UID:kondate-2026-11-25@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
-DTSTART;VALUE=DATE:20261125
-DTEND;VALUE=DATE:20261126
-SUMMARY:鱈と春菊、じゃがいもの白ワイン蒸し
-DESCRIPTION:【夜】\n・鱈と春菊、じゃがいもの白ワイン
- 蒸し\n・ごはん 100g\n・ニンジンの梅しらす蒸し\n・鶏
- ひき肉とかぶのスープ\n\n献立カレンダーで開く\nhttps:
- //hiro-guitar.github.io/kakei-calendar/kondate.html?d=2026-11-25
+ alendar/kondate.html?d=2026-11-25
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-26@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261126
 DTEND;VALUE=DATE:20261127
-SUMMARY:白あえ
-DESCRIPTION:【夜】\n・白あえ\n・ごはん 100g\n・おくら生
- 姜ソテー\n・フライパンで目玉焼き味噌汁\n\n献立カレ
- ンダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/kondate
- .html?d=2026-11-26
+SUMMARY:鱈と春菊、じゃがいもの白ワイン蒸し
+DESCRIPTION:【夜】\n・鱈と春菊、じゃがいもの白ワイン
+ 蒸し\n・ごはん 100g\n・ニンジンの梅しらす蒸し\n・鶏
+ ひき肉とかぶのスープ\n\n献立カレンダーで開く\nhttps:
+ //hiro-guitar.github.io/kakei-calendar/kondate.html?d=2026-11-26
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-11-27@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261127
 DTEND;VALUE=DATE:20261128
+SUMMARY:白あえ
+DESCRIPTION:【夜】\n・白あえ\n・ごはん 100g\n・おくら生
+ 姜ソテー\n・フライパンで目玉焼き味噌汁\n\n献立カレ
+ ンダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/kondate
+ .html?d=2026-11-27
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:kondate-2026-11-28@hiro-guitar.github.io
+DTSTAMP:20261107T002952Z
+DTSTART;VALUE=DATE:20261128
+DTEND;VALUE=DATE:20261129
 SUMMARY:鶏むね肉とトマトの出汁煮
 DESCRIPTION:【夜】\n・鶏むね肉とトマトの出汁煮\n・ごは
  ん 100g\n・包丁要らず！ ゆでキャベツ&ゆで卵のマスタ
  ードサラダ\n・鶏ひき肉とかぶのスープ\n\n献立カレン
  ダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/kondate.ht
- ml?d=2026-11-27
+ ml?d=2026-11-28
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:kondate-2026-11-28@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
-DTSTART;VALUE=DATE:20261128
-DTEND;VALUE=DATE:20261129
+UID:kondate-2026-11-29@hiro-guitar.github.io
+DTSTAMP:20261107T002952Z
+DTSTART;VALUE=DATE:20261129
+DTEND;VALUE=DATE:20261130
 SUMMARY:茄子のサルシッチャ風スープ
 DESCRIPTION:【夜】\n・茄子のサルシッチャ風スープ\n・ご
  はん 100g\n・ブロッコリーのクルミ醤油和え\n・豆乳と
  大根とホタテ缶、豆腐のスープ\n\n献立カレンダーで
  開く\nhttps://hiro-guitar.github.io/kakei-calendar/kondate.html?d=2026
- -11-28
+ -11-29
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:kondate-2026-11-29@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
-DTSTART;VALUE=DATE:20261129
-DTEND;VALUE=DATE:20261130
+UID:kondate-2026-11-30@hiro-guitar.github.io
+DTSTAMP:20261107T002952Z
+DTSTART;VALUE=DATE:20261130
+DTEND;VALUE=DATE:20261201
 SUMMARY:ぶりとみょうがのバター炒め
 DESCRIPTION:【夜】\n・ぶりとみょうがのバター炒め\n・ご
  はん 100g\n・かぼちゃの黒酢バターソテー\n・豆乳と大
  根とホタテ缶、豆腐のスープ\n\n献立カレンダーで開
  く\nhttps://hiro-guitar.github.io/kakei-calendar/kondate.html?d=2026-11
- -29
+ -30
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:kondate-2026-11-30@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
-DTSTART;VALUE=DATE:20261130
-DTEND;VALUE=DATE:20261201
+UID:kondate-2026-12-01@hiro-guitar.github.io
+DTSTAMP:20261107T002952Z
+DTSTART;VALUE=DATE:20261201
+DTEND;VALUE=DATE:20261202
 SUMMARY:レモンバター香るチキンソテー
 DESCRIPTION:【夜】\n・レモンバター香るチキンソテー\n・
  ごはん 100g\n・ゆでもやしのさっぱり和え\n・【プラス
  ワンメニュー】にんじん豆乳スープ\n\n献立カレンダ
  ーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/kondate.html?
- d=2026-11-30
+ d=2026-12-01
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:kondate-2026-12-01@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
-DTSTART;VALUE=DATE:20261201
-DTEND;VALUE=DATE:20261202
+UID:kondate-2026-12-02@hiro-guitar.github.io
+DTSTAMP:20261107T002952Z
+DTSTART;VALUE=DATE:20261202
+DTEND;VALUE=DATE:20261203
 SUMMARY:くたくたブロッコリーとしらすとレモンの煮込
  みパスタ
 DESCRIPTION:【夜】\n・★くたくたブロッコリーとしらす
  とレモンの煮込みパスタ\n・かぼちゃの共和え\n・わ
  かめと韓国のりの即席味噌汁\n\n献立カレンダーで開
  く\nhttps://hiro-guitar.github.io/kakei-calendar/kondate.html?d=2026-12
- -01
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
-UID:kondate-2026-12-02@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
-DTSTART;VALUE=DATE:20261202
-DTEND;VALUE=DATE:20261203
-SUMMARY:ささみときのこのシンプル塩炒め
-DESCRIPTION:【夜】\n・ささみときのこのシンプル塩炒め\n
- ・ごはん 100g\n・小松菜と卵の煮びたし\n・洋風味噌玉
- \n\n献立カレンダーで開く\nhttps://hiro-guitar.github.io/kakei-
- calendar/kondate.html?d=2026-12-02
+ -02
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-12-03@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261203
 DTEND;VALUE=DATE:20261204
-SUMMARY:青椒肉絲（チンジャオロウスー）
-DESCRIPTION:【夜】\n・青椒肉絲（チンジャオロウスー）\n
- ・ごはん 100g\n・茹で春キャベツのオイルがけ\n・白ス
- ンドゥブ\n\n献立カレンダーで開く\nhttps://hiro-guitar.gith
- ub.io/kakei-calendar/kondate.html?d=2026-12-03
+SUMMARY:ささみときのこのシンプル塩炒め
+DESCRIPTION:【夜】\n・ささみときのこのシンプル塩炒め\n
+ ・ごはん 100g\n・小松菜と卵の煮びたし\n・洋風味噌玉
+ \n\n献立カレンダーで開く\nhttps://hiro-guitar.github.io/kakei-
+ calendar/kondate.html?d=2026-12-03
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-12-04@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261204
 DTEND;VALUE=DATE:20261205
-SUMMARY:豚肉とキャベツの塩昆布豆乳煮
-DESCRIPTION:【夜】\n・豚肉とキャベツの塩昆布豆乳煮\n・
- ごはん 100g\n・ブロッコリーとバジルのサラダ\n・白ス
+SUMMARY:青椒肉絲（チンジャオロウスー）
+DESCRIPTION:【夜】\n・青椒肉絲（チンジャオロウスー）\n
+ ・ごはん 100g\n・茹で春キャベツのオイルがけ\n・白ス
  ンドゥブ\n\n献立カレンダーで開く\nhttps://hiro-guitar.gith
  ub.io/kakei-calendar/kondate.html?d=2026-12-04
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-12-05@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261205
 DTEND;VALUE=DATE:20261206
-SUMMARY:サバ缶パエリア
-DESCRIPTION:【夜】\n・サバ缶パエリア\n・酒蒸しブロッコ
- リー\n・洋風味噌玉\n\n献立カレンダーで開く\nhttps://hi
- ro-guitar.github.io/kakei-calendar/kondate.html?d=2026-12-05
+SUMMARY:豚肉とキャベツの塩昆布豆乳煮
+DESCRIPTION:【夜】\n・豚肉とキャベツの塩昆布豆乳煮\n・
+ ごはん 100g\n・ブロッコリーとバジルのサラダ\n・白ス
+ ンドゥブ\n\n献立カレンダーで開く\nhttps://hiro-guitar.gith
+ ub.io/kakei-calendar/kondate.html?d=2026-12-05
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-12-06@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261206
 DTEND;VALUE=DATE:20261207
+SUMMARY:サバ缶パエリア
+DESCRIPTION:【夜】\n・サバ缶パエリア\n・酒蒸しブロッコ
+ リー\n・洋風味噌玉\n\n献立カレンダーで開く\nhttps://hi
+ ro-guitar.github.io/kakei-calendar/kondate.html?d=2026-12-06
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:kondate-2026-12-07@hiro-guitar.github.io
+DTSTAMP:20261107T002952Z
+DTSTART;VALUE=DATE:20261207
+DTEND;VALUE=DATE:20261208
 SUMMARY:トマトと牛肉の甘辛炒め
 DESCRIPTION:【夜】\n・トマトと牛肉の甘辛炒め\n・ごはん
   100g\n・あさりとわかめ、長ネギのガーリック醤油ワ
  イン蒸し\n・ブロッコリーとバジルのサラダ\n\n献立カ
  レンダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/kond
- ate.html?d=2026-12-06
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
-UID:kondate-2026-12-07@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
-DTSTART;VALUE=DATE:20261207
-DTEND;VALUE=DATE:20261208
-SUMMARY:豆腐と春菊の豆乳鍋
-DESCRIPTION:【夜】\n・豆腐と春菊の豆乳鍋\n・ごはん 100g\
- n・牡蠣とごぼうの醤油蒸し\n・キャベツと里芋の食べ
- るスープ\n\n献立カレンダーで開く\nhttps://hiro-guitar.gith
- ub.io/kakei-calendar/kondate.html?d=2026-12-07
+ ate.html?d=2026-12-07
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-12-08@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261208
 DTEND;VALUE=DATE:20261209
-SUMMARY:くたくた菜の花と鶏肉のパスタ
-DESCRIPTION:【夜】\n・★くたくた菜の花と鶏肉のパスタ\n
- ・小松菜のおひたし\n・菜の花と卵のマヨネーズ炒め\
- n\n献立カレンダーで開く\nhttps://hiro-guitar.github.io/kakei-c
- alendar/kondate.html?d=2026-12-08
+SUMMARY:豆腐と春菊の豆乳鍋
+DESCRIPTION:【夜】\n・豆腐と春菊の豆乳鍋\n・ごはん 100g\
+ n・牡蠣とごぼうの醤油蒸し\n・キャベツと里芋の食べ
+ るスープ\n\n献立カレンダーで開く\nhttps://hiro-guitar.gith
+ ub.io/kakei-calendar/kondate.html?d=2026-12-08
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-12-09@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261209
 DTEND;VALUE=DATE:20261210
-SUMMARY:ミニマムアクアパッツァ
-DESCRIPTION:【夜】\n・ミニマムアクアパッツァ\n・ごはん
-  100g\n・酒蒸しブロッコリー\n・洋風味噌玉\n\n献立カ
- レンダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/kond
- ate.html?d=2026-12-09
+SUMMARY:くたくた菜の花と鶏肉のパスタ
+DESCRIPTION:【夜】\n・★くたくた菜の花と鶏肉のパスタ\n
+ ・小松菜のおひたし\n・菜の花と卵のマヨネーズ炒め\
+ n\n献立カレンダーで開く\nhttps://hiro-guitar.github.io/kakei-c
+ alendar/kondate.html?d=2026-12-09
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-12-10@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261210
 DTEND;VALUE=DATE:20261211
-SUMMARY:豚しゃぶの梅バター和え
-DESCRIPTION:【夜】\n・豚しゃぶの梅バター和え\n・ごはん
-  100g\n・ブロッコリーとバジルのサラダ\n・白スンドゥ
- ブ\n\n献立カレンダーで開く\nhttps://hiro-guitar.github.io/kak
- ei-calendar/kondate.html?d=2026-12-10
+SUMMARY:ミニマムアクアパッツァ
+DESCRIPTION:【夜】\n・ミニマムアクアパッツァ\n・ごはん
+  100g\n・酒蒸しブロッコリー\n・洋風味噌玉\n\n献立カ
+ レンダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/kond
+ ate.html?d=2026-12-10
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-12-11@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261211
 DTEND;VALUE=DATE:20261212
-SUMMARY:煮ない鯖味噌
-DESCRIPTION:【夜】\n・煮ない鯖味噌\n・ごはん 100g\n・牡
- 蠣とごぼうの醤油蒸し\n・韓国風味噌玉\n\n献立カレン
- ダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/kondate.ht
- ml?d=2026-12-11
+SUMMARY:豚しゃぶの梅バター和え
+DESCRIPTION:【夜】\n・豚しゃぶの梅バター和え\n・ごはん
+  100g\n・ブロッコリーとバジルのサラダ\n・白スンドゥ
+ ブ\n\n献立カレンダーで開く\nhttps://hiro-guitar.github.io/kak
+ ei-calendar/kondate.html?d=2026-12-11
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-12-12@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261212
 DTEND;VALUE=DATE:20261213
-SUMMARY:豚ひき肉となすのとろけるハーブ煮込み
-DESCRIPTION:【夜】\n・豚ひき肉となすのとろけるハーブ
- 煮込み\n・ごはん 100g\n・小松菜のおひたし\n・菜の花
- と卵のマヨネーズ炒め\n\n献立カレンダーで開く\nhttps:
- //hiro-guitar.github.io/kakei-calendar/kondate.html?d=2026-12-12
+SUMMARY:煮ない鯖味噌
+DESCRIPTION:【夜】\n・煮ない鯖味噌\n・ごはん 100g\n・牡
+ 蠣とごぼうの醤油蒸し\n・韓国風味噌玉\n\n献立カレン
+ ダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/kondate.ht
+ ml?d=2026-12-12
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-12-13@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261213
 DTEND;VALUE=DATE:20261214
+SUMMARY:豚ひき肉となすのとろけるハーブ煮込み
+DESCRIPTION:【夜】\n・豚ひき肉となすのとろけるハーブ
+ 煮込み\n・ごはん 100g\n・小松菜のおひたし\n・菜の花
+ と卵のマヨネーズ炒め\n\n献立カレンダーで開く\nhttps:
+ //hiro-guitar.github.io/kakei-calendar/kondate.html?d=2026-12-13
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:kondate-2026-12-14@hiro-guitar.github.io
+DTSTAMP:20261107T002952Z
+DTSTART;VALUE=DATE:20261214
+DTEND;VALUE=DATE:20261215
 SUMMARY:きほんの肉野菜炒め
 DESCRIPTION:【夜】\n・きほんの肉野菜炒め\n・ごはん 100g\
  n・あさりとわかめ、長ネギのガーリック醤油ワイン
  蒸し\n・あさりとれんこん、玉ねぎの塩スープ\n\n献立
  カレンダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/k
- ondate.html?d=2026-12-13
+ ondate.html?d=2026-12-14
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:kondate-2026-12-14@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
-DTSTART;VALUE=DATE:20261214
-DTEND;VALUE=DATE:20261215
+UID:kondate-2026-12-15@hiro-guitar.github.io
+DTSTAMP:20261107T002952Z
+DTSTART;VALUE=DATE:20261215
+DTEND;VALUE=DATE:20261216
 SUMMARY:豚しゃぶと豆腐と切り干し大根の黒酢和え
 DESCRIPTION:【夜】\n・豚しゃぶと豆腐と切り干し大根の
  黒酢和え\n・ごはん 100g\n・あさりとわかめ、長ネギの
  ガーリック醤油ワイン蒸し\n・韓国風味噌玉\n\n献立カ
  レンダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/kond
- ate.html?d=2026-12-14
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
-UID:kondate-2026-12-15@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
-DTSTART;VALUE=DATE:20261215
-DTEND;VALUE=DATE:20261216
-SUMMARY:とろけるオクラのワンパンパスタ
-DESCRIPTION:【夜】\n・★とろけるオクラのワンパンパス
- タ\n・ニンジンの梅しらす蒸し\n・あさりとれんこん
- 、玉ねぎの塩スープ\n\n献立カレンダーで開く\nhttps://h
- iro-guitar.github.io/kakei-calendar/kondate.html?d=2026-12-15
+ ate.html?d=2026-12-15
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-12-16@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261216
 DTEND;VALUE=DATE:20261217
-SUMMARY:豚肉とかぶのシンプル鍋
-DESCRIPTION:【夜】\n・豚肉とかぶのシンプル鍋\n・ごはん
-  100g\n・牡蠣とごぼうの醤油蒸し\n・梅味噌玉\n\n献立
- カレンダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/k
- ondate.html?d=2026-12-16
+SUMMARY:とろけるオクラのワンパンパスタ
+DESCRIPTION:【夜】\n・★とろけるオクラのワンパンパス
+ タ\n・ニンジンの梅しらす蒸し\n・あさりとれんこん
+ 、玉ねぎの塩スープ\n\n献立カレンダーで開く\nhttps://h
+ iro-guitar.github.io/kakei-calendar/kondate.html?d=2026-12-16
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-12-17@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261217
 DTEND;VALUE=DATE:20261218
-SUMMARY:長芋ともち麦の牛スープ
-DESCRIPTION:【夜】\n・長芋ともち麦の牛スープ\n・ごはん
-  100g\n・菜の花と卵のマヨネーズ炒め\n・酒蒸しブロッ
- コリー\n\n献立カレンダーで開く\nhttps://hiro-guitar.github.
- io/kakei-calendar/kondate.html?d=2026-12-17
+SUMMARY:豚肉とかぶのシンプル鍋
+DESCRIPTION:【夜】\n・豚肉とかぶのシンプル鍋\n・ごはん
+  100g\n・牡蠣とごぼうの醤油蒸し\n・梅味噌玉\n\n献立
+ カレンダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/k
+ ondate.html?d=2026-12-17
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-12-18@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261218
 DTEND;VALUE=DATE:20261219
-SUMMARY:手羽元の昆布バターポトフ
-DESCRIPTION:【夜】\n・手羽元の昆布バターポトフ\n・ごは
- ん 100g\n・ニンジンの梅しらす蒸し\n・韓国風味噌玉\n\
- n献立カレンダーで開く\nhttps://hiro-guitar.github.io/kakei-cal
- endar/kondate.html?d=2026-12-18
+SUMMARY:長芋ともち麦の牛スープ
+DESCRIPTION:【夜】\n・長芋ともち麦の牛スープ\n・ごはん
+  100g\n・菜の花と卵のマヨネーズ炒め\n・酒蒸しブロッ
+ コリー\n\n献立カレンダーで開く\nhttps://hiro-guitar.github.
+ io/kakei-calendar/kondate.html?d=2026-12-18
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-12-19@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261219
 DTEND;VALUE=DATE:20261220
-SUMMARY:鯵のアクアパッツァ
-DESCRIPTION:【夜】\n・鯵のアクアパッツァ\n・ごはん 100g\
- n・赤パプリカのくたくた\n・豆乳と大根とホタテ缶、
- 豆腐のスープ\n\n献立カレンダーで開く\nhttps://hiro-guita
- r.github.io/kakei-calendar/kondate.html?d=2026-12-19
+SUMMARY:手羽元の昆布バターポトフ
+DESCRIPTION:【夜】\n・手羽元の昆布バターポトフ\n・ごは
+ ん 100g\n・ニンジンの梅しらす蒸し\n・韓国風味噌玉\n\
+ n献立カレンダーで開く\nhttps://hiro-guitar.github.io/kakei-cal
+ endar/kondate.html?d=2026-12-19
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-12-20@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261220
 DTEND;VALUE=DATE:20261221
+SUMMARY:鯵のアクアパッツァ
+DESCRIPTION:【夜】\n・鯵のアクアパッツァ\n・ごはん 100g\
+ n・赤パプリカのくたくた\n・豆乳と大根とホタテ缶、
+ 豆腐のスープ\n\n献立カレンダーで開く\nhttps://hiro-guita
+ r.github.io/kakei-calendar/kondate.html?d=2026-12-20
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:kondate-2026-12-21@hiro-guitar.github.io
+DTSTAMP:20261107T002952Z
+DTSTART;VALUE=DATE:20261221
+DTEND;VALUE=DATE:20261222
 SUMMARY:和風酒蒸しハンバーグ
 DESCRIPTION:【夜】\n・和風酒蒸しハンバーグ\n・ごはん 10
  0g\n・茹でブロッコリーのしらす生姜のせ\n・あさりと
  れんこん、玉ねぎの塩スープ\n\n献立カレンダーで開
  く\nhttps://hiro-guitar.github.io/kakei-calendar/kondate.html?d=2026-12
- -20
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
-UID:kondate-2026-12-21@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
-DTSTART;VALUE=DATE:20261221
-DTEND;VALUE=DATE:20261222
-SUMMARY:豚肉ときゅうりの塩昆布炒め
-DESCRIPTION:【夜】\n・豚肉ときゅうりの塩昆布炒め\n・ご
- はん 100g\n・春菊と海苔の豆乳おひたし\n・鶏ひき肉と
- かぶのスープ\n\n献立カレンダーで開く\nhttps://hiro-guita
- r.github.io/kakei-calendar/kondate.html?d=2026-12-21
+ -21
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-12-22@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261222
 DTEND;VALUE=DATE:20261223
+SUMMARY:豚肉ときゅうりの塩昆布炒め
+DESCRIPTION:【夜】\n・豚肉ときゅうりの塩昆布炒め\n・ご
+ はん 100g\n・春菊と海苔の豆乳おひたし\n・鶏ひき肉と
+ かぶのスープ\n\n献立カレンダーで開く\nhttps://hiro-guita
+ r.github.io/kakei-calendar/kondate.html?d=2026-12-22
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:kondate-2026-12-23@hiro-guitar.github.io
+DTSTAMP:20261107T002952Z
+DTSTART;VALUE=DATE:20261223
+DTEND;VALUE=DATE:20261224
 SUMMARY:鶏肉と茄子の蕪おろし煮、梅にんにく仕立て
 DESCRIPTION:【夜】\n・★鶏肉と茄子の蕪おろし煮、梅に
  んにく仕立て\n・ごはん 100g\n・しらす、玉ねぎ、わか
  めのごま油蒸し\n・ザーサイとひきわり納豆のスープ\
  n\n献立カレンダーで開く\nhttps://hiro-guitar.github.io/kakei-c
- alendar/kondate.html?d=2026-12-22
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
-UID:kondate-2026-12-23@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
-DTSTART;VALUE=DATE:20261223
-DTEND;VALUE=DATE:20261224
-SUMMARY:鱈と春菊、じゃがいもの白ワイン蒸し
-DESCRIPTION:【夜】\n・鱈と春菊、じゃがいもの白ワイン
- 蒸し\n・ごはん 100g\n・ニンジンの梅しらす蒸し\n・鶏
- ひき肉とかぶのスープ\n\n献立カレンダーで開く\nhttps:
- //hiro-guitar.github.io/kakei-calendar/kondate.html?d=2026-12-23
+ alendar/kondate.html?d=2026-12-23
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-12-24@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261224
 DTEND;VALUE=DATE:20261225
-SUMMARY:白あえ
-DESCRIPTION:【夜】\n・白あえ\n・ごはん 100g\n・おくら生
- 姜ソテー\n・フライパンで目玉焼き味噌汁\n\n献立カレ
- ンダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/kondate
- .html?d=2026-12-24
+SUMMARY:鱈と春菊、じゃがいもの白ワイン蒸し
+DESCRIPTION:【夜】\n・鱈と春菊、じゃがいもの白ワイン
+ 蒸し\n・ごはん 100g\n・ニンジンの梅しらす蒸し\n・鶏
+ ひき肉とかぶのスープ\n\n献立カレンダーで開く\nhttps:
+ //hiro-guitar.github.io/kakei-calendar/kondate.html?d=2026-12-24
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-12-25@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261225
 DTEND;VALUE=DATE:20261226
+SUMMARY:白あえ
+DESCRIPTION:【夜】\n・白あえ\n・ごはん 100g\n・おくら生
+ 姜ソテー\n・フライパンで目玉焼き味噌汁\n\n献立カレ
+ ンダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/kondate
+ .html?d=2026-12-25
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:kondate-2026-12-26@hiro-guitar.github.io
+DTSTAMP:20261107T002952Z
+DTSTART;VALUE=DATE:20261226
+DTEND;VALUE=DATE:20261227
 SUMMARY:鶏むね肉とトマトの出汁煮
 DESCRIPTION:【夜】\n・鶏むね肉とトマトの出汁煮\n・ごは
  ん 100g\n・包丁要らず！ ゆでキャベツ&ゆで卵のマスタ
  ードサラダ\n・鶏ひき肉とかぶのスープ\n\n献立カレン
  ダーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/kondate.ht
- ml?d=2026-12-25
+ ml?d=2026-12-26
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:kondate-2026-12-26@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
-DTSTART;VALUE=DATE:20261226
-DTEND;VALUE=DATE:20261227
+UID:kondate-2026-12-27@hiro-guitar.github.io
+DTSTAMP:20261107T002952Z
+DTSTART;VALUE=DATE:20261227
+DTEND;VALUE=DATE:20261228
 SUMMARY:茄子のサルシッチャ風スープ
 DESCRIPTION:【夜】\n・茄子のサルシッチャ風スープ\n・ご
  はん 100g\n・ブロッコリーのクルミ醤油和え\n・豆乳と
  大根とホタテ缶、豆腐のスープ\n\n献立カレンダーで
  開く\nhttps://hiro-guitar.github.io/kakei-calendar/kondate.html?d=2026
- -12-26
+ -12-27
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:kondate-2026-12-27@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
-DTSTART;VALUE=DATE:20261227
-DTEND;VALUE=DATE:20261228
+UID:kondate-2026-12-28@hiro-guitar.github.io
+DTSTAMP:20261107T002952Z
+DTSTART;VALUE=DATE:20261228
+DTEND;VALUE=DATE:20261229
 SUMMARY:ぶりとみょうがのバター炒め
 DESCRIPTION:【夜】\n・ぶりとみょうがのバター炒め\n・ご
  はん 100g\n・かぼちゃの黒酢バターソテー\n・豆乳と大
  根とホタテ缶、豆腐のスープ\n\n献立カレンダーで開
  く\nhttps://hiro-guitar.github.io/kakei-calendar/kondate.html?d=2026-12
- -27
+ -28
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:kondate-2026-12-28@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
-DTSTART;VALUE=DATE:20261228
-DTEND;VALUE=DATE:20261229
+UID:kondate-2026-12-29@hiro-guitar.github.io
+DTSTAMP:20261107T002952Z
+DTSTART;VALUE=DATE:20261229
+DTEND;VALUE=DATE:20261230
 SUMMARY:レモンバター香るチキンソテー
 DESCRIPTION:【夜】\n・レモンバター香るチキンソテー\n・
  ごはん 100g\n・ゆでもやしのさっぱり和え\n・【プラス
  ワンメニュー】にんじん豆乳スープ\n\n献立カレンダ
  ーで開く\nhttps://hiro-guitar.github.io/kakei-calendar/kondate.html?
- d=2026-12-28
+ d=2026-12-29
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:kondate-2026-12-29@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
-DTSTART;VALUE=DATE:20261229
-DTEND;VALUE=DATE:20261230
+UID:kondate-2026-12-30@hiro-guitar.github.io
+DTSTAMP:20261107T002952Z
+DTSTART;VALUE=DATE:20261230
+DTEND;VALUE=DATE:20261231
 SUMMARY:くたくたブロッコリーとしらすとレモンの煮込
  みパスタ
 DESCRIPTION:【夜】\n・★くたくたブロッコリーとしらす
  とレモンの煮込みパスタ\n・かぼちゃの共和え\n・わ
  かめと韓国のりの即席味噌汁\n\n献立カレンダーで開
  く\nhttps://hiro-guitar.github.io/kakei-calendar/kondate.html?d=2026-12
- -29
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
-UID:kondate-2026-12-30@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
-DTSTART;VALUE=DATE:20261230
-DTEND;VALUE=DATE:20261231
-SUMMARY:ささみときのこのシンプル塩炒め
-DESCRIPTION:【夜】\n・ささみときのこのシンプル塩炒め\n
- ・ごはん 100g\n・小松菜と卵の煮びたし\n・洋風味噌玉
- \n\n献立カレンダーで開く\nhttps://hiro-guitar.github.io/kakei-
- calendar/kondate.html?d=2026-12-30
+ -30
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2026-12-31@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20261231
 DTEND;VALUE=DATE:20270101
-SUMMARY:青椒肉絲（チンジャオロウスー）
-DESCRIPTION:【夜】\n・青椒肉絲（チンジャオロウスー）\n
- ・ごはん 100g\n・茹で春キャベツのオイルがけ\n・白ス
- ンドゥブ\n\n献立カレンダーで開く\nhttps://hiro-guitar.gith
- ub.io/kakei-calendar/kondate.html?d=2026-12-31
+SUMMARY:ささみときのこのシンプル塩炒め
+DESCRIPTION:【夜】\n・ささみときのこのシンプル塩炒め\n
+ ・ごはん 100g\n・小松菜と卵の煮びたし\n・洋風味噌玉
+ \n\n献立カレンダーで開く\nhttps://hiro-guitar.github.io/kakei-
+ calendar/kondate.html?d=2026-12-31
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-04@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270104
 DTEND;VALUE=DATE:20270105
 SUMMARY:さけのごまムニエル
@@ -771,7 +771,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-05@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270105
 DTEND;VALUE=DATE:20270106
 SUMMARY:ささみときのこのシンプル塩炒め
@@ -785,7 +785,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-06@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270106
 DTEND;VALUE=DATE:20270107
 SUMMARY:鮭の梅バター照り焼き
@@ -799,7 +799,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-07@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270107
 DTEND;VALUE=DATE:20270108
 SUMMARY:豚と白菜の梅酒蒸し
@@ -813,7 +813,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-08@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270108
 DTEND;VALUE=DATE:20270109
 SUMMARY:ニラとしらすのあんかけオムレツ
@@ -828,7 +828,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-09@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270109
 DTEND;VALUE=DATE:20270110
 SUMMARY:ゆで鶏手羽中のセロリソースがけ
@@ -841,7 +841,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-10@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270110
 DTEND;VALUE=DATE:20270111
 SUMMARY:白あえ
@@ -852,7 +852,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-11@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270111
 DTEND;VALUE=DATE:20270112
 SUMMARY:豚肉とキャベツの塩昆布豆乳煮
@@ -866,7 +866,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-12@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270112
 DTEND;VALUE=DATE:20270113
 SUMMARY:きほんの肉野菜炒め
@@ -881,7 +881,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-13@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270113
 DTEND;VALUE=DATE:20270114
 SUMMARY:ぶりの湯煮（カブと梅のソース）
@@ -895,7 +895,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-14@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270114
 DTEND;VALUE=DATE:20270115
 SUMMARY:豚肉と梅の炒め物
@@ -909,7 +909,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-15@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270115
 DTEND;VALUE=DATE:20270116
 SUMMARY:長芋ともち麦の牛スープ
@@ -923,7 +923,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-16@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270116
 DTEND;VALUE=DATE:20270117
 SUMMARY:豚肉とグリンピースの炊き込みご飯
@@ -935,7 +935,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-17@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270117
 DTEND;VALUE=DATE:20270118
 SUMMARY:鱈と春菊、じゃがいもの白ワイン蒸し
@@ -947,7 +947,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-18@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270118
 DTEND;VALUE=DATE:20270119
 SUMMARY:ミニマムアクアパッツァ
@@ -962,7 +962,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-19@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270119
 DTEND;VALUE=DATE:20270120
 SUMMARY:サバ缶パエリア
@@ -976,7 +976,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-20@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270120
 DTEND;VALUE=DATE:20270121
 SUMMARY:豚しゃぶの梅バター和え
@@ -990,7 +990,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-21@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270121
 DTEND;VALUE=DATE:20270122
 SUMMARY:酒蒸しにんじんの洋風卵とじ
@@ -1005,7 +1005,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-22@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270122
 DTEND;VALUE=DATE:20270123
 SUMMARY:レモンバター香るチキンソテー
@@ -1019,7 +1019,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-23@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270123
 DTEND;VALUE=DATE:20270124
 SUMMARY:鱈とキャベツのオレンジ煮込みショートパスタ
@@ -1032,7 +1032,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-24@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270124
 DTEND;VALUE=DATE:20270125
 SUMMARY:ゆで鶏の梅にんにくあえ
@@ -1044,7 +1044,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-25@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270125
 DTEND;VALUE=DATE:20270126
 SUMMARY:鯵のアクアパッツァ
@@ -1058,7 +1058,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-26@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270126
 DTEND;VALUE=DATE:20270127
 SUMMARY:鶏むね肉と野菜のハーブ出汁酢マリネ
@@ -1073,7 +1073,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-27@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270127
 DTEND;VALUE=DATE:20270128
 SUMMARY:サケとミニトマトのクリームチーズ煮
@@ -1088,7 +1088,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-28@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270128
 DTEND;VALUE=DATE:20270129
 SUMMARY:茹で鶏のオクラ和え
@@ -1103,7 +1103,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-29@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270129
 DTEND;VALUE=DATE:20270130
 SUMMARY:煮ない鯖味噌
@@ -1117,7 +1117,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-30@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270130
 DTEND;VALUE=DATE:20270131
 SUMMARY:豚と長いもの黒ごま炒め
@@ -1129,7 +1129,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-01-31@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270131
 DTEND;VALUE=DATE:20270201
 SUMMARY:高野豆腐と鶏ひき肉とミニトマトの洋風煮
@@ -1142,7 +1142,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-01@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270201
 DTEND;VALUE=DATE:20270202
 SUMMARY:さけのごまムニエル
@@ -1156,7 +1156,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-02@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270202
 DTEND;VALUE=DATE:20270203
 SUMMARY:ささみときのこのシンプル塩炒め
@@ -1170,7 +1170,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-03@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270203
 DTEND;VALUE=DATE:20270204
 SUMMARY:鮭の梅バター照り焼き
@@ -1184,7 +1184,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-04@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270204
 DTEND;VALUE=DATE:20270205
 SUMMARY:豚と白菜の梅酒蒸し
@@ -1198,7 +1198,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-05@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270205
 DTEND;VALUE=DATE:20270206
 SUMMARY:ニラとしらすのあんかけオムレツ
@@ -1213,7 +1213,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-06@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270206
 DTEND;VALUE=DATE:20270207
 SUMMARY:ゆで鶏手羽中のセロリソースがけ
@@ -1226,7 +1226,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-07@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270207
 DTEND;VALUE=DATE:20270208
 SUMMARY:白あえ
@@ -1237,7 +1237,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-08@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270208
 DTEND;VALUE=DATE:20270209
 SUMMARY:豚肉とキャベツの塩昆布豆乳煮
@@ -1251,7 +1251,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-09@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270209
 DTEND;VALUE=DATE:20270210
 SUMMARY:きほんの肉野菜炒め
@@ -1266,7 +1266,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-10@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270210
 DTEND;VALUE=DATE:20270211
 SUMMARY:ぶりの湯煮（カブと梅のソース）
@@ -1280,7 +1280,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-11@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270211
 DTEND;VALUE=DATE:20270212
 SUMMARY:豚肉と梅の炒め物
@@ -1294,7 +1294,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-12@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270212
 DTEND;VALUE=DATE:20270213
 SUMMARY:長芋ともち麦の牛スープ
@@ -1308,7 +1308,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-13@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270213
 DTEND;VALUE=DATE:20270214
 SUMMARY:豚肉とグリンピースの炊き込みご飯
@@ -1320,7 +1320,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-14@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270214
 DTEND;VALUE=DATE:20270215
 SUMMARY:鱈と春菊、じゃがいもの白ワイン蒸し
@@ -1332,7 +1332,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-15@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270215
 DTEND;VALUE=DATE:20270216
 SUMMARY:ミニマムアクアパッツァ
@@ -1347,7 +1347,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-16@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270216
 DTEND;VALUE=DATE:20270217
 SUMMARY:サバ缶パエリア
@@ -1361,7 +1361,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-17@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270217
 DTEND;VALUE=DATE:20270218
 SUMMARY:豚しゃぶの梅バター和え
@@ -1375,7 +1375,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-18@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270218
 DTEND;VALUE=DATE:20270219
 SUMMARY:酒蒸しにんじんの洋風卵とじ
@@ -1390,7 +1390,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-19@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270219
 DTEND;VALUE=DATE:20270220
 SUMMARY:レモンバター香るチキンソテー
@@ -1404,7 +1404,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-20@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270220
 DTEND;VALUE=DATE:20270221
 SUMMARY:鱈とキャベツのオレンジ煮込みショートパスタ
@@ -1417,7 +1417,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-21@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270221
 DTEND;VALUE=DATE:20270222
 SUMMARY:ゆで鶏の梅にんにくあえ
@@ -1429,7 +1429,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-22@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270222
 DTEND;VALUE=DATE:20270223
 SUMMARY:鯵のアクアパッツァ
@@ -1443,7 +1443,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-23@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270223
 DTEND;VALUE=DATE:20270224
 SUMMARY:鶏むね肉と野菜のハーブ出汁酢マリネ
@@ -1458,7 +1458,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-24@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270224
 DTEND;VALUE=DATE:20270225
 SUMMARY:サケとミニトマトのクリームチーズ煮
@@ -1473,7 +1473,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-25@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270225
 DTEND;VALUE=DATE:20270226
 SUMMARY:茹で鶏のオクラ和え
@@ -1488,7 +1488,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-26@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270226
 DTEND;VALUE=DATE:20270227
 SUMMARY:煮ない鯖味噌
@@ -1502,7 +1502,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-27@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270227
 DTEND;VALUE=DATE:20270228
 SUMMARY:豚と長いもの黒ごま炒め
@@ -1514,7 +1514,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:kondate-2027-02-28@hiro-guitar.github.io
-DTSTAMP:20261105T100038Z
+DTSTAMP:20261107T002952Z
 DTSTART;VALUE=DATE:20270228
 DTEND;VALUE=DATE:20270301
 SUMMARY:高野豆腐と鶏ひき肉とミニトマトの洋風煮
