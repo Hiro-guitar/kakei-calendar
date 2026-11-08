@@ -368,7 +368,7 @@ async function refreshDb(){
   if(state.mode!=='sheet')return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
 }
-const BUILD='1794098803';
+const BUILD='1794099152';
 async function checkUpdate(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});const s=await r.text();const m=s.match(/const BUILD='([0-9]+)'/);if(m&&m[1]!==BUILD){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))location.reload()}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshDb();checkUpdate()}});
 setTimeout(checkUpdate,3000);
@@ -460,7 +460,10 @@ state.bike=lsGet('kondate-bike',{});state.eat=lsGet('kondate-eat',{});
 const bikeOf=k=>{const d=(state.days[k]||{}).bikemin;if(d)return d;const v=state.bike[k];return typeof v==='number'?{g:v}:(v||{})};
 const eatOf=k=>(state.days[k]||{}).eat||state.eat[k]||[];
 function setDayField(k,f,val){const o={...(state.days[k]||{})};if(val==null)delete o[f];else o[f]=val;saveDay(k,o)}
-const bikeExtra=k=>{const v=bikeOf(k);return Math.round(BK.reduce((a,[id,,r])=>a+(v[id]||0)*r,0)*BIKE_SHARE/10)*10};
+const STEP_K=0.035; // 1歩あたりの消費（約75kg・歩幅65cm、安静時の分を除いた正味）
+const stepsOf=k=>+((state.days[k]||{}).steps)||0;
+const burnOf=k=>{const v=bikeOf(k);return Math.round(BK.reduce((a,[id,,r])=>a+(v[id]||0)*r,0)+stepsOf(k)*STEP_K)};
+const bikeExtra=k=>Math.round(burnOf(k)*BIKE_SHARE/10)*10;
 state.fav=lsGet('kondate-fav',[]);
 function saveFav(o){state.fav=o;lsSet('kondate-fav',o);renderCard()}
 let addSlot=null;
@@ -740,7 +743,7 @@ function renderCard(){
     const seg=(v,cls)=>'<i class="'+cls+'" style="width:'+Math.max(0,Math.min(100,v/c.target*100))+'%"></i>';
     if(p.t.cheat){
       h+='<section class="left"><p class="big" style="font-size:1.6rem">今日はお休み</p><p class="left-s">今日は計算なし。アイス貯金にも点数にも入りません。明日からまたいつもどおりで大丈夫です</p></section>';
-      {const v=bikeOf(sel),ex=bikeExtra(sel),burn=Math.round(BK.reduce((a,[id,,r])=>a+(v[id]||0)*r,0));if(burn)h+='<p class="hint" style="margin:0;font-size:1rem">自転車で 約<b>'+burn+'</b>kcal 使いました</p>';if(0)h+='<details class="bike"><summary><span>自転車</span><span class="muted">'+(burn?burn+'kcal':'乗った分を入れる')+'</span></summary>'+BK.map(([id,n])=>'<div class="bikein"><label for="bk-'+id+'">'+n+'</label><input type="number" id="bk-'+id+'" data-bk="'+id+'" inputmode="numeric" min="0" max="300" step="5" value="'+(v[id]||'')+'" placeholder="0"><span>分</span></div>').join('')+'</details>';}
+      {const v=bikeOf(sel),ex=bikeExtra(sel),burn=burnOf(sel);if(burn)h+='<p class="hint" style="margin:0;font-size:1rem">'+(stepsOf(sel)&&BK.some(([id])=>v[id])?'自転車と歩きで':stepsOf(sel)?'歩いて':'自転車で')+' 約<b>'+burn+'</b>kcal 使いました</p>';if(0)h+='<details class="bike"><summary><span>自転車</span><span class="muted">'+(burn?burn+'kcal':'乗った分を入れる')+'</span></summary>'+BK.map(([id,n])=>'<div class="bikein"><label for="bk-'+id+'">'+n+'</label><input type="number" id="bk-'+id+'" data-bk="'+id+'" inputmode="numeric" min="0" max="300" step="5" value="'+(v[id]||'')+'" placeholder="0"><span>分</span></div>').join('')+'</details>';}
     } else {
     // 残り
     h+='<section class="left'+(c.left<0?' over':'')+'"><div class="lrow"><div><p class="left-l">'+(c.left>=0?'今日あと':'今日は')+'</p><p class="big">'+Math.abs(c.left)+'<small>kcal'+(c.left<0?' オーバー':'')+'</small></p></div>'
@@ -777,7 +780,7 @@ function renderCard(){
     const rv=review(sel);
     if(rv)h+='<section class="review"><div class="score"><b>'+rv.score+'</b><small>点</small></div><div><p class="rv-g">'+(sel===today?'今日の点数（途中経過）':'この日の点数')+'</p></div></section>';
     const v=bikeOf(sel);
-    h+='<details class="bike"><summary><span>自転車</span><span class="muted">'+(p.t.cheat?(c.ex?'約'+Math.round(BK.reduce((a,[id,,r])=>a+(bikeOf(sel)[id]||0)*r,0))+'kcal使った':'乗った分を入れる'):(c.ex?'+'+c.ex+'kcal':'乗った分を足す'))+'</span></summary>'+BK.map(([id,n,r])=>'<div class="bikein"><label for="bk-'+id+'">'+n+'</label><input type="number" id="bk-'+id+'" data-bk="'+id+'" inputmode="numeric" min="0" max="300" step="5" value="'+(v[id]||'')+'" placeholder="0"><span>分</span><span class="muted small">30分で+'+Math.round(r*30*BIKE_SHARE)+'kcal</span></div>').join('')+'</details>';
+    h+='<details class="bike"><summary><span>自転車・歩数</span><span class="muted">'+(p.t.cheat?(burnOf(sel)?'約'+burnOf(sel)+'kcal使った':'動いた分を入れる'):(c.ex?'+'+c.ex+'kcal':'動いた分を足す'))+'</span></summary>'+BK.map(([id,n,r])=>'<div class="bikein"><label for="bk-'+id+'">'+n+'</label><input type="number" id="bk-'+id+'" data-bk="'+id+'" inputmode="numeric" min="0" max="300" step="5" value="'+(v[id]||'')+'" placeholder="0"><span>分</span><span class="muted small">30分で+'+Math.round(r*30*BIKE_SHARE)+'kcal</span></div>').join('')+'<div class="bikein"><label for="steps">歩数</label><input type="number" id="steps" data-steps="1" inputmode="numeric" min="0" max="60000" step="100" value="'+(stepsOf(sel)||'')+'" placeholder="0"><span>歩</span><span class="muted small">'+(p.t.cheat?'1000歩で約'+Math.round(1000*STEP_K)+'kcal':'1000歩で+'+Math.round(1000*STEP_K*BIKE_SHARE)+'kcal')+'</span></div></details>';
     if(!p.t.cheat)h+='<details class="more"><summary>この日の栄養（献立から）</summary>'+nutHtml(p.t.v)+'</details>';
   } else h+='<p class="small" style="margin:0">お正月は献立なし。おせちやお雑煮は好きなものを、量だけ控えめに。</p>';
   const dd=state.days[sel]||{};
@@ -803,6 +806,7 @@ function renderCard(){
   card.querySelectorAll('[data-favdel2]').forEach(b=>b.onclick=()=>{b.closest('li').remove()});
   card.querySelectorAll('[data-favdone]').forEach(b=>b.onclick=()=>{const o=[];card.querySelectorAll('.favlist li').forEach(li=>{const n=li.querySelector('[data-fn]').value.trim().slice(0,40),k=Math.round(+li.querySelector('[data-fk]').value);if(n&&k>0&&k<5000)o.push([n,k])});favEdit=false;saveFav(o)});
   card.querySelectorAll('[data-eatdel]').forEach(b=>b.onclick=()=>{const l=eatOf(sel).slice();l.splice(+b.dataset.eatdel,1);setDayField(sel,'eat',l.length?l:null);renderCard()});
+  card.querySelectorAll('input[data-steps]').forEach(si=>si.onchange=()=>{const val=Math.max(0,Math.min(60000,parseInt(si.value)||0));const o={...(state.days[sel]||{})};if(val)o.steps=val;else delete o.steps;saveDay(sel,o);renderCard();const dt=document.querySelector('details.bike');if(dt)dt.open=true});
   card.querySelectorAll('input[data-bk]').forEach(bi=>bi.onchange=()=>{const val=Math.max(0,Math.min(300,parseInt(bi.value)||0));const cur={...bikeOf(sel)};if(val)cur[bi.dataset.bk]=val;else delete cur[bi.dataset.bk];const o={...(state.days[sel]||{})};if(Object.keys(cur).length)o.bikemin=cur;else delete o.bikemin;saveDay(sel,o);renderCard();const dt=document.querySelector('details.bike');if(dt)dt.open=true});
   const memo=card.querySelector('#memo');memo.onchange=()=>{const o={...(state.days[sel]||{})};o.memo=memo.value.slice(0,500);saveDay(sel,o)};
 }
@@ -896,12 +900,12 @@ function renderPlan(){
 <div class="card prose"><h2>おやつとアイス</h2>
 <p>夜のおやつは200kcalまで毎日食べていい。もっと食べたい日は、アイス貯金を使う。</p>
 <ul><li>袋のお菓子は、先に器に1回分だけ出す。アイスは1個ずつのもの（ピノ、雪見だいふく、パピコなど）が量を合わせやすい</li><li>温かいお茶を一緒に出すと、2個目に手が伸びにくい</li><li>超えた日は、翌日に減らして取り戻さなくていい。アイス貯金から使ったことになるだけ</li><li>軽いアイス：パピコ1本74kcal、白熊85〜89kcal、アイスの実101kcal、SUNAO 110kcal（<a class="rec" href="https://maquia.hpplus.jp/bikatsu/healthcare-diet/95830/" target="_blank" rel="noopener">MAQUIAの低カロリーアイス特集</a>より）</li></ul></div>
-<div class="card prose"><h2>自転車</h2>
+<div class="card prose"><h2>自転車と歩数</h2>
 <p>ふだんの移動を自転車にする。わざわざ運動の時間は作らない。乗った分の半分を、その日の枠に足せる（「今日」の自転車に分数を入れる）。残りの半分は、そのまま痩せる分になる。</p>
 <div class="tbl"><table><thead><tr><th>自転車</th><th>30分の消費</th><th>使う場面</th></tr></thead><tbody>
 <tr><td>ブリヂストン（アシストなし）</td><td>約170kcal</td><td>1人で出かけるとき。こちらを優先</td></tr>
 <tr><td>ギュット（電動アシスト）</td><td>約130kcal</td><td>子どもを乗せるとき、荷物が多いとき</td></tr></tbody></table></div>
-<ul class="small"><li>分数は1日の合計（往復や何回かに分けてもOK）</li><li>1月からは通勤や送迎で乗った分も数える</li><li>ヘルメットを着用。子どもを乗せる日は安全優先</li></ul>
+<ul class="small"><li>歩数も入れられる。スマホのヘルスケアに出る1日の歩数をそのまま入れればOK。1000歩で約35kcal（その半分を枠に足す）</li><li>分数は1日の合計（往復や何回かに分けてもOK）</li><li>1月からは通勤や送迎で乗った分も数える</li><li>ヘルメットを着用。子どもを乗せる日は安全優先</li></ul>
 <p class="small muted">消費の数字は <a class="rec" href="https://oggi.jp/6752715" target="_blank" rel="noopener">Oggiのメッツ表</a> と <a class="rec" href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10348875" target="_blank" rel="noopener">ノルウェーの研究（2023年）</a> から計算。</p></div>
 <div class="card prose"><h2>栄養</h2>
 <p>献立の56日分を日本食品標準成分表の値で計算した、1日あたりの中央値。長谷川あかりさんのレシピ約290品（BAILA・MAQUIA・LEE・YouTube・Xなど）から組み直した後の数字です。昼（自由・400kcal）は、ふつうの昼ごはんの平均で見込んでいます。</p>
