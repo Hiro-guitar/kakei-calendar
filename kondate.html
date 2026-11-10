@@ -371,7 +371,7 @@ async function refreshDb(){
   if(state.mode!=='sheet')return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
 }
-const BUILD='1794317374';
+const BUILD='1794317388';
 async function checkUpdate(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});const s=await r.text();const m=s.match(/const BUILD='([0-9]+)'/);if(m&&m[1]!==BUILD){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))location.reload()}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshDb();checkUpdate()}});
 setTimeout(checkUpdate,3000);
@@ -457,7 +457,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-r]');if(b)
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeRecipe()});
 const f10=x=>Math.floor(x/10)*10;
 // 自転車：見通しには入れていない。乗った分だけ食べてよい（Oggiのメッツ表と体重75kgから：ギュット30分約130kcal、ブリヂストン30分約170kcal）
-const BK=[['g','ギュット（電動）',130/30],['b','ブリヂストン',170/30]];
+const BK=[['g','ギュット',130/30],['b','ブリヂストン',170/30]];
 const DAY=1300,SNACK=200,BIKE_SHARE=0.5; // 1日1,300kcal。夜のおやつ200を含む。自転車は消費の半分だけ枠に足す
 state.bike=lsGet('kondate-bike',{});state.eat=lsGet('kondate-eat',{});
 const bikeOf=k=>{const d=(state.days[k]||{}).bikemin;if(d)return d;const v=state.bike[k];return typeof v==='number'?{g:v}:(v||{})};
