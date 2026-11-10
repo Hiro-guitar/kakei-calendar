@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="献立">
 <meta name="robots" content="noindex">
@@ -156,6 +156,8 @@ details.more textarea{margin-top:6px}
 .edslot{display:flex;gap:4px}.edslot button{font:inherit;font-size:.82rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:3px 10px;cursor:pointer}
 .edslot button[aria-pressed="true"]{background:var(--olive);border-color:var(--olive);color:var(--surface)}
 .edbtns{display:flex;gap:10px;align-items:center;margin-left:auto}
+.bikein .small{flex-basis:100%;padding-left:calc(7.5em + 8px);margin-top:-4px}
+html,body{overflow-x:hidden}
 /* calendar */
 .tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tabs button{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 14px;border-radius:999px;cursor:pointer}
@@ -218,7 +220,7 @@ table.ing td.num{white-space:normal;text-align:right}
 .eatq{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.eatq button{font:inherit;font-size:.78rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:3px 10px;cursor:pointer}
 .fav{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;background:var(--surface)}.fav button{border:0!important;background:none!important}.fav .favx{color:var(--muted);padding:3px 8px 3px 2px!important}
 .eatleft{margin:8px 0 0;font-size:.95rem;display:flex;flex-wrap:wrap;gap:6px;align-items:baseline}.eatleft b{color:var(--leaf);font-size:1.05rem}.eatleft.over b{color:var(--warn)}
-.bikein{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:.88rem;flex-wrap:wrap}.bikein label{min-width:8.5em}.bikein input{width:5.5em;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit}
+.bikein{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:.88rem;flex-wrap:wrap}.bikein label{flex:0 0 7.5em}.bikein input{width:5em;font:inherit;font-size:16px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit}
 .free ul{margin:0;padding-left:1.1em;display:grid;gap:2px}
 .total span:last-child{white-space:nowrap}
 .total{display:flex;gap:8px;justify-content:space-between;font-weight:700;font-variant-numeric:tabular-nums;border-top:1px solid var(--line);padding-top:10px}
@@ -256,6 +258,7 @@ button.link{font:inherit;border:0;background:none;color:var(--muted);text-decora
 .ms input{width:18px;height:18px;margin-top:3px;accent-color:var(--leaf);flex:none}
 .spark{width:100%;height:160px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+input,textarea,select{font-size:16px!important}
 </style>
 </head>
 <body>
@@ -368,7 +371,7 @@ async function refreshDb(){
   if(state.mode!=='sheet')return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
 }
-const BUILD='1794304672';
+const BUILD='1794317374';
 async function checkUpdate(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});const s=await r.text();const m=s.match(/const BUILD='([0-9]+)'/);if(m&&m[1]!==BUILD){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))location.reload()}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshDb();checkUpdate()}});
 setTimeout(checkUpdate,3000);
