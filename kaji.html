@@ -337,7 +337,9 @@ function choreCard(c, todays){
     if (last.by !== S.me) meta += `<button class="thanks ${last.thanks?'on':''}" data-act="thanks" data-id="${last.id}">${last.thanks?'♥ ありがとう済':'♡ ありがとう'}</button>`;
     else if (last.thanks) meta += `<span class="thanks on">♥ ありがとうが届いてる</span>`;
   }
-  const ck = done ? `<span class="check on ${last.by}">✓</span>` : `<button class="check" data-act="do" data-id="${c.id}" aria-label="やった"></button>`;
+  const ck = done ? (last.by === S.me
+      ? `<button class="check on ${last.by}" data-act="uncheck" data-id="${last.id}" aria-label="取り消す">✓</button>`
+      : `<button class="check on ${last.by}" data-act="notmine" aria-label="${esc(nm(last.by))}の記録">✓</button>`) : `<button class="check" data-act="do" data-id="${c.id}" aria-label="やった"></button>`;
   return `<div class="card ${done?'done':''}"><span class="stripe ${c.owner}"></span>
     <div class="body" data-act="open" data-id="${c.id}"><div class="name">${esc(c.name)}</div><div class="meta">${meta}</div></div>${ck}</div>`;
 }
@@ -533,6 +535,8 @@ document.addEventListener('click', e => {
     case 'open': sheetChore(id); break;
     case 'thanks': toggleThanks(L); break;
     case 'undo': remove(L); toast('取り消しました'); if (el.dataset.close) closeSheet(); break;
+    case 'uncheck': remove(L); toast('チェックを外しました'); break;
+    case 'notmine': toast('相手がつけたチェックは外せません'); break;
     case 'tick': el.classList.toggle('on'); break;
     case 'free': doFree(el.dataset.v); closeSheet(); break;
     case 'freein': doFree($('freein').value); closeSheet(); break;
