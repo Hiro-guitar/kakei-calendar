@@ -359,6 +359,13 @@ nav.tabs .tile{width:38px;height:38px}
 .uw.s4 .uwname{opacity:1;transform:none}
 .uwbtns{opacity:0;transition:opacity .5s .4s;pointer-events:none}
 .uw.s4 .uwbtns{opacity:1;pointer-events:auto}
+.ribgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.ribgrid button{position:relative;background:#fff;border-radius:14px;padding:4px 2px 6px;display:flex;flex-direction:column;align-items:center;box-shadow:0 2px 5px rgba(31,82,110,.1)}
+.ribgrid button.on{box-shadow:inset 0 0 0 2.5px var(--amber)}
+.ribgrid svg{width:56px;height:44px}
+.ribgrid.charms svg{width:34px;height:34px;margin:4px 0}
+.ribgrid span{font-size:10.5px;font-weight:800;line-height:1.2;text-align:center}
+.ribgrid em{position:absolute;top:-5px;right:-3px;font-style:normal;background:var(--red);color:#fff;font-size:8.5px;font-weight:800;padding:1px 5px;border-radius:999px}
 </style>
 </head>
 <body>
@@ -3215,13 +3222,13 @@ function greensSVG0(g, cx, cy, R, seed, under){
   if (g.t === 'kasumi' && !under){ const m = { s:10, m:18, l:28 }[g.n] || 18; for (let i = 0; i < m; i++){ const a = rnd(seed, i + 90) * Math.PI * 2, d = Math.sqrt(rnd(seed, i + 120)) * R * 1.05; o += `<g transform="translate(${(cx + Math.cos(a) * d * 1.15).toFixed(1)},${(cy + Math.sin(a) * d * .65).toFixed(1)})">${[[0, 0], [1.4, .6], [-.8, 1.2]].map(([dx, dy]) => `<circle cx="${dx}" cy="${dy}" r=".9" fill="#fdfdf8" stroke="#d8d8cc" stroke-width=".2"/>`).join('')}</g>`; } }
   return o;
 }
-function ribbonSVG(r, x, y, w){ return `<g class="bqr">${ribbonSVG0(r, x, y, w)}</g>`; }
+var ribbonSVG = function(r, x, y, w){ return `<g class="bqr">${ribbonSVG0(r, x, y, w)}</g>`; };
 function ribbonSVG0(r, x, y, w){
   if (r.st === 'mizuhiki') return `<path d="M${x - w/2} ${y - .6} H ${x + w/2} M${x - w/2} ${y + .3} H ${x + w/2} M${x - w/2} ${y + 1.2} H ${x + w/2}" stroke="#d8303a" stroke-width=".55"/><path d="M${x - w/2} ${y - .15} H ${x + w/2} M${x - w/2} ${y + .75} H ${x + w/2}" stroke="#fbfaf6" stroke-width=".5"/>${[-1, 1].map(sd => `<path d="M${x} ${y + .3} C ${x + sd * 3} ${y - 4} ${x + sd * 7} ${y - 3} ${x + sd * 6} ${y + .3} C ${x + sd * 5} ${y + 3.6} ${x + sd * 2} ${y + 2.4} ${x} ${y + .3}" stroke="#d8303a" stroke-width=".55" fill="none"/><path d="M${x} ${y + .3} C ${x + sd * 2.6} ${y - 3} ${x + sd * 5.6} ${y - 2.2} ${x + sd * 5} ${y + .3}" stroke="#e2b23a" stroke-width=".5" fill="none"/><path d="M${x} ${y + .6} L ${x + sd * 4} ${y + 8}" stroke="${sd < 0 ? '#d8303a' : '#fbfaf6'}" stroke-width=".6"/>`).join('')}<circle cx="${x}" cy="${y + .3}" r="1.2" fill="#e2b23a"/>`;
   if (r.st === 'xmas') return ribbonSVG00({ st:'bow', c:'red' }, x, y, w) + `<g transform="translate(${x + 2},${y - 2.6})"><path d="M0 0 C 2 -2 4 -2 6 0 C 5 .8 5 2 6 2.8 C 4 3.6 2 3.2 0 0Z" fill="#2f7a3a"/><path d="M0 0 C -1 -2.4 -.4 -4.6 1.4 -6 C 1.8 -4.6 2.8 -4 3.8 -4.4 C 3.4 -2 2 -.6 0 0Z" fill="#3a8a42"/>${[[-.6, -.4], [.6, .4], [-.8, 1]].map(([dx, dy]) => `<circle cx="${dx}" cy="${dy}" r=".9" fill="#d8282a"/>`).join('')}</g>`;
   return ribbonSVG00(r, x, y, w);
 }
-function ribbonSVG00(r, x, y, w){
+var ribbonSVG00 = function(r, x, y, w){
   const c = (RIB_C[r.c] || RIB_C.red)[1], dk = shade(c, -.3), st = r.st || 'bow';
   if (st === 'twine') return `<path d="M${x - w/2} ${y} Q ${x} ${y + 1.6} ${x + w/2} ${y} M${x - w/2} ${y + 1.4} Q ${x} ${y + 3} ${x + w/2} ${y + 1.4}" stroke="#b8925a" stroke-width=".7" fill="none"/><path d="M${x} ${y + 1} c -3 -3 -5 -1 -3.4 .8 c 1 1 2.4 .2 3.4 -.8 c 3 -3 5 -1 3.4 .8 c -1 1 -2.4 .2 -3.4 -.8 M${x} ${y + 1} l -2 6 M${x} ${y + 1} l 2.2 6.4" stroke="#a8824a" stroke-width=".6" fill="none"/>`;
   const band = st === 'lace' ? `<path d="M${x - w/2} ${y - 1.4} H ${x + w/2} V ${y + 1.6} ${Array.from({length:Math.round(w / 1.6)}, (_, i) => `Q ${x + w/2 - (i + .5) * 1.6} ${y + 2.6} ${x + w/2 - (i + 1) * 1.6} ${y + 1.6}`).join(' ')}Z" fill="#fbfaf4" stroke="#d8d4c8" stroke-width=".25"/>${Array.from({length:Math.round(w / 2.4)}, (_, i) => `<circle cx="${x - w/2 + 1.2 + i * 2.4}" cy="${y}" r=".45" fill="none" stroke="#d8d4c8" stroke-width=".25"/>`).join('')}`
@@ -3229,7 +3236,71 @@ function ribbonSVG00(r, x, y, w){
   const bc = st === 'lace' ? (r.c === 'white' ? '#fbfaf6' : c) : c;
   if (st === 'knot') return band + `<path d="M${x - .6} ${y + 1} L ${x - 3.4} ${y + 8} L ${x - 1.6} ${y + 7.4} M${x + .6} ${y + 1} L ${x + 3} ${y + 8.6} L ${x + 1.2} ${y + 7.8}" stroke="${c}" stroke-width="1.4" fill="none" stroke-linecap="round"/><ellipse cx="${x}" cy="${y + .4}" rx="1.6" ry="1.9" fill="${shade(c, .08)}" stroke="${dk}" stroke-width=".3"/>`;
   return band + `<path d="M${x} ${y + .2} C ${x - 6} ${y - 5} ${x - 11} ${y - 2} ${x - 9} ${y + 1.4} C ${x - 7.6} ${y + 3.8} ${x - 3} ${y + 2.2} ${x} ${y + .2}Z" fill="${bc}" stroke="${shade(bc, -.3)}" stroke-width=".3"/><path d="M${x} ${y + .2} C ${x + 6} ${y - 5} ${x + 11} ${y - 2} ${x + 9} ${y + 1.4} C ${x + 7.6} ${y + 3.8} ${x + 3} ${y + 2.2} ${x} ${y + .2}Z" fill="${bc}" stroke="${shade(bc, -.3)}" stroke-width=".3"/><path d="M${x - 1} ${y + 1.2} L ${x - 4.2} ${y + 9} L ${x - 2.2} ${y + 8} L ${x - 1.6} ${y + 10} L ${x} ${y + 1.8} M${x + 1} ${y + 1.2} L ${x + 4.2} ${y + 9} L ${x + 2.2} ${y + 8} L ${x + 1.6} ${y + 10} L ${x} ${y + 1.8}" fill="${shade(bc, -.06)}" stroke="${shade(bc, -.3)}" stroke-width=".3"/><circle cx="${x}" cy="${y + .4}" r="1.5" fill="${shade(bc, .1)}" stroke="${shade(bc, -.3)}" stroke-width=".3"/>`;
+};
+/* ===== リボン追加＆チャーム ===== */
+Object.assign(RIB_ST, { double:'ダブル', organza:'オーガンジー', dotrib:'ドット', striperib:'ストライプ', velvet:'ベルベット', curly:'くるくる', rosette:'ロゼット', pearl:'パール付き' });
+let RIBN = 0;
+function bowParts(x, y, fill, edge, k = 1, tails = true){
+  const L = (sd) => `<path d="M${x} ${y + .2} C ${x + sd * 6 * k} ${y - 5 * k} ${x + sd * 11 * k} ${y - 2 * k} ${x + sd * 9 * k} ${y + 1.4 * k} C ${x + sd * 7.6 * k} ${y + 3.8 * k} ${x + sd * 3 * k} ${y + 2.2 * k} ${x} ${y + .2}Z" fill="${fill}" stroke="${edge}" stroke-width=".3"/><path d="M${x + sd * 1.4 * k} ${y - .4 * k} C ${x + sd * 4 * k} ${y - 2.6 * k} ${x + sd * 7 * k} ${y - 2.4 * k} ${x + sd * 8 * k} ${y - .6 * k}" stroke="#ffffff" stroke-width=".45" opacity=".4" fill="none"/>`;
+  const T = (sd) => `<path d="M${x + sd * 1 * k} ${y + 1.2 * k} L ${x + sd * 4.2 * k} ${y + 9 * k} L ${x + sd * 2.2 * k} ${y + 8 * k} L ${x + sd * 1.6 * k} ${y + 10 * k} L ${x} ${y + 1.8 * k}" fill="${fill}" stroke="${edge}" stroke-width=".3"/>`;
+  return (tails ? T(-1) + T(1) : '') + L(-1) + L(1);
 }
+const _rib00 = ribbonSVG00;
+ribbonSVG00 = function(r, x, y, w){
+  const c = (RIB_C[r.c] || RIB_C.red)[1], dk = shade(c, -.3), st = r.st || 'bow', id = 'rb' + (RIBN++);
+  const band = (fill) => `<path d="M${x - w/2} ${y - 1.4} Q ${x} ${y - .4} ${x + w/2} ${y - 1.4} L ${x + w/2} ${y + 1.4} Q ${x} ${y + 2.4} ${x - w/2} ${y + 1.4}Z" fill="${fill}" stroke="${dk}" stroke-width=".3"/>`;
+  const knot = (fill) => `<ellipse cx="${x}" cy="${y + .4}" rx="1.6" ry="1.5" fill="${fill}" stroke="${dk}" stroke-width=".3"/>`;
+  if (st === 'double'){ const c2 = r.c === 'white' ? '#e2b23a' : '#fbfaf6'; return band(c) + bowParts(x, y, c, dk, 1.12) + bowParts(x, y + .3, c2, shade(c2, -.3), .7, false) + knot(c2); }
+  if (st === 'organza') return `<g opacity=".62">${band(c)}${bowParts(x, y, c, dk, 1.15)}</g><g fill="none" stroke="#ffffff" stroke-width=".35" opacity=".8">${bowParts(x, y, 'none', '#ffffff', 1.15)}</g>${knot(shade(c, .1))}`;
+  if (st === 'dotrib' || st === 'striperib'){ const ink = r.c === 'white' ? '#e8586a' : '#ffffff'; const pat = st === 'dotrib' ? `<pattern id="${id}" width="2.2" height="2.2" patternUnits="userSpaceOnUse"><rect width="2.2" height="2.2" fill="${c}"/><circle cx="1.1" cy="1.1" r=".45" fill="${ink}"/></pattern>` : `<pattern id="${id}" width="1.8" height="1.8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="1.8" height="1.8" fill="${c}"/><rect width=".7" height="1.8" fill="${ink}" opacity=".85"/></pattern>`;
+    return `<defs>${pat}</defs>` + band(`url(#${id})`) + bowParts(x, y, `url(#${id})`, dk, 1.08) + knot(c); }
+  if (st === 'velvet'){ const vc = shade(c, -.2); return `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shade(vc, .25)}"/><stop offset=".5" stop-color="${vc}"/><stop offset="1" stop-color="${shade(vc, -.3)}"/></linearGradient></defs>` + band(`url(#${id})`) + bowParts(x, y, `url(#${id})`, shade(vc, -.35), 1.1) + knot(vc); }
+  if (st === 'curly') return band(c) + [-1, 1, -.5, .5].map((sd, i) => { let d = `M${x} ${y + 1}`; for (let j = 1; j <= 7; j++){ d += ` q ${(sd * 2.2).toFixed(1)} ${(.6 + i * .2).toFixed(1)} ${(sd * .4).toFixed(1)} ${(1.8 + i * .2).toFixed(1)} q ${(-sd * 1.4).toFixed(1)} .4 ${(sd * .5).toFixed(1)} ${(.6).toFixed(1)}`; } return `<path d="${d}" stroke="${i % 2 ? shade(c, .15) : c}" stroke-width=".8" fill="none" stroke-linecap="round"/>`; }).join('') + `<circle cx="${x}" cy="${y + .4}" r="2" fill="${c}" stroke="${dk}" stroke-width=".3"/>` + Array.from({length:8}, (_, i) => `<path d="M${x} ${y + .4} q ${(Math.cos(i * .785) * 3).toFixed(1)} ${(Math.sin(i * .785) * 3 - 1).toFixed(1)} ${(Math.cos(i * .785) * 3.6).toFixed(1)} ${(Math.sin(i * .785) * 3.6).toFixed(1)}" stroke="${c}" stroke-width=".9" fill="none" stroke-linecap="round"/>`).join('');
+  if (st === 'rosette') return band(c) + bowParts(x, y + 1, c, dk, .9, true).replace(/<path d="M[^"]*C[^"]*Z"[^>]*\/><path[^>]*\/>/g, '') + Array.from({length:10}, (_, i) => { const a = i * 36; return `<g transform="translate(${x},${y + .4}) rotate(${a})"><path d="M0 0 C 1.8 -1.2 1.8 -4.4 0 -4.8 C -1.8 -4.4 -1.8 -1.2 0 0Z" fill="${i % 2 ? c : shade(c, .12)}" stroke="${dk}" stroke-width=".25"/></g>`; }).join('') + Array.from({length:6}, (_, i) => `<g transform="translate(${x},${y + .4}) rotate(${i * 60 + 30})"><path d="M0 0 C 1.1 -.8 1.1 -2.6 0 -2.9 C -1.1 -2.6 -1.1 -.8 0 0Z" fill="${shade(c, .2)}" stroke="${dk}" stroke-width=".2"/></g>`).join('') + `<circle cx="${x}" cy="${y + .4}" r="1" fill="${shade(c, -.1)}"/>`;
+  if (st === 'pearl') return band(c) + `<path d="M${x - w/2 + 1} ${y + 1.6} Q ${x} ${y + 7} ${x + w/2 - 1} ${y + 1.6}" fill="none" stroke="none" id="${id}"/>` + Array.from({length:11}, (_, i) => { const t = i / 10, px = (1 - t) * (1 - t) * (x - w/2 + 1) + 2 * (1 - t) * t * x + t * t * (x + w/2 - 1), py = (1 - t) * (1 - t) * (y + 1.6) + 2 * (1 - t) * t * (y + 7) + t * t * (y + 1.6); return `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r=".65" fill="#fbf8f0" stroke="#d8d0c0" stroke-width=".15"/><circle cx="${(px - .2).toFixed(1)}" cy="${(py - .2).toFixed(1)}" r=".2" fill="#fff"/>`; }).join('') + bowParts(x, y, c, dk, 1) + `<circle cx="${x}" cy="${y + .4}" r="1.3" fill="#fbf8f0" stroke="#d8d0c0" stroke-width=".2"/>`;
+  return _rib00(r, x, y, w);
+};
+/* --- チャーム --- */
+const CHARMS = {
+  heart:{ l:'ハート', on:() => true }, star:{ l:'星', on:() => true }, clover:{ l:'四つ葉', on:() => true }, moonc:{ l:'月', on:() => true },
+  kagami:{ l:'鏡餅', on:(m, d) => m === 1 && d <= 15 }, mame:{ l:'福豆', on:(m, d) => (m === 1 && d >= 25) || (m === 2 && d <= 3) }, choco:{ l:'チョコ', on:(m, d) => m === 2 && d <= 14 },
+  hina:{ l:'おひなさま', on:(m, d) => (m === 2 && d >= 18) || (m === 3 && d <= 3) }, sakurac:{ l:'桜', on:(m) => m === 3 || m === 4 }, tulipc:{ l:'チューリップ', on:(m) => m === 4 || m === 5 },
+  koinobori:{ l:'こいのぼり', on:(m, d) => (m === 4 && d >= 15) || (m === 5 && d <= 5) }, teru:{ l:'てるてる坊主', on:(m) => m === 6 }, tanzaku:{ l:'短冊', on:(m) => m === 7 },
+  kingyoc:{ l:'金魚', on:(m) => m === 7 || m === 8 }, furin:{ l:'風鈴', on:(m) => m === 7 || m === 8 }, usagi:{ l:'うさぎ', on:(m) => m === 9 }, pumpkinc:{ l:'かぼちゃ', on:(m) => m === 10 },
+  donguri:{ l:'どんぐり', on:(m) => m === 10 || m === 11 }, kinokoc:{ l:'きのこ', on:(m) => m === 11 }, snowman:{ l:'雪だるま', on:(m) => m === 12 || m <= 2 }, bell:{ l:'ベル', on:(m, d) => m === 12 && d <= 25 },
+};
+function charmArt(k){
+  const ol = c => `stroke="${shade(c, -.3)}" stroke-width=".25"`;
+  switch (k){
+    case 'heart': return `<path d="M0 2.6 C -3.6 0 -3 -3 -1.4 -3 C -.6 -3 0 -2.4 0 -1.8 C 0 -2.4 .6 -3 1.4 -3 C 3 -3 3.6 0 0 2.6Z" fill="#e2b23a" ${ol('#e2b23a')}/><path d="M-1.6 -2 Q -2.2 -1 -1.6 0" stroke="#fff" stroke-width=".4" opacity=".6" fill="none"/>`;
+    case 'star': return `<path d="M0 -3.2 L .9 -1 L 3.2 -1 L 1.4 .4 L 2 2.8 L 0 1.4 L -2 2.8 L -1.4 .4 L -3.2 -1 L -.9 -1Z" fill="#f2c84a" ${ol('#e2b23a')} stroke-linejoin="round"/><circle cx="-.6" cy="-.8" r=".4" fill="#fff" opacity=".6"/>`;
+    case 'clover': return [0, 90, 180, 270].map(a => `<path d="M0 0 C -1.6 -1.2 -1.4 -3 0 -2.4 C 1.4 -3 1.6 -1.2 0 0Z" fill="#5aa84a" ${ol('#5aa84a')} transform="rotate(${a})"/>`).join('') + `<path d="M0 0 Q .6 2 1.6 3" stroke="#4a8a3a" stroke-width=".4" fill="none"/>`;
+    case 'moonc': return `<path d="M1 -3 A 3.2 3.2 0 1 0 1 3 A 2.4 2.4 0 1 1 1 -3Z" fill="#f2d24a" ${ol('#e2b23a')}/><circle cx="2.2" cy="-1.6" r=".5" fill="#f2d24a"/>`;
+    case 'kagami': return `<ellipse cy="2" rx="3.2" ry="1.2" fill="#c8a06a"/><ellipse cy="1" rx="2.8" ry="1.5" fill="#fbfaf4" ${ol('#e8e4d8')}/><ellipse cy="-.8" rx="2.1" ry="1.2" fill="#fbfaf4" ${ol('#e8e4d8')}/><circle cy="-2.4" r="1.1" fill="#f2a02a" ${ol('#f2a02a')}/><path d="M0 -3.4 Q .6 -4 1.2 -3.6" stroke="#4a8a3a" stroke-width=".5" fill="none"/>`;
+    case 'mame': return `<path d="M-3 -1 L 3 -1 L 2.4 2.6 L -2.4 2.6Z" fill="#d8b47a" ${ol('#d8b47a')}/>` + [[-1.4, -1.6], [0, -2], [1.4, -1.6], [-.7, -2.6], [.7, -2.6]].map(([a, b]) => `<ellipse cx="${a}" cy="${b}" rx=".75" ry=".6" fill="#f2dca0" ${ol('#f2dca0')}/>`).join('');
+    case 'choco': return `<path d="M0 2.8 C -3.8 0 -3.2 -3.2 -1.4 -3.2 C -.6 -3.2 0 -2.6 0 -2 C 0 -2.6 .6 -3.2 1.4 -3.2 C 3.2 -3.2 3.8 0 0 2.8Z" fill="#7a4a2a" ${ol('#5a3218')}/><path d="M-2 -1.2 Q 0 0 2 -1.2" stroke="#f6c0d0" stroke-width=".55" fill="none"/>`;
+    case 'hina': return `<path d="M-2.6 3 L -1.4 -1 L 1.4 -1 L 2.6 3Z" fill="#e8506a" ${ol('#e8506a')}/><path d="M-2.2 1.4 L 2.2 1.4 L 2.6 3 L -2.6 3Z" fill="#f2c84a"/><path d="M-1.4 -1 L 0 1 L 1.4 -1" fill="#fbfaf2"/><circle cy="-2" r="1.4" fill="#fbf2e8" ${ol('#e8d8c8')}/><path d="M-1.4 -2.2 Q 0 -3.8 1.4 -2.2 Q 1 -3 0 -3 Q -1 -3 -1.4 -2.2Z" fill="#2a2020"/><path d="M-.6 -3.2 L 0 -4 L .6 -3.2Z" fill="#e2b23a"/><circle cx="-.45" cy="-1.9" r=".18" fill="#2a2020"/><circle cx=".45" cy="-1.9" r=".18" fill="#2a2020"/><circle cx="-.8" cy="-1.4" r=".3" fill="#f6b0c0" opacity=".7"/><circle cx=".8" cy="-1.4" r=".3" fill="#f6b0c0" opacity=".7"/>`;
+    case 'sakurac': return [0, 72, 144, 216, 288].map(a => `<path d="M0 0 C 1.6 -.6 1.9 -2.6 1 -3.2 L .4 -2.8 L 0 -3.4 L -.4 -2.8 L -1 -3.2 C -1.9 -2.6 -1.6 -.6 0 0Z" fill="#f6b6c8" ${ol('#f6b6c8')} transform="rotate(${a})"/>`).join('') + `<circle r=".8" fill="#e8708a"/><circle r=".35" fill="#f2c84a"/>`;
+    case 'tulipc': return `<path d="M0 0 V 3.4" stroke="#5f9a4a" stroke-width=".6"/><path d="M0 2.8 Q -2 2 -1.6 .6" stroke="#6aa84f" stroke-width=".8" fill="none"/><path d="M-2 -2.6 Q -2.2 .6 0 .8 Q 2.2 .6 2 -2.6 L 1 -1.4 L 0 -3 L -1 -1.4Z" fill="#ec6a7a" ${ol('#ec6a7a')}/>`;
+    case 'koinobori': return `<path d="M-3.4 0 C -2.6 -1.6 1.8 -1.8 3 0 L 4 -1.2 L 3.8 0 L 4 1.2 L 3 0 C 1.8 1.8 -2.6 1.6 -3.4 0Z" fill="#e8505a" ${ol('#e8505a')}/><path d="M-1 -1.2 Q -.4 0 -1 1.2 M1 -1.3 Q 1.6 0 1 1.3" stroke="#fff" stroke-width=".35" fill="none" opacity=".7"/><circle cx="-2.4" cy="-.2" r=".6" fill="#fff"/><circle cx="-2.4" cy="-.2" r=".3" fill="#2a2a2a"/>`;
+    case 'teru': return `<circle cy="-1.4" r="2" fill="#fbfaf6" ${ol('#d8d4c8')}/><path d="M-1.6 0 Q -2.8 2.6 -2 3.4 L 2 3.4 Q 2.8 2.6 1.6 0Z" fill="#fbfaf6" ${ol('#d8d4c8')}/><path d="M-1.6 0 H 1.6" stroke="#e8586a" stroke-width=".6"/><circle cx="-.7" cy="-1.6" r=".22" fill="#2a2a2a"/><circle cx=".7" cy="-1.6" r=".22" fill="#2a2a2a"/><path d="M-.6 -.9 Q 0 -.4 .6 -.9" stroke="#2a2a2a" stroke-width=".25" fill="none"/><circle cx="-1.2" cy="-1" r=".3" fill="#f6b0c0" opacity=".7"/><circle cx="1.2" cy="-1" r=".3" fill="#f6b0c0" opacity=".7"/>`;
+    case 'tanzaku': return `<rect x="-1.4" y="-3" width="2.8" height="6.4" rx=".3" fill="#8ec0e0" ${ol('#8ec0e0')}/><path d="M-.6 -1.6 H .6 M-.6 -.2 H .6 M-.6 1.2 H .3" stroke="#fff" stroke-width=".3"/><path d="M2 -2.6 l .4 .9 l 1 .1 l -.8 .6 l .3 1 l -.9 -.6 l -.9 .6 l .3 -1 l -.8 -.6 l 1 -.1Z" fill="#f2c84a"/>`;
+    case 'kingyoc': return `<path d="M1.4 0 C 2.6 -1 3.6 -2.2 4 -1.6 C 3.6 -.6 3.6 .6 4 1.6 C 3.6 2.2 2.6 1 1.4 0Z" fill="#f28a6a" ${ol('#e8503a')}/><ellipse rx="2.2" ry="1.6" fill="#e8503a" ${ol('#e8503a')}/><circle cx="-1.1" cy="-.4" r=".42" fill="#fff"/><circle cx="-1.2" cy="-.4" r=".24" fill="#2a2a2a"/>`;
+    case 'furin': return `<path d="M-2.6 1 Q -2.6 -2.8 0 -2.8 Q 2.6 -2.8 2.6 1Z" fill="#dcf0f8" fill-opacity=".85" ${ol('#8ec0e0')}/><path d="M-2 -.6 Q 0 .4 2 -.6" stroke="#e8586a" stroke-width=".4" fill="none"/><circle cx="-.8" cy="-1.6" r=".4" fill="#5aa84a"/><circle cx=".9" cy="-1.4" r=".35" fill="#e8586a"/><path d="M0 1 V 2" stroke="#999" stroke-width=".2"/><rect x="-.9" y="2" width="1.8" height="2.4" fill="#fbf2c8" ${ol('#e8d8a0')}/>`;
+    case 'usagi': return `<ellipse cx="-.8" cy="-2.4" rx=".6" ry="1.6" fill="#fff" ${ol('#c8c0b8')}/><ellipse cx=".8" cy="-2.4" rx=".6" ry="1.6" fill="#fff" ${ol('#c8c0b8')}/><ellipse cx="-.8" cy="-2.4" rx=".25" ry="1" fill="#f6c0c8"/><ellipse cx=".8" cy="-2.4" rx=".25" ry="1" fill="#f6c0c8"/><ellipse cy=".6" rx="2.4" ry="2" fill="#fff" ${ol('#c8c0b8')}/><circle cx="-.8" cy=".3" r=".25" fill="#2a2a2a"/><circle cx=".8" cy=".3" r=".25" fill="#2a2a2a"/><path d="M-.3 1 Q 0 1.3 .3 1" stroke="#c87a8a" stroke-width=".25" fill="none"/><circle cx="-1.4" cy="1" r=".35" fill="#f6b0c0" opacity=".7"/><circle cx="1.4" cy="1" r=".35" fill="#f6b0c0" opacity=".7"/>`;
+    case 'pumpkinc': return `<path d="M0 -2 Q .2 -3 1 -3.2" stroke="#5a7a2a" stroke-width=".6" fill="none"/><ellipse cx="-1.3" rx="1.5" ry="2" fill="#e8822a"/><ellipse cx="1.3" rx="1.5" ry="2" fill="#e8822a"/><ellipse rx="1.6" ry="2.2" fill="#f2922a" ${ol('#e8822a')}/><path d="M-1.4 -.5 L -.7 -.5 L -1 -1.1Z M.7 -.5 L 1.4 -.5 L 1 -1.1Z" fill="#5a2a0a"/><path d="M-1.2 .6 Q 0 1.6 1.2 .6" stroke="#5a2a0a" stroke-width=".45" fill="none"/>`;
+    case 'donguri': return `<ellipse cy=".8" rx="2" ry="2.5" fill="#b8784a" ${ol('#8a5432')}/><ellipse cx="-.7" cy=".2" rx=".45" ry=".9" fill="#fff" opacity=".35"/><path d="M-2.3 -.6 Q 0 -3.2 2.3 -.6Z" fill="#7a5432"/><path d="M-1.8 -1.2 L 1.8 -1.2 M-1.2 -1.9 L 1.2 -1.9" stroke="#5a3a20" stroke-width=".25"/><path d="M0 -2.4 L .4 -3.4" stroke="#5a3a20" stroke-width=".45"/>`;
+    case 'kinokoc': return `<path d="M-.9 0 Q -1.1 2 -.8 2.6 L .8 2.6 Q 1.1 2 .9 0Z" fill="#f6eedc" ${ol('#e8dcc0')}/><path d="M-3 0 Q -3 -3.2 0 -3.4 Q 3 -3.2 3 0 Q 0 .8 -3 0Z" fill="#d8483a" ${ol('#d8483a')}/><circle cx="-1.2" cy="-1.8" r=".55" fill="#fff"/><circle cx="1.1" cy="-1.4" r=".45" fill="#fff"/><circle cx="0" cy="-2.8" r=".35" fill="#fff"/>`;
+    case 'snowman': return `<circle cy="1.4" r="2.2" fill="#fbfdff" ${ol('#c8d4e0')}/><circle cy="-1.6" r="1.6" fill="#fbfdff" ${ol('#c8d4e0')}/><path d="M-1.6 -2.6 L 1.6 -2.6 L 1.2 -3.8 L -1.2 -3.8Z" fill="#d8303a"/><circle cx="-.5" cy="-1.8" r=".22" fill="#2a2a2a"/><circle cx=".5" cy="-1.8" r=".22" fill="#2a2a2a"/><path d="M0 -1.4 L 1 -1.2 L 0 -1.1Z" fill="#f2922a"/><path d="M-1.4 -.3 Q 0 .4 1.4 -.3" stroke="#3a7a4a" stroke-width=".55" fill="none"/>`;
+    case 'bell': return `<path d="M-2.6 1.6 Q -2.6 -2.8 0 -2.8 Q 2.6 -2.8 2.6 1.6 L 3 2.2 L -3 2.2Z" fill="#e2b23a" ${ol('#c8961a')}/><circle cy="2.6" r=".7" fill="#c8961a"/><path d="M-1.4 -1.6 Q -1.8 0 -1.4 1.2" stroke="#fff" stroke-width=".45" opacity=".55" fill="none"/><path d="M-1.6 -3 Q -3 -4.2 -2 -4.6 Q -1 -4.4 0 -2.8 Q 1 -4.4 2 -4.6 Q 3 -4.2 1.6 -3Z" fill="#d8303a"/>`;
+  }
+  return '';
+}
+function charmSVG(k, x, y){ if (!k || !CHARMS[k]) return ''; return `<g class="charm"><path d="M${x} ${y} L ${x} ${y + 5.6}" stroke="#c8a85a" stroke-width=".4" stroke-dasharray=".5 .25"/><circle cx="${x}" cy="${y + 5.9}" r=".6" fill="none" stroke="#c8a85a" stroke-width=".35"/><g transform="translate(${x},${y + 10.4}) scale(1.25)">${charmArt(k)}</g></g>`; }
+const _ribW = ribbonSVG;
+ribbonSVG = function(r, x, y, w){ const base = _ribW(r, x, y, w); return r.charm ? base.replace(/<\/g>$/, charmSVG(r.charm, x, y + 1.2) + '</g>') : base; };
+function ribbonTile(st, c, charm = ''){ return `<svg viewBox="-13 -6 26 ${charm ? 30 : 22}">${ribbonSVG({ st, c, charm }, 0, 0, 22)}</svg>`; }
+
 let DRYF = '';
 var bouquetSVG = function(raw, opts = {}){
   const dry = opts.dry || 0, DF = dry > .02 ? dryFilter(dry) : null; DRYF = DF ? DF.id : '';
@@ -3310,10 +3381,11 @@ function sheetBouquet(){
     if (sp_.length) h += `<label class="f">季節限定の柄 <span class="ltd">いまだけ</span></label><div class="seg">${sp_.map(([k, v]) => `<button class="${BQ.paper.pat === k ? 'on' : ''}" data-act="bqpat" data-v="${k}">${v.l}</button>`).join('')}</div>`;
     if (BQ.shape === 'bouquet' || BQ.shape === 'round') h += `<label class="f">内側の紙（重ね）</label>${swatches('bqpc2', PAPER_C, BQ.paper.c2, `<button class="${!BQ.paper.c2 ? 'on' : ''}" data-act="bqpc2" data-v=""><i style="background:repeating-linear-gradient(45deg,#fff 0 3px,#eee 3px 6px)"></i><small>なし</small></button>`)}`;
   }
-  if (BQTAB === 'rib'){ const [mo_, d_] = nowMD(), sr_ = Object.entries(SEASON_RIB).filter(([k, v]) => v.on(mo_, d_));
-    h += `<label class="f">結び方</label>${seg('bqrst', RIB_ST, BQ.rib.st)}`;
-    if (sr_.length) h += `<label class="f">季節限定 <span class="ltd">いまだけ</span></label><div class="seg">${sr_.map(([k, v]) => `<button class="${BQ.rib.st === k ? 'on' : ''}" data-act="bqrst" data-v="${k}">${v.l}</button>`).join('')}</div>`;
-    if (!['twine', 'mizuhiki', 'xmas'].includes(BQ.rib.st)) h += `<label class="f">色</label>${swatches('bqrc', RIB_C, BQ.rib.c)}`; }
+  if (BQTAB === 'rib'){ const [mo_, d_] = nowMD(), sr_ = Object.entries(SEASON_RIB).filter(([k, v]) => v.on(mo_, d_)), rc_ = ['twine', 'mizuhiki', 'xmas'].includes(BQ.rib.st) ? 'red' : BQ.rib.c;
+    h += `<label class="f">結び方</label><div class="ribgrid">${Object.entries(RIB_ST).map(([k, l]) => `<button class="${BQ.rib.st === k ? 'on' : ''}" data-act="bqrst" data-v="${k}">${ribbonTile(k, rc_)}<span>${l}</span></button>`).join('')}${sr_.map(([k, v]) => `<button class="${BQ.rib.st === k ? 'on' : ''}" data-act="bqrst" data-v="${k}">${ribbonTile(k, 'red')}<span>${v.l}</span><em>いまだけ</em></button>`).join('')}</div>`;
+    if (!['twine', 'mizuhiki', 'xmas'].includes(BQ.rib.st)) h += `<label class="f">色</label>${swatches('bqrc', RIB_C, BQ.rib.c)}`;
+    const ch_ = Object.entries(CHARMS).filter(([k, v]) => v.on(mo_, d_)), always = ['heart', 'star', 'clover', 'moonc'];
+    h += `<label class="f">チャーム</label><div class="ribgrid charms"><button class="${!BQ.rib.charm ? 'on' : ''}" data-act="bqcharm" data-v=""><svg viewBox="-5 -5 10 10"><path d="M-2 -2 L 2 2 M2 -2 L -2 2" stroke="#b8b0a0" stroke-width=".6"/></svg><span>なし</span></button>${ch_.map(([k, v]) => `<button class="${BQ.rib.charm === k ? 'on' : ''}" data-act="bqcharm" data-v="${k}"><svg viewBox="-5 -5 10 10">${charmArt(k)}</svg><span>${v.l}</span>${always.includes(k) ? '' : '<em>いまだけ</em>'}</button>`).join('')}</div>`; }
   if (BQTAB === 'green') h += `<label class="f">種類</label>${seg('bqgt', GREENS, BQ.green.t)}${BQ.green.t === 'none' ? '' : `<label class="f">量</label>${seg('bqgn', { s:'少し', m:'ふつう', l:'たっぷり' }, BQ.green.n)}`}`;
   h += `<button class="btn go wide" style="margin-top:18px" data-act="bqsend" ${BQ.flowers.length ? '' : 'disabled'}>${esc(nm(to))}に贈る</button>`;
   const sc = $('sheet').classList.contains('open') ? $('sheet').scrollTop : 0;
@@ -3708,6 +3780,7 @@ document.addEventListener('click', e => {
     case 'bqpc2': BQ.paper.c2 = el.dataset.v; sheetBouquet(); break;
     case 'bqpat': BQ.paper.pat = el.dataset.v; sheetBouquet(); break;
     case 'bqrst': BQ.rib.st = el.dataset.v; sheetBouquet(); break;
+    case 'bqcharm': BQ.rib.charm = el.dataset.v; sheetBouquet(); break;
     case 'bqrc': BQ.rib.c = el.dataset.v; sheetBouquet(); break;
     case 'bqgt': BQ.green.t = el.dataset.v; sheetBouquet(); break;
     case 'bqgn': BQ.green.n = el.dataset.v; sheetBouquet(); break;
