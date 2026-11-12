@@ -282,7 +282,7 @@ nav.tabs .tile{width:38px;height:38px}
 .bqprev{display:flex;justify-content:center;min-height:200px;align-items:flex-end}
 .bqprev .bq{width:190px;height:200px}
 .bqsticky{position:sticky;top:-14px;z-index:3;background:var(--cream);margin:-14px -18px 0;padding:10px 18px 8px;box-shadow:0 6px 10px -8px rgba(31,82,110,.25)}
-.bqtabs button{font-size:12px;padding:7px 2px}
+.bqtabs button{font-size:11.5px;padding:7px 1px}
 .sw{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .sw button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;border-radius:12px}
 .sw button.on{background:var(--paper);box-shadow:inset 0 0 0 2px var(--amber)}
@@ -3298,7 +3298,13 @@ function charmArt(k){
 }
 function charmSVG(k, x, y){ if (!k || !CHARMS[k]) return ''; return `<g class="charm"><path d="M${x} ${y} L ${x} ${y + 5.6}" stroke="#c8a85a" stroke-width=".4" stroke-dasharray=".5 .25"/><circle cx="${x}" cy="${y + 5.9}" r=".6" fill="none" stroke="#c8a85a" stroke-width=".35"/><g transform="translate(${x},${y + 10.4}) scale(1.25)">${charmArt(k)}</g></g>`; }
 const _ribW = ribbonSVG;
-ribbonSVG = function(r, x, y, w){ const base = _ribW(r, x, y, w); return r.charm ? base.replace(/<\/g>$/, charmSVG(r.charm, x, y + 1.2) + '</g>') : base; };
+ribbonSVG = function(r, x, y, w){ return _ribW(r, x, y, w); };
+function decoPicks(list, cx, cy, R, seed){
+  if (!list || !list.length) return '';
+  const n = list.length, slots = n === 1 ? [[.55, -.5]] : n === 2 ? [[-.6, -.45], [.62, -.35]] : [[-.68, -.3], [.05, -.85], [.7, -.38]];
+  return list.map((k, j) => { if (!CHARMS[k]) return ''; const [sx, sy] = slots[j], x = cx + sx * R * 1.05, y = cy + sy * R * .75 - 4, rot = sx * 16 + (rnd(seed, j + 400) - .5) * 8;
+    return `<g class="bqf deco" style="--i:${20 + j}"><g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${rot.toFixed(0)})"><path d="M0 3 L 0 13" stroke="#b89a6a" stroke-width=".8" stroke-linecap="round"/><g transform="scale(1.75)">${charmArt(k)}</g></g></g>`; }).join('');
+}
 function ribbonTile(st, c, charm = ''){ return `<svg viewBox="-13 -6 26 ${charm ? 30 : 22}">${ribbonSVG({ st, c, charm }, 0, 0, 22)}</svg>`; }
 
 let DRYF = '';
@@ -3312,6 +3318,7 @@ var bouquetSVG = function(raw, opts = {}){
   const drawFlowers = (cx2, cy2, stemTo) => { const sp = dome(n, cx2, cy2, R, seed, b.size); let st = '', fw = '';
     sp.forEach(([x, y]) => { if (stemTo) st += `<path d="M${x.toFixed(1)} ${y.toFixed(1)} Q ${(x * .4).toFixed(1)} ${((y + stemTo[1]) / 2).toFixed(1)} ${stemTo[0]} ${stemTo[1]}" stroke="#6aa84f" stroke-width=".9" fill="none"/>`; });
     sp.slice().sort((a, c) => a[1] - c[1]).forEach(([x, y, k, i]) => { const key = fl[i]; if (FL[key]) fw += `<g class="bqf" style="--i:${i}"${DF ? ` filter="url(#${DF.id})"` : ''}><g transform="translate(${x.toFixed(1)},${(y + dry * 3).toFixed(1)}) scale(${(k * .92 * (1 - dry * .1)).toFixed(2)}) rotate(${((rnd(seed, i + 30) - .5) * 26 + x * .5 + dry * Math.sign(x || 1) * 16).toFixed(0)})">${flowerSVG(key, seed + i)}</g></g>`; });
+    fw += decoPicks(b.deco, cx2, cy2, R, seed);
     return { st, fw }; };
   if (b.shape === 'vase'){
     const tint = P.base; cy = -30;
@@ -3358,14 +3365,14 @@ bouquetSVG = function(raw, opts = {}){ const r = _bqsvg(raw, opts); if (!opts.co
 const bouquetBox = (raw, cls = '') => { const r = bouquetSVG(raw); return `<svg class="bq ${cls}" viewBox="${r.vb}" preserveAspectRatio="xMidYMax meet">${r.svg}</svg>`; };
 let BQ = null, BQTAB = 'flower';
 function bloomStock(){ const m = {}; weekLogs(0).forEach(l => { const k = flowerOf(l); m[k] = (m[k] || 0) + 1; }); return m; }
-function newBQ(){ return { flowers:[], shape:'bouquet', paper:{ c:'kraft', c2:'', pat:'plain' }, rib:{ st:'bow', c:'red' }, green:{ t:'leaf', n:'m' }, size:'m', seed:uid() }; }
+function newBQ(){ return { deco:[], flowers:[], shape:'bouquet', paper:{ c:'kraft', c2:'', pat:'plain' }, rib:{ st:'bow', c:'red' }, green:{ t:'leaf', n:'m' }, size:'m', seed:uid() }; }
 function swatches(act, map, cur, extra = ''){ return `<div class="sw">${extra}${Object.entries(map).map(([v, [l, c]]) => `<button class="${cur === v ? 'on' : ''}" data-act="${act}" data-v="${v}" title="${l}"><i style="background:${c}"></i><small>${l}</small></button>`).join('')}</div>`; }
 function seg(act, map, cur){ return `<div class="seg">${Object.entries(map).map(([v, l]) => `<button class="${cur === v ? 'on' : ''}" data-act="${act}" data-v="${v}">${l}</button>`).join('')}</div>`; }
 function sheetBouquet(){
   if (!BQ) BQ = newBQ();
   const to = other(S.me), week = bloomStock();
   let h = `<div class="bqsticky"><div class="bqprev">${BQ.flowers.length ? bouquetBox(BQ) : `<div class="empty">花を選んでね</div>`}</div>${BQ.flowers.length ? `<div class="bqname">${esc(bqNameOf({ ...BQ, at:Date.now() }))}</div>` : ''}
-    <div class="seg bqtabs">${[['flower','花'],['shape','形'],['paper','包み紙'],['rib','リボン'],['green','グリーン']].map(([v, l]) => `<button class="${BQTAB === v ? 'on' : ''}" data-act="bqtab" data-v="${v}">${l}</button>`).join('')}</div></div>`;
+    <div class="seg bqtabs">${[['flower','花'],['shape','形'],['paper','包み紙'],['rib','リボン'],['deco','飾り'],['green','グリーン']].map(([v, l]) => `<button class="${BQTAB === v ? 'on' : ''}" data-act="bqtab" data-v="${v}">${l}</button>`).join('')}</div></div>`;
   if (BQTAB === 'flower'){
     h += `<div class="row" style="justify-content:space-between;margin:10px 2px 6px"><span class="muted">${BQ.flowers.length} / 12輪</span><span class="row"><button class="btn small ghost" data-act="bqundo">ひとつ戻す</button><button class="btn small ghost" data-act="bqshuffle">並び替え</button><button class="btn small ghost" data-act="bqclear">空にする</button></span></div>`;
     h += `<label class="f" style="margin-top:4px">大きさ</label>${seg('bqsize', SIZES, BQ.size)}`;
@@ -3384,8 +3391,10 @@ function sheetBouquet(){
   if (BQTAB === 'rib'){ const [mo_, d_] = nowMD(), sr_ = Object.entries(SEASON_RIB).filter(([k, v]) => v.on(mo_, d_)), rc_ = ['twine', 'mizuhiki', 'xmas'].includes(BQ.rib.st) ? 'red' : BQ.rib.c;
     h += `<label class="f">結び方</label><div class="ribgrid">${Object.entries(RIB_ST).map(([k, l]) => `<button class="${BQ.rib.st === k ? 'on' : ''}" data-act="bqrst" data-v="${k}">${ribbonTile(k, rc_)}<span>${l}</span></button>`).join('')}${sr_.map(([k, v]) => `<button class="${BQ.rib.st === k ? 'on' : ''}" data-act="bqrst" data-v="${k}">${ribbonTile(k, 'red')}<span>${v.l}</span><em>いまだけ</em></button>`).join('')}</div>`;
     if (!['twine', 'mizuhiki', 'xmas'].includes(BQ.rib.st)) h += `<label class="f">色</label>${swatches('bqrc', RIB_C, BQ.rib.c)}`;
-    const ch_ = Object.entries(CHARMS).filter(([k, v]) => v.on(mo_, d_)), always = ['heart', 'star', 'clover', 'moonc'];
-    h += `<label class="f">チャーム</label><div class="ribgrid charms"><button class="${!BQ.rib.charm ? 'on' : ''}" data-act="bqcharm" data-v=""><svg viewBox="-5 -5 10 10"><path d="M-2 -2 L 2 2 M2 -2 L -2 2" stroke="#b8b0a0" stroke-width=".6"/></svg><span>なし</span></button>${ch_.map(([k, v]) => `<button class="${BQ.rib.charm === k ? 'on' : ''}" data-act="bqcharm" data-v="${k}"><svg viewBox="-5 -5 10 10">${charmArt(k)}</svg><span>${v.l}</span>${always.includes(k) ? '' : '<em>いまだけ</em>'}</button>`).join('')}</div>`; }
+  }
+  if (BQTAB === 'deco'){ const [mo_, d_] = nowMD(), ch_ = Object.entries(CHARMS).filter(([k, v]) => v.on(mo_, d_)), always = ['heart', 'star', 'clover', 'moonc'], cur = BQ.deco || [];
+    h += `<label class="f">花束に挿す飾り（3つまで）</label><div class="ribgrid charms">${ch_.map(([k, v]) => `<button class="${cur.includes(k) ? 'on' : ''}" data-act="bqdeco" data-v="${k}"><svg viewBox="-5 -5 10 10">${charmArt(k)}</svg><span>${v.l}</span>${always.includes(k) ? '' : '<em>いまだけ</em>'}</button>`).join('')}</div>`;
+    if (cur.length) h += `<button class="btn small ghost" style="margin-top:8px" data-act="bqdecoclear">飾りを外す</button>`; }
   if (BQTAB === 'green') h += `<label class="f">種類</label>${seg('bqgt', GREENS, BQ.green.t)}${BQ.green.t === 'none' ? '' : `<label class="f">量</label>${seg('bqgn', { s:'少し', m:'ふつう', l:'たっぷり' }, BQ.green.n)}`}`;
   h += `<button class="btn go wide" style="margin-top:18px" data-act="bqsend" ${BQ.flowers.length ? '' : 'disabled'}>${esc(nm(to))}に贈る</button>`;
   const sc = $('sheet').classList.contains('open') ? $('sheet').scrollTop : 0;
@@ -3780,6 +3789,8 @@ document.addEventListener('click', e => {
     case 'bqpc2': BQ.paper.c2 = el.dataset.v; sheetBouquet(); break;
     case 'bqpat': BQ.paper.pat = el.dataset.v; sheetBouquet(); break;
     case 'bqrst': BQ.rib.st = el.dataset.v; sheetBouquet(); break;
+    case 'bqdeco': { BQ.deco = BQ.deco || []; const v = el.dataset.v, i = BQ.deco.indexOf(v); if (i >= 0) BQ.deco.splice(i, 1); else if (BQ.deco.length < 3) BQ.deco.push(v); else toast('飾りは3つまでだよ'); sheetBouquet(); break; }
+    case 'bqdecoclear': BQ.deco = []; sheetBouquet(); break;
     case 'bqcharm': BQ.rib.charm = el.dataset.v; sheetBouquet(); break;
     case 'bqrc': BQ.rib.c = el.dataset.v; sheetBouquet(); break;
     case 'bqgt': BQ.green.t = el.dataset.v; sheetBouquet(); break;
