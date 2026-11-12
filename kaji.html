@@ -173,7 +173,7 @@ function put(item){
 const remove = item => put({ ...item, deleted:true });
 
 function settings(){
-  return S.items.settings || { id:'settings', kind:'settings', names:{ h:'ひろき', y:'佑理' } };
+  return S.items.settings || { id:'settings', kind:'settings', names:{ h:'拓輝', y:'佑理' } };
 }
 const nm = k => k === 'any' ? 'どちらでも' : (settings().names[k] || k);
 const other = k => k === 'h' ? 'y' : 'h';
@@ -559,7 +559,7 @@ document.addEventListener('click', e => {
       if (j < 0 || j >= cs.length) return; [cs[i], cs[j]] = [cs[j], cs[i]];
       cs.forEach((c,k) => { if (c.order !== k) { c.order = k; c.updatedAt = Date.now(); S.items[c.id] = c; S.queue = S.queue.filter(q => q.id !== c.id); S.queue.push(c); } });
       save(); render(); push(); break; }
-    case 'savenames': { const s = { ...settings(), names:{ h:$('name_h').value.trim()||'ひろき', y:$('name_y').value.trim()||'佑理' } }; put(s); toast('保存しました'); break; }
+    case 'savenames': { const s = { ...settings(), names:{ h:$('name_h').value.trim()||'拓輝', y:$('name_y').value.trim()||'佑理' } }; put(s); toast('保存しました'); break; }
     case 'savesync': S.url = $('s_url').value.trim(); S.key = $('s_key').value.trim(); S.lastSync = 0; save(); toast('同期しています…'); sync().then(() => toast(syncState==='ok'?'同期しました':'同期できませんでした')); break;
     case 'export': { const b = new Blob([JSON.stringify(S.items,null,1)], {type:'application/json'}); const u = URL.createObjectURL(b);
       const x = document.createElement('a'); x.href = u; x.download = `uchikaji-${dayKey(Date.now())}.json`; x.click(); setTimeout(() => URL.revokeObjectURL(u), 2000); break; }
