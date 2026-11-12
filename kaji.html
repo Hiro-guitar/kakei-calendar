@@ -3269,7 +3269,7 @@ const CHARMS = {
   kingyoc:{ l:'金魚', on:(m) => m === 7 || m === 8 }, furin:{ l:'風鈴', on:(m) => m === 7 || m === 8 }, usagi:{ l:'うさぎ', on:(m) => m === 9 }, pumpkinc:{ l:'かぼちゃ', on:(m) => m === 10 },
   donguri:{ l:'どんぐり', on:(m) => m === 10 || m === 11 }, kinokoc:{ l:'きのこ', on:(m) => m === 11 }, snowman:{ l:'雪だるま', on:(m) => m === 12 || m <= 2 }, bell:{ l:'ベル', on:(m, d) => m === 12 && d <= 25 },
 };
-function charmArt(k){
+var charmArt = function(k){
   const ol = c => `stroke="${shade(c, -.3)}" stroke-width=".25"`;
   switch (k){
     case 'heart': return `<path d="M0 2.6 C -3.6 0 -3 -3 -1.4 -3 C -.6 -3 0 -2.4 0 -1.8 C 0 -2.4 .6 -3 1.4 -3 C 3 -3 3.6 0 0 2.6Z" fill="#e2b23a" ${ol('#e2b23a')}/><path d="M-1.6 -2 Q -2.2 -1 -1.6 0" stroke="#fff" stroke-width=".4" opacity=".6" fill="none"/>`;
@@ -3295,16 +3295,16 @@ function charmArt(k){
     case 'bell': return `<path d="M-2.6 1.6 Q -2.6 -2.8 0 -2.8 Q 2.6 -2.8 2.6 1.6 L 3 2.2 L -3 2.2Z" fill="#e2b23a" ${ol('#c8961a')}/><circle cy="2.6" r=".7" fill="#c8961a"/><path d="M-1.4 -1.6 Q -1.8 0 -1.4 1.2" stroke="#fff" stroke-width=".45" opacity=".55" fill="none"/><path d="M-1.6 -3 Q -3 -4.2 -2 -4.6 Q -1 -4.4 0 -2.8 Q 1 -4.4 2 -4.6 Q 3 -4.2 1.6 -3Z" fill="#d8303a"/>`;
   }
   return '';
-}
+};
 function charmSVG(k, x, y){ if (!k || !CHARMS[k]) return ''; return `<g class="charm"><path d="M${x} ${y} L ${x} ${y + 5.6}" stroke="#c8a85a" stroke-width=".4" stroke-dasharray=".5 .25"/><circle cx="${x}" cy="${y + 5.9}" r=".6" fill="none" stroke="#c8a85a" stroke-width=".35"/><g transform="translate(${x},${y + 10.4}) scale(1.25)">${charmArt(k)}</g></g>`; }
 const _ribW = ribbonSVG;
 ribbonSVG = function(r, x, y, w){ return _ribW(r, x, y, w); };
-function decoWrap(list, x, y, seed){
+var decoWrap = function(list, x, y, seed){
   if (!list || !list.length) return '';
   const n = list.length, pos = n === 1 ? [[0, 0]] : n === 2 ? [[-3.6, .4], [3.6, -.4]] : [[-4.4, 1.2], [0, -2.2], [4.4, 1]];
   return `<g class="bqf deco" style="--i:20">` + list.map((k, j) => { if (!CHARMS[k]) return ''; const [dx, dy] = pos[j], rot = (rnd(seed, j + 410) - .5) * 20;
     return `<g transform="translate(${(x + dx).toFixed(1)},${(y + dy).toFixed(1)}) rotate(${rot.toFixed(0)}) scale(1.45)"><g transform="translate(.25,.35)" opacity=".18">${charmArt(k).replace(/fill="[^"]*"/g, 'fill="#000"').replace(/stroke="[^"]*"/g, 'stroke="none"')}</g>${charmArt(k)}</g>`; }).join('') + `</g>`;
-}
+};
 function decoPicks(list, cx, cy, R, seed){
   if (!list || !list.length) return '';
   const n = list.length, slots = n === 1 ? [[.55, -.5]] : n === 2 ? [[-.6, -.45], [.62, -.35]] : [[-.68, -.3], [.05, -.85], [.7, -.38]];
@@ -3330,7 +3330,7 @@ var bouquetSVG = function(raw, opts = {}){
     const { st, fw } = drawFlowers(0, cy, [0, 20]);
     o += greensSVG(b.green, 0, cy, R, seed, true) + st;
     o += `<path d="M-9 4 C -14 12 -12 26 -7 33 L 7 33 C 12 26 14 12 9 4 C 7 2 7 -2 8 -4 L -8 -4 C -7 -2 -7 2 -9 4Z" fill="${tint}" fill-opacity=".38" stroke="${shade(tint, -.3)}" stroke-opacity=".6" stroke-width=".5"/><path d="M-11.4 14 C -12 20 -10 28 -7 32 L 7 32 C 10 28 12 20 11.4 14Z" fill="#c8e0ec" opacity=".45"/><path d="M-6 -2 C -7 6 -9 16 -6 28" stroke="#fff" stroke-width="1.2" opacity=".5" fill="none"/><ellipse cy="-4" rx="8" ry="1.4" fill="none" stroke="${shade(tint, -.3)}" stroke-opacity=".6" stroke-width=".5"/>`;
-    o += fw + greensSVG(b.green, 0, cy, R, seed, false) + ribbonSVG(b.rib, 0, 0, 16) + decoWrap(b.deco, 0, 15, seed);
+    o += fw + greensSVG(b.green, 0, cy, R, seed, false) + ribbonSVG(b.rib, 0, 0, 16) + decoWrap(b.deco, 0, 0, seed);
     return { svg:o, vb:`-40 -${Math.round(40 + R)} 80 ${Math.round(78 + R)}` };
   }
   if (b.shape === 'basket'){
@@ -3340,7 +3340,7 @@ var bouquetSVG = function(raw, opts = {}){
     const { fw } = drawFlowers(0, cy, null);
     o += greensSVG(b.green, 0, cy, R, seed, true) + fw + greensSVG(b.green, 0, cy, R, seed, false);
     o += `<path d="M-23 2 L 23 2 L 18 24 Q 0 27 -18 24Z" fill="#b8884e" stroke="#7a5428" stroke-width=".5"/>` + Array.from({length:5}, (_, i) => `<path d="M-22 ${5 + i * 4} Q 0 ${7 + i * 4} 22 ${5 + i * 4}" stroke="#8a6232" stroke-width=".5" fill="none"/>`).join('') + Array.from({length:11}, (_, i) => `<path d="M${-20 + i * 4} 2.4 L ${-16 + i * 3.2} 24" stroke="#d8aa6e" stroke-width=".6" opacity=".7"/>`).join('') + `<path d="M-24 1 L 24 1 L 24 3.6 L -24 3.6Z" fill="#a8784a" stroke="#7a5428" stroke-width=".4"/>`;
-    o += ribbonSVG(b.rib, 14, 0, 0) + decoWrap(b.deco, -6, 12, seed);
+    o += ribbonSVG(b.rib, 14, 0, 0) + decoWrap(b.deco, 14, 0, seed);
     return { svg:o, vb:`-40 -${Math.round(34 + R * 1.2)} 80 ${Math.round(62 + R * 1.2)}` };
   }
   if (b.shape === 'round'){
@@ -3349,7 +3349,7 @@ var bouquetSVG = function(raw, opts = {}){
     if (P2) o += `<ellipse cy="${cy + 3}" rx="${(R + 4) * 1.12}" ry="${(R + 4) * .62}" fill="${P2.fill}"/>`;
     o += `<path d="M-5 ${cy + 6} L -4 30 L 4 30 L 5 ${cy + 6}Z" fill="#6aa84f"/>` + Array.from({length:7}, (_, i) => `<path d="M${-3.6 + i * 1.2} ${cy + 8} L ${-3 + i} 30" stroke="#4f8a3a" stroke-width=".4"/>`).join('');
     const { fw } = drawFlowers(0, cy, null);
-    o += greensSVG(b.green, 0, cy, R, seed, true) + fw + greensSVG(b.green, 0, cy, R, seed, false) + decoWrap(b.deco, 0, cy + (R + 6) * .6, seed) + ribbonSVG(b.rib, 0, 12, 10);
+    o += greensSVG(b.green, 0, cy, R, seed, true) + fw + greensSVG(b.green, 0, cy, R, seed, false) + ribbonSVG(b.rib, 0, 12, 10) + decoWrap(b.deco, 0, 12, seed);
     return { svg:o, vb:`-40 -${Math.round(30 + R)} 80 ${Math.round(66 + R)}` };
   }
   // 花束（円すい形の包み）
@@ -3359,7 +3359,7 @@ var bouquetSVG = function(raw, opts = {}){
   o += greensSVG(b.green, cx, cy, R, seed, true) + st + fw + greensSVG(b.green, cx, cy, R, seed, false);
   o += `<path d="M${-half + 4} ${cy + 14} Q -10 ${cy + 20} 0 ${cy + 18} Q 10 ${cy + 20} ${half - 4} ${cy + 14} L 5 36 Q 0 38 -5 36Z" fill="${P.fill}" stroke="${shade(P.dk, -.25)}" stroke-opacity=".5" stroke-width=".4"/>`;
   o += `<path d="M${-half + 4} ${cy + 14} Q -10 ${cy + 20} 0 ${cy + 18} Q 10 ${cy + 20} ${half - 4} ${cy + 14}" fill="none" stroke="${shade(P.base, .3)}" stroke-width=".8"/><path d="M-12 ${cy + 18} L -2 34 M10 ${cy + 18} L 2 34" stroke="${shade(P.dk, -.1)}" stroke-width=".4" opacity=".6"/>`;
-  o += decoWrap(b.deco, 0, 5, seed) + ribbonSVG(b.rib, 0, 16, 11);
+  o += ribbonSVG(b.rib, 0, 16, 11) + decoWrap(b.deco, 0, 16, seed);
   return { svg:o, vb:`-${Math.round(half + 8)} -${Math.round(40 + R)} ${Math.round(half * 2 + 16)} ${Math.round(80 + R)}` };
 };
 function coverPath(vb){ const [x, y, w, h] = vb.split(' ').map(Number); const L = x + w * .14, Rr = x + w * .86, top = y + h * .03, bot = y + h * .62;
@@ -3397,7 +3397,7 @@ function sheetBouquet(){
     h += `<label class="f">結び方</label><div class="ribgrid">${Object.entries(RIB_ST).map(([k, l]) => `<button class="${BQ.rib.st === k ? 'on' : ''}" data-act="bqrst" data-v="${k}">${ribbonTile(k, rc_)}<span>${l}</span></button>`).join('')}${sr_.map(([k, v]) => `<button class="${BQ.rib.st === k ? 'on' : ''}" data-act="bqrst" data-v="${k}">${ribbonTile(k, 'red')}<span>${v.l}</span><em>いまだけ</em></button>`).join('')}</div>`;
     if (!['twine', 'mizuhiki', 'xmas'].includes(BQ.rib.st)) h += `<label class="f">色</label>${swatches('bqrc', RIB_C, BQ.rib.c)}`;
   }
-  if (BQTAB === 'deco'){ const [mo_, d_] = nowMD(), ch_ = Object.entries(CHARMS).filter(([k, v]) => v.on(mo_, d_)), always = ['heart', 'star', 'clover', 'moonc'], cur = BQ.deco || [];
+  if (BQTAB === 'deco'){ const [mo_, d_] = nowMD(), ch_ = Object.entries(CHARMS).filter(([k, v]) => v.on(mo_, d_)), always = ALWAYS_CH, cur = BQ.deco || [];
     h += `<label class="f">チャーム（1つ選べる・もう一度押すと外れる）</label><div class="ribgrid charms">${ch_.map(([k, v]) => `<button class="${cur.includes(k) ? 'on' : ''}" data-act="bqdeco" data-v="${k}"><svg viewBox="-5 -5 10 10">${charmArt(k)}</svg><span>${v.l}</span>${always.includes(k) ? '' : '<em>いまだけ</em>'}</button>`).join('')}</div>`;
     if (cur.length) h += `<button class="btn small ghost" style="margin-top:8px" data-act="bqdecoclear">チャームを外す</button>`; }
   if (BQTAB === 'green') h += `<label class="f">種類</label>${seg('bqgt', GREENS, BQ.green.t)}${BQ.green.t === 'none' ? '' : `<label class="f">量</label>${seg('bqgn', { s:'少し', m:'ふつう', l:'たっぷり' }, BQ.green.n)}`}`;
@@ -3427,6 +3427,79 @@ function bouquetSection(){
   if (list.length) h += `<div class="bqshelf">` + list.slice(0, 12).map(b => `<button data-act="bqview" data-id="${b.id}">${bouquetBox(b)}<small>${esc(nm(b.from))}→${esc(nm(b.to))}<br>${dayKey(b.at).slice(5).replace('-', '/')}</small></button>`).join('') + `</div>`;
   return h + `</div>`;
 }
+
+/* ===== チャーム（素材感のある飾り、リボンの結び目から下げる） ===== */
+const MAT = {
+  gold:['#fbe7a0', '#e2b23a', '#a87a18'], silver:['#ffffff', '#c8ccd4', '#8a90a0'], rose:['#fbd8cc', '#e8a890', '#b07060'],
+};
+let CHN = 0;
+function metal(d, tone = 'gold'){ const [a, b, c] = MAT[tone], id = 'mt' + tone; return `<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset=".5" stop-color="${b}"/><stop offset="1" stop-color="${c}"/></linearGradient></defs><path d="${d}" fill="url(#${id})" stroke="${c}" stroke-width=".25"/><path d="${d}" fill="none" stroke="#ffffff" stroke-width=".25" opacity=".55" transform="translate(-.15,-.15)"/>`; }
+function wood(d, c = '#c8965a'){ const id = 'wd' + c.slice(1); return `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shade(c, .15)}"/><stop offset="1" stop-color="${shade(c, -.12)}"/></linearGradient></defs><path d="${d}" fill="url(#${id})" stroke="${shade(c, -.35)}" stroke-width=".25"/>`; }
+function chirimen(d, c){ const id = 'cr' + c.slice(1); return `<defs><pattern id="${id}" width=".8" height=".8" patternUnits="userSpaceOnUse"><rect width=".8" height=".8" fill="${c}"/><circle cx=".2" cy=".2" r=".16" fill="${shade(c, .18)}"/><circle cx=".6" cy=".6" r=".14" fill="${shade(c, -.1)}"/></pattern></defs><path d="${d}" fill="url(#${id})" stroke="${shade(c, -.3)}" stroke-width=".25"/>`; }
+function felt(d, c){ return `<path d="${d}" fill="${c}" stroke="${shade(c, -.25)}" stroke-width=".25"/><path d="${d}" fill="none" stroke="#fffaf0" stroke-width=".22" stroke-dasharray=".45 .35" transform="scale(.82)"/>`; }
+function glass(d, c){ return `<path d="${d}" fill="${c}" fill-opacity=".55" stroke="${shade(c, -.25)}" stroke-width=".25"/><path d="${d}" fill="none" stroke="#ffffff" stroke-width=".5" opacity=".6" transform="scale(.7) translate(-.4,-.6)" stroke-dasharray="1.6 3"/>`; }
+const loop = (y = -3.4, c = '#c8a85a') => `<circle cx="0" cy="${y}" r=".55" fill="none" stroke="${c}" stroke-width=".3"/>`;
+const HEART = 'M0 2.8 C -3.8 0 -3.2 -3.2 -1.4 -3.2 C -.6 -3.2 0 -2.6 0 -2 C 0 -2.6 .6 -3.2 1.4 -3.2 C 3.2 -3.2 3.8 0 0 2.8Z';
+const STAR = 'M0 -3.2 L .9 -1 L 3.2 -1 L 1.4 .4 L 2 2.8 L 0 1.4 L -2 2.8 L -1.4 .4 L -3.2 -1 L -.9 -1Z';
+const CH = {
+  /* いつでも */
+  heart:{ l:'金のハート', m:'metal', a:() => metal(HEART) + loop(-3.6) },
+  star:{ l:'銀の星', m:'metal', a:() => metal(STAR, 'silver') + loop(-3.8, '#a8acb4') },
+  moonc:{ l:'金の三日月', m:'metal', a:() => metal('M1 -3 A 3.2 3.2 0 1 0 1 3 A 2.4 2.4 0 1 1 1 -3Z') + `<circle cx="2.3" cy="-1.4" r=".45" fill="#f2d870"/>` + loop(-3.6) },
+  clover:{ l:'四つ葉', m:'metal', a:() => metal([0, 90, 180, 270].map(a => { const r = a * Math.PI / 180, c = Math.cos(r), s2 = Math.sin(r); const P = (x, y) => `${(x * c - y * s2).toFixed(2)} ${(x * s2 + y * c).toFixed(2)}`; return `M0 0 C ${P(-1.6, -1.2)} ${P(-1.4, -3)} ${P(0, -2.4)} C ${P(1.4, -3)} ${P(1.6, -1.2)} 0 0Z`; }).join(' ')) + `<path d="M0 0 Q .6 2 1.4 3" stroke="#a87a18" stroke-width=".4" fill="none"/>` + loop(-3) },
+  key:{ l:'アンティークの鍵', m:'metal', a:() => metal('M-.6 -1.4 A 1.8 1.8 0 1 1 .6 -1.4 L .5 3 L 1.6 3 L 1.6 3.8 L .5 3.8 L .5 4.4 L 1.2 4.4 L 1.2 5 L -.5 5 L -.5 -1.4Z M0 -4.4 A .9 .9 0 1 0 0.01 -4.4Z', 'rose') + loop(-5.4, '#b07060') },
+  bird:{ l:'金の小鳥', m:'metal', a:() => metal('M-3 .6 C -2.4 -1.8 0 -2.4 1.4 -1.4 L 3 -2 L 2.2 -.8 C 2.6 1.4 .2 2.4 -1.6 1.8 L -3.2 2.4Z') + `<circle cx="1.2" cy="-1" r=".25" fill="#6a4a10"/>` + loop(-2.8) },
+  pearl:{ l:'パールのしずく', m:'metal', a:() => `<path d="M0 -3 V -1.6" stroke="#c8a85a" stroke-width=".3"/><circle cy="-1.2" r=".6" fill="#e2b23a"/><path d="M0 -.6 C 2 1.4 2 3.4 0 3.6 C -2 3.4 -2 1.4 0 -.6Z" fill="#fbf6ee" stroke="#d8d0c0" stroke-width=".25"/><ellipse cx="-.6" cy="1.6" rx=".5" ry=".8" fill="#fff"/>` + loop(-3.4) },
+  woodheart:{ l:'木のハート', m:'wood', a:() => wood(HEART) + `<circle cy="-1.6" r=".4" fill="${shade('#c8965a', -.4)}"/><path d="M-1.6 -.6 Q 0 0 1.6 -.6 M-1.2 .8 Q 0 1.2 1.2 .8" stroke="#a8784a" stroke-width=".2" fill="none"/>` },
+  woodstar:{ l:'木の星', m:'wood', a:() => wood(STAR, '#d8aa6e') + `<circle cy="-1.2" r=".35" fill="#7a5432"/>` },
+  tag:{ l:'クラフトタグ', m:'wood', a:() => wood('M-2.2 -2.4 L 0 -3.6 L 2.2 -2.4 L 2.2 3.6 L -2.2 3.6Z', '#d8b888') + `<circle cy="-2.4" r=".5" fill="#fbf6ea" stroke="#a8885a" stroke-width=".2"/>${[0, 1, 2].map(i => `<path d="M-1.4 ${i * 1.1} H ${1.4 - i * .3}" stroke="#8a6a44" stroke-width=".25" opacity=".55"/>`).join('')}<g transform="translate(0,2.6) scale(.35)">${metal(HEART, 'rose')}</g>` },
+  cotton:{ l:'コットンフラワー', m:'natural', a:() => `<path d="M0 3.6 L 0 1.6" stroke="#7a5a3a" stroke-width=".5"/>${[0, 72, 144, 216, 288].map(a => `<path d="M0 1.4 L ${(Math.sin(a * Math.PI / 180) * 2.6).toFixed(1)} ${(1.6 - Math.cos(a * Math.PI / 180) * 2).toFixed(1)}" stroke="#6a4a2a" stroke-width=".5"/>`).join('')}${[[-1.3, -.8], [1.3, -.8], [0, -2.1], [-1, .7], [1, .7]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.35" fill="#fdfbf6" stroke="#e2dccc" stroke-width=".2"/>`).join('')}` },
+  orange:{ l:'ドライオレンジ', m:'natural', a:() => `<circle r="3" fill="#d8862a" stroke="#a8601a" stroke-width=".3"/><circle r="2.5" fill="#e8a24a"/>${Array.from({length:9}, (_, i) => `<path d="M0 0 L ${(Math.cos(i * .698) * 2.3).toFixed(2)} ${(Math.sin(i * .698) * 2.3).toFixed(2)}" stroke="#f6d8a0" stroke-width=".35"/>`).join('')}<circle r=".4" fill="#f6d8a0"/>` + loop(-3.6, '#b8925a') },
+  cinnamon:{ l:'シナモンスティック', m:'natural', a:() => [-1, 0, 1].map(i => `<rect x="${i * 1.15 - .55}" y="-3.4" width="1.1" height="7" rx=".4" fill="${['#9a5a32', '#a8683a', '#8a4a28'][i + 1]}" stroke="#6a3a1a" stroke-width=".2"/>`).join('') + `<path d="M-2 0 H 2" stroke="#b8925a" stroke-width=".7"/>` },
+  lavender:{ l:'ラベンダーの束', m:'natural', a:() => [-1.2, 0, 1.2].map((x, i) => `<path d="M${x * .4} 3.8 L ${x} -1" stroke="#7a9a6a" stroke-width=".3"/>${[0, 1, 2, 3, 4].map(j => `<ellipse cx="${x + (j % 2 ? .3 : -.3)}" cy="${-1.2 - j * .7}" rx=".42" ry=".5" fill="${j % 2 ? '#8a72c8' : '#9a82d8'}"/>`).join('')}`).join('') + `<path d="M-1 2 H 1" stroke="#b8925a" stroke-width=".6"/>` },
+  wheat:{ l:'麦の穂', m:'natural', a:() => `<path d="M0 4 L 0 -3.6" stroke="#c8a05a" stroke-width=".35"/>${[0, 1, 2, 3, 4].map(j => `<ellipse cx="-.55" cy="${-2.8 + j * 1}" rx=".45" ry=".8" fill="#e2c07a" transform="rotate(-25 -.55 ${-2.8 + j})"/><ellipse cx=".55" cy="${-2.4 + j * 1}" rx=".45" ry=".8" fill="#d8b46a" transform="rotate(25 .55 ${-2.4 + j})"/>`).join('')}` },
+  glassheart:{ l:'ガラスのハート', m:'glass', a:() => glass(HEART, '#f4a0b8') + loop(-3.6, '#c8a85a') },
+  /* 季節 */
+  mizuhiki:{ l:'水引の梅結び', on:(m, d) => m === 1 && d <= 15, a:() => [0, 72, 144, 216, 288].map(a => `<circle cx="0" cy="-1.5" r="1.2" fill="none" stroke="${a % 144 ? '#d8303a' : '#e2b23a'}" stroke-width=".55" transform="rotate(${a})"/>`).join('') + `<circle r=".7" fill="none" stroke="#e2b23a" stroke-width=".5"/>` },
+  ougi:{ l:'金の扇', on:(m, d) => m === 1 && d <= 15, a:() => metal('M0 2.4 L -3.4 -1.4 A 4.8 4.8 0 0 1 3.4 -1.4Z') + [-2.4, -1.2, 0, 1.2, 2.4].map(x => `<path d="M0 2.4 L ${x} -2.6" stroke="#a87a18" stroke-width=".18"/>`).join('') + `<circle cy="2.4" r=".45" fill="#d8303a"/>` },
+  setsubun:{ l:'柊と豆', on:(m, d) => (m === 1 && d >= 25) || (m === 2 && d <= 3), a:() => `<path d="M0 3.4 L 0 -1" stroke="#6a5a3a" stroke-width=".35"/><path d="M0 -1 C .8 -2.2 2 -1.6 2.8 -2.6 C 3 -1.6 3.8 -1.4 4 -.6 C 3 -.4 2.6 .4 1.8 .4 C 1 .6 .4 0 0 -1Z" fill="#2f6a3a" stroke="#1f4a2a" stroke-width=".2"/><path d="M0 -1 C -.8 -2.2 -2 -1.6 -2.8 -2.6 C -3 -1.6 -3.8 -1.4 -4 -.6 C -3 -.4 -2.6 .4 -1.8 .4 C -1 .6 -.4 0 0 -1Z" fill="#3a7a42" stroke="#1f4a2a" stroke-width=".2"/>${[[-.8, 1.6], [.8, 1.8], [0, 2.8]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx=".75" ry=".6" fill="#e8d0a0" stroke="#b89a6a" stroke-width=".2"/>`).join('')}` },
+  lock:{ l:'ハートの錠前', on:(m, d) => m === 2 && d <= 14, a:() => metal('M-1.4 -1 L -1.4 -2.2 A 1.4 1.4 0 0 1 1.4 -2.2 L 1.4 -1', 'gold').replace('fill="url(#mtgold)"', 'fill="none"').replace('stroke="#a87a18" stroke-width=".25"', 'stroke="#c8961a" stroke-width=".55"') + metal('M0 3.4 C -3.6 .8 -3 -1.8 -1.4 -1.8 C -.6 -1.8 0 -1.2 0 -.8 C 0 -1.2 .6 -1.8 1.4 -1.8 C 3 -1.8 3.6 .8 0 3.4Z', 'rose') + `<circle cy=".4" r=".35" fill="#6a3a2a"/><path d="M0 .6 V 1.4" stroke="#6a3a2a" stroke-width=".3"/>` },
+  bonbon:{ l:'包みチョコ', on:(m, d) => m === 2 && d <= 14, a:() => `<path d="M-1.6 0 L -3.4 -1.4 L -3 0 L -3.4 1.4Z M1.6 0 L 3.4 -1.4 L 3 0 L 3.4 1.4Z" fill="#e8b8c8" stroke="#c88a9a" stroke-width=".2"/><ellipse rx="1.9" ry="1.6" fill="#7a4a2a" stroke="#5a3218" stroke-width=".25"/><path d="M-1 -.6 Q 0 -1.2 1 -.6" stroke="#c88a6a" stroke-width=".3" fill="none"/>` + loop(-2.4, '#c88a9a') },
+  kai:{ l:'貝合わせ', on:(m, d) => (m === 2 && d >= 18) || (m === 3 && d <= 3), a:() => `<path d="M-3 .8 C -3 -2.4 3 -2.4 3 .8 Q 0 2.4 -3 .8Z" fill="#fbf2ec" stroke="#d8c8b8" stroke-width=".25"/><path d="M-2.6 .6 C -2.4 -1.8 2.4 -1.8 2.6 .6" fill="none" stroke="#e2b23a" stroke-width=".35"/>${[0, 1, 2].map(i => `<circle cx="${-1 + i}" cy="${-.4 - (i % 2) * .4}" r=".45" fill="${['#e8586a', '#f2c84a', '#7ab85a'][i]}"/>`).join('')}<path d="M-1.4 1.6 Q 0 2.4 1.4 1.6" stroke="#d8303a" stroke-width=".4" fill="none"/>` + loop(-2.6, '#d8303a') },
+  sakurac:{ l:'ちりめんの桜', on:(m) => m === 3 || m === 4, a:() => chirimen([0, 72, 144, 216, 288].map(a => { const r = a * Math.PI / 180, c = Math.cos(r), s2 = Math.sin(r); const P = (x, y) => `${(x * c - y * s2).toFixed(2)} ${(x * s2 + y * c).toFixed(2)}`; return `M0 0 C ${P(1.7, -.6)} ${P(2, -2.7)} ${P(1, -3.3)} L ${P(.4, -2.9)} L ${P(0, -3.5)} L ${P(-.4, -2.9)} L ${P(-1, -3.3)} C ${P(-2, -2.7)} ${P(-1.7, -.6)} 0 0Z`; }).join(' '), '#f4b8c8') + `<circle r=".7" fill="#e8708a"/>` },
+  tulipc:{ l:'木のチューリップ', on:(m) => m === 4 || m === 5, a:() => wood('M-2 -2.6 Q -2.2 .8 0 1 Q 2.2 .8 2 -2.6 L 1 -1.4 L 0 -3 L -1 -1.4Z', '#e88a8a') + `<path d="M0 1 V 3.8" stroke="#7a9a5a" stroke-width=".5"/><path d="M0 3 Q -1.8 2.4 -1.6 1.2" stroke="#7a9a5a" stroke-width=".7" fill="none"/>` },
+  koinobori:{ l:'ちりめんのこいのぼり', on:(m, d) => (m === 4 && d >= 15) || (m === 5 && d <= 5), a:() => chirimen('M-3.4 0 C -2.6 -1.7 1.8 -1.9 3 0 L 4 -1.3 L 3.8 0 L 4 1.3 L 3 0 C 1.8 1.9 -2.6 1.7 -3.4 0Z', '#d8505a') + `<path d="M-1 -1.2 Q -.4 0 -1 1.2 M1 -1.3 Q 1.6 0 1 1.3" stroke="#fff" stroke-width=".3" fill="none" opacity=".7"/><circle cx="-2.4" cy="-.2" r=".55" fill="#fff"/><circle cx="-2.4" cy="-.2" r=".28" fill="#2a2a2a"/>` + loop(-1.8, '#c8a85a') },
+  leaf:{ l:'銀のリーフ', on:(m) => m === 5, a:() => metal('M0 3.6 C 2.6 1.6 2.6 -2 0 -3.6 C -2.6 -2 -2.6 1.6 0 3.6Z', 'silver') + `<path d="M0 3.4 L 0 -3 M0 1 L 1.2 -.2 M0 -.6 L -1.2 -1.6 M0 2 L -1 1" stroke="#8a90a0" stroke-width=".2"/>` + loop(-4, '#a8acb4') },
+  drop:{ l:'ガラスのしずく', on:(m) => m === 6, a:() => glass('M0 -3.4 C 2.4 0 2.6 2.4 0 3.4 C -2.6 2.4 -2.4 0 0 -3.4Z', '#8ec0e0') + loop(-4, '#a8acb4') },
+  tanzaku:{ l:'金の星飾り', on:(m) => m === 7, a:() => metal(STAR) + `<g transform="translate(2.4,2.6) scale(.45)">${metal(STAR, 'silver')}</g>` + loop(-3.8) },
+  furin:{ l:'ガラスの風鈴', on:(m) => m === 7 || m === 8, a:() => glass('M-2.6 1 Q -2.6 -2.8 0 -2.8 Q 2.6 -2.8 2.6 1Z', '#cfeaf6') + `<path d="M-2 -.6 Q 0 .4 2 -.6" stroke="#e8586a" stroke-width=".35" fill="none"/><circle cx="-.8" cy="-1.6" r=".38" fill="#5aa84a"/><circle cx=".9" cy="-1.4" r=".32" fill="#e8586a"/><path d="M0 1 V 2" stroke="#999" stroke-width=".2"/><rect x="-.8" y="2" width="1.6" height="2.4" fill="#fbf2c8" stroke="#e8d8a0" stroke-width=".2"/>` + loop(-3.4, '#a8acb4') },
+  shell:{ l:'貝殻', on:(m) => m === 7 || m === 8, a:() => `<path d="M0 3 L -3 -1 Q 0 -4.4 3 -1Z" fill="#fbe6d8" stroke="#d8b8a0" stroke-width=".25"/>${[-2, -1, 0, 1, 2].map(x => `<path d="M0 3 L ${x * 1.2} ${-2.2 - (2 - Math.abs(x)) * .4}" stroke="#e8c4ac" stroke-width=".35"/>`).join('')}<path d="M-1 3 L 0 3.8 L 1 3Z" fill="#f2d4c0"/>` },
+  kingyoc:{ l:'ちりめんの金魚', on:(m) => m === 7 || m === 8, a:() => chirimen('M1.4 0 C 2.6 -1 3.6 -2.2 4 -1.6 C 3.6 -.6 3.6 .6 4 1.6 C 3.6 2.2 2.6 1 1.4 0Z', '#f2906a') + chirimen('M-2.2 0 A 2.2 1.6 0 1 0 2.2 0 A 2.2 1.6 0 1 0 -2.2 0Z', '#e8503a') + `<circle cx="-1.1" cy="-.4" r=".4" fill="#fff"/><circle cx="-1.2" cy="-.4" r=".22" fill="#2a2a2a"/>` + loop(-2.2) },
+  usagi:{ l:'ちりめんのうさぎ', on:(m) => m === 9, a:() => chirimen('M-.8 -1 C -1.6 -2.8 -1.4 -4.2 -.8 -4.2 C -.2 -4.2 0 -2.8 -.2 -1.2 Z M.8 -1 C 1.6 -2.8 1.4 -4.2 .8 -4.2 C .2 -4.2 0 -2.8 .2 -1.2Z', '#fbf8f2') + chirimen('M-2.4 .8 A 2.4 2 0 1 0 2.4 .8 A 2.4 2 0 1 0 -2.4 .8Z', '#fbf8f2') + `<circle cx="-.8" cy=".4" r=".25" fill="#d8303a"/><circle cx=".8" cy=".4" r=".25" fill="#d8303a"/><ellipse cx="-.8" cy="-2.6" rx=".3" ry=".9" fill="#f6c0c8"/><ellipse cx=".8" cy="-2.6" rx=".3" ry=".9" fill="#f6c0c8"/>` },
+  susukic:{ l:'金のススキ', on:(m) => m === 9, a:() => `<path d="M0 3.8 Q .3 0 -.4 -3.4" stroke="#c8a040" stroke-width=".35" fill="none"/>${[0, 1, 2, 3].map(i => `<path d="M${-.2 - i * .1} ${-3 + i * 1.3} q 1.4 .2 1.8 1.4 M${-.2 - i * .1} ${-3 + i * 1.3} q -1.2 .4 -1.4 1.6" stroke="#e8c870" stroke-width=".5" fill="none" stroke-linecap="round"/>`).join('')}` },
+  donguri:{ l:'どんぐり', on:(m) => m >= 9 && m <= 11, a:() => [[-1.2, .4, -15], [1.3, .7, 20]].map(([x, y, r]) => `<g transform="translate(${x},${y}) rotate(${r})"><ellipse cy=".8" rx="1.3" ry="1.8" fill="#a8683a" stroke="#7a4a22" stroke-width=".2"/><ellipse cx="-.4" cy=".4" rx=".3" ry=".7" fill="#fff" opacity=".3"/><path d="M-1.5 -.4 Q 0 -2 1.5 -.4Z" fill="#6a4a2a"/>${[0, 1].map(j => `<path d="M-1.2 ${-.6 - j * .4} H 1.2" stroke="#4a3018" stroke-width=".18"/>`).join('')}</g>`).join('') + `<path d="M-1.2 -1.4 Q 0 -3 1.3 -1.2" stroke="#7a5a3a" stroke-width=".3" fill="none"/>` },
+  pinecone:{ l:'松ぼっくり', on:(m) => m >= 10 || m <= 2, a:() => `<ellipse cy=".4" rx="2.4" ry="3.2" fill="#8a5a32"/>${Array.from({length:14}, (_, i) => { const r = Math.floor(i / 3), x = ((i % 3) - 1) * 1.3 * (1 - r * .12), y = -2.2 + r * 1.2; return `<path d="M${(x - .7).toFixed(1)} ${y.toFixed(1)} Q ${x.toFixed(1)} ${(y + 1.2).toFixed(1)} ${(x + .7).toFixed(1)} ${y.toFixed(1)}" fill="#a8703e" stroke="#5a3a1a" stroke-width=".2"/>`; }).join('')}` + loop(-3.4, '#b8925a') },
+  pumpkinc:{ l:'フェルトのかぼちゃ', on:(m) => m === 10, a:() => felt('M0 -2 C -3.4 -2.2 -3.8 2.6 0 2.4 C 3.8 2.6 3.4 -2.2 0 -2Z', '#e8822a') + `<path d="M-1.4 -1.8 Q -2 .2 -1.4 2.2 M1.4 -1.8 Q 2 .2 1.4 2.2" stroke="#c8661a" stroke-width=".3" fill="none"/><path d="M0 -2 Q .2 -3 1 -3.2" stroke="#5a7a2a" stroke-width=".6" fill="none"/>` },
+  momijic:{ l:'押し紅葉', on:(m) => m === 10 || m === 11, a:() => `<path d="M0 3.4 L 0 1.4 M0 1.2 L -.5 .2 L -2.8 .9 L -2 -.2 L -3.8 -1 L -1.6 -1.4 L -2.1 -3.2 L -.6 -2.1 L 0 -4.4 L .6 -2.1 L 2.1 -3.2 L 1.6 -1.4 L 3.8 -1 L 2 -.2 L 2.8 .9 L .5 .2Z" fill="#c8482a" stroke="#8a2a1a" stroke-width=".2" stroke-linejoin="round"/><path d="M0 1.2 L 0 -3.6 M0 .2 L -2.6 -.8 M0 .2 L 2.6 -.8" stroke="#8a2a1a" stroke-width=".18" opacity=".7"/>` },
+  berry:{ l:'木の実とベリー', on:(m) => m === 11 || m === 12, a:() => `<path d="M-2 3 Q 0 0 1.6 -2.6" stroke="#6a4a2a" stroke-width=".4" fill="none"/>${[[-1.4, -.4], [-.4, -1.6], [.8, -.8], [.2, .4], [-1, .9]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r=".75" fill="#b8282a" stroke="#7a1a1a" stroke-width=".2"/><circle cx="${x - .25}" cy="${y - .25}" r=".2" fill="#fff" opacity=".6"/>`).join('')}<path d="M1.6 -2.6 C 2.8 -2.6 3.4 -1.4 3 -.6 C 2.2 -.6 1.6 -1.6 1.6 -2.6Z" fill="#5a7a3a"/>` },
+  snowflake:{ l:'木の雪の結晶', on:(m) => m === 12 || m <= 2, a:() => wood([0, 60, 120].map(a => { const r = a * Math.PI / 180, c = Math.cos(r), s2 = Math.sin(r); const P = (x, y) => `${(x * c - y * s2).toFixed(2)} ${(x * s2 + y * c).toFixed(2)}`; return `M${P(-.35, -3.4)} L ${P(.35, -3.4)} L ${P(.35, 3.4)} L ${P(-.35, 3.4)}Z`; }).join(' '), '#e8d4b0') + `<circle r=".7" fill="#e8d4b0" stroke="#a88a5a" stroke-width=".2"/>` + loop(-3.9, '#b8925a') },
+  pompom:{ l:'毛糸のポンポン', on:(m) => m === 12 || m <= 2, a:() => `<circle r="2.8" fill="#f2f0ea"/>${Array.from({length:30}, (_, i) => { const a = i * 2.4, d = Math.sqrt(i / 30) * 2.6; return `<path d="M${(Math.cos(a) * d).toFixed(2)} ${(Math.sin(a) * d).toFixed(2)} l ${(Math.cos(a) * .6).toFixed(2)} ${(Math.sin(a) * .6).toFixed(2)}" stroke="${i % 3 ? '#e8e2d6' : '#d8303a'}" stroke-width=".35" stroke-linecap="round"/>`; }).join('')}` },
+  bell:{ l:'金のベル', on:(m, d) => m === 12 && d <= 25, a:() => metal('M-2.6 1.6 Q -2.6 -2.8 0 -2.8 Q 2.6 -2.8 2.6 1.6 L 3 2.2 L -3 2.2Z') + `<circle cy="2.6" r=".6" fill="#a87a18"/>` + loop(-3.4) },
+  holly:{ l:'ヒイラギ', on:(m, d) => m === 12 && d <= 25, a:() => `<path d="M0 0 C .8 -1.2 2 -.6 2.8 -1.6 C 3 -.6 3.8 -.4 4 .4 C 3 .6 2.6 1.4 1.8 1.4 C 1 1.6 .4 1 0 0Z" fill="#2f6a3a" stroke="#1f4a2a" stroke-width=".2"/><path d="M0 0 C -.8 -1.2 -2 -.6 -2.8 -1.6 C -3 -.6 -3.8 -.4 -4 .4 C -3 .6 -2.6 1.4 -1.8 1.4 C -1 1.6 -.4 1 0 0Z" fill="#3a7a42" stroke="#1f4a2a" stroke-width=".2"/>${[[-.7, -.6], [.6, -.5], [0, .5]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r=".8" fill="#c8202a"/><circle cx="${x - .25}" cy="${y - .25}" r=".22" fill="#fff" opacity=".6"/>`).join('')}` },
+};
+const ALWAYS_CH = Object.keys(CH).filter(k => !CH[k].on);
+for (const k of Object.keys(CHARMS)) delete CHARMS[k];
+for (const [k, v] of Object.entries(CH)) CHARMS[k] = { l:v.l, on:v.on || (() => true) };
+charmArt = function(k){ return CH[k] ? CH[k].a() : ''; };
+decoWrap = function(list, x, y, seed){
+  const k = list && list[0]; if (!k || !CH[k]) return '';
+  const metalish = CH[k].m === 'metal' || CH[k].m === 'glass', cord = metalish ? '#c8a85a' : '#b89268';
+  const sc = 1.45, ex = x + 5.2, ey = y - 6.6;
+  const cordPath = `<path d="M${x + .8} ${y - .4} Q ${x + 3.6} ${y - 1.2} ${ex - .4} ${ey + 3.6 * sc - 5}" stroke="${cord}" stroke-width=".42" fill="none"${metalish ? ' stroke-dasharray=".55 .3"' : ''}/>`;
+  const art = CH[k].a();
+  const sh = art.replace(/<defs>.*?<\/defs>/g, '').replace(/fill="[^"]*"/g, 'fill="#000"').replace(/stroke="[^"]*"/g, 'stroke="none"');
+  return `<g class="bqf deco" style="--i:20">${cordPath}<g transform="translate(${ex + .5},${ey + .7}) rotate(10) scale(${sc})" opacity=".18">${sh}</g><g transform="translate(${ex},${ey}) rotate(10) scale(${sc})">${art}</g></g>`;
+};
 
 function gardenSVG(logs, big){
   const W = 360, H = big ? 210 : 160, ground = H - 52;
