@@ -3377,7 +3377,7 @@ function sheetBouquet(){
   if (!BQ) BQ = newBQ();
   const to = other(S.me), week = bloomStock();
   let h = `<div class="bqsticky"><div class="bqprev">${BQ.flowers.length ? bouquetBox(BQ) : `<div class="empty">花を選んでね</div>`}</div>${BQ.flowers.length ? `<div class="bqname">${esc(bqNameOf({ ...BQ, at:Date.now() }))}</div>` : ''}
-    <div class="seg bqtabs">${[['flower','花'],['shape','形'],['paper','包み紙'],['rib','リボン'],['deco','飾り'],['green','グリーン']].map(([v, l]) => `<button class="${BQTAB === v ? 'on' : ''}" data-act="bqtab" data-v="${v}">${l}</button>`).join('')}</div></div>`;
+    <div class="seg bqtabs">${[['flower','花'],['shape','形'],['paper','包み紙'],['rib','リボン'],['deco','チャーム'],['green','グリーン']].map(([v, l]) => `<button class="${BQTAB === v ? 'on' : ''}" data-act="bqtab" data-v="${v}">${l}</button>`).join('')}</div></div>`;
   if (BQTAB === 'flower'){
     h += `<div class="row" style="justify-content:space-between;margin:10px 2px 6px"><span class="muted">${BQ.flowers.length} / 12輪</span><span class="row"><button class="btn small ghost" data-act="bqundo">ひとつ戻す</button><button class="btn small ghost" data-act="bqshuffle">並び替え</button><button class="btn small ghost" data-act="bqclear">空にする</button></span></div>`;
     h += `<label class="f" style="margin-top:4px">大きさ</label>${seg('bqsize', SIZES, BQ.size)}`;
@@ -3398,8 +3398,8 @@ function sheetBouquet(){
     if (!['twine', 'mizuhiki', 'xmas'].includes(BQ.rib.st)) h += `<label class="f">色</label>${swatches('bqrc', RIB_C, BQ.rib.c)}`;
   }
   if (BQTAB === 'deco'){ const [mo_, d_] = nowMD(), ch_ = Object.entries(CHARMS).filter(([k, v]) => v.on(mo_, d_)), always = ['heart', 'star', 'clover', 'moonc'], cur = BQ.deco || [];
-    h += `<label class="f">包み紙に付ける飾り（3つまで）</label><div class="ribgrid charms">${ch_.map(([k, v]) => `<button class="${cur.includes(k) ? 'on' : ''}" data-act="bqdeco" data-v="${k}"><svg viewBox="-5 -5 10 10">${charmArt(k)}</svg><span>${v.l}</span>${always.includes(k) ? '' : '<em>いまだけ</em>'}</button>`).join('')}</div>`;
-    if (cur.length) h += `<button class="btn small ghost" style="margin-top:8px" data-act="bqdecoclear">飾りを外す</button>`; }
+    h += `<label class="f">チャーム（1つ選べる・もう一度押すと外れる）</label><div class="ribgrid charms">${ch_.map(([k, v]) => `<button class="${cur.includes(k) ? 'on' : ''}" data-act="bqdeco" data-v="${k}"><svg viewBox="-5 -5 10 10">${charmArt(k)}</svg><span>${v.l}</span>${always.includes(k) ? '' : '<em>いまだけ</em>'}</button>`).join('')}</div>`;
+    if (cur.length) h += `<button class="btn small ghost" style="margin-top:8px" data-act="bqdecoclear">チャームを外す</button>`; }
   if (BQTAB === 'green') h += `<label class="f">種類</label>${seg('bqgt', GREENS, BQ.green.t)}${BQ.green.t === 'none' ? '' : `<label class="f">量</label>${seg('bqgn', { s:'少し', m:'ふつう', l:'たっぷり' }, BQ.green.n)}`}`;
   h += `<button class="btn go wide" style="margin-top:18px" data-act="bqsend" ${BQ.flowers.length ? '' : 'disabled'}>${esc(nm(to))}に贈る</button>`;
   const sc = $('sheet').classList.contains('open') ? $('sheet').scrollTop : 0;
@@ -3794,7 +3794,7 @@ document.addEventListener('click', e => {
     case 'bqpc2': BQ.paper.c2 = el.dataset.v; sheetBouquet(); break;
     case 'bqpat': BQ.paper.pat = el.dataset.v; sheetBouquet(); break;
     case 'bqrst': BQ.rib.st = el.dataset.v; sheetBouquet(); break;
-    case 'bqdeco': { BQ.deco = BQ.deco || []; const v = el.dataset.v, i = BQ.deco.indexOf(v); if (i >= 0) BQ.deco.splice(i, 1); else if (BQ.deco.length < 3) BQ.deco.push(v); else toast('飾りは3つまでだよ'); sheetBouquet(); break; }
+    case 'bqdeco': { const v = el.dataset.v; BQ.deco = (BQ.deco || [])[0] === v ? [] : [v]; sheetBouquet(); break; }
     case 'bqdecoclear': BQ.deco = []; sheetBouquet(); break;
     case 'bqcharm': BQ.rib.charm = el.dataset.v; sheetBouquet(); break;
     case 'bqrc': BQ.rib.c = el.dataset.v; sheetBouquet(); break;
