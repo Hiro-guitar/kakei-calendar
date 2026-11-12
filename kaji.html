@@ -224,19 +224,59 @@ nav.tabs .tile{width:38px;height:38px}
 .zbig svg{width:130px;height:130px}
 .zbig{gap:10px;align-items:flex-end}
 .zbig .zplant{width:100px;height:120px}
-.cr-fly{animation:crfly 7s ease-in-out infinite alternate;transform-box:fill-box}
-@keyframes crfly{0%{transform:translate(0,0)}25%{transform:translate(14px,-8px)}50%{transform:translate(4px,6px)}75%{transform:translate(-12px,-4px)}100%{transform:translate(-4px,4px)}}
-.cr-fly .wing-l,.cr-fly .wing-r{animation:flap .28s ease-in-out infinite alternate;transform-box:fill-box}
-.cr-fly .wing-l{transform-origin:right center}.cr-fly .wing-r{transform-origin:left center}
-@keyframes flap{to{transform:scaleX(.35)}}
-.cr-perch{animation:bob2 3.2s ease-in-out infinite}
-@keyframes bob2{50%{transform:translateY(-1px) rotate(-3deg)}}
-.cr-hop{animation:hop 4s ease-in-out infinite}
-@keyframes hop{0%,70%,100%{transform:translate(0,0)}78%{transform:translate(3px,-4px)}86%{transform:translate(6px,0)}}
-.cr-ground{animation:crawl 12s linear infinite alternate}
-@keyframes crawl{to{transform:translateX(16px)}}
-.cr-hop2{animation:hop2 .5s ease-out}
-@keyframes hop2{40%{transform:translateY(-6px)}}
+.cr .mv,.cr .face,.cr .tap{transform-box:fill-box;transform-origin:center}
+.cr .tap.go{animation:tapjump .5s ease-out}
+@keyframes tapjump{40%{transform:translateY(-7px)}}
+.m-flutter{animation:flutter 9s ease-in-out infinite}
+@keyframes flutter{0%,100%{transform:translate(0,0)}15%{transform:translate(10px,-6px)}30%{transform:translate(18px,2px)}45%{transform:translate(8px,10px)}60%{transform:translate(-6px,4px)}75%{transform:translate(-14px,-6px)}90%{transform:translate(-6px,-10px)}}
+.m-flutter .face{animation:bob3 .5s ease-in-out infinite alternate}
+@keyframes bob3{to{transform:translateY(-1.2px)}}
+.m-flutter .wing-l,.m-flutter .wing-r{animation:flap .26s ease-in-out infinite alternate;transform-box:fill-box}
+.wing-l{transform-origin:right center}.wing-r{transform-origin:left center}
+@keyframes flap{to{transform:scaleX(.3)}}
+.m-buzz{animation:buzz 6s ease-in-out infinite}
+@keyframes buzz{0%,100%{transform:translate(0,0)}8%{transform:translate(1px,-1px)}16%{transform:translate(-1px,.6px)}24%{transform:translate(0,0)}32%{transform:translate(13px,-5px)}40%{transform:translate(14px,-4px)}48%{transform:translate(12px,-6px)}56%{transform:translate(13px,-5px)}66%{transform:translate(-7px,2px)}74%{transform:translate(-6px,1px)}82%{transform:translate(-8px,3px)}90%{transform:translate(-7px,2px)}}
+.m-buzz .wing-l,.m-buzz .wing-r{animation:buzzw .07s linear infinite alternate;transform-box:fill-box}
+@keyframes buzzw{to{transform:scaleX(.55)}}
+.m-dart{animation:dart 8s ease-out infinite}
+@keyframes dart{0%,28%{transform:translate(0,0)}33%,60%{transform:translate(26px,-10px)}65%,92%{transform:translate(-18px,-3px)}97%,100%{transform:translate(0,0)}}
+.m-dart .wing-l,.m-dart .wing-r{animation:dartw .05s linear infinite alternate;transform-box:fill-box}
+@keyframes dartw{to{transform:scaleY(.75)}}
+.m-swoop{animation:swoop 7s linear infinite}
+@keyframes swoop{0%{transform:translate(-230px,10px) rotate(-6deg)}25%{transform:translate(-115px,-8px) rotate(4deg)}50%{transform:translate(0,6px) rotate(-4deg)}75%{transform:translate(115px,-10px) rotate(5deg)}100%{transform:translate(230px,4px) rotate(-4deg)}}
+.m-wander{animation:wander 10s ease-in-out infinite alternate}
+@keyframes wander{25%{transform:translate(6px,-4px)}50%{transform:translate(-2px,-8px)}75%{transform:translate(-8px,-2px)}100%{transform:translate(4px,3px)}}
+.m-wander .wing-l,.m-wander .wing-r{animation:buzzw .12s linear infinite alternate;transform-box:fill-box}
+.m-perch{animation:perch 6s ease-in-out infinite}
+@keyframes perch{0%,78%,100%{transform:translate(0,0)}82%{transform:translate(0,-2.4px)}86%{transform:translate(0,0)}}
+.m-perch .face{animation:look 9s steps(1,end) infinite}
+@keyframes look{0%{transform:scaleX(1)}45%{transform:scaleX(-1)}80%{transform:scaleX(1)}}
+.m-hopwalk{animation:hopwalk 11s linear infinite}
+@keyframes hopwalk{0%{transform:translate(0,0)}4%{transform:translate(2px,-2.6px)}8%{transform:translate(4px,0)}12%{transform:translate(6px,-2.6px)}16%,30%{transform:translate(8px,0)}34%{transform:translate(10px,-2.6px)}38%,52%{transform:translate(12px,0)}56%{transform:translate(10px,-2.6px)}60%{transform:translate(8px,0)}64%{transform:translate(6px,-2.6px)}68%{transform:translate(4px,0)}72%{transform:translate(2px,-2.6px)}76%,100%{transform:translate(0,0)}}
+.m-hopwalk .face{animation:turnA 11s steps(1,end) infinite}
+@keyframes turnA{0%{transform:scaleX(1)}46%{transform:scaleX(-1)}96%{transform:scaleX(1)}}
+.m-hopwalk .peck{animation:peck 11s ease-in-out infinite;transform-box:fill-box;transform-origin:center bottom}
+@keyframes peck{0%,20%,26%,40%,46%,100%{transform:rotate(0)}22%,42%{transform:rotate(18deg)}}
+.m-crawl{animation:crawl 28s linear infinite}
+@keyframes crawl{0%{transform:translateX(0)}45%,50%{transform:translateX(18px)}95%,100%{transform:translateX(0)}}
+.m-crawl .face{animation:turnB 28s steps(1,end) infinite}
+@keyframes turnB{0%{transform:scaleX(1)}47%{transform:scaleX(-1)}97%{transform:scaleX(1)}}
+.m-frog{animation:frog 9s ease-in-out infinite}
+@keyframes frog{0%,58%{transform:translate(0,0)}63%{transform:translate(6px,-7px)}68%,88%{transform:translate(12px,0)}93%{transform:translate(6px,-7px)}98%,100%{transform:translate(0,0)}}
+.m-frog .face{animation:breathe 1.6s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(1.03,.97)}}
+.m-cricket{animation:cricket 7s ease-out infinite}
+@keyframes cricket{0%,76%{transform:translate(0,0)}80%{transform:translate(3px,-3px)}84%,92%{transform:translate(6px,0)}96%{transform:translate(3px,-3px)}100%{transform:translate(0,0)}}
+.m-ladybug{animation:lady 14s ease-in-out infinite}
+@keyframes lady{0%{transform:translate(0,0)}40%,50%{transform:translate(4px,-4px)}90%,100%{transform:translate(0,0)}}
+.m-ladybug .face{animation:ladyrot 14s ease-in-out infinite}
+@keyframes ladyrot{0%,40%{transform:rotate(45deg)}46%,90%{transform:rotate(225deg)}96%,100%{transform:rotate(405deg)}}
+.m-still .face{animation:still 3s ease-in-out infinite}
+@keyframes still{50%{transform:translateY(-.4px)}}
+.m-sway .face{animation:msway 3.4s ease-in-out infinite alternate;transform-origin:center bottom}
+@keyframes msway{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
+.m-pend .face{animation:pend 4s ease-in-out infinite alternate;transform-origin:center top}
+@keyframes pend{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
 .glow{animation:glow 1.6s ease-in-out infinite alternate}
 @keyframes glow{to{opacity:.05}}
 </style>
@@ -2808,8 +2848,15 @@ function creatureLayer(list, items, W, H, ground, U){
     else if ((c.kind === 'bird' || c.kind === 'perch') && perches.length && (c.kind === 'perch' || R(5) > .35)){
       const p = perches[Math.floor(R(6) * perches.length)], ph = plantOf(p.sp).h * U * p.k * .75; x = p.x + (R(7) - .5) * 14 * p.k; y = p.gy - ph * (.55 + R(8) * .3); cls = 'cr-perch'; sc = c.kind === 'perch' ? .8 : 1.05; }
     else { x = 24 + R(9) * (W - 48); y = H - 16 - R(10) * 12; cls = 'cr-hop'; sc = 1.1; }
-    const flip = R(11) > .5 ? -1 : 1; sc *= U / 11;
-    o += `<g data-act="creature" data-k="${esc(n)}" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><g class="${cls}" style="animation-delay:-${(R(12) * 6).toFixed(1)}s"><g transform="scale(${(sc * flip).toFixed(2)},${sc})">${creatureSVG(n)}</g></g><rect x="-10" y="-10" width="20" height="20" fill="transparent"/></g>`; });
+    sc *= U / 11;
+    if (n === 'ツバメ') { x = W / 2; y = 26 + R(2) * 30; }
+    const m = BFLY[n] ? 'flutter' : (n === 'ミツバチ' || n === 'マルハナバチ') ? 'buzz' : (n === 'シオカラトンボ' || n === 'アキアカネ') ? 'dart' : n === 'ツバメ' ? 'swoop' : n === 'ゲンジボタル' ? 'wander'
+      : BIRD2[n] ? (cls === 'cr-perch' ? 'perch' : 'hopwalk') : (n === 'カタツムリ' || n === 'ダンゴムシ') ? 'crawl' : n === 'アマガエル' ? 'frog' : n === 'スズムシ' ? 'cricket' : n === 'テントウムシ' ? 'ladybug'
+      : n === 'カマキリ' ? 'sway' : n === 'ミノムシ' ? 'pend' : 'still';
+    const flip = ['flutter', 'buzz', 'dart', 'wander', 'still', 'sway'].includes(m) && R(11) > .5 ? -1 : 1, dl = `animation-delay:-${(R(12) * 9).toFixed(1)}s`;
+    let art = `<g transform="scale(${(sc * flip).toFixed(2)},${sc.toFixed(2)})">${creatureSVG(n)}</g>`;
+    if (m === 'hopwalk') art = `<g class="peck" style="${dl}">${art}</g>`;
+    o += `<g class="cr" data-act="creature" data-k="${esc(n)}" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><g class="tap"><g class="mv m-${m}" style="${dl}"><g class="face" style="${dl}">${art}</g></g></g><rect x="-12" y="-12" width="24" height="24" fill="transparent"/></g>`; });
   return o;
 }
 
@@ -3164,7 +3211,7 @@ document.addEventListener('click', e => {
       toast(`${FL[k].n}｜${dayKey(l.at).slice(5).replace('-','/')} ${l.name}`); break; }
     case 'zm': zMode = el.dataset.v; zFilter = 'month'; render(); break;
     case 'zc': sheetCreature(el.dataset.k); break;
-    case 'creature': { const g = el.querySelector('g'); if (g) { g.classList.remove('cr-hop2'); void g.getBBox(); g.classList.add('cr-hop2'); } chime('thanks'); toast(`${el.dataset.k}｜${CR[el.dataset.k].desc.split('。')[0]}`); break; }
+    case 'creature': { const g = el.querySelector('.tap'); if (g) { g.classList.remove('go'); void g.getBBox(); g.classList.add('go'); } chime('thanks'); toast(`${el.dataset.k}｜${CR[el.dataset.k].desc.split('。')[0]}`); break; }
     case 'zf': zFilter = el.dataset.v; render(); break;
     case 'zk': sheetZukan(el.dataset.k); break;
     case 'talk': talkIdx++; lastTyped = ''; render(); break;
