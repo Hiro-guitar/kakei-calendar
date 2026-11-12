@@ -3299,6 +3299,12 @@ function charmArt(k){
 function charmSVG(k, x, y){ if (!k || !CHARMS[k]) return ''; return `<g class="charm"><path d="M${x} ${y} L ${x} ${y + 5.6}" stroke="#c8a85a" stroke-width=".4" stroke-dasharray=".5 .25"/><circle cx="${x}" cy="${y + 5.9}" r=".6" fill="none" stroke="#c8a85a" stroke-width=".35"/><g transform="translate(${x},${y + 10.4}) scale(1.25)">${charmArt(k)}</g></g>`; }
 const _ribW = ribbonSVG;
 ribbonSVG = function(r, x, y, w){ return _ribW(r, x, y, w); };
+function decoWrap(list, x, y, seed){
+  if (!list || !list.length) return '';
+  const n = list.length, pos = n === 1 ? [[0, 0]] : n === 2 ? [[-3.6, .4], [3.6, -.4]] : [[-4.4, 1.2], [0, -2.2], [4.4, 1]];
+  return `<g class="bqf deco" style="--i:20">` + list.map((k, j) => { if (!CHARMS[k]) return ''; const [dx, dy] = pos[j], rot = (rnd(seed, j + 410) - .5) * 20;
+    return `<g transform="translate(${(x + dx).toFixed(1)},${(y + dy).toFixed(1)}) rotate(${rot.toFixed(0)}) scale(1.45)"><g transform="translate(.25,.35)" opacity=".18">${charmArt(k).replace(/fill="[^"]*"/g, 'fill="#000"').replace(/stroke="[^"]*"/g, 'stroke="none"')}</g>${charmArt(k)}</g>`; }).join('') + `</g>`;
+}
 function decoPicks(list, cx, cy, R, seed){
   if (!list || !list.length) return '';
   const n = list.length, slots = n === 1 ? [[.55, -.5]] : n === 2 ? [[-.6, -.45], [.62, -.35]] : [[-.68, -.3], [.05, -.85], [.7, -.38]];
@@ -3318,14 +3324,13 @@ var bouquetSVG = function(raw, opts = {}){
   const drawFlowers = (cx2, cy2, stemTo) => { const sp = dome(n, cx2, cy2, R, seed, b.size); let st = '', fw = '';
     sp.forEach(([x, y]) => { if (stemTo) st += `<path d="M${x.toFixed(1)} ${y.toFixed(1)} Q ${(x * .4).toFixed(1)} ${((y + stemTo[1]) / 2).toFixed(1)} ${stemTo[0]} ${stemTo[1]}" stroke="#6aa84f" stroke-width=".9" fill="none"/>`; });
     sp.slice().sort((a, c) => a[1] - c[1]).forEach(([x, y, k, i]) => { const key = fl[i]; if (FL[key]) fw += `<g class="bqf" style="--i:${i}"${DF ? ` filter="url(#${DF.id})"` : ''}><g transform="translate(${x.toFixed(1)},${(y + dry * 3).toFixed(1)}) scale(${(k * .92 * (1 - dry * .1)).toFixed(2)}) rotate(${((rnd(seed, i + 30) - .5) * 26 + x * .5 + dry * Math.sign(x || 1) * 16).toFixed(0)})">${flowerSVG(key, seed + i)}</g></g>`; });
-    fw += decoPicks(b.deco, cx2, cy2, R, seed);
     return { st, fw }; };
   if (b.shape === 'vase'){
     const tint = P.base; cy = -30;
     const { st, fw } = drawFlowers(0, cy, [0, 20]);
     o += greensSVG(b.green, 0, cy, R, seed, true) + st;
     o += `<path d="M-9 4 C -14 12 -12 26 -7 33 L 7 33 C 12 26 14 12 9 4 C 7 2 7 -2 8 -4 L -8 -4 C -7 -2 -7 2 -9 4Z" fill="${tint}" fill-opacity=".38" stroke="${shade(tint, -.3)}" stroke-opacity=".6" stroke-width=".5"/><path d="M-11.4 14 C -12 20 -10 28 -7 32 L 7 32 C 10 28 12 20 11.4 14Z" fill="#c8e0ec" opacity=".45"/><path d="M-6 -2 C -7 6 -9 16 -6 28" stroke="#fff" stroke-width="1.2" opacity=".5" fill="none"/><ellipse cy="-4" rx="8" ry="1.4" fill="none" stroke="${shade(tint, -.3)}" stroke-opacity=".6" stroke-width=".5"/>`;
-    o += fw + greensSVG(b.green, 0, cy, R, seed, false) + ribbonSVG(b.rib, 0, 0, 16);
+    o += fw + greensSVG(b.green, 0, cy, R, seed, false) + ribbonSVG(b.rib, 0, 0, 16) + decoWrap(b.deco, 0, 15, seed);
     return { svg:o, vb:`-40 -${Math.round(40 + R)} 80 ${Math.round(78 + R)}` };
   }
   if (b.shape === 'basket'){
@@ -3335,7 +3340,7 @@ var bouquetSVG = function(raw, opts = {}){
     const { fw } = drawFlowers(0, cy, null);
     o += greensSVG(b.green, 0, cy, R, seed, true) + fw + greensSVG(b.green, 0, cy, R, seed, false);
     o += `<path d="M-23 2 L 23 2 L 18 24 Q 0 27 -18 24Z" fill="#b8884e" stroke="#7a5428" stroke-width=".5"/>` + Array.from({length:5}, (_, i) => `<path d="M-22 ${5 + i * 4} Q 0 ${7 + i * 4} 22 ${5 + i * 4}" stroke="#8a6232" stroke-width=".5" fill="none"/>`).join('') + Array.from({length:11}, (_, i) => `<path d="M${-20 + i * 4} 2.4 L ${-16 + i * 3.2} 24" stroke="#d8aa6e" stroke-width=".6" opacity=".7"/>`).join('') + `<path d="M-24 1 L 24 1 L 24 3.6 L -24 3.6Z" fill="#a8784a" stroke="#7a5428" stroke-width=".4"/>`;
-    o += ribbonSVG(b.rib, 14, 0, 0);
+    o += ribbonSVG(b.rib, 14, 0, 0) + decoWrap(b.deco, -6, 12, seed);
     return { svg:o, vb:`-40 -${Math.round(34 + R * 1.2)} 80 ${Math.round(62 + R * 1.2)}` };
   }
   if (b.shape === 'round'){
@@ -3344,7 +3349,7 @@ var bouquetSVG = function(raw, opts = {}){
     if (P2) o += `<ellipse cy="${cy + 3}" rx="${(R + 4) * 1.12}" ry="${(R + 4) * .62}" fill="${P2.fill}"/>`;
     o += `<path d="M-5 ${cy + 6} L -4 30 L 4 30 L 5 ${cy + 6}Z" fill="#6aa84f"/>` + Array.from({length:7}, (_, i) => `<path d="M${-3.6 + i * 1.2} ${cy + 8} L ${-3 + i} 30" stroke="#4f8a3a" stroke-width=".4"/>`).join('');
     const { fw } = drawFlowers(0, cy, null);
-    o += greensSVG(b.green, 0, cy, R, seed, true) + fw + greensSVG(b.green, 0, cy, R, seed, false) + ribbonSVG(b.rib, 0, 12, 10);
+    o += greensSVG(b.green, 0, cy, R, seed, true) + fw + greensSVG(b.green, 0, cy, R, seed, false) + decoWrap(b.deco, 0, cy + (R + 6) * .6, seed) + ribbonSVG(b.rib, 0, 12, 10);
     return { svg:o, vb:`-40 -${Math.round(30 + R)} 80 ${Math.round(66 + R)}` };
   }
   // 花束（円すい形の包み）
@@ -3354,7 +3359,7 @@ var bouquetSVG = function(raw, opts = {}){
   o += greensSVG(b.green, cx, cy, R, seed, true) + st + fw + greensSVG(b.green, cx, cy, R, seed, false);
   o += `<path d="M${-half + 4} ${cy + 14} Q -10 ${cy + 20} 0 ${cy + 18} Q 10 ${cy + 20} ${half - 4} ${cy + 14} L 5 36 Q 0 38 -5 36Z" fill="${P.fill}" stroke="${shade(P.dk, -.25)}" stroke-opacity=".5" stroke-width=".4"/>`;
   o += `<path d="M${-half + 4} ${cy + 14} Q -10 ${cy + 20} 0 ${cy + 18} Q 10 ${cy + 20} ${half - 4} ${cy + 14}" fill="none" stroke="${shade(P.base, .3)}" stroke-width=".8"/><path d="M-12 ${cy + 18} L -2 34 M10 ${cy + 18} L 2 34" stroke="${shade(P.dk, -.1)}" stroke-width=".4" opacity=".6"/>`;
-  o += ribbonSVG(b.rib, 0, 16, 11);
+  o += decoWrap(b.deco, 0, 5, seed) + ribbonSVG(b.rib, 0, 16, 11);
   return { svg:o, vb:`-${Math.round(half + 8)} -${Math.round(40 + R)} ${Math.round(half * 2 + 16)} ${Math.round(80 + R)}` };
 };
 function coverPath(vb){ const [x, y, w, h] = vb.split(' ').map(Number); const L = x + w * .14, Rr = x + w * .86, top = y + h * .03, bot = y + h * .62;
@@ -3393,7 +3398,7 @@ function sheetBouquet(){
     if (!['twine', 'mizuhiki', 'xmas'].includes(BQ.rib.st)) h += `<label class="f">色</label>${swatches('bqrc', RIB_C, BQ.rib.c)}`;
   }
   if (BQTAB === 'deco'){ const [mo_, d_] = nowMD(), ch_ = Object.entries(CHARMS).filter(([k, v]) => v.on(mo_, d_)), always = ['heart', 'star', 'clover', 'moonc'], cur = BQ.deco || [];
-    h += `<label class="f">花束に挿す飾り（3つまで）</label><div class="ribgrid charms">${ch_.map(([k, v]) => `<button class="${cur.includes(k) ? 'on' : ''}" data-act="bqdeco" data-v="${k}"><svg viewBox="-5 -5 10 10">${charmArt(k)}</svg><span>${v.l}</span>${always.includes(k) ? '' : '<em>いまだけ</em>'}</button>`).join('')}</div>`;
+    h += `<label class="f">包み紙に付ける飾り（3つまで）</label><div class="ribgrid charms">${ch_.map(([k, v]) => `<button class="${cur.includes(k) ? 'on' : ''}" data-act="bqdeco" data-v="${k}"><svg viewBox="-5 -5 10 10">${charmArt(k)}</svg><span>${v.l}</span>${always.includes(k) ? '' : '<em>いまだけ</em>'}</button>`).join('')}</div>`;
     if (cur.length) h += `<button class="btn small ghost" style="margin-top:8px" data-act="bqdecoclear">飾りを外す</button>`; }
   if (BQTAB === 'green') h += `<label class="f">種類</label>${seg('bqgt', GREENS, BQ.green.t)}${BQ.green.t === 'none' ? '' : `<label class="f">量</label>${seg('bqgn', { s:'少し', m:'ふつう', l:'たっぷり' }, BQ.green.n)}`}`;
   h += `<button class="btn go wide" style="margin-top:18px" data-act="bqsend" ${BQ.flowers.length ? '' : 'disabled'}>${esc(nm(to))}に贈る</button>`;
