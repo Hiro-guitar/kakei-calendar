@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="うちの家事">
+<meta name="theme-color" content="#faf6ef">
+<title>うちの家事</title>
+<style>
+:root{
+  --bg:#faf6ef; --card:#fff; --ink:#2b2a28; --sub:#8a857c; --line:#ece6db;
+  --h:#2f8f83; --h-soft:#dff0ed; --y:#e0785a; --y-soft:#fbe6df; --any:#a59f94; --any-soft:#efebe4;
+  --accent:#3d3a35;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;font-size:15px}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input,textarea,select{font:inherit;color:inherit}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(env(safe-area-inset-top) + 12px) 18px 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
+header h1{font-size:18px;margin:0;font-weight:700;flex:1}
+header .date{font-size:13px;color:var(--sub);font-weight:400;margin-left:6px}
+.me-chip{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:13px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.dot.h{background:var(--h)} .dot.y{background:var(--y)} .dot.any{background:var(--any)}
+.sync{width:8px;height:8px;border-radius:50%;background:#c9c3b8}
+.sync.ok{background:#58b368}.sync.pending{background:#f0b13b}.sync.err{background:#d9534f}
+main{padding:14px 16px calc(96px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:rgba(250,246,239,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);display:flex;padding:6px 6px calc(6px + env(safe-area-inset-bottom));z-index:6}
+nav.tabs button{flex:1;padding:6px 0;font-size:11px;color:var(--sub);display:flex;flex-direction:column;align-items:center;gap:2px}
+nav.tabs button .ic{font-size:20px;line-height:1}
+nav.tabs button.on{color:var(--ink);font-weight:700}
+h2{font-size:13px;color:var(--sub);font-weight:600;margin:22px 4px 8px;letter-spacing:.04em}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.muted{color:var(--sub);font-size:13px}
+/* timeline */
+.tl{position:relative;height:46px;margin:4px 2px 0}
+.tl .bar{position:absolute;left:0;right:0;top:18px;height:4px;border-radius:2px;background:var(--line)}
+.tl .now{position:absolute;top:10px;width:2px;height:20px;background:var(--accent);border-radius:1px}
+.tl .d{position:absolute;top:13px;width:14px;height:14px;margin-left:-7px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.tl .tick{position:absolute;top:32px;font-size:10px;color:var(--sub);transform:translateX(-50%)}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--sub);margin-top:2px}
+.legend span{display:flex;align-items:center;gap:5px}
+/* chore cards */
+.card{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 12px 12px 0;margin-bottom:8px;overflow:hidden;position:relative}
+.card .stripe{width:5px;align-self:stretch;border-radius:0 4px 4px 0;flex:none}
+.stripe.h{background:var(--h)}.stripe.y{background:var(--y)}.stripe.any{background:var(--any)}
+.card .body{flex:1;min-width:0}
+.card .name{font-weight:600;font-size:15px}
+.card .meta{font-size:12px;color:var(--sub);margin-top:2px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.card.done{background:#fdfbf7}
+.card.done .name{color:var(--sub);text-decoration:line-through;text-decoration-color:#cfc8bc}
+.check{width:38px;height:38px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;flex:none}
+.check:active{transform:scale(.92)}
+.check.on.h{background:var(--h);border-color:var(--h)}.check.on.y{background:var(--y);border-color:var(--y)}
+.thanks{font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--sub)}
+.thanks.on{background:#fff0f2;border-color:#f3c1c9;color:#d0546b}
+.badge{font-size:11px;padding:1px 7px;border-radius:999px}
+.badge.h{background:var(--h-soft);color:var(--h)}.badge.y{background:var(--y-soft);color:var(--y)}.badge.any{background:var(--any-soft);color:#6f6a62}
+.empty{text-align:center;padding:24px 10px;color:var(--sub);font-size:13px}
+.fab{position:fixed;right:18px;bottom:calc(78px + env(safe-area-inset-bottom));background:var(--accent);color:#fff;border-radius:999px;padding:12px 18px;font-weight:600;box-shadow:0 6px 18px rgba(0,0,0,.18);z-index:4}
+.minirow{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line);font-size:14px}
+.minirow:last-child{border-bottom:0}
+.minirow .t{color:var(--sub);font-size:12px;width:40px;flex:none}
+.minirow .n{flex:1}
+/* week */
+.weeknav{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 10px}
+.weeknav button{padding:6px 12px;border-radius:10px;background:var(--card);border:1px solid var(--line)}
+.wgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.wday{background:var(--card);border:1px solid var(--line);border-radius:12px;min-height:118px;padding:6px 5px;display:flex;flex-direction:column;align-items:center}
+.wday.today{border-color:var(--accent)}
+.wday.sel{background:#f3eee5}
+.wday .wd{font-size:11px;color:var(--sub)}
+.wday .dn{font-size:15px;font-weight:700;margin-bottom:6px}
+.wday .dots{display:flex;flex-wrap:wrap;gap:3px;justify-content:center}
+.wday .dots i{width:8px;height:8px;border-radius:50%;display:block}
+.wday .dots i.h{background:var(--h)}.wday .dots i.y{background:var(--y)}
+/* review */
+.reveal{width:100%;padding:14px;border-radius:14px;border:1px dashed #cfc8bc;color:var(--sub);background:transparent}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.who{border-radius:14px;padding:12px}
+.who.h{background:var(--h-soft)}.who.y{background:var(--y-soft)}
+.who .nm{font-weight:700;font-size:14px;margin-bottom:6px}
+.who ul{margin:0;padding-left:16px;font-size:13px;line-height:1.7}
+.note{padding:10px 2px;border-bottom:1px solid var(--line)}
+.note:last-child{border-bottom:0}
+.note .txt{font-size:14px;white-space:pre-wrap}
+.note .m{font-size:12px;color:var(--sub);margin-top:4px;display:flex;gap:8px;align-items:center}
+.btn{padding:10px 16px;border-radius:12px;background:var(--accent);color:#fff;font-weight:600}
+.btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.btn.small{padding:5px 10px;font-size:12px;border-radius:9px}
+.btn.danger{background:#fff;color:#c0392b;border:1px solid #f0c9c4}
+.btn.wide{width:100%;padding:13px}
+.row{display:flex;gap:8px;align-items:center}
+.list-item{display:flex;align-items:center;gap:10px;padding:11px 2px;border-bottom:1px solid var(--line)}
+.list-item:last-child{border-bottom:0}
+.list-item .n{flex:1;min-width:0}
+.list-item .n small{display:block;color:var(--sub);font-size:12px}
+.ord{display:flex;flex-direction:column}
+.ord button{font-size:11px;color:var(--sub);padding:1px 6px}
+label.f{display:block;font-size:12px;color:var(--sub);margin:14px 0 6px}
+input.t,textarea.t,select.t{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:#fff;outline:none}
+textarea.t{min-height:70px;resize:vertical}
+.seg{display:flex;background:#f1ece3;border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;padding:8px 4px;border-radius:9px;font-size:13px;color:var(--sub)}
+.seg button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.days{display:flex;gap:5px;margin-top:8px}
+.days button{flex:1;padding:8px 0;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:13px}
+.days button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(30,25,20,.35);z-index:20;opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.open{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--bg);border-radius:20px 20px 0 0;max-height:88vh;overflow:auto;padding:8px 18px calc(22px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .25s ease;max-width:640px;margin:0 auto}
+.sheet.open{transform:none}
+.sheet .grab{width:40px;height:4px;border-radius:2px;background:#d6cfc3;margin:4px auto 12px}
+.sheet h3{margin:4px 0 4px;font-size:19px}
+.defs{list-style:none;padding:0;margin:8px 0 0}
+.defs li{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.defs li:last-child{border-bottom:0}
+.defs li .bx{width:20px;height:20px;border-radius:6px;border:2px solid #cfc8bc;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
+.defs li.on .bx{background:var(--accent);border-color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chips button{padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:13px}
+.toast{position:fixed;left:50%;bottom:calc(140px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--accent);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;opacity:0;transition:all .2s;z-index:30;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.onboard{min-height:70vh;display:flex;flex-direction:column;justify-content:center;gap:14px;text-align:center}
+.onboard .big{padding:22px;border-radius:18px;font-size:18px;font-weight:700;color:#fff}
+.onboard .big.h{background:var(--h)}.onboard .big.y{background:var(--y)}
+.hint{font-size:12px;color:var(--sub);line-height:1.6;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <h1>うちの家事<span class="date" id="hdate"></span></h1>
+  <span class="sync" id="sync" title="同期"></span>
+  <button class="me-chip" id="mechip"></button>
+</header>
+<main id="view"></main>
+<button class="fab" id="fab">＋ 名もなき家事</button>
+<nav class="tabs" id="tabs">
+  <button data-t="today"><span class="ic">☀︎</span>今日</button>
+  <button data-t="week"><span class="ic">▦</span>週</button>
+  <button data-t="review"><span class="ic">✎</span>振り返り</button>
+  <button data-t="settings"><span class="ic">⚙︎</span>設定</button>
+</nav>
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* ========== 状態 ========== */
+const LS = 'uchikaji.v1';
+const SLOTS = [['morning','朝'],['day','昼'],['night','夜'],['any','いつでも']];
+const WD = ['日','月','火','水','木','金','土'];
+let S = (() => { try { return JSON.parse(localStorage.getItem(LS)) } catch(e) { return null } })()
+  || { items:{}, me:null, url:'', key:'', lastSync:0, queue:[], seeded:false };
+let tab = 'today', weekOff = 0, selDay = null, reviewOpen = false, syncState = 'local';
+
+const save = () => { try { localStorage.setItem(LS, JSON.stringify(S)) } catch(e) {} };
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const all = kind => Object.values(S.items).filter(i => i.kind === kind && !i.deleted);
+const $ = id => document.getElementById(id);
+
+function put(item){
+  item.updatedAt = Date.now();
+  S.items[item.id] = item;
+  S.queue = S.queue.filter(q => q.id !== item.id);
+  S.queue.push(item);
+  save(); render(); push();
+}
+const remove = item => put({ ...item, deleted:true });
+
+function settings(){
+  return S.items.settings || { id:'settings', kind:'settings', names:{ h:'ひろき', y:'佑理' } };
+}
+const nm = k => k === 'any' ? 'どちらでも' : (settings().names[k] || k);
+const other = k => k === 'h' ? 'y' : 'h';
+
+/* ========== 日付 ========== */
+const pad = n => String(n).padStart(2,'0');
+const dayKey = ts => { const d = new Date(ts); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}` };
+const hm = ts => { const d = new Date(ts); return `${d.getHours()}:${pad(d.getMinutes())}` };
+const startOfDay = ts => { const d = new Date(ts); d.setHours(0,0,0,0); return d.getTime() };
+const daysBetween = (a,b) => Math.round((startOfDay(b) - startOfDay(a)) / 864e5);
+function weekStart(off){ const d = new Date(); d.setHours(0,0,0,0); const dow = (d.getDay()+6)%7; d.setDate(d.getDate()-dow+off*7); return d; }
+
+/* ========== 家事ロジック ========== */
+function choresSorted(){ return all('chore').sort((a,b) => (a.order??0) - (b.order??0)); }
+function logsOn(key){ return all('log').filter(l => dayKey(l.at) === key).sort((a,b) => a.at - b.at); }
+function lastDone(cid){ let m = 0; for (const l of all('log')) if (l.choreId === cid && l.at > m) m = l.at; return m; }
+function isDueToday(c){
+  const now = Date.now(), f = c.freq || { type:'daily' };
+  if (f.type === 'daily') return true;
+  if (f.type === 'weekly') return (f.days||[]).includes(new Date().getDay());
+  if (f.type === 'interval'){
+    const ld = lastDone(c.id);
+    if (!ld) return true;
+    if (dayKey(ld) === dayKey(now)) return true;
+    return daysBetween(ld, now) >= (f.n || 1);
+  }
+  return true;
+}
+function freqText(c){
+  const f = c.freq || { type:'daily' };
+  if (f.type === 'daily') return '毎日';
+  if (f.type === 'weekly') return (f.days||[]).slice().sort().map(d => WD[d]).join('・') + '曜';
+  if (f.type === 'interval') return `${f.n||1}日ごと`;
+  return '';
+}
+
+function doChore(c){
+  if (!S.me) return;
+  put({ id:uid(), kind:'log', choreId:c.id, name:c.name, by:S.me, at:Date.now(), thanks:false });
+  toast(`「${c.name}」やった！`);
+}
+function doFree(name){
+  name = name.trim(); if (!name || !S.me) return;
+  put({ id:uid(), kind:'log', choreId:null, name, by:S.me, at:Date.now(), thanks:false });
+  toast(`「${name}」を記録しました`);
+}
+function toggleThanks(log){ put({ ...log, thanks: !log.thanks }); if (!log.thanks) toast('ありがとうを送りました'); }
+
+/* ========== 初期データ（仮） ========== */
+function seedIfEmpty(){
+  if (S.seeded || all('chore').length || Object.values(S.items).some(i => i.kind === 'chore')) { S.seeded = true; save(); return; }
+  const C = (id,name,owner,slot,freq,def) => ({ id:'seed_'+id, kind:'chore', name, owner, slot, freq, def });
+  const list = [
+    C('breakfast','朝ごはんの準備','y','morning',{type:'daily'},['食卓に並べる','使った調理器具はシンクへ']),
+    C('dish_am','朝の洗い物','h','morning',{type:'daily'},['シンクに何も残っていない','水切りカゴは空にしておく']),
+    C('kid_am','子どもの支度','y','morning',{type:'daily'},['着替え・持ち物をそろえる','連絡帳を確認']),
+    C('laundry','洗濯（回す・干す）','h','morning',{type:'daily'},['洗濯機を回して干すまで','洗濯機のフタは開けておく']),
+    C('laundry_in','洗濯物の取り込み・たたむ','h','day',{type:'daily'},['たたんで各自の場所にしまう']),
+    C('dinner','夕飯づくり','y','night',{type:'daily'},['食卓に並べる','コンロ周りをさっと拭く']),
+    C('dish_pm','夜の洗い物','h','night',{type:'daily'},['シンクに何も残っていない','排水口のゴミを捨てる','台を拭く']),
+    C('bath_clean','お風呂掃除','h','night',{type:'daily'},['浴槽を洗ってお湯はりまで','床の髪の毛を取る']),
+    C('kid_bath','子どものお風呂','y','night',{type:'daily'},['体を洗って保湿まで']),
+    C('trash','ゴミ出し','h','morning',{type:'weekly',days:[1,4]},['家中のゴミ箱を集める','新しい袋をセット']),
+    C('vacuum','掃除機','any','any',{type:'interval',n:3},['リビングと寝室','コードを片付ける']),
+    C('toilet','トイレ掃除','h','any',{type:'weekly',days:[6]},['便器の中と便座','床を拭く','ペーパーの補充']),
+    C('shopping','買い出し','any','any',{type:'weekly',days:[0,3]},['リストのものを買う','冷蔵庫にしまう']),
+    C('sheets','シーツ・枕カバー交換','any','any',{type:'interval',n:14},['外して洗濯','新しいものを付ける']),
+  ];
+  list.forEach((c,i) => { c.order = i; c.updatedAt = 1; S.items[c.id] = c; S.queue.push(c); });
+  S.seeded = true; save();
+}
+
+/* ========== 同期（GAS） ========== */
+let pushing = false;
+async function push(){
+  if (!S.url || pushing || !S.queue.length) { setSync(); return; }
+  pushing = true; setSync('pending');
+  const batch = S.queue.slice();
+  try {
+    const r = await fetch(S.url, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ key:S.key, items:batch }) });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'error');
+    const sent = new Map(batch.map(b => [b.id, b.updatedAt]));
+    S.queue = S.queue.filter(q => sent.get(q.id) !== q.updatedAt);
+    save(); syncState = 'ok';
+  } catch(e) { syncState = 'err'; }
+  pushing = false; setSync();
+  if (S.queue.length && syncState === 'ok') push();
+}
+async function pull(){
+  if (!S.url) { setSync(); return false; }
+  try {
+    const since = Math.max(0, (S.lastSync||0) - 60000);
+    const r = await fetch(`${S.url}?key=${encodeURIComponent(S.key)}&since=${since}`);
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'error');
+    for (const it of j.items){
+      const cur = S.items[it.id];
+      if (!cur || (it.updatedAt||0) >= (cur.updatedAt||0)) S.items[it.id] = it;
+    }
+    S.lastSync = j.now; save(); syncState = 'ok'; setSync();
+    return true;
+  } catch(e) { syncState = 'err'; setSync(); return false; }
+}
+async function sync(){
+  const ok = await pull();
+  if (ok && !S.seeded) seedIfEmpty();
+  await push();
+  render();
+}
+function setSync(s){
+  const el = $('sync');
+  const st = s || (!S.url ? 'local' : S.queue.length ? (syncState==='err'?'err':'pending') : syncState);
+  el.className = 'sync ' + (st==='ok'?'ok':st==='pending'?'pending':st==='err'?'err':'');
+  el.title = { local:'この端末だけに保存中', ok:'同期済み', pending:'同期待ち', err:'同期エラー' }[st] || '';
+}
+
+/* ========== 描画 ========== */
+function render(){
+  const now = new Date();
+  $('hdate').textContent = `${now.getMonth()+1}/${now.getDate()}（${WD[now.getDay()]}）`;
+  const me = S.me;
+  $('mechip').innerHTML = me ? `<span class="dot ${me}"></span>${esc(nm(me))}` : '未設定';
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
+  $('fab').style.display = (me && tab === 'today') ? '' : 'none';
+  const v = $('view');
+  if (!me) { v.innerHTML = viewOnboard(); return; }
+  v.innerHTML = { today:viewToday, week:viewWeek, review:viewReview, settings:viewSettings }[tab]();
+  setSync();
+}
+
+function viewOnboard(){
+  const n = settings().names;
+  return `<div class="onboard">
+    <div style="font-size:20px;font-weight:700">この端末を使うのは？</div>
+    <div class="muted">あとから設定で変えられます</div>
+    <button class="big h" data-act="setme" data-k="h">${esc(n.h)}</button>
+    <button class="big y" data-act="setme" data-k="y">${esc(n.y)}</button>
+  </div>`;
+}
+
+function timeline(logs, showNow){
+  const now = new Date(), nowMin = now.getHours()*60 + now.getMinutes();
+  const ticks = [0,6,12,18,24].map(h => `<span class="tick" style="left:${h/24*100}%">${h}</span>`).join('');
+  const dots = logs.map(l => { const d = new Date(l.at); const m = d.getHours()*60 + d.getMinutes();
+    return `<span class="d" style="left:${m/1440*100}%;background:var(--${l.by})" title="${esc(hm(l.at)+' '+l.name)}"></span>` }).join('');
+  return `<div class="tl"><div class="bar"></div>${ticks}${showNow?`<span class="now" style="left:${nowMin/1440*100}%"></span>`:''}${dots}</div>`;
+}
+const legend = () => `<div class="legend"><span><i class="dot h"></i>${esc(nm('h'))}</span><span><i class="dot y"></i>${esc(nm('y'))}</span></div>`;
+
+function choreCard(c, todays){
+  const done = todays.length > 0;
+  const last = todays[todays.length-1];
+  let meta = `<span class="badge ${c.owner}">${esc(nm(c.owner))}</span>`;
+  if (done){
+    meta = `<span>✓ ${hm(last.at)} ${esc(nm(last.by))}</span>`;
+    if (last.by !== S.me) meta += `<button class="thanks ${last.thanks?'on':''}" data-act="thanks" data-id="${last.id}">${last.thanks?'♥ ありがとう済':'♡ ありがとう'}</button>`;
+    else if (last.thanks) meta += `<span class="thanks on">♥ ありがとうが届いてる</span>`;
+  }
+  const ck = done ? `<span class="check on ${last.by}">✓</span>` : `<button class="check" data-act="do" data-id="${c.id}" aria-label="やった"></button>`;
+  return `<div class="card ${done?'done':''}"><span class="stripe ${c.owner}"></span>
+    <div class="body" data-act="open" data-id="${c.id}"><div class="name">${esc(c.name)}</div><div class="meta">${meta}</div></div>${ck}</div>`;
+}
+
+function viewToday(){
+  const tk = dayKey(Date.now());
+  const logs = logsOn(tk);
+  const chores = choresSorted();
+  const due = chores.filter(isDueToday);
+  const dueIds = new Set(due.map(c => c.id));
+  let html = `<div class="panel">${timeline(logs, true)}${legend()}</div>`;
+  for (const [slot,label] of SLOTS){
+    const cs = due.filter(c => (c.slot||'any') === slot);
+    if (!cs.length) continue;
+    const withLogs = cs.map(c => [c, logs.filter(l => l.choreId === c.id)]);
+    withLogs.sort((a,b) => (a[1].length>0) - (b[1].length>0));
+    html += `<h2>${label}</h2>` + withLogs.map(([c,t]) => choreCard(c,t)).join('');
+  }
+  if (!due.length) html += `<div class="empty">今日の家事はまだ登録されていません。<br>設定から追加できます。</div>`;
+  const extra = logs.filter(l => !l.choreId || !dueIds.has(l.choreId));
+  if (extra.length){
+    html += `<h2>ほかにやったこと</h2><div class="panel">` + extra.map(l => `<div class="minirow"><span class="t">${hm(l.at)}</span><span class="dot ${l.by}"></span><span class="n">${esc(l.name)}</span>
+      ${l.by!==S.me?`<button class="thanks ${l.thanks?'on':''}" data-act="thanks" data-id="${l.id}">${l.thanks?'♥':'♡'}</button>`:(l.thanks?'<span class="thanks on">♥</span>':`<button class="btn small ghost" data-act="undo" data-id="${l.id}">取消</button>`)}</div>`).join('') + `</div>`;
+  }
+  return html;
+}
+
+function viewWeek(){
+  const ws = weekStart(weekOff);
+  const tk = dayKey(Date.now());
+  const days = [...Array(7)].map((_,i) => { const d = new Date(ws); d.setDate(ws.getDate()+i); return d; });
+  const label = `${ws.getMonth()+1}/${ws.getDate()} 〜 ${days[6].getMonth()+1}/${days[6].getDate()}`;
+  let html = `<div class="weeknav"><button data-act="wk" data-d="-1">‹ 前</button><b>${weekOff===0?'今週':label}</b><button data-act="wk" data-d="1" ${weekOff>=0?'disabled style="opacity:.3"':''}>次 ›</button></div>`;
+  html += `<div class="wgrid">` + days.map(d => {
+    const k = dayKey(d.getTime()); const logs = logsOn(k);
+    return `<button class="wday ${k===tk?'today':''} ${k===selDay?'sel':''}" data-act="selday" data-k="${k}">
+      <span class="wd">${WD[d.getDay()]}</span><span class="dn">${d.getDate()}</span>
+      <span class="dots">${logs.map(l => `<i class="${l.by}"></i>`).join('')}</span></button>`;
+  }).join('') + `</div><div style="margin-top:8px">${legend()}</div>`;
+  const k = selDay && days.some(d => dayKey(d.getTime()) === selDay) ? selDay : null;
+  if (k){
+    const logs = logsOn(k);
+    html += `<h2>${k.slice(5).replace('-','/')} の家事</h2><div class="panel">${timeline(logs, k===tk)}`;
+    html += logs.length ? logs.map(l => `<div class="minirow"><span class="t">${hm(l.at)}</span><span class="dot ${l.by}"></span><span class="n">${esc(l.name)}${l.thanks?' <span style="color:#d0546b">♥</span>':''}</span></div>`).join('') : `<div class="empty">記録なし</div>`;
+    html += `</div>`;
+  } else {
+    html += `<p class="hint">日付をタップすると、その日の流れが見られます。</p>`;
+  }
+  return html;
+}
+
+function viewReview(){
+  const ws = weekStart(weekOff), we = new Date(ws); we.setDate(ws.getDate()+7);
+  const logs = all('log').filter(l => l.at >= ws.getTime() && l.at < we.getTime());
+  const notes = all('note').sort((a,b) => b.at - a.at);
+  const open = notes.filter(n => n.status !== 'done'), closed = notes.filter(n => n.status === 'done');
+  let html = `<div class="weeknav"><button data-act="wk" data-d="-1">‹ 前</button><b>${weekOff===0?'今週の振り返り':`${ws.getMonth()+1}/${ws.getDate()}の週`}</b><button data-act="wk" data-d="1" ${weekOff>=0?'disabled style="opacity:.3"':''}>次 ›</button></div>`;
+
+  html += `<h2>改善ボックス（${open.length}）</h2><div class="panel">`;
+  html += open.length ? open.map(n => noteRow(n)).join('') : `<div class="empty">まだありません</div>`;
+  html += `<div style="margin-top:10px"><textarea class="t" id="newnote" placeholder="気になったこと・こうしたいこと（その場で言わずにここへ）"></textarea>
+    <div class="row" style="margin-top:8px;justify-content:flex-end"><button class="btn small" data-act="addnote">入れる</button></div></div></div>`;
+
+  html += `<h2>ふたりの1週間</h2>`;
+  if (!reviewOpen){
+    html += `<button class="reveal" data-act="reveal">ふたりで見るときにタップ<br><small>件数は振り返りの材料。比べるためではなく、担当を組み替えるために使う</small></button>`;
+  } else {
+    const per = k => { const m = {}; logs.filter(l => l.by === k).forEach(l => m[l.name] = (m[l.name]||0)+1); return Object.entries(m).sort((a,b) => b[1]-a[1]); };
+    const thx = k => logs.filter(l => l.by === k && l.thanks).length;
+    html += `<div class="split">` + ['h','y'].map(k => `<div class="who ${k}"><div class="nm">${esc(nm(k))}</div>
+      <ul>${per(k).map(([n,c]) => `<li>${esc(n)}${c>1?` ×${c}`:''}</li>`).join('') || '<li style="list-style:none;margin-left:-16px" class="muted">記録なし</li>'}</ul>
+      <div class="muted" style="margin-top:6px">♥ もらったありがとう ${thx(k)}</div></div>`).join('') + `</div>`;
+    const nameless = logs.filter(l => !l.choreId);
+    if (nameless.length) html += `<p class="hint">名もなき家事 ${nameless.length}件：${nameless.map(l => esc(l.name)).join('、')}</p>`;
+    html += `<p class="hint">偏りを感じたら、設定で担当を組み替えましょう。完了の定義もこのタイミングで見直せます。</p>`;
+  }
+  if (closed.length){
+    html += `<h2>話したこと</h2><div class="panel">` + closed.slice(0,20).map(n => noteRow(n)).join('') + `</div>`;
+  }
+  return html;
+}
+function noteRow(n){
+  const c = n.choreId && S.items[n.choreId];
+  return `<div class="note"><div class="txt">${esc(n.text)}</div>
+    <div class="m"><span class="dot ${n.by}"></span>${esc(nm(n.by))}・${dayKey(n.at).slice(5).replace('-','/')}${c?`・${esc(c.name)}`:''}
+    <span style="flex:1"></span>
+    ${n.status==='done' ? `<button class="btn small ghost" data-act="reopen" data-id="${n.id}">戻す</button>` : `<button class="btn small ghost" data-act="closenote" data-id="${n.id}">話した ✓</button>`}
+    ${n.by===S.me?`<button class="btn small ghost" data-act="delnote" data-id="${n.id}">削除</button>`:''}</div></div>`;
+}
+
+function viewSettings(){
+  const n = settings().names;
+  let html = `<h2>家事リスト</h2><div class="panel">`;
+  const cs = choresSorted();
+  html += cs.map((c,i) => `<div class="list-item"><span class="stripe ${c.owner}" style="width:5px;height:34px;border-radius:3px"></span>
+    <div class="n" data-act="edit" data-id="${c.id}"><div>${esc(c.name)}</div><small>${esc(nm(c.owner))}・${SLOTS.find(s=>s[0]===(c.slot||'any'))[1]}・${freqText(c)}</small></div>
+    <div class="ord"><button data-act="mv" data-id="${c.id}" data-d="-1" ${i===0?'disabled':''}>▲</button><button data-act="mv" data-id="${c.id}" data-d="1" ${i===cs.length-1?'disabled':''}>▼</button></div></div>`).join('')
+    || `<div class="empty">家事がありません</div>`;
+  html += `<button class="btn wide" style="margin-top:10px" data-act="edit" data-id="">＋ 家事を追加</button></div>`;
+
+  html += `<h2>ふたりの名前</h2><div class="panel">
+    <div class="row"><span class="dot h"></span><input class="t" id="name_h" value="${esc(n.h)}"></div>
+    <div class="row" style="margin-top:8px"><span class="dot y"></span><input class="t" id="name_y" value="${esc(n.y)}"></div>
+    <div class="row" style="margin-top:10px;justify-content:flex-end"><button class="btn small" data-act="savenames">保存</button></div></div>`;
+
+  html += `<h2>この端末を使う人</h2><div class="panel"><div class="seg">
+    <button class="${S.me==='h'?'on':''}" data-act="setme" data-k="h">${esc(n.h)}</button>
+    <button class="${S.me==='y'?'on':''}" data-act="setme" data-k="y">${esc(n.y)}</button></div></div>`;
+
+  html += `<h2>同期（Google Apps Script）</h2><div class="panel">
+    <label class="f" style="margin-top:0">ウェブアプリURL</label><input class="t" id="s_url" value="${esc(S.url)}" placeholder="https://script.google.com/macros/s/…/exec">
+    <label class="f">合言葉（Code.gsのKEYと同じもの）</label><input class="t" id="s_key" value="${esc(S.key)}">
+    <div class="row" style="margin-top:10px;justify-content:flex-end;gap:8px"><span class="muted" id="syncmsg" style="flex:1">${S.url?(S.lastSync?`最終同期 ${hm(S.lastSync)}`:'未同期'):'未設定（この端末だけに保存中）'}</span>
+    <button class="btn small" data-act="savesync">保存して同期</button></div>
+    <p class="hint">2台のスマホで同じURLと合言葉を入れると、記録が共有されます。</p></div>`;
+
+  html += `<h2>バックアップ</h2><div class="panel row"><button class="btn small ghost" data-act="export">書き出す（JSON）</button><span class="muted">全データをファイルに保存</span></div>`;
+  return html;
+}
+
+/* ========== シート ========== */
+function openSheet(html){ $('sheet').innerHTML = `<div class="grab"></div>` + html; $('sheet').classList.add('open'); $('scrim').classList.add('open'); }
+function closeSheet(){ $('sheet').classList.remove('open'); $('scrim').classList.remove('open'); }
+
+function sheetChore(id){
+  const c = S.items[id]; if (!c) return;
+  const tl = logsOn(dayKey(Date.now())).filter(l => l.choreId === id);
+  const ld = lastDone(id);
+  let h = `<h3>${esc(c.name)}</h3><div class="meta muted" style="display:flex;gap:8px;align-items:center"><span class="badge ${c.owner}">担当：${esc(nm(c.owner))}</span>${freqText(c)}${ld&&!tl.length?`・前回 ${dayKey(ld).slice(5).replace('-','/')}`:''}</div>`;
+  h += `<label class="f">完了の定義</label>`;
+  h += (c.def||[]).length ? `<ul class="defs">${c.def.map((d,i) => `<li data-act="tick"><span class="bx">✓</span><span>${esc(d)}</span></li>`).join('')}</ul>` : `<p class="muted">まだ決まっていません（編集から追加）</p>`;
+  h += `<button class="btn wide" style="margin-top:16px" data-act="do" data-id="${c.id}" data-close="1">やった！</button>`;
+  if (tl.length){
+    h += `<label class="f">今日の記録</label><div class="panel">` + tl.map(l => `<div class="minirow"><span class="t">${hm(l.at)}</span><span class="dot ${l.by}"></span><span class="n">${esc(nm(l.by))}</span>${l.by===S.me?`<button class="btn small ghost" data-act="undo" data-id="${l.id}" data-close="1">取り消す</button>`:''}</div>`).join('') + `</div>`;
+  }
+  h += `<label class="f">改善ボックスに入れる（その場で言わずに、週1で話す）</label><textarea class="t" id="cnote" placeholder="例：排水口のゴミも捨ててほしい"></textarea>
+    <div class="row" style="margin-top:8px"><button class="btn ghost" style="flex:1" data-act="edit" data-id="${c.id}">家事を編集</button><button class="btn" style="flex:1" data-act="addcnote" data-id="${c.id}">入れる</button></div>`;
+  openSheet(h);
+}
+
+let draft = null;
+function sheetEdit(id){
+  const c = id ? S.items[id] : null;
+  draft = c ? JSON.parse(JSON.stringify(c)) : { id:uid(), kind:'chore', name:'', owner:S.me||'any', slot:'any', freq:{type:'daily'}, def:['','',''], order: (Math.max(-1,...all('chore').map(x=>x.order??0))+1), _new:true };
+  while ((draft.def||[]).length < 3) (draft.def = draft.def||[]).push('');
+  renderEdit();
+}
+function renderEdit(){
+  const d = draft, f = d.freq || {type:'daily'};
+  const seg = (field, opts, cur) => `<div class="seg">${opts.map(([v,l]) => `<button class="${cur===v?'on':''}" data-act="dset" data-f="${field}" data-v="${v}">${esc(l)}</button>`).join('')}</div>`;
+  let h = `<h3>${d._new?'家事を追加':'家事を編集'}</h3>
+    <label class="f">名前</label><input class="t" id="e_name" value="${esc(d.name)}" placeholder="例：夜の洗い物">
+    <label class="f">担当</label>${seg('owner',[['h',nm('h')],['y',nm('y')],['any','どちらでも']],d.owner)}
+    <label class="f">時間帯</label>${seg('slot',SLOTS,d.slot||'any')}
+    <label class="f">頻度</label>${seg('ftype',[['daily','毎日'],['weekly','曜日'],['interval','◯日ごと']],f.type)}`;
+  if (f.type === 'weekly') h += `<div class="days">${[1,2,3,4,5,6,0].map(i => `<button class="${(f.days||[]).includes(i)?'on':''}" data-act="dday" data-v="${i}">${WD[i]}</button>`).join('')}</div>`;
+  if (f.type === 'interval') h += `<div class="row" style="margin-top:8px"><input class="t" id="e_n" type="number" min="1" max="60" value="${f.n||3}" style="width:90px"><span>日ごと</span></div>`;
+  h += `<label class="f">完了の定義（ここまでやったら完了、を短く）</label>` +
+    d.def.map((x,i) => `<input class="t e_def" style="margin-bottom:6px" value="${esc(x)}" placeholder="${['例：シンクに何も残っていない','例：台を拭く','（任意）'][i]||'（任意）'}">`).join('') +
+    `<button class="btn small ghost" data-act="addline">＋ 行を追加</button>`;
+  h += `<div class="row" style="margin-top:18px"><button class="btn ghost" style="flex:1" data-act="close">キャンセル</button><button class="btn" style="flex:2" data-act="saveedit">保存</button></div>`;
+  if (!d._new) h += `<button class="btn danger wide" style="margin-top:10px" data-act="delchore" id="delbtn">この家事を削除</button>`;
+  openSheet(h);
+}
+function captureEdit(){
+  if (!draft) return;
+  const n = $('e_name'); if (n) draft.name = n.value;
+  const en = $('e_n'); if (en) draft.freq.n = Math.max(1, parseInt(en.value)||1);
+  const defs = [...document.querySelectorAll('.e_def')].map(i => i.value);
+  if (defs.length) draft.def = defs;
+}
+
+function sheetFree(){
+  const recent = [...new Set(all('log').filter(l => !l.choreId).sort((a,b) => b.at-a.at).map(l => l.name))].slice(0,8);
+  const base = ['洗剤・ティッシュの補充','保育園・幼稚園の連絡','ゴミ袋をセット','郵便物の整理','水筒を洗う','植物の水やり'];
+  const chips = [...new Set([...recent, ...base])].slice(0,12);
+  openSheet(`<h3>名もなき家事</h3><p class="muted">小さいけど誰かがやってること、ワンタップで残そう</p>
+    <div class="chips">${chips.map(c => `<button data-act="free" data-v="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+    <label class="f">自由に入力</label><div class="row"><input class="t" id="freein" placeholder="例：網戸の掃除"><button class="btn" data-act="freein">記録</button></div>`);
+}
+
+/* ========== イベント ========== */
+let toastT;
+function toast(m){ const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1600); }
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const a = el.dataset.act, id = el.dataset.id;
+  const L = id && S.items[id];
+  switch(a){
+    case 'setme': S.me = el.dataset.k; save(); render(); break;
+    case 'do': doChore(S.items[id]); if (el.dataset.close) closeSheet(); break;
+    case 'open': sheetChore(id); break;
+    case 'thanks': toggleThanks(L); break;
+    case 'undo': remove(L); toast('取り消しました'); if (el.dataset.close) closeSheet(); break;
+    case 'tick': el.classList.toggle('on'); break;
+    case 'free': doFree(el.dataset.v); closeSheet(); break;
+    case 'freein': doFree($('freein').value); closeSheet(); break;
+    case 'wk': weekOff = Math.min(0, weekOff + Number(el.dataset.d)); selDay = null; reviewOpen = false; render(); break;
+    case 'selday': selDay = selDay === el.dataset.k ? null : el.dataset.k; render(); break;
+    case 'reveal': reviewOpen = true; render(); break;
+    case 'addnote': { const t = $('newnote').value.trim(); if (!t) return; put({ id:uid(), kind:'note', by:S.me, text:t, choreId:null, at:Date.now(), status:'open' }); toast('改善ボックスに入れました'); break; }
+    case 'addcnote': { const t = $('cnote').value.trim(); if (!t) return; put({ id:uid(), kind:'note', by:S.me, text:t, choreId:id, at:Date.now(), status:'open' }); closeSheet(); toast('改善ボックスに入れました'); break; }
+    case 'closenote': put({ ...L, status:'done' }); break;
+    case 'reopen': put({ ...L, status:'open' }); break;
+    case 'delnote': remove(L); break;
+    case 'edit': sheetEdit(id); break;
+    case 'dset': captureEdit(); { const f = el.dataset.f, v = el.dataset.v;
+      if (f === 'ftype') { draft.freq = { type:v, days: draft.freq.days || [new Date().getDay()], n: draft.freq.n || 3 }; }
+      else draft[f] = v; } renderEdit(); break;
+    case 'dday': captureEdit(); { const v = Number(el.dataset.v), ds = new Set(draft.freq.days||[]); ds.has(v) ? ds.delete(v) : ds.add(v); draft.freq.days = [...ds]; } renderEdit(); break;
+    case 'addline': captureEdit(); draft.def.push(''); renderEdit(); break;
+    case 'saveedit': { captureEdit(); const d = { ...draft }; d.name = (d.name||'').trim();
+      if (!d.name) { toast('名前を入れてください'); return; }
+      if (d.freq.type === 'weekly' && !(d.freq.days||[]).length) { toast('曜日を選んでください'); return; }
+      d.def = d.def.map(x => x.trim()).filter(Boolean); delete d._new;
+      put(d); draft = null; closeSheet(); toast('保存しました'); break; }
+    case 'delchore':
+      if (!el.dataset.sure) { el.dataset.sure = '1'; el.textContent = 'もう一度押すと削除します'; return; }
+      remove(S.items[draft.id]); draft = null; closeSheet(); toast('削除しました'); break;
+    case 'close': closeSheet(); break;
+    case 'mv': { const cs = choresSorted(); const i = cs.findIndex(c => c.id === id), j = i + Number(el.dataset.d);
+      if (j < 0 || j >= cs.length) return; [cs[i], cs[j]] = [cs[j], cs[i]];
+      cs.forEach((c,k) => { if (c.order !== k) { c.order = k; c.updatedAt = Date.now(); S.items[c.id] = c; S.queue = S.queue.filter(q => q.id !== c.id); S.queue.push(c); } });
+      save(); render(); push(); break; }
+    case 'savenames': { const s = { ...settings(), names:{ h:$('name_h').value.trim()||'ひろき', y:$('name_y').value.trim()||'佑理' } }; put(s); toast('保存しました'); break; }
+    case 'savesync': S.url = $('s_url').value.trim(); S.key = $('s_key').value.trim(); S.lastSync = 0; save(); toast('同期しています…'); sync().then(() => toast(syncState==='ok'?'同期しました':'同期できませんでした')); break;
+    case 'export': { const b = new Blob([JSON.stringify(S.items,null,1)], {type:'application/json'}); const u = URL.createObjectURL(b);
+      const x = document.createElement('a'); x.href = u; x.download = `uchikaji-${dayKey(Date.now())}.json`; x.click(); setTimeout(() => URL.revokeObjectURL(u), 2000); break; }
+  }
+});
+$('scrim').addEventListener('click', closeSheet);
+$('mechip').addEventListener('click', () => { tab = 'settings'; render(); });
+$('fab').addEventListener('click', sheetFree);
+$('tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; tab = b.dataset.t; weekOff = 0; selDay = null; reviewOpen = false; closeSheet(); render(); window.scrollTo(0,0); });
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'freein') { doFree(e.target.value); closeSheet(); } });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) sync(); });
+setInterval(() => { if (!document.hidden && S.url) sync(); }, 30000);
+setInterval(() => { if (tab === 'today' && !$('sheet').classList.contains('open')) render(); }, 60000);
+
+/* ========== 起動 ========== */
+if (!S.url) seedIfEmpty();
+render();
+if (S.url) sync();
+</script>
+</body>
+</html>
