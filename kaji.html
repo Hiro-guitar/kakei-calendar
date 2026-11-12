@@ -279,9 +279,21 @@ nav.tabs .tile{width:38px;height:38px}
 @keyframes pend{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
 .glow{animation:glow 1.6s ease-in-out infinite alternate}
 @keyframes glow{to{opacity:.05}}
-.bqprev{display:flex;justify-content:center;min-height:150px;align-items:center}
-.bqprev .bq{width:150px;height:208px}
-.bqprev.big .bq{width:210px;height:290px}
+.bqprev{display:flex;justify-content:center;min-height:200px;align-items:flex-end}
+.bqprev .bq{width:190px;height:200px}
+.bqsticky{position:sticky;top:-14px;z-index:3;background:var(--cream);margin:-14px -18px 0;padding:10px 18px 8px;box-shadow:0 6px 10px -8px rgba(31,82,110,.25)}
+.bqtabs button{font-size:12px;padding:7px 2px}
+.sw{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.sw button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;border-radius:12px}
+.sw button.on{background:var(--paper);box-shadow:inset 0 0 0 2px var(--amber)}
+.sw i{width:26px;height:26px;border-radius:50%;box-shadow:inset 0 0 0 1.5px rgba(31,82,110,.15)}
+.sw small{font-size:10px;font-weight:700;color:var(--sub)}
+.bqshapes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px}
+.bqshapes button{background:#fff;border-radius:16px;padding:6px 2px;display:flex;flex-direction:column;align-items:center;box-shadow:0 2px 5px rgba(31,82,110,.1)}
+.bqshapes button.on{box-shadow:inset 0 0 0 2.5px var(--amber)}
+.bqshapes .bq{width:64px;height:76px}
+.bqshapes span{font-size:11px;font-weight:800}
+.bqprev.big .bq{width:240px;height:270px}
 .bq.pop{animation:bqpop .6s cubic-bezier(.3,1.6,.5,1)}
 @keyframes bqpop{from{transform:scale(.6) rotate(-8deg);opacity:0}}
 .bqgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
@@ -292,12 +304,12 @@ nav.tabs .tile{width:38px;height:38px}
 .bqcell.out{opacity:.35}
 .bqcell:active{transform:scale(.94)}
 .bqbanner{display:flex;align-items:center;gap:12px;width:100%;background:linear-gradient(135deg,#fff6e8,#fde9ee);border-radius:24px;padding:10px 16px;margin:10px 0 4px;box-shadow:var(--sh);text-align:left;animation:bqpop .6s cubic-bezier(.3,1.6,.5,1)}
-.bqbanner svg{width:54px;height:76px;flex:none}
+.bqbanner svg{width:60px;height:70px;flex:none}
 .bqbanner span{display:flex;flex-direction:column;gap:2px;font-size:15px}
 .bqbanner small{font-size:12px;color:var(--sub);font-weight:700}
 .bqshelf{display:flex;gap:10px;overflow-x:auto;margin-top:12px;padding-bottom:4px}
 .bqshelf button{flex:none;display:flex;flex-direction:column;align-items:center;gap:2px}
-.bqshelf svg{width:64px;height:88px}
+.bqshelf svg{width:70px;height:80px}
 .bqshelf small{font-size:10.5px;color:var(--sub);font-weight:700;text-align:center;line-height:1.3}
 </style>
 </head>
@@ -2882,54 +2894,131 @@ function creatureLayer(list, items, W, H, ground, U){
   return o;
 }
 
-/* ===== 花束 ===== */
-const WRAPS = { kraft:['クラフト', '#cfae82', '#b8945e'], white:['白', '#f7f3ea', '#ddd6c6'], pink:['ピンク', '#f6d3da', '#e6b0bc'], blue:['水色', '#d4e6f2', '#a8c8de'], green:['若草', '#dfeccb', '#b8d09a'] };
-const RIBBONS = { red:['赤', '#d8404a'], white:['白', '#fbfaf6'], gold:['金', '#e2b23a'], navy:['紺', '#2a4a7a'], pink:['ピンク', '#ec8aa8'] };
-function bouquetSVG(flowers, wrap = 'kraft', ribbon = 'red', seed = 'b'){
-  const [, wc, wd] = WRAPS[wrap] || WRAPS.kraft, rc = (RIBBONS[ribbon] || RIBBONS.red)[1], n = flowers.length;
-  const slots = [[0, -30, 1.15], [-12, -26, 1.05], [12, -26, 1.05], [-6, -40, 1], [7, -40, 1], [-19, -16, .95], [19, -16, .95]];
-  const order = n <= 3 ? [0, 1, 2] : n <= 5 ? [3, 4, 0, 1, 2] : [3, 4, 1, 2, 0, 5, 6];
-  const pos = order.slice(0, n).map((i, j) => slots[i]);
-  let o = `<defs>${LG('wp' + wrap, shade(wc, .12), wc, wd)}</defs>`;
-  // 包み紙（奥）
-  o += `<path d="M-30 -22 Q -14 -34 0 -30 Q 14 -34 30 -22 L 4 34 L -4 34Z" fill="${shade(wc, -.08)}" stroke="${shade(wd, -.25)}" stroke-opacity=".5" stroke-width=".4"/>`;
-  // 葉と茎
-  for (let i = 0; i < Math.max(3, n); i++){ const a = -50 + i * (100 / Math.max(2, Math.max(3, n) - 1)); o += `<path d="${leafPath('lance', 16, 4)}" fill="${i % 2 ? '#5f9a4a' : '#4f8a3a'}" stroke="#3a6a2a" stroke-opacity=".4" stroke-width=".3" transform="translate(0,-6) rotate(${a.toFixed(0)})"/>`; }
-  pos.forEach(([x, y]) => { o += `<path d="M${x} ${y} Q ${x * .5} ${(y + 20) / 2} 0 22" stroke="#6aa84f" stroke-width="1" fill="none"/>`; });
-  // 花（奥の列から）
-  pos.map((p, j) => [p, j]).sort((a, b) => a[0][1] - b[0][1]).forEach(([[x, y, k], j]) => {
-    const key = flowers[j]; if (!FL[key]) return;
-    o += `<g transform="translate(${x},${y}) scale(${(k * .95).toFixed(2)}) rotate(${((rnd(seed, j) - .5) * 24 + x * .6).toFixed(0)})">${flowerSVG(key, seed + j)}</g>`; });
-  // 包み紙（手前）
-  o += `<path d="M-26 -10 Q -10 -4 0 -6 Q 10 -4 26 -10 L 5 34 Q 0 36 -5 34Z" fill="url(#wp${wrap})" stroke="${shade(wd, -.25)}" stroke-opacity=".5" stroke-width=".4"/>`;
-  o += `<path d="M-26 -10 Q -10 -4 0 -6 Q 10 -4 26 -10" fill="none" stroke="${shade(wc, .25)}" stroke-width=".8"/><path d="M-12 -6 L -2 32 M10 -6 L 2 32" stroke="${shade(wd, -.1)}" stroke-width=".4" opacity=".6"/>`;
-  // リボン
-  o += `<path d="M-5.6 14 L 5.6 14 L 5 17 L -5 17Z" fill="${rc}" stroke="${shade(rc, -.3)}" stroke-width=".3"/><path d="M0 15.5 C -6 10 -11 13 -9 16.5 C -7.6 19 -3 17.4 0 15.5Z" fill="${rc}" stroke="${shade(rc, -.3)}" stroke-width=".3"/><path d="M0 15.5 C 6 10 11 13 9 16.5 C 7.6 19 3 17.4 0 15.5Z" fill="${rc}" stroke="${shade(rc, -.3)}" stroke-width=".3"/><path d="M-1 16.4 L -4 24 L -2 23 L -1.4 25 L 0 17 M1 16.4 L 4 24 L 2 23 L 1.4 25 L 0 17" fill="${shade(rc, -.08)}" stroke="${shade(rc, -.3)}" stroke-width=".3"/><circle cx="0" cy="15.6" r="1.4" fill="${shade(rc, .1)}" stroke="${shade(rc, -.3)}" stroke-width=".3"/>`;
+/* ===== 花束（カスタマイズ版） ===== */
+const PAPER_C = { kraft:['クラフト', '#cfae82'], white:['白', '#f7f3ea'], pink:['ピンク', '#f6d3da'], blue:['水色', '#d4e6f2'], green:['若草', '#dfeccb'], lav:['ラベンダー', '#e2d8f0'], lemon:['レモン', '#f6eeb8'], black:['黒', '#3a3638'], navy:['紺', '#2e3f5c'], bord:['ボルドー', '#7a2a3a'] };
+const RIB_C = { red:['赤', '#d8404a'], white:['白', '#fbfaf6'], gold:['金', '#e2b23a'], navy:['紺', '#2a4a7a'], pink:['ピンク', '#ec8aa8'], black:['黒', '#2a2a2a'], green:['緑', '#4a7a4a'], sky:['水色', '#8ec0e0'] };
+const PATTERNS = { plain:'無地', dots:'ドット', stripe:'ストライプ', gingham:'ギンガム', news:'英字新聞' };
+const SHAPES = { bouquet:'花束', round:'ラウンド', basket:'かご', vase:'花瓶' };
+const RIB_ST = { bow:'ちょう結び', knot:'結び目', twine:'麻ひも', lace:'レース' };
+const GREENS = { none:'なし', leaf:'リーフ', euca:'ユーカリ', fern:'シダ', kasumi:'カスミソウ' };
+const SIZES = { s:'小さめ', m:'ふつう', l:'大きめ' };
+function normBq(b){ if (b.shape) return b; return { ...b, shape:'bouquet', paper:{ c:b.wrap === 'white' ? 'white' : b.wrap || 'kraft', c2:'', pat:'plain' }, rib:{ st:'bow', c:b.ribbon || 'red' }, green:{ t:'leaf', n:'m' }, size:'m', seed:b.id || 'x' }; }
+function paperFill(id, c, pat){
+  const base = PAPER_C[c] ? PAPER_C[c][1] : c, dk = shade(base, -.18), lt = shade(base, .2), ink = shade(base, base === '#3a3638' || base === '#2e3f5c' || base === '#7a2a3a' ? .35 : -.3);
+  let def = `<linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${lt}"/><stop offset="1" stop-color="${dk}"/></linearGradient>`;
+  if (pat === 'dots') def += `<pattern id="${id}p" width="5" height="5" patternUnits="userSpaceOnUse"><rect width="5" height="5" fill="url(#${id}g)"/><circle cx="1.2" cy="1.2" r=".7" fill="${ink}" opacity=".5"/><circle cx="3.7" cy="3.7" r=".7" fill="${ink}" opacity=".5"/></pattern>`;
+  else if (pat === 'stripe') def += `<pattern id="${id}p" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><rect width="4" height="4" fill="url(#${id}g)"/><rect width="1.4" height="4" fill="${ink}" opacity=".28"/></pattern>`;
+  else if (pat === 'gingham') def += `<pattern id="${id}p" width="5" height="5" patternUnits="userSpaceOnUse"><rect width="5" height="5" fill="url(#${id}g)"/><rect width="2.5" height="5" fill="${ink}" opacity=".18"/><rect width="5" height="2.5" fill="${ink}" opacity=".18"/></pattern>`;
+  else if (pat === 'news') def += `<pattern id="${id}p" width="14" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-8)"><rect width="14" height="9" fill="url(#${id}g)"/>${[1.5, 3, 4.5, 6, 7.5].map(y => `<path d="M1 ${y} H ${y === 4.5 ? 7 : 13}" stroke="${ink}" stroke-width=".35" opacity=".45" stroke-dasharray="${(2 + y % 3).toFixed(1)} .6"/>`).join('')}<rect x="8" y="3.6" width="5" height="3.2" fill="${ink}" opacity=".15"/></pattern>`;
+  return { def, fill:pat && pat !== 'plain' ? `url(#${id}p)` : `url(#${id}g)`, base, dk };
+}
+function dome(n, cx, cy, R, seed, size){
+  const k = { s:.82, m:1, l:1.18 }[size] || 1, out = [];
+  for (let i = 0; i < n; i++){ const a = i * 137.5 * Math.PI / 180 + rnd(seed, i) * .5, d = Math.sqrt((i + .5) / n) * R * k;
+    out.push([cx + Math.cos(a) * d * 1.15, cy + Math.sin(a) * d * .62 - (1 - d / (R * k + .01)) * 6, (.95 - (d / (R * k + .01)) * .12) * k, i]); }
+  return out;
+}
+function greensSVG(g, cx, cy, R, seed, under){
+  if (!g || g.t === 'none') return '';
+  const cnt = { s:4, m:7, l:11 }[g.n] || 7; let o = '';
+  for (let i = 0; i < cnt; i++){ const a = -165 + i * (150 / (cnt - 1)) + (rnd(seed, i + 70) - .5) * 14, ar = a * Math.PI / 180, x = cx + Math.cos(ar) * R * .55, y = cy + Math.sin(ar) * R * .4;
+    if (g.t === 'leaf' && under) o += `<path d="${leafPath('lance', 15, 4)}" fill="${i % 2 ? '#4f8a3a' : '#5f9a4a'}" stroke="#2f5a2a" stroke-opacity=".4" stroke-width=".3" transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${(a + 90).toFixed(0)})"/>`;
+    if (g.t === 'euca' && under){ o += `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${(a + 90).toFixed(0)})"><path d="M0 0 L0 -17" stroke="#8a7a6a" stroke-width=".5"/>${[3, 7, 11, 15].map((t, j) => `<circle cx="${j % 2 ? 2.2 : -2.2}" cy="${-t}" r="${2.6 - j * .3}" fill="${j % 2 ? '#9ab4a8' : '#a8c0b4'}" stroke="#6a8a7a" stroke-width=".3"/>`).join('')}</g>`; }
+    if (g.t === 'fern' && under) o += `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${(a + 90).toFixed(0)})"><path d="M0 0 Q 1 -9 0 -18" stroke="#3f7a3a" stroke-width=".6" fill="none"/>${Array.from({length:8}, (_, j) => `<path d="M0 ${-2 - j * 2} q ${3.6 - j * .35} -.6 ${4.4 - j * .4} -2 M0 ${-2 - j * 2} q ${-(3.6 - j * .35)} -.6 ${-(4.4 - j * .4)} -2" stroke="#4f8a3a" stroke-width="1" stroke-linecap="round" fill="none"/>`).join('')}</g>`;
+  }
+  if (g.t === 'kasumi' && !under){ const m = { s:10, m:18, l:28 }[g.n] || 18; for (let i = 0; i < m; i++){ const a = rnd(seed, i + 90) * Math.PI * 2, d = Math.sqrt(rnd(seed, i + 120)) * R * 1.05; o += `<g transform="translate(${(cx + Math.cos(a) * d * 1.15).toFixed(1)},${(cy + Math.sin(a) * d * .65).toFixed(1)})">${[[0, 0], [1.4, .6], [-.8, 1.2]].map(([dx, dy]) => `<circle cx="${dx}" cy="${dy}" r=".9" fill="#fdfdf8" stroke="#d8d8cc" stroke-width=".2"/>`).join('')}</g>`; } }
   return o;
 }
-const bouquetBox = (svg, cls = '') => `<svg class="bq ${cls}" viewBox="-34 -56 68 94">${svg}</svg>`;
-let BQ = null;
+function ribbonSVG(r, x, y, w){
+  const c = (RIB_C[r.c] || RIB_C.red)[1], dk = shade(c, -.3), st = r.st || 'bow';
+  if (st === 'twine') return `<path d="M${x - w/2} ${y} Q ${x} ${y + 1.6} ${x + w/2} ${y} M${x - w/2} ${y + 1.4} Q ${x} ${y + 3} ${x + w/2} ${y + 1.4}" stroke="#b8925a" stroke-width=".7" fill="none"/><path d="M${x} ${y + 1} c -3 -3 -5 -1 -3.4 .8 c 1 1 2.4 .2 3.4 -.8 c 3 -3 5 -1 3.4 .8 c -1 1 -2.4 .2 -3.4 -.8 M${x} ${y + 1} l -2 6 M${x} ${y + 1} l 2.2 6.4" stroke="#a8824a" stroke-width=".6" fill="none"/>`;
+  const band = st === 'lace' ? `<path d="M${x - w/2} ${y - 1.4} H ${x + w/2} V ${y + 1.6} ${Array.from({length:Math.round(w / 1.6)}, (_, i) => `Q ${x + w/2 - (i + .5) * 1.6} ${y + 2.6} ${x + w/2 - (i + 1) * 1.6} ${y + 1.6}`).join(' ')}Z" fill="#fbfaf4" stroke="#d8d4c8" stroke-width=".25"/>${Array.from({length:Math.round(w / 2.4)}, (_, i) => `<circle cx="${x - w/2 + 1.2 + i * 2.4}" cy="${y}" r=".45" fill="none" stroke="#d8d4c8" stroke-width=".25"/>`).join('')}`
+    : `<path d="M${x - w/2} ${y - 1.4} Q ${x} ${y - .4} ${x + w/2} ${y - 1.4} L ${x + w/2} ${y + 1.4} Q ${x} ${y + 2.4} ${x - w/2} ${y + 1.4}Z" fill="${c}" stroke="${dk}" stroke-width=".3"/>`;
+  const bc = st === 'lace' ? (r.c === 'white' ? '#fbfaf6' : c) : c;
+  if (st === 'knot') return band + `<path d="M${x - .6} ${y + 1} L ${x - 3.4} ${y + 8} L ${x - 1.6} ${y + 7.4} M${x + .6} ${y + 1} L ${x + 3} ${y + 8.6} L ${x + 1.2} ${y + 7.8}" stroke="${c}" stroke-width="1.4" fill="none" stroke-linecap="round"/><ellipse cx="${x}" cy="${y + .4}" rx="1.6" ry="1.9" fill="${shade(c, .08)}" stroke="${dk}" stroke-width=".3"/>`;
+  return band + `<path d="M${x} ${y + .2} C ${x - 6} ${y - 5} ${x - 11} ${y - 2} ${x - 9} ${y + 1.4} C ${x - 7.6} ${y + 3.8} ${x - 3} ${y + 2.2} ${x} ${y + .2}Z" fill="${bc}" stroke="${shade(bc, -.3)}" stroke-width=".3"/><path d="M${x} ${y + .2} C ${x + 6} ${y - 5} ${x + 11} ${y - 2} ${x + 9} ${y + 1.4} C ${x + 7.6} ${y + 3.8} ${x + 3} ${y + 2.2} ${x} ${y + .2}Z" fill="${bc}" stroke="${shade(bc, -.3)}" stroke-width=".3"/><path d="M${x - 1} ${y + 1.2} L ${x - 4.2} ${y + 9} L ${x - 2.2} ${y + 8} L ${x - 1.6} ${y + 10} L ${x} ${y + 1.8} M${x + 1} ${y + 1.2} L ${x + 4.2} ${y + 9} L ${x + 2.2} ${y + 8} L ${x + 1.6} ${y + 10} L ${x} ${y + 1.8}" fill="${shade(bc, -.06)}" stroke="${shade(bc, -.3)}" stroke-width=".3"/><circle cx="${x}" cy="${y + .4}" r="1.5" fill="${shade(bc, .1)}" stroke="${shade(bc, -.3)}" stroke-width=".3"/>`;
+}
+function bouquetSVG(raw){
+  const b = normBq(raw), seed = b.seed || b.id || 'b', fl = b.flowers || [], n = fl.length, pid = 'pp' + hash(seed + JSON.stringify(b.paper)).toString(36);
+  const P = paperFill(pid, b.paper.c, b.paper.pat), P2 = b.paper.c2 ? paperFill(pid + 'i', b.paper.c2, 'plain') : null;
+  const R = 7 + Math.sqrt(Math.max(n, 1)) * 5.2;
+  let o = `<defs>${P.def}${P2 ? P2.def : ''}</defs>`, cx = 0, cy = -26, flowers = '';
+  const spots = dome(n, cx, cy, R, seed, b.size);
+  const drawFlowers = (cx2, cy2, stemTo) => { const sp = dome(n, cx2, cy2, R, seed, b.size); let st = '', fw = '';
+    sp.forEach(([x, y]) => { if (stemTo) st += `<path d="M${x.toFixed(1)} ${y.toFixed(1)} Q ${(x * .4).toFixed(1)} ${((y + stemTo[1]) / 2).toFixed(1)} ${stemTo[0]} ${stemTo[1]}" stroke="#6aa84f" stroke-width=".9" fill="none"/>`; });
+    sp.slice().sort((a, c) => a[1] - c[1]).forEach(([x, y, k, i]) => { const key = fl[i]; if (FL[key]) fw += `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${(k * .92).toFixed(2)}) rotate(${((rnd(seed, i + 30) - .5) * 26 + x * .5).toFixed(0)})">${flowerSVG(key, seed + i)}</g>`; });
+    return { st, fw }; };
+  if (b.shape === 'vase'){
+    const tint = P.base; cy = -30;
+    const { st, fw } = drawFlowers(0, cy, [0, 20]);
+    o += greensSVG(b.green, 0, cy, R, seed, true) + st;
+    o += `<path d="M-9 4 C -14 12 -12 26 -7 33 L 7 33 C 12 26 14 12 9 4 C 7 2 7 -2 8 -4 L -8 -4 C -7 -2 -7 2 -9 4Z" fill="${tint}" fill-opacity=".38" stroke="${shade(tint, -.3)}" stroke-opacity=".6" stroke-width=".5"/><path d="M-11.4 14 C -12 20 -10 28 -7 32 L 7 32 C 10 28 12 20 11.4 14Z" fill="#c8e0ec" opacity=".45"/><path d="M-6 -2 C -7 6 -9 16 -6 28" stroke="#fff" stroke-width="1.2" opacity=".5" fill="none"/><ellipse cy="-4" rx="8" ry="1.4" fill="none" stroke="${shade(tint, -.3)}" stroke-opacity=".6" stroke-width=".5"/>`;
+    o += fw + greensSVG(b.green, 0, cy, R, seed, false) + ribbonSVG(b.rib, 0, 0, 16);
+    return { svg:o, vb:`-40 -${Math.round(40 + R)} 80 ${Math.round(78 + R)}` };
+  }
+  if (b.shape === 'basket'){
+    cy = -8;
+    o += `<path d="M-22 -4 Q 0 -${30 + R} 22 -4" stroke="#a8784a" stroke-width="2.6" fill="none"/><path d="M-22 -4 Q 0 -${30 + R} 22 -4" stroke="#c89a62" stroke-width="1" fill="none" stroke-dasharray="2 1.4"/>`;
+    if (P2 || b.paper) o += `<path d="M-24 -2 Q -18 -9 -10 -5 Q -2 -10 6 -5 Q 14 -10 24 -2 L 22 4 L -22 4Z" fill="${P.fill}" stroke="${shade(P.dk, -.2)}" stroke-opacity=".5" stroke-width=".4"/>`;
+    const { fw } = drawFlowers(0, cy, null);
+    o += greensSVG(b.green, 0, cy, R, seed, true) + fw + greensSVG(b.green, 0, cy, R, seed, false);
+    o += `<path d="M-23 2 L 23 2 L 18 24 Q 0 27 -18 24Z" fill="#b8884e" stroke="#7a5428" stroke-width=".5"/>` + Array.from({length:5}, (_, i) => `<path d="M-22 ${5 + i * 4} Q 0 ${7 + i * 4} 22 ${5 + i * 4}" stroke="#8a6232" stroke-width=".5" fill="none"/>`).join('') + Array.from({length:11}, (_, i) => `<path d="M${-20 + i * 4} 2.4 L ${-16 + i * 3.2} 24" stroke="#d8aa6e" stroke-width=".6" opacity=".7"/>`).join('') + `<path d="M-24 1 L 24 1 L 24 3.6 L -24 3.6Z" fill="#a8784a" stroke="#7a5428" stroke-width=".4"/>`;
+    o += ribbonSVG(b.rib, 14, 0, 0).replace(/^<path d="M[^"]*"[^>]*\/>/, '');
+    return { svg:o, vb:`-40 -${Math.round(34 + R * 1.2)} 80 ${Math.round(62 + R * 1.2)}` };
+  }
+  if (b.shape === 'round'){
+    cy = -20;
+    o += `<path d="${Array.from({length:18}, (_, i) => { const a = i / 18 * Math.PI * 2, r = R + 7 + (i % 2 ? 2 : 0); return `${i ? 'L' : 'M'} ${(Math.cos(a) * r * 1.15).toFixed(1)} ${(cy + 3 + Math.sin(a) * r * .66).toFixed(1)}`; }).join(' ')}Z" fill="${P.fill}" stroke="${shade(P.dk, -.2)}" stroke-opacity=".5" stroke-width=".4"/>`;
+    if (P2) o += `<ellipse cy="${cy + 3}" rx="${(R + 4) * 1.12}" ry="${(R + 4) * .62}" fill="${P2.fill}"/>`;
+    o += `<path d="M-5 ${cy + 6} L -4 30 L 4 30 L 5 ${cy + 6}Z" fill="#6aa84f"/>` + Array.from({length:7}, (_, i) => `<path d="M${-3.6 + i * 1.2} ${cy + 8} L ${-3 + i} 30" stroke="#4f8a3a" stroke-width=".4"/>`).join('');
+    const { fw } = drawFlowers(0, cy, null);
+    o += greensSVG(b.green, 0, cy, R, seed, true) + fw + greensSVG(b.green, 0, cy, R, seed, false) + ribbonSVG(b.rib, 0, 12, 10);
+    return { svg:o, vb:`-40 -${Math.round(30 + R)} 80 ${Math.round(66 + R)}` };
+  }
+  // 花束（円すい形の包み）
+  const top = cy - R * .2, half = 18 + R * .55;
+  o += `<path d="M${-half} ${top} Q ${-half / 2} ${top - 12} 0 ${top - 8} Q ${half / 2} ${top - 12} ${half} ${top} L 4 36 L -4 36Z" fill="${P2 ? P2.fill : shade(P.base, -.08)}" stroke="${shade(P.dk, -.25)}" stroke-opacity=".5" stroke-width=".4"/>`;
+  const { st, fw } = drawFlowers(cx, cy, [0, 22]);
+  o += greensSVG(b.green, cx, cy, R, seed, true) + st + fw + greensSVG(b.green, cx, cy, R, seed, false);
+  o += `<path d="M${-half + 4} ${cy + 14} Q -10 ${cy + 20} 0 ${cy + 18} Q 10 ${cy + 20} ${half - 4} ${cy + 14} L 5 36 Q 0 38 -5 36Z" fill="${P.fill}" stroke="${shade(P.dk, -.25)}" stroke-opacity=".5" stroke-width=".4"/>`;
+  o += `<path d="M${-half + 4} ${cy + 14} Q -10 ${cy + 20} 0 ${cy + 18} Q 10 ${cy + 20} ${half - 4} ${cy + 14}" fill="none" stroke="${shade(P.base, .3)}" stroke-width=".8"/><path d="M-12 ${cy + 18} L -2 34 M10 ${cy + 18} L 2 34" stroke="${shade(P.dk, -.1)}" stroke-width=".4" opacity=".6"/>`;
+  o += ribbonSVG(b.rib, 0, 16, 11);
+  return { svg:o, vb:`-${Math.round(half + 8)} -${Math.round(40 + R)} ${Math.round(half * 2 + 16)} ${Math.round(80 + R)}` };
+}
+const bouquetBox = (raw, cls = '') => { const r = bouquetSVG(raw); return `<svg class="bq ${cls}" viewBox="${r.vb}" preserveAspectRatio="xMidYMax meet">${r.svg}</svg>`; };
+let BQ = null, BQTAB = 'flower';
 function bloomStock(){ const m = {}; weekLogs(0).forEach(l => { const k = flowerOf(l); m[k] = (m[k] || 0) + 1; }); return m; }
+function newBQ(){ return { flowers:[], shape:'bouquet', paper:{ c:'kraft', c2:'', pat:'plain' }, rib:{ st:'bow', c:'red' }, green:{ t:'leaf', n:'m' }, size:'m', seed:uid() }; }
+function swatches(act, map, cur, extra = ''){ return `<div class="sw">${extra}${Object.entries(map).map(([v, [l, c]]) => `<button class="${cur === v ? 'on' : ''}" data-act="${act}" data-v="${v}" title="${l}"><i style="background:${c}"></i><small>${l}</small></button>`).join('')}</div>`; }
+function seg(act, map, cur){ return `<div class="seg">${Object.entries(map).map(([v, l]) => `<button class="${cur === v ? 'on' : ''}" data-act="${act}" data-v="${v}">${l}</button>`).join('')}</div>`; }
 function sheetBouquet(){
-  if (!BQ) BQ = { sel:[], wrap:'kraft', ribbon:'red' };
-  const stock = bloomStock(), used = {}; BQ.sel.forEach(k => used[k] = (used[k] || 0) + 1);
-  const to = other(S.me);
-  let h = `<h3>花束を贈る</h3><p class="muted">今週の庭に咲いた花から選んで、${esc(nm(to))}に贈ろう（最大7輪）</p>
-    <div class="bqprev">${BQ.sel.length ? bouquetBox(bouquetSVG(BQ.sel, BQ.wrap, BQ.ribbon, 'prev')) : `<div class="empty">下の花をタップして選んでね</div>`}</div>`;
-  if (BQ.sel.length) h += `<div class="row" style="justify-content:center;margin-top:-4px"><button class="btn small ghost" data-act="bqundo">ひとつ戻す</button><button class="btn small ghost" data-act="bqclear">やり直す</button></div>`;
-  h += `<label class="f">花を選ぶ</label><div class="bqgrid">` + Object.entries(stock).sort((a, b) => b[1] - a[1]).map(([k, n]) => { const left = n - (used[k] || 0);
-    return `<button class="bqcell ${left ? '' : 'out'}" data-act="bqadd" data-k="${esc(k)}" ${left && BQ.sel.length < 7 ? '' : 'disabled'}><svg viewBox="-16 -18 32 32">${flowerSVG(k, k)}</svg><span>${esc(FL[k].n)}</span><small>のこり${left}</small></button>`; }).join('') + `</div>`;
-  h += `<label class="f">包み紙</label><div class="seg">${Object.entries(WRAPS).map(([v, [l]]) => `<button class="${BQ.wrap === v ? 'on' : ''}" data-act="bqwrap" data-v="${v}">${l}</button>`).join('')}</div>`;
-  h += `<label class="f">リボン</label><div class="seg">${Object.entries(RIBBONS).map(([v, [l]]) => `<button class="${BQ.ribbon === v ? 'on' : ''}" data-act="bqrib" data-v="${v}">${l}</button>`).join('')}</div>`;
-  h += `<button class="btn go wide" style="margin-top:18px" data-act="bqsend" ${BQ.sel.length ? '' : 'disabled style="opacity:.4;margin-top:18px"'}>${esc(nm(to))}に贈る</button>`;
+  if (!BQ) BQ = newBQ();
+  const to = other(S.me), week = bloomStock(), found = {}; all('log').forEach(l => { found[flowerOf(l)] = 1; });
+  let h = `<div class="bqsticky"><div class="bqprev">${BQ.flowers.length ? bouquetBox(BQ) : `<div class="empty">花を選んでね</div>`}</div>
+    <div class="seg bqtabs">${[['flower','花'],['shape','形'],['paper','包み紙'],['rib','リボン'],['green','グリーン']].map(([v, l]) => `<button class="${BQTAB === v ? 'on' : ''}" data-act="bqtab" data-v="${v}">${l}</button>`).join('')}</div></div>`;
+  if (BQTAB === 'flower'){
+    h += `<div class="row" style="justify-content:space-between;margin:10px 2px 6px"><span class="muted">${BQ.flowers.length} / 12輪</span><span class="row"><button class="btn small ghost" data-act="bqundo">ひとつ戻す</button><button class="btn small ghost" data-act="bqshuffle">並び替え</button><button class="btn small ghost" data-act="bqclear">空にする</button></span></div>`;
+    h += `<label class="f" style="margin-top:4px">大きさ</label>${seg('bqsize', SIZES, BQ.size)}`;
+    const keys = Object.keys(found).sort((a, c) => (week[c] ? 1 : 0) - (week[a] ? 1 : 0) || FL[a].no - FL[c].no);
+    h += `<label class="f">花（今週咲いた花が先頭。図鑑で見つけた花から選べる）</label><div class="bqgrid">` + keys.map(k => `<button class="bqcell" data-act="bqadd" data-k="${esc(k)}" ${BQ.flowers.length < 12 ? '' : 'disabled'}><svg viewBox="-16 -18 32 32">${flowerSVG(k, k)}</svg><span>${esc(FL[k].n)}</span>${week[k] ? '<small>今週</small>' : ''}</button>`).join('') + `</div>`;
+  }
+  if (BQTAB === 'shape') h += `<div class="bqshapes">${Object.entries(SHAPES).map(([v, l]) => `<button class="${BQ.shape === v ? 'on' : ''}" data-act="bqshape" data-v="${v}">${bouquetBox({ ...BQ, shape:v, flowers:BQ.flowers.length ? BQ.flowers : ['バラ', 'カスミソウ', 'ガーベラ'] })}<span>${l}</span></button>`).join('')}</div>`;
+  if (BQTAB === 'paper'){
+    h += BQ.shape === 'vase' ? `<p class="hint">花瓶のときは、選んだ色がガラスの色になるよ</p>` : '';
+    h += `<label class="f">外側の紙</label>${swatches('bqpc', PAPER_C, BQ.paper.c)}<label class="f">柄</label>${seg('bqpat', PATTERNS, BQ.paper.pat)}`;
+    if (BQ.shape === 'bouquet' || BQ.shape === 'round') h += `<label class="f">内側の紙（重ね）</label>${swatches('bqpc2', PAPER_C, BQ.paper.c2, `<button class="${!BQ.paper.c2 ? 'on' : ''}" data-act="bqpc2" data-v=""><i style="background:repeating-linear-gradient(45deg,#fff 0 3px,#eee 3px 6px)"></i><small>なし</small></button>`)}`;
+  }
+  if (BQTAB === 'rib') h += `<label class="f">結び方</label>${seg('bqrst', RIB_ST, BQ.rib.st)}${BQ.rib.st === 'twine' ? '' : `<label class="f">色</label>${swatches('bqrc', RIB_C, BQ.rib.c)}`}`;
+  if (BQTAB === 'green') h += `<label class="f">種類</label>${seg('bqgt', GREENS, BQ.green.t)}${BQ.green.t === 'none' ? '' : `<label class="f">量</label>${seg('bqgn', { s:'少し', m:'ふつう', l:'たっぷり' }, BQ.green.n)}`}`;
+  h += `<button class="btn go wide" style="margin-top:18px" data-act="bqsend" ${BQ.flowers.length ? '' : 'disabled'}>${esc(nm(to))}に贈る</button>`;
   const sc = $('sheet').classList.contains('open') ? $('sheet').scrollTop : 0;
   openSheet(h); $('sheet').scrollTop = sc;
 }
 function sheetBouquetView(id){
   const b = S.items[id]; if (!b) return;
   if (b.to === S.me && !b.opened) put({ ...b, opened:true });
-  const counts = {}; b.flowers.forEach(k => counts[k] = (counts[k] || 0) + 1);
-  openSheet(`<div class="bqprev big">${bouquetBox(bouquetSVG(b.flowers, b.wrap, b.ribbon, b.id), 'pop')}</div>
+  const counts = {}; (b.flowers || []).forEach(k => counts[k] = (counts[k] || 0) + 1);
+  openSheet(`<div class="bqprev big">${bouquetBox(b, 'pop')}</div>
     <h3 style="text-align:center">${esc(nm(b.from))}から${esc(nm(b.to))}へ</h3><p class="muted" style="text-align:center">${dayKey(b.at).replace(/-/g, '/')}</p>
     <div class="bloomlist" style="justify-content:center">${Object.entries(counts).map(([k, n]) => `<span><svg viewBox="-14 -16 28 28">${flowerSVG(k, k)}</svg>${esc(FL[k] ? FL[k].n : k)}${n > 1 ? ` ×${n}` : ''}</span>`).join('')}</div>`);
 }
@@ -2937,13 +3026,13 @@ function bouquetBanner(){
   const inbox = all('bouquet').filter(b => b.to === S.me && !b.opened).sort((a, b) => b.at - a.at);
   if (!inbox.length) return '';
   const b = inbox[0];
-  return `<button class="bqbanner" data-act="bqview" data-id="${b.id}"><svg viewBox="-34 -56 68 94">${bouquetSVG(b.flowers, b.wrap, b.ribbon, b.id)}</svg><span><b>${esc(nm(b.from))}から花束が届いたよ</b><small>タップしてひらく</small></span></button>`;
+  return `<button class="bqbanner" data-act="bqview" data-id="${b.id}">${bouquetBox(b)}<span><b>${esc(nm(b.from))}から花束が届いたよ</b><small>タップしてひらく</small></span></button>`;
 }
 function bouquetSection(){
-  const stock = bloomStock(), list = all('bouquet').sort((a, b) => b.at - a.at);
+  const list = all('bouquet').sort((a, b) => b.at - a.at), any = all('log').length;
   let h = `<h2>花束</h2><div class="panel">`;
-  h += Object.keys(stock).length ? `<button class="btn go wide" data-act="bqnew">今週の花で花束を作る</button>` : `<div class="empty" style="padding:10px">今週の庭に花が咲いたら、花束を作れるよ</div>`;
-  if (list.length) h += `<div class="bqshelf">` + list.slice(0, 12).map(b => `<button data-act="bqview" data-id="${b.id}"><svg viewBox="-34 -56 68 94">${bouquetSVG(b.flowers, b.wrap, b.ribbon, b.id)}</svg><small>${esc(nm(b.from))}→${esc(nm(b.to))}<br>${dayKey(b.at).slice(5).replace('-', '/')}</small></button>`).join('') + `</div>`;
+  h += any ? `<button class="btn go wide" data-act="bqnew">花束を作る</button>` : `<div class="empty" style="padding:10px">庭に花が咲いたら、花束を作れるよ</div>`;
+  if (list.length) h += `<div class="bqshelf">` + list.slice(0, 12).map(b => `<button data-act="bqview" data-id="${b.id}">${bouquetBox(b)}<small>${esc(nm(b.from))}→${esc(nm(b.to))}<br>${dayKey(b.at).slice(5).replace('-', '/')}</small></button>`).join('') + `</div>`;
   return h + `</div>`;
 }
 
@@ -3300,13 +3389,22 @@ document.addEventListener('click', e => {
     case 'zm': zMode = el.dataset.v; zFilter = 'month'; render(); break;
     case 'zc': sheetCreature(el.dataset.k); break;
     case 'creature': { const g = el.querySelector('.tap'); if (g) { g.classList.remove('go'); void g.getBBox(); g.classList.add('go'); } chime('thanks'); toast(`${el.dataset.k}｜${CR[el.dataset.k].desc.split('。')[0]}`); break; }
-    case 'bqnew': BQ = null; sheetBouquet(); break;
-    case 'bqadd': if (BQ.sel.length < 7) { BQ.sel.push(el.dataset.k); sheetBouquet(); } break;
-    case 'bqundo': BQ.sel.pop(); sheetBouquet(); break;
-    case 'bqclear': BQ.sel = []; sheetBouquet(); break;
-    case 'bqwrap': BQ.wrap = el.dataset.v; sheetBouquet(); break;
-    case 'bqrib': BQ.ribbon = el.dataset.v; sheetBouquet(); break;
-    case 'bqsend': if (!BQ || !BQ.sel.length) break; put({ id:uid(), kind:'bouquet', from:S.me, to:other(S.me), flowers:BQ.sel.slice(), wrap:BQ.wrap, ribbon:BQ.ribbon, at:Date.now(), opened:false }); BQ = null; closeSheet(); chime('thanks'); toast(`花束を${nm(other(S.me))}に贈りました`); break;
+    case 'bqnew': BQ = null; BQTAB = 'flower'; sheetBouquet(); break;
+    case 'bqtab': BQTAB = el.dataset.v; sheetBouquet(); break;
+    case 'bqadd': if (BQ.flowers.length < 12) { BQ.flowers.push(el.dataset.k); sheetBouquet(); } break;
+    case 'bqundo': BQ.flowers.pop(); sheetBouquet(); break;
+    case 'bqclear': BQ.flowers = []; sheetBouquet(); break;
+    case 'bqshuffle': BQ.seed = uid(); sheetBouquet(); break;
+    case 'bqsize': BQ.size = el.dataset.v; sheetBouquet(); break;
+    case 'bqshape': BQ.shape = el.dataset.v; sheetBouquet(); break;
+    case 'bqpc': BQ.paper.c = el.dataset.v; sheetBouquet(); break;
+    case 'bqpc2': BQ.paper.c2 = el.dataset.v; sheetBouquet(); break;
+    case 'bqpat': BQ.paper.pat = el.dataset.v; sheetBouquet(); break;
+    case 'bqrst': BQ.rib.st = el.dataset.v; sheetBouquet(); break;
+    case 'bqrc': BQ.rib.c = el.dataset.v; sheetBouquet(); break;
+    case 'bqgt': BQ.green.t = el.dataset.v; sheetBouquet(); break;
+    case 'bqgn': BQ.green.n = el.dataset.v; sheetBouquet(); break;
+    case 'bqsend': if (!BQ || !BQ.flowers.length) break; put({ id:uid(), kind:'bouquet', from:S.me, to:other(S.me), ...JSON.parse(JSON.stringify(BQ)), at:Date.now(), opened:false }); BQ = null; closeSheet(); chime('thanks'); toast(`花束を${nm(other(S.me))}に贈りました`); break;
     case 'bqview': sheetBouquetView(el.dataset.id); break;
     case 'zf': zFilter = el.dataset.v; render(); break;
     case 'zk': sheetZukan(el.dataset.k); break;
