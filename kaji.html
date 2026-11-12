@@ -429,83 +429,460 @@ function setSync(s){
 }
 
 /* ========== 季節の庭 ========== */
-const FL = {
-  robai:{n:'ロウバイ',t:'radial',p:8,l:8,w:5.5,c:'#f3d35a',ctr:'#9b6b1c',cr:2.6},
-  suisen:{n:'スイセン',t:'daffodil',c:'#fbf8ea',cup:'#f3bf33'},
-  kantsubaki:{n:'カンツバキ',t:'radial',p:7,l:9,w:7,c:'#d7334a',c2:'#e2566a',ctr:'#f5d04a',cr:3.2},
-  ume:{n:'ウメ',t:'radial',p:5,l:8,w:8,c:'#fdfbf3',ctr:'#f4d86b',cr:2.4,stam:'#d9a72a'},
-  fukujuso:{n:'フクジュソウ',t:'radial',p:12,l:9,w:4.2,c:'#f7c31e',c2:'#f9d24e',ctr:'#c99a14',cr:3.2},
-  nanohana:{n:'ナノハナ',t:'cluster',fc:'#f5d630',fc2:'#f0c419',k:9,r:3.2,four:1},
-  momo:{n:'モモ',t:'radial',p:5,l:9,w:7.5,c:'#f6a2bf',ctr:'#d6436f',cr:2.3,stam:'#c23a62'},
-  mimoza:{n:'ミモザ',t:'cluster',fc:'#f7d63a',fc2:'#f2c419',k:11,r:3.3},
-  sakura:{n:'サクラ',t:'radial',p:5,l:9,w:7.5,c:'#fad4df',ctr:'#e88aa5',cr:2.2,notch:1,stam:'#d9708f'},
-  tulip:{n:'チューリップ',t:'tulip',c:'#ef5b5b',c2:'#d94545'},
-  tanpopo:{n:'タンポポ',t:'radial',p:22,l:9,w:2.4,c:'#f7d02a',c2:'#f9dc55',ctr:'#efb515',cr:3},
-  nemophila:{n:'ネモフィラ',t:'radial',p:5,l:8,w:7.5,c:'#8ec5f2',ctr:'#ffffff',cr:3.2,stam:'#3f6fb3'},
-  bara:{n:'バラ',t:'rose',c:'#e2485d',c2:'#b92f45'},
-  tsutsuji:{n:'ツツジ',t:'radial',p:5,l:10,w:7.5,c:'#ea5aa6',ctr:'#c22f80',cr:2,stam:'#a8246b'},
-  carnation:{n:'カーネーション',t:'rose',c:'#f27d92',c2:'#d65b73'},
-  ajisai:{n:'アジサイ',t:'cluster',fc:'#7d8de0',fc2:'#b48ad8',k:13,r:3.6,four:1},
-  kuchinashi:{n:'クチナシ',t:'radial',p:6,l:10,w:6.5,c:'#fdfaee',ctr:'#efe0a0',cr:2.6},
-  dokudami:{n:'ドクダミ',t:'radial',p:4,l:9,w:6.5,c:'#fbfbf5',ctr:'#f2d443',cr:2.2},
-  himawari:{n:'ヒマワリ',t:'radial',p:16,l:10,w:4.4,c:'#f8c21c',c2:'#fbd24a',ctr:'#6b4421',cr:6.5},
-  asagao:{n:'アサガオ',t:'trumpet',c:'#5470d8'},
-  hasu:{n:'ハス',t:'radial',p:8,l:11,w:6.5,c:'#f7bfd0',c2:'#fbd9e3',ctr:'#f4d76a',cr:3},
-  sarusuberi:{n:'サルスベリ',t:'cluster',fc:'#e86aa6',fc2:'#f08cbb',k:11,r:3.1},
-  higanbana:{n:'ヒガンバナ',t:'spider',c:'#e0323a'},
-  cosmos:{n:'コスモス',t:'radial',p:8,l:11,w:5.5,c:'#f59fc0',ctr:'#f4c542',cr:2.8,notch:1},
-  hagi:{n:'ハギ',t:'cluster',fc:'#c46ab8',fc2:'#d98fce',k:9,r:2.6},
-  kinmokusei:{n:'キンモクセイ',t:'cluster',fc:'#f39a2b',fc2:'#f7b04a',k:12,r:2.6,four:1},
-  kiku:{n:'キク',t:'radial',p:18,l:11,w:3,c:'#f4cf3c',c2:'#f8dd70',ctr:'#d39b16',cr:3,double:1},
-  sazanka:{n:'サザンカ',t:'radial',p:6,l:9.5,w:7.5,c:'#f29ab6',c2:'#f7bccd',ctr:'#f5d76e',cr:3.2,stam:'#e2b73a'},
-  tsuwabuki:{n:'ツワブキ',t:'radial',p:11,l:10,w:3.4,c:'#f7c925',ctr:'#e0a412',cr:3.6},
-  koutei:{n:'皇帝ダリア',t:'radial',p:8,l:11.5,w:5.5,c:'#d8a8e2',c2:'#c58fd2',ctr:'#f2d24b',cr:3.2},
-  poinsettia:{n:'ポインセチア',t:'radial',p:7,l:12,w:5,c:'#d42b3a',c2:'#b81f2e',ctr:'#e9d14a',cr:2.4},
-  cyclamen:{n:'シクラメン',t:'cyclamen',c:'#e9548f'},
-};
-const SEASON = {1:['robai','suisen','kantsubaki'],2:['ume','suisen','fukujuso'],3:['nanohana','momo','mimoza'],4:['sakura','tulip','tanpopo','nemophila'],5:['bara','tsutsuji','nemophila','carnation'],6:['ajisai','kuchinashi','dokudami'],7:['himawari','asagao','hasu'],8:['himawari','asagao','sarusuberi'],9:['higanbana','cosmos','hagi'],10:['cosmos','kinmokusei','hagi'],11:['kiku','sazanka','tsuwabuki','koutei'],12:['sazanka','poinsettia','kantsubaki','cyclamen']};
+const FLOWER_DATA = `ウメ|2-3|round|#fdfbf3|#f4d86b|5
+紅梅|2-3|round|#e5638a|#f4d06b|5
+ロウバイ|1-2|round|#f3d35a|#9b6b1c|8
+ソシンロウバイ|1-2|round|#f6dd6a|#f0cc3a|8
+スイセン|12-3|daffodil|#fbf8ea|#f3bf33
+ラッパスイセン|3-4|daffodil|#f7d43c|#f2a91b
+フクジュソウ|1-3|daisy|#f7c31e|#c99a14|12
+セツブンソウ|2-3|round|#ffffff|#6a5ac4|5
+マンサク|2-3|spider|#f2c42b
+クリスマスローズ|1-3|round|#e9d8e4|#c9d47a|5
+カンツバキ|12-2|round|#d7334a|#f5d04a|7
+ヤブツバキ|1-4|round|#c9283c|#f4d04a|5
+ツバキ|2-4|round|#cf2c3f|#f5d04a|6
+白いツバキ|2-4|round|#fbf7ee|#f3cf4a|6
+ワビスケ|12-3|round|#f4c3d0|#f2d24a|5
+ジンチョウゲ|2-3|cluster4|#f3c6d3|#fff5f8
+ミモザ|3|ball|#f7d63a|#f2c419
+ナノハナ|2-4|cluster4|#f5d630|#f0c419
+モモ|3-4|round|#f6a2bf|#d6436f|5
+ハナモモ|3-4|pompom|#f28cb0|#e25d8d
+サクラ|3-4|cosmos|#fad4df|#e88aa5|5
+ヤマザクラ|4|round|#fbe4ea|#c96b86|5
+シダレザクラ|3-4|wisteria|#f8c6d4
+ヤエザクラ|4|pompom|#f4a9c0|#e17f9f
+カワヅザクラ|2-3|cosmos|#f6a8c2|#d9608a|5
+コブシ|3|lily|#fdfcf6|#f1e7c8
+ハクモクレン|3|tulip|#fbf8ef|#efe6cf
+シモクレン|4|tulip|#9c3e7b|#d58ab8
+ユキヤナギ|3-4|ball|#ffffff|#f1f1e6
+レンギョウ|3-4|star|#f6c625|#e2a611|4
+ボケ|3-4|round|#e8504f|#f4d04a|5
+アンズ|3-4|round|#f7d7dd|#c76a82|5
+スモモ|4|round|#ffffff|#d9c46a|5
+ナシ|4|round|#fefefa|#8a5a6a|5
+リンゴ|4-5|round|#fbe1e6|#e9d36a|5
+ハナミズキ|4-5|round|#f7d3dc|#8cae5a|4
+白いハナミズキ|4-5|round|#fbfaf2|#8cae5a|4
+チューリップ|4|tulip|#ef5b5b|#d94545
+黄色いチューリップ|4|tulip|#f7cd3a|#eab21c
+白いチューリップ|4|tulip|#fbf8ee|#ece4cf
+ピンクのチューリップ|4|tulip|#f6a2bf|#ea7fa3
+紫のチューリップ|4|tulip|#9a5fc4|#7f45ab
+オレンジのチューリップ|4|tulip|#f6923a|#e4731e
+タンポポ|3-5|daisy|#f7d02a|#efb515|22
+シロバナタンポポ|3-5|daisy|#fbfaf0|#f2d24a|22
+ネモフィラ|4-5|round|#8ec5f2|#ffffff|5
+パンジー|11-5|pansy|#6f4bb8|#f4d03f
+黄色いパンジー|11-5|pansy|#f6d03a|#6b3fa5
+ビオラ|11-5|pansy|#f2c32f|#6b3fa5
+白いビオラ|11-5|pansy|#fbf9f2|#7a5fc4
+スミレ|3-5|pansy|#7a4fc0|#f7f3ff
+ムスカリ|3-4|spike|#4a62c8|#6f86de
+ヒヤシンス|3-4|spike|#b07ad8|#c99ae6
+ピンクのヒヤシンス|3-4|spike|#f39ac0|#f8bcd6
+クロッカス|2-3|tulip|#a77de0|#8b5ec8
+黄色いクロッカス|2-3|tulip|#f6cf3a|#e8b21e
+アネモネ|3-5|poppy|#d93b5a|#2b2440
+紫のアネモネ|3-5|poppy|#7a4fc0|#2b2440
+ラナンキュラス|3-5|rose|#f59a8a|#e47766
+黄色いラナンキュラス|3-5|rose|#f7d04a|#e8b21e
+スイートピー|3-5|iris|#f7b6d0|#f099bd
+紫のスイートピー|3-5|iris|#b39ae6|#9a7ad6
+カタクリ|3-4|lily|#c98ad6|#9d5fb0
+ショウジョウバカマ|3-4|spider|#e28ab8
+ヤマブキ|4|round|#f7b51e|#e39812|5
+ヤエヤマブキ|4|pompom|#f6b021|#f3c44a
+ツツジ|4-5|round|#ea5aa6|#c22f80|5
+白いツツジ|4-5|round|#fbf9f0|#b6c77a|5
+サツキ|5-6|round|#f05f8e|#c43a6c|5
+シャクナゲ|4-5|cluster|#f2a3c3|#e687ae
+フジ|4-5|wisteria|#9b86d9
+白いフジ|4-5|wisteria|#f3f1ea
+ハナニラ|3-4|star|#d9e4fb|#f2e7a0|6
+オオイヌノフグリ|2-4|round|#6a8de6|#ffffff|4
+ホトケノザ|3-4|spike|#d65a9c|#e88bbd
+レンゲソウ|4-5|ball|#d977b5|#f1b8d8
+シロツメクサ|4-7|ball|#fbfbf3|#eef0d8
+アカツメクサ|5-7|ball|#d76a9b|#e594bb
+カラスノエンドウ|3-5|iris|#c64d93|#e48fbf
+ハルジオン|4-6|daisy|#fbe7ee|#f3d24a|30
+ヒメジョオン|6-10|daisy|#ffffff|#f0c929|26
+シバザクラ|4-5|star|#f07ab0|#c84e86|5
+白いシバザクラ|4-5|star|#fbfaf2|#c9b0d8|5
+フリージア|3-4|tulip|#f6d43e|#efbd22
+白いフリージア|3-4|tulip|#fbf9ee|#efe6c8
+アイリス|4-5|iris|#6c5bd1|#f5d24a
+ジャーマンアイリス|5|iris|#8a5cd1|#f2c24a
+アヤメ|5|iris|#6f4cc4|#f4cf3a
+カキツバタ|5|iris|#4d55c8|#ffffff
+ハナショウブ|6|iris|#7a4fc0|#f4d03f
+白いハナショウブ|6|iris|#fbfaf2|#f4d03f
+シラン|4-5|iris|#b54ea6|#e7a8d4
+シャガ|4-5|iris|#e9e5f7|#f2c94a
+エビネ|4-5|iris|#c99a55|#f4f0e6
+スズラン|4-5|bell|#ffffff
+ボタン|4-5|rose|#e85a8a|#c63d6c
+白いボタン|4-5|rose|#fbf6ee|#e8dccb
+シャクヤク|5-6|rose|#f4a8c0|#e183a3
+白いシャクヤク|5-6|rose|#fbf6ee|#ece0cc
+バラ|5-6,10-11|rose|#e2485d|#b92f45
+黄色いバラ|5-6,10-11|rose|#f6cf45|#e2ad22
+白いバラ|5-6,10-11|rose|#fbf7ef|#e8decb
+ピンクのバラ|5-6,10-11|rose|#f4a3b8|#e17a96
+オレンジのバラ|5-6,10-11|rose|#f6984a|#e2762a
+紫のバラ|5-6,10-11|rose|#b49ad8|#9a7ac4
+モッコウバラ|4-5|pompom|#f7e08a|#f0cc55
+ノイバラ|5|round|#ffffff|#f4d03f|5
+カーネーション|4-6|carnation|#f27d92|#d65b73
+白いカーネーション|4-6|carnation|#fbf7f0|#e8dccb
+黄色いカーネーション|4-6|carnation|#f6d04a|#e2b02a
+ゼラニウム|4-11|ball|#e8505f|#f07f8a
+ピンクのゼラニウム|4-11|ball|#f39ac0|#f8bcd6
+マーガレット|3-6|daisy|#ffffff|#f3c623|16
+黄色いマーガレット|3-6|daisy|#f7d84a|#e8b21e|16
+デイジー|3-5|daisy|#f8d3e0|#f3c623|26
+ガーベラ|3-6,9-11|daisy|#f46f4f|#6e3d20|20
+ピンクのガーベラ|3-6,9-11|daisy|#f68ab0|#7a3d40|20
+黄色いガーベラ|3-6,9-11|daisy|#f7c92a|#6e4a20|20
+ポピー|4-6|poppy|#f05a3a|#2b2228
+シャーレーポピー|5|poppy|#f7a1b0|#2b2228
+アイスランドポピー|3-5|poppy|#f6d03a|#6a4a1a
+ハナビシソウ|4-6|poppy|#f69a1e|#f6c84a
+カスミソウ|5-7|ball|#ffffff|#f4f4ec
+ルピナス|4-6|spike|#a77de0|#f2a3c3
+キンギョソウ|4-6|spike|#f48aa6|#f6d04a
+ジギタリス|5-6|spike|#c784c8|#e3b0e0
+ラベンダー|6-7|spike|#9a82d8|#b7a3e6
+デルフィニウム|5-6|spike|#4d7fe0|#7aa0ec
+オダマキ|4-5|star|#8a6ad6|#f4f0ff|5
+クレマチス|5-6,9-10|star|#8a6ad6|#f2e6a2|6
+白いクレマチス|5-6,9-10|star|#fbfaf2|#c9d47a|6
+ナデシコ|5-8|carnation|#f28bb4|#d8628d
+カワラナデシコ|7-9|carnation|#f6a8c8|#e07aa5
+ムラサキツユクサ|5-7|round|#7a6bd6|#f4d03f|3
+ツユクサ|6-9|iris|#3f6fe0|#f4d03f
+ドクダミ|5-6|round|#fbfbf5|#f2d443|4
+アジサイ|6-7|cluster4|#7d8de0|#b48ad8
+ピンクのアジサイ|6-7|cluster4|#f09ac0|#e47aa8
+ガクアジサイ|6-7|cluster4|#6f8fe0|#4b63c0
+アナベル|6-7|cluster4|#f3f7e6|#e2edc9
+カシワバアジサイ|6-7|spike|#fbfaf0|#eef2dc
+クチナシ|6-7|round|#fdfaee|#efe0a0|6
+ユリ|6-8|lily|#fbf7ef|#e6a33b
+ヤマユリ|7-8|lily|#fbf7ef|#d8603a
+オニユリ|7-8|lily|#f07a2b|#4b2a1c
+カサブランカ|7-8|lily|#ffffff|#f2d24a
+スカシユリ|6-7|lily|#f6a12b|#c4361f
+ササユリ|6-7|lily|#f9d8e2|#e8a33b
+ハス|7-8|double|#f7bfd0|#f4d76a|8
+スイレン|6-9|daisy|#f6b9cc|#f2d24a|14
+白いスイレン|6-9|daisy|#fbfaf2|#f2d24a|14
+ホタルブクロ|6-7|bell|#e6c3e0
+キキョウ|6-9|star|#7a5bd6|#f4f1ff|5
+白いキキョウ|6-9|star|#fbfaf2|#d9e0f4|5
+ヒマワリ|7-8|sunflower|#f8c21c|#5b3a1a
+ミニヒマワリ|7-9|sunflower|#f7d24a|#6b4421
+八重ヒマワリ|7-9|pompom|#f8c21c|#f7d24a
+アサガオ|7-9|trumpet|#5470d8
+ピンクのアサガオ|7-9|trumpet|#e35d9a
+紫のアサガオ|7-9|trumpet|#8a4fc0
+ヒルガオ|6-8|trumpet|#f6c4d8
+ユウガオ|7-9|trumpet|#fbfaf2
+ハマヒルガオ|5-6|trumpet|#f3b3d6
+ルコウソウ|7-10|star|#e3313f|#f7d0d4|5
+ノウゼンカズラ|7-8|trumpet|#f28a3a
+サルスベリ|7-9|ball|#e86aa6|#f08cbb
+白いサルスベリ|7-9|ball|#fbf8f0|#ece8da
+ムクゲ|7-9|round|#f2b6d6|#b3315f|5
+白いムクゲ|7-9|round|#fbfaf2|#c93a5a|5
+フヨウ|8-10|round|#f7c6da|#d84e86|5
+ハイビスカス|6-10|round|#e8344a|#8e1f2f|5
+黄色いハイビスカス|6-10|round|#f6cf3a|#c4361f|5
+ブーゲンビリア|6-10|cluster|#e0489b|#f06fb4
+ペチュニア|4-10|trumpet|#b05ac4
+ピンクのペチュニア|4-10|trumpet|#f07ab0
+カリブラコア|4-11|trumpet|#e05aa0
+ベゴニア|4-11|round|#f06f7a|#f4d04a|4
+インパチェンス|6-10|round|#f5729a|#ffffff|5
+マリーゴールド|5-11|pompom|#f6a21c|#f7c84a
+フレンチマリーゴールド|5-11|pompom|#e2551f|#f2a32a
+サルビア|6-11|spike|#e3313f|#f05a62
+ブルーサルビア|6-10|spike|#4a5fd0|#7b8de4
+ケイトウ|7-10|spike|#d9244c|#ee4a6e
+黄色いケイトウ|7-10|spike|#f6c42a|#f8d65a
+センニチコウ|7-10|ball|#c03b8a|#d86aa8
+ジニア|6-10|pompom|#f05f7a|#f7a1b0
+オレンジのジニア|6-10|pompom|#f6843a|#f8a85a
+ポーチュラカ|6-9|round|#f45b8b|#f6d04a|5
+マツバボタン|6-9|round|#f05ab0|#f6d04a|5
+ニチニチソウ|6-10|round|#f591bd|#c9306e|5
+白いニチニチソウ|6-10|round|#fbfaf2|#e0457a|5
+アガパンサス|6-7|cluster|#7f9ae6|#a9bdf0
+ギボウシ|6-8|bell|#c5b3e6
+トケイソウ|7-9|daisy|#b9a8ec|#5a3f9e|10
+ダリア|6-11|pompom|#e04a6a|#f28aa0
+黄色いダリア|6-11|pompom|#f6c42a|#f8d65a
+白いダリア|6-11|pompom|#fbf8f0|#efe8d6
+グラジオラス|7-9|spike|#f05a72|#f8a2b0
+カンナ|7-10|lily|#f04a2c|#f8a12c
+ホウセンカ|7-9|round|#f05a8a|#fbd0dc|5
+オシロイバナ|7-10|trumpet|#f04ea0
+ヘチマ|7-9|round|#f7d43a|#e9b81a|5
+キュウリ|6-8|round|#f6d84a|#ead070|5
+ナス|6-9|star|#9a7ad6|#f4d03f|5
+オクラ|7-9|round|#f8eaa8|#8a2a3a|5
+ゴーヤ|7-9|round|#f6d02e|#e8b81e|5
+ハマナス|5-7|round|#e44f8a|#f4d04a|5
+ノカンゾウ|7-8|lily|#f28a2a|#e0641a
+ヤブカンゾウ|7-8|lily|#ef7a26|#c04a18
+ニッコウキスゲ|7-8|lily|#f6a12a|#e0761a
+ミソハギ|7-8|spike|#d863a8|#e88ec2
+ハギ|9|ball|#c46ab8|#d98fce
+白いハギ|9|ball|#fbfaf2|#ece8f0
+ヒガンバナ|9|spider|#e0323a
+白いヒガンバナ|9|spider|#fbf6ec
+リコリス|8-9|spider|#f39ac0
+キツネノカミソリ|8|lily|#f28a2a|#e0641a
+コスモス|9-10|cosmos|#f59fc0|#f4c542|8
+白いコスモス|9-10|cosmos|#fbf8f2|#f4c542|8
+赤いコスモス|9-10|cosmos|#d9365a|#f4c542|8
+キバナコスモス|7-10|cosmos|#f6a52a|#f2c94a|8
+チョコレートコスモス|7-10|cosmos|#6b2a2e|#4a1d20|8
+オミナエシ|8-9|ball|#f5d63a|#f0c419
+フジバカマ|9-10|ball|#e7c6e0|#d9aad3
+ススキ|9-11|spike|#e9dcc0|#d8c7a2
+ワレモコウ|9-10|ball|#7a2a3a|#8e3a4a
+リンドウ|9-11|bell|#4a5fd0
+シュウメイギク|9-10|round|#f6c7dd|#f4d03f|6
+白いシュウメイギク|9-10|round|#fbfaf2|#f4d03f|6
+ノコンギク|9-11|daisy|#c9b8ef|#f4d03f|18
+シオン|9-10|daisy|#a68ae0|#f4d03f|20
+ホトトギス|9-10|lily|#e9d8f0|#8a4fa6
+キンモクセイ|9-10|cluster4|#f39a2b|#f7b04a
+ギンモクセイ|9-10|cluster4|#fbf6e6|#f0e6c6
+ツワブキ|10-12|daisy|#f7c925|#e0a412|11
+キク|10-11|double|#f4cf3c|#d39b16|18
+白いキク|10-11|double|#fbf8ef|#e9cf6a|18
+赤いキク|10-11|double|#c93a4a|#e0b02a|18
+コギク|10-11|daisy|#e86a9a|#f4d03f|14
+黄色いコギク|10-11|daisy|#f6c92a|#e0a412|14
+ノギク|10-11|daisy|#e3d9f6|#f4d03f|16
+皇帝ダリア|11-12|round|#d8a8e2|#f2d24b|8
+サザンカ|10-12|round|#f29ab6|#f5d76e|6
+白いサザンカ|10-12|round|#fbf8f0|#f5d76e|6
+赤いサザンカ|10-12|round|#d93a5a|#f5d76e|6
+ヤツデ|11-12|ball|#f4f1dc|#e8e2bc
+ビワ|11-1|ball|#f3efe0|#e2d7b4
+ポインセチア|11-12|star|#d42b3a|#e9d14a|7
+白いポインセチア|11-12|star|#f8f4e6|#e9d14a|7
+シクラメン|11-3|cyclamen|#e9548f
+白いシクラメン|11-3|cyclamen|#fbf6f2
+赤いシクラメン|11-3|cyclamen|#c9283c
+ガーデンシクラメン|10-3|cyclamen|#c7347a
+ハボタン|11-2|rose|#c58ad0|#8fb98a
+シャコバサボテン|11-1|lily|#e8487a|#f8a0bd
+ストック|11-4|spike|#f3a8c8|#fbd3e3
+紫のストック|11-4|spike|#a77de0|#c3a0ec
+キンセンカ|12-4|pompom|#f6a21c|#e5761a
+プリムラ|12-4|round|#f05a8a|#f6d04a|5
+ジュリアン|12-4|round|#f3d03a|#e7a81c|5
+プリムラ・マラコイデス|1-4|ball|#f3a3c8|#f8c0d8
+スノードロップ|2-3|bell|#fbfbf5
+スノーフレーク|3-4|bell|#fbfbf5
+アロエ|12-2|spike|#f05a2a|#f7a03a
+ウインターコスモス|10-12|cosmos|#f6d63a|#c9a51c|8
+エリカ|11-3|spike|#e88ac0|#f4b8d8
+ローズマリー|11-4|spike|#8aa0e0|#b0c0ee
+ノースポール|12-5|daisy|#ffffff|#f2c51e|18
+ユキワリソウ|2-4|round|#f3b3d6|#f4f0ff|6
+フキノトウ|2-3|ball|#e6ead0|#b8cf8a
+ナズナ|2-5|ball|#ffffff|#eef2e0
+アリッサム|3-6,10-11|ball|#ffffff|#f6f0f6
+紫のアリッサム|3-6,10-11|ball|#c3a0ec|#d8c3f2
+ロベリア|4-6|round|#3f5fd8|#ffffff|5
+ワスレナグサ|4-5|round|#8fb8f0|#f4d03f|5
+ヤグルマギク|4-6|daisy|#3d63d6|#2a4aa8|14
+リナリア|4-6|spike|#c89ae6|#f4d03f
+アグロステンマ|5-6|round|#e88ac0|#ffffff|5
+ニゲラ|5-6|star|#7fa6e6|#4a5a8a|8
+ブルーデージー|3-5|daisy|#6e8ce6|#f4d03f|14
+オステオスペルマム|3-6|daisy|#d58ad6|#3f3a8a|14
+ディモルフォセカ|3-5|daisy|#f6a12b|#6b3f1f|16
+ガザニア|5-10|daisy|#f69a2a|#8a4a1a|14
+ペンタス|5-10|cluster|#e86aa6|#f38fbe
+ランタナ|5-10|cluster|#f6a63a|#f05a8a
+アゲラタム|5-11|ball|#a69ae6|#c3baf0
+トレニア|6-10|pansy|#7a6ad6|#f4d03f
+メランポジウム|6-10|daisy|#f6c92a|#e09a1a|10
+ルドベキア|7-9|daisy|#f6b21e|#3b2a1a|14
+エキナセア|6-9|daisy|#e478b0|#b8622a|14
+ガイラルディア|6-10|daisy|#e0512a|#f6c42a|12
+クレオメ|7-9|spider|#f0a3cf
+ハゼラン|7-9|ball|#e86aa6|#f6b0cf
+ブルーベリー|4-5|bell|#fbf6ee
+ヒメツルソバ|5-11|ball|#f3a8c8|#e57fae
+ツルニチニチソウ|4-6|star|#7f7ee0|#ffffff|5
+シャスターデージー|5-7|daisy|#ffffff|#f2c51e|22
+ニオイバンマツリ|5-6|round|#8a6ad6|#fbf8ff|5
+クリンソウ|5-6|cluster|#e2558f|#f08ab4
+ネジバナ|6-7|spike|#f19ac2|#f6c2da
+ハンゲショウ|6-7|spike|#fbfbf0|#e8eedc
+ナツツバキ|6-7|round|#fbfaf2|#f2d24a|5
+ホオズキ|7-8|bell|#f26a1f
+ネムノキ|6-7|thistle|#f39ac0
+アザミ|5-9|thistle|#c54aa6
+ノアザミ|5-8|thistle|#d65ab0
+ヤマボウシ|5-6|round|#fbfaf2|#b8cf7a|4
+エゴノキ|5|bell|#ffffff
+ウツギ|5-6|star|#ffffff|#f2e6a2|5
+タチアオイ|6-8|round|#f07aa8|#f8e0a0|5
+白いタチアオイ|6-8|round|#fbfaf2|#f2e0a0|5
+キョウチクトウ|6-9|round|#f39ac0|#fbd3e3|5
+ザクロ|6|trumpet|#e8442a
+ミズバショウ|5-6|lily|#fdfbf3|#e8dc7a
+コマクサ|7|iris|#f4a3c8|#ffffff
+チングルマ|7|round|#ffffff|#f4d03f|5
+ハマユウ|7-8|spider|#fbf8f0
+ゲンノショウコ|7-9|round|#f3b3d6|#a64a7a|5
+カラスウリ|8|spider|#ffffff
+ツリガネニンジン|8-10|bell|#b8a3e6
+クズ|8-9|spike|#b0428a|#d97ab5
+ヤブラン|8-10|spike|#9a72d0|#b897e2
+ミズヒキ|8-10|spike|#d8283c|#f0f0f0
+アキノキリンソウ|9-10|spike|#f3cf2a|#f7df6a
+セイタカアワダチソウ|10-11|spike|#f2c21e|#f6d65a
+ツリフネソウ|8-10|bell|#d84a9c
+ツルボ|8-9|spike|#c896d8|#e0b8ea
+アメジストセージ|9-11|spike|#8a4fc0|#b07ad8
+パイナップルセージ|9-11|spike|#e3313f|#f05a62
+コルチカム|9-10|tulip|#d89ae0|#c47ad0
+サフラン|10-11|tulip|#9a6ad6|#7f4fc0
+ネリネ|10-12|spider|#f28ab8
+アスター|7-9|daisy|#b07ad8|#f4d03f|20
+ストケシア|6-8|daisy|#8a8ae6|#e8e0ff|16
+リアトリス|6-8|spike|#b047a8|#cc6dc0
+アスチルベ|5-7|spike|#f39ac0|#f8c0d8
+ベロニカ|5-7|spike|#5a6fd8|#8a9ae6
+アリウム|5-6|ball|#a77de0|#c3a0ec
+チャイブ|5-6|ball|#c896d8|#e0b8ea
+ムラサキハナナ|3-5|cluster4|#a68ae0|#c3b3f0
+キランソウ|3-5|iris|#4a5fd0|#8a9ae6
+ニリンソウ|4-5|round|#ffffff|#f2e6a2|5
+イチリンソウ|4-5|round|#fbfbf5|#f2d24a|5
+イカリソウ|4|star|#c896d8|#ffffff|4
+ミツマタ|3-4|ball|#f6d03a|#f7df6a
+アセビ|2-4|bell|#fbf6f2
+ヒュウガミズキ|3-4|bell|#f6dc5a
+トサミズキ|3-4|bell|#f2d24a
+サンシュユ|2-3|ball|#f6c92a|#f3d65a
+ハナカイドウ|4|round|#f4a3bb|#e8d06a|5
+ライラック|4-5|cluster4|#b89ae6|#cdb8f0
+ニセアカシア|5|wisteria|#fbfaf2
+トチノキ|5|spike|#fbf6ec|#f4c3c8
+ハナズオウ|4|ball|#c6408a|#d96aa8
+アマリリス|4-6|lily|#e3313f|#fbd0d0
+ゼフィランサス|7-9|lily|#f3a8c8|#f4e8a0
+タマスダレ|8-10|lily|#ffffff|#f4d03f
+シンビジウム|1-4|lily|#e9d8a8|#b8473a
+ホテイアオイ|7-9|iris|#b8a8ec|#f4d03f
+バーベナ|5-10|cluster|#d8466a|#ed6f8c
+紫のバーベナ|5-10|cluster|#8a5cd1|#a77de0
+ペラルゴニウム|4-6|round|#f28ab0|#8a2a4a|5
+ネメシア|3-6,10-11|pansy|#f7b0c8|#f4d03f
+リビングストンデージー|3-5|daisy|#f05ab0|#f6e0a0|26
+シネラリア|1-4|daisy|#6a5ad6|#f8f4ff|14
+ハナカンザシ|2-5|daisy|#ffffff|#f4d03f|16
+スカビオサ|5-10|thistle|#a69ae6
+エリゲロン|4-11|daisy|#fbe0ec|#f3d24a|24
+ペンステモン|6-7|bell|#e86aa6
+カンパニュラ|5-7|bell|#8a8ae6
+ジャスミン|4-5|star|#ffffff|#f4f0e0|5
+スイカズラ|5-6|spider|#fbf6e0
+クサギ|8-9|spider|#fbf8f2
+ヘクソカズラ|7-9|bell|#f4ece8
+ゲッカビジン|6-9|lily|#fdfcf6|#f4e6c0
+シュウカイドウ|8-10|round|#f39ac0|#f6d04a|4
+オキザリス|3-5,9-11|round|#f3a3c8|#f6e08a|5
+カタバミ|4-10|round|#f6d43a|#e8b81e|5
+ハルシャギク|6-8|daisy|#f6c32a|#8a2a1a|8
+オオキンケイギク|5-7|daisy|#f6c92a|#e8a51e|8
+ヘリクリサム|5-10|pompom|#f6a21c|#c4361f
+白いセンニチコウ|7-10|ball|#fbf8f0|#efeadc
+ムラサキシキブ|6-7|ball|#e8b8e0|#d89ad0
+ノボタン|7-11|round|#7a4fc0|#f4d03f|5
+ユーパトリウム|8-10|ball|#b8a3e6|#d0c3f0
+ヒメヒオウギズイセン|7-8|lily|#f26a1f|#f6a12a
+ルリマツリ|6-10|cluster|#8fb8f0|#b0ccf4
+ジンジャー|8-10|lily|#ffffff|#f2e6a2
+カラー|5-7|tulip|#fbf8ef|#f2e6c8
+黄色いカラー|5-7|tulip|#f6cf3a|#eab21c
+ワイルドストロベリー|4-6|round|#ffffff|#f4d03f|5
+イチゴ|3-5|round|#ffffff|#f2d24a|5
+ミカン|5|star|#ffffff|#f6e6a0|5
+カキ|5-6|bell|#f3f0d6
+クローバー（四つ葉）|4-7|ball|#fbfbf3|#eef0d8
+`;
+const FL = {}, SEASON = {1:[],2:[],3:[],4:[],5:[],6:[],7:[],8:[],9:[],10:[],11:[],12:[]};
+FLOWER_DATA.trim().split('\n').forEach(line => {
+  const [n, ms, t, c, c2, p] = line.split('|');
+  FL[n] = { n, t, c, c2, p: p ? Number(p) : 0 };
+  ms.split(',').forEach(r => { const [a, b] = r.split('-').map(Number); let m = a; for (let i = 0; i < 12; i++){ SEASON[m].push(n); if (m === (b || a)) break; m = m % 12 + 1; } });
+});
 const hash = s => { let h = 2166136261; for (const ch of String(s)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
 const rnd = (seed, i) => (hash(seed + ':' + i) % 10000) / 10000;
 const flowerOf = l => { const list = SEASON[new Date(l.at).getMonth()+1]; return list[hash(l.id) % list.length]; };
+const shade = (hex, k) => { const n = parseInt(hex.slice(1), 16); let r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+  const f = v => Math.max(0, Math.min(255, Math.round(k < 0 ? v * (1 + k) : v + (255 - v) * k)));
+  return '#' + [f(r), f(g), f(b)].map(v => v.toString(16).padStart(2, '0')).join(''); };
 
 function flowerSVG(key, seed){
-  const f = FL[key]; let g = '';
-  const petal = (i, n, l, w, c, off=0) => `<ellipse cx="0" cy="${-l*0.55}" rx="${w/2}" ry="${l/2}" fill="${c}" transform="rotate(${i*360/n+off})"/>`;
-  if (f.t === 'radial'){
-    const notch = f.notch ? ` stroke="rgba(255,255,255,.0)"` : '';
-    if (f.double) for (let i = 0; i < f.p; i++) g += petal(i, f.p, f.l, f.w, f.c2 || f.c, 180/f.p);
-    for (let i = 0; i < f.p; i++) g += petal(i, f.p, f.double ? f.l*0.78 : f.l, f.w, (f.c2 && !f.double && i%2) ? f.c2 : f.c);
-    if (f.notch) for (let i = 0; i < f.p; i++) g += `<circle cx="0" cy="${-f.l*1.05}" r="${f.w*0.18}" fill="#f6efd9" transform="rotate(${i*360/f.p})"/>`;
-    if (f.stam) for (let i = 0; i < 10; i++) g += `<circle cx="0" cy="${-f.cr-1.8}" r=".8" fill="${f.stam}" transform="rotate(${i*36})"/>`;
-    g += `<circle r="${f.cr}" fill="${f.ctr}"/>`;
-    if (key === 'himawari') g += `<circle r="${f.cr*0.6}" fill="#4f3016"/>`;
-  } else if (f.t === 'cluster'){
-    for (let i = 0; i < f.k; i++){
-      const a = i * 2.4, d = 2.2 * Math.sqrt(i + 0.5) * (f.r/3), x = Math.cos(a)*d, y = Math.sin(a)*d*0.9;
-      const c = (f.fc2 && rnd(seed, i) > .5) ? f.fc2 : f.fc;
-      g += f.four
-        ? `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${(rnd(seed,i+9)*90).toFixed(0)})">${[0,90,180,270].map(r => `<ellipse cx="0" cy="${-f.r*0.45}" rx="${f.r*0.42}" ry="${f.r*0.5}" fill="${c}" transform="rotate(${r})"/>`).join('')}<circle r="${f.r*0.18}" fill="#fff8"/></g>`
-        : `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${f.r}" fill="${c}"/><circle cx="${(x-f.r*0.3).toFixed(1)}" cy="${(y-f.r*0.3).toFixed(1)}" r="${f.r*0.35}" fill="#fff5"/>`;
-    }
-  } else if (f.t === 'spider'){
-    for (let i = 0; i < 6; i++){ const r = i*60; g += `<path d="M0 0 Q 3 -6 1 -11 Q 0 -13 -2 -11" fill="none" stroke="${f.c}" stroke-width="2.4" stroke-linecap="round" transform="rotate(${r})"/>`; }
-    for (let i = 0; i < 6; i++){ const r = -70 + i*28; g += `<path d="M0 0 Q 4 -10 2 -17" fill="none" stroke="${f.c}" stroke-width=".9" transform="rotate(${r})"/><circle cx="2" cy="-17" r="1" fill="#f3c34a" transform="rotate(${r})"/>`; }
-  } else if (f.t === 'trumpet'){
-    g += `<circle r="11" fill="${f.c}"/><circle r="11" fill="none" stroke="#7d93e8" stroke-width="1.2"/>`;
-    for (let i = 0; i < 5; i++) g += `<line x1="0" y1="0" x2="0" y2="-10.5" stroke="#3d55b8" stroke-width="1.2" transform="rotate(${i*72})"/>`;
-    g += `<circle r="4.5" fill="#f4f2ff"/><circle r="1.6" fill="#e9e3a0"/>`;
-  } else if (f.t === 'tulip'){
-    g += `<path d="M-8 -2 Q-9 -14 -4 -15 L0 -9 L4 -15 Q9 -14 8 -2 Q7 6 0 6 Q-7 6 -8 -2Z" fill="${f.c}"/><path d="M-3 -2 Q-2 -14 0 -16 Q2 -14 3 -2 Q2 5 0 5 Q-2 5 -3 -2Z" fill="${f.c2}"/>`;
-  } else if (f.t === 'rose'){
-    g += `<circle r="10" fill="${f.c}"/>`;
-    g += `<path d="M-6 2 A7 7 0 0 1 6 -3 M-4 -4 A5 5 0 0 1 5 3 M-2 2 A3 3 0 0 1 2 -2 M0 0 A1.5 1.5 0 0 1 1 1" fill="none" stroke="${f.c2}" stroke-width="1.4" stroke-linecap="round"/>`;
-    if (key === 'carnation') for (let i = 0; i < 12; i++) g += `<circle cx="0" cy="-10" r="1.6" fill="${f.c}" transform="rotate(${i*30})"/>`;
-  } else if (f.t === 'daffodil'){
-    for (let i = 0; i < 6; i++) g += petal(i, 6, 10, 6.5, f.c);
-    g += `<circle r="5" fill="${f.cup}"/><circle r="5" fill="none" stroke="#e5a21c" stroke-width="1.2" stroke-dasharray="1.5 1"/><circle r="2.2" fill="#e0991a"/>`;
-  } else if (f.t === 'cyclamen'){
-    for (const r of [-38, -12, 14, 40]) g += `<ellipse cx="0" cy="-8" rx="3.2" ry="8" fill="${f.c}" transform="rotate(${r})"/>`;
-    g += `<ellipse cx="0" cy="1" rx="4" ry="2.4" fill="#b8336a"/>`;
+  const f = FL[key]; if (!f) return '';
+  const c = f.c, c2 = f.c2 || shade(c, -.25), dk = shade(c, -.22), lt = shade(c, .35);
+  const P = (n, l, w, col, off=0, sc=1) => { let s = ''; for (let i = 0; i < n; i++) s += `<ellipse cx="0" cy="${-l*0.55*sc}" rx="${w/2*sc}" ry="${l/2*sc}" fill="${col}" transform="rotate(${i*360/n+off})"/>`; return s; };
+  const ring = (n, r, rr, col) => { let s = ''; for (let i = 0; i < n; i++) s += `<circle cx="0" cy="${-r}" r="${rr}" fill="${col}" transform="rotate(${i*360/n})"/>`; return s; };
+  let g = '';
+  switch (f.t){
+    case 'round': { const n = f.p || 5, w = n <= 4 ? 8.5 : n <= 6 ? 7.5 : 6.5;
+      g = P(n, 10, w, c) + P(n, 6, w*0.5, lt, 0) ;
+      g += ring(10, 3.6, .75, c2) + `<circle r="2.6" fill="${c2}"/>`; break; }
+    case 'cosmos': { const n = f.p || 8; g = P(n, 11, n <= 5 ? 7.5 : 5.6, c);
+      g += ring(n, 11.2, n <= 5 ? 1.4 : 1.1, '#f3ead3') + `<circle r="2.9" fill="${c2}"/>`; break; }
+    case 'daisy': { const n = f.p || 16, w = Math.max(1.8, 30 / n);
+      g = P(n, 10.5, w, c) + `<circle r="${n > 18 ? 3.2 : 3.6}" fill="${c2}"/><circle r="1.6" fill="${shade(c2, -.2)}"/>`; break; }
+    case 'double': { const n = f.p || 16; g = P(n, 11, 3.2, dk, 180/n) + P(n, 8.6, 3, c) + P(Math.round(n*0.7), 5.5, 2.6, lt, 90/n) + `<circle r="2.2" fill="${c2}"/>`; break; }
+    case 'sunflower': g = P(18, 9.5, 4.2, shade(c, -.08), 10) + P(18, 9, 3.8, c) + `<circle r="6.8" fill="${c2}"/><circle r="4.4" fill="${shade(c2, -.25)}"/>`; break;
+    case 'star': { const n = f.p || 5; for (let i = 0; i < n; i++) g += `<path d="M0 0 Q ${-4.6*5/n} -6 0 -11.5 Q ${4.6*5/n} -6 0 0Z" fill="${c}" transform="rotate(${i*360/n})"/>`;
+      for (let i = 0; i < n; i++) g += `<path d="M0 0 L0 -7" stroke="${dk}" stroke-width=".7" transform="rotate(${i*360/n})"/>`;
+      g += `<circle r="2.4" fill="${c2}"/>`; break; }
+    case 'pompom': g = P(14, 11, 4.6, dk, 12) + P(12, 8.5, 4.4, c) + P(9, 5.8, 4, lt, 20) + `<circle r="2.4" fill="${c2}"/>`; break;
+    case 'rose': g = `<circle r="10" fill="${c}"/>` + P(5, 8, 7, dk, 36, 1.15) + `<circle r="8.2" fill="${c}"/><path d="M-6 2 A7 7 0 0 1 6 -3 M-4 -4 A5 5 0 0 1 5 3 M-2 2 A3 3 0 0 1 2 -2" fill="none" stroke="${c2}" stroke-width="1.4" stroke-linecap="round"/>`; break;
+    case 'carnation': g = `<circle r="9" fill="${c}"/>` + ring(14, 9.6, 1.9, c) + ring(10, 6, 1.6, dk) + `<circle r="4.5" fill="${lt}"/>` + ring(7, 3.6, 1.2, c); break;
+    case 'poppy': g = P(4, 11, 10, dk, 45) + P(4, 10.5, 10, c) + `<circle r="3.4" fill="${c2}"/>` + ring(12, 4.3, .7, c2); break;
+    case 'tulip': g = `<path d="M-8 -2 Q-9 -14 -4 -15 L0 -9 L4 -15 Q9 -14 8 -2 Q7 6 0 6 Q-7 6 -8 -2Z" fill="${c}"/><path d="M-3 -2 Q-2 -14 0 -16 Q2 -14 3 -2 Q2 5 0 5 Q-2 5 -3 -2Z" fill="${c2}"/>`; break;
+    case 'lily': for (let i = 0; i < 6; i++) g += `<path d="M0 0 Q -4 -7 0 -13 Q 4 -7 0 0Z" fill="${i%2?c:shade(c,-.06)}" transform="rotate(${i*60+30})"/>`;
+      for (let i = 0; i < 6; i++) g += `<circle cx="0" cy="-5.5" r=".8" fill="${c2}" transform="rotate(${i*60+30})"/><path d="M0 0 L0 -9" stroke="${c2}" stroke-width=".6" transform="rotate(${i*60})"/><circle cx="0" cy="-9.4" r="1" fill="${c2}" transform="rotate(${i*60})"/>`; break;
+    case 'iris': g = `<ellipse cx="0" cy="-6" rx="3.6" ry="6.5" fill="${lt}"/>` + [-115, 0, 115].map(r => `<g transform="rotate(${r})"><ellipse cx="0" cy="5.5" rx="5" ry="7" fill="${c}"/><ellipse cx="0" cy="4" rx="1.3" ry="3" fill="${c2}"/></g>`).join(''); break;
+    case 'pansy': g = `<ellipse cx="-4.5" cy="-5.5" rx="5.2" ry="6" fill="${dk}"/><ellipse cx="4.5" cy="-5.5" rx="5.2" ry="6" fill="${dk}"/><ellipse cx="-6" cy="1" rx="5" ry="4.6" fill="${c}"/><ellipse cx="6" cy="1" rx="5" ry="4.6" fill="${c}"/><ellipse cx="0" cy="5" rx="6.6" ry="5.4" fill="${c}"/><ellipse cx="0" cy="2.4" rx="3.6" ry="3" fill="${c2}"/><circle r="1.4" cy="0.6" fill="#f6d03a"/>`; break;
+    case 'trumpet': g = `<circle r="11" fill="${c}"/><circle r="11" fill="none" stroke="${lt}" stroke-width="1.2"/>` + [0,72,144,216,288].map(r => `<line x1="0" y1="0" x2="0" y2="-10.5" stroke="${dk}" stroke-width="1.1" transform="rotate(${r})"/>`).join('') + `<circle r="4.3" fill="#fbf8f0"/><circle r="1.5" fill="#ece3a0"/>`; break;
+    case 'bell': for (const [x, y, s] of [[-5, -4, .9], [4, -1, 1], [-1, 5, .85]]) g += `<g transform="translate(${x},${y}) scale(${s})"><path d="M0 -8 L0 -4" stroke="#6aa84f" stroke-width="1"/><path d="M-4.5 4 Q-5 -4 0 -4.5 Q5 -4 4.5 4 L5.5 5.6 Q0 4.2 -5.5 5.6Z" fill="${c}"/><path d="M-2 0 Q-2 -3 0 -3.4" stroke="${lt}" stroke-width="1" fill="none"/></g>`; break;
+    case 'spike': for (let i = 0; i < 9; i++){ const y = 10 - i * 2.6, r = 3.4 - i * 0.22; g += `<circle cx="${-r*0.75}" cy="${y}" r="${r}" fill="${i%2?c:c2}"/><circle cx="${r*0.75}" cy="${y-1.2}" r="${r}" fill="${i%2?c2:c}"/>`; } break;
+    case 'wisteria': for (let i = 0; i < 9; i++){ const y = -8 + i * 2.6, r = 3.3 - i * 0.24; g += `<circle cx="${-r*0.7}" cy="${y}" r="${r}" fill="${i%2?c:lt}"/><circle cx="${r*0.7}" cy="${y+1.2}" r="${r}" fill="${i%2?lt:c}"/>`; } break;
+    case 'thistle': g = `<ellipse cx="0" cy="4" rx="5.5" ry="5" fill="#7da35c"/>`; for (let i = 0; i < 15; i++) g += `<line x1="0" y1="1" x2="0" y2="-11" stroke="${i%2?c:lt}" stroke-width="1.5" stroke-linecap="round" transform="rotate(${-70 + i*10})"/>`; break;
+    case 'cluster4': case 'cluster': case 'ball': {
+      const k = f.t === 'ball' ? 11 : 12, r = f.t === 'cluster4' ? 3.4 : f.t === 'ball' ? 3 : 3.3;
+      for (let i = 0; i < k; i++){
+        const a = i * 2.4, d = 2.3 * Math.sqrt(i + .5) * (r/3), x = Math.cos(a)*d, y = Math.sin(a)*d*.9, col = rnd(seed, i) > .5 ? c2 : c;
+        if (f.t === 'cluster4') g += `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${(rnd(seed, i+9)*90).toFixed(0)})">${[0,90,180,270].map(q => `<ellipse cx="0" cy="${-r*.45}" rx="${r*.42}" ry="${r*.5}" fill="${col}" transform="rotate(${q})"/>`).join('')}<circle r="${r*.18}" fill="#fff8"/></g>`;
+        else if (f.t === 'cluster') g += `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)})">${[0,72,144,216,288].map(q => `<ellipse cx="0" cy="${-r*.42}" rx="${r*.36}" ry="${r*.48}" fill="${col}" transform="rotate(${q})"/>`).join('')}<circle r="${r*.2}" fill="${lt}"/></g>`;
+        else g += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="${col}"/><circle cx="${(x-r*.3).toFixed(1)}" cy="${(y-r*.3).toFixed(1)}" r="${r*.35}" fill="#fff6"/>`;
+      } break; }
+    case 'spider': for (let i = 0; i < 6; i++) g += `<path d="M0 0 Q 3 -6 1 -11 Q 0 -13 -2 -11" fill="none" stroke="${c}" stroke-width="2.4" stroke-linecap="round" transform="rotate(${i*60})"/>`;
+      for (let i = 0; i < 6; i++){ const r = -70 + i*28; g += `<path d="M0 0 Q 4 -10 2 -17" fill="none" stroke="${c}" stroke-width=".9" transform="rotate(${r})"/><circle cx="2" cy="-17" r="1" fill="#e8b53a" transform="rotate(${r})"/>`; } break;
+    case 'daffodil': g = P(6, 10, 6.5, c) + `<circle r="5" fill="${c2}"/><circle r="5" fill="none" stroke="${shade(c2,-.15)}" stroke-width="1.2" stroke-dasharray="1.5 1"/><circle r="2.2" fill="${shade(c2,-.2)}"/>`; break;
+    case 'cyclamen': for (const r of [-38, -12, 14, 40]) g += `<ellipse cx="0" cy="-8" rx="3.2" ry="8" fill="${r%2?c:shade(c,-.06)}" transform="rotate(${r})"/>`; g += `<ellipse cx="0" cy="1" rx="4" ry="2.4" fill="${dk}"/>`; break;
   }
   return g;
 }
@@ -629,7 +1006,7 @@ function viewWeek(){
   let html = `<div class="weeknav"><button data-act="wk" data-d="-1">‹ 前</button><b>${weekOff===0?'今週':label}</b><button data-act="wk" data-d="1" ${weekOff>=0?'disabled style="opacity:.3"':''}>次 ›</button></div>`;
   const wlg = weekLogs(weekOff), bs = bloomSummary(wlg);
   html += `<div class="panel gpanel" style="margin-bottom:12px"><div class="gtitle">${weekOff===0?'今週':'この週'}の庭<span>${wlg.length}輪</span></div>${gardenSVG(wlg, true)}
-    ${bs.length?`<div class="bloomlist">${bs.map(([k,n]) => `<span><svg viewBox="-14 -16 28 28">${flowerSVG(k,k)}</svg>${FL[k].n}${n>1?` ×${n}`:''}</span>`).join('')}</div>`:''}</div>`;
+    ${bs.length?`<div class="bloomlist">${bs.slice(0,8).map(([k,n]) => `<span><svg viewBox="-14 -16 28 28">${flowerSVG(k,k)}</svg>${FL[k].n}${n>1?` ×${n}`:''}</span>`).join('')}${bs.length>8?`<span>ほか${bs.length-8}種</span>`:''}</div>`:''}</div>`;
   html += `<div class="wgrid">` + days.map(d => {
     const k = dayKey(d.getTime()); const logs = logsOn(k);
     return `<button class="wday ${k===tk?'today':''} ${k===selDay?'sel':''}" data-act="selday" data-k="${k}">
