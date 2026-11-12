@@ -279,6 +279,26 @@ nav.tabs .tile{width:38px;height:38px}
 @keyframes pend{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
 .glow{animation:glow 1.6s ease-in-out infinite alternate}
 @keyframes glow{to{opacity:.05}}
+.bqprev{display:flex;justify-content:center;min-height:150px;align-items:center}
+.bqprev .bq{width:150px;height:208px}
+.bqprev.big .bq{width:210px;height:290px}
+.bq.pop{animation:bqpop .6s cubic-bezier(.3,1.6,.5,1)}
+@keyframes bqpop{from{transform:scale(.6) rotate(-8deg);opacity:0}}
+.bqgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.bqcell{background:#fff;border-radius:16px;padding:6px 2px;display:flex;flex-direction:column;align-items:center;box-shadow:0 2px 5px rgba(31,82,110,.1)}
+.bqcell svg{width:40px;height:40px}
+.bqcell span{font-size:10.5px;font-weight:800;line-height:1.25;text-align:center}
+.bqcell small{font-size:10px;color:var(--sub);font-weight:700}
+.bqcell.out{opacity:.35}
+.bqcell:active{transform:scale(.94)}
+.bqbanner{display:flex;align-items:center;gap:12px;width:100%;background:linear-gradient(135deg,#fff6e8,#fde9ee);border-radius:24px;padding:10px 16px;margin:10px 0 4px;box-shadow:var(--sh);text-align:left;animation:bqpop .6s cubic-bezier(.3,1.6,.5,1)}
+.bqbanner svg{width:54px;height:76px;flex:none}
+.bqbanner span{display:flex;flex-direction:column;gap:2px;font-size:15px}
+.bqbanner small{font-size:12px;color:var(--sub);font-weight:700}
+.bqshelf{display:flex;gap:10px;overflow-x:auto;margin-top:12px;padding-bottom:4px}
+.bqshelf button{flex:none;display:flex;flex-direction:column;align-items:center;gap:2px}
+.bqshelf svg{width:64px;height:88px}
+.bqshelf small{font-size:10.5px;color:var(--sub);font-weight:700;text-align:center;line-height:1.3}
 </style>
 </head>
 <body>
@@ -381,6 +401,7 @@ function talkMsg(due, logs){
   const wk = weekLogs(0);
   if (wk.length){ const top = bloomSummary(wk)[0]; msgs.push(`今週は庭に${wk.length}輪咲いたよ。いちばん多いのは${FL[top[0]].n}。`); }
   const crw = creaturesFor(weekLogs(0)); if (crw.length) msgs.push(`今週は庭に${crw.slice(0, 2).join('と')}${crw.length > 2 ? 'たち' : ''}が遊びに来てるよ。タップしてみて。`);
+  const inb = all('bouquet').filter(b => b.to === me && !b.opened); if (inb.length) msgs.unshift(`${nm(other(me))}から花束が届いてるよ。上の花束をタップしてみて。`);
   if (openNotes) msgs.push(`改善ボックスに${openNotes}つ入ってるよ。週に1回、ふたりで見てみよう。`);
   msgs.push(['気になったことは、その場で言わずに改善ボックスへ入れておこう。','小さな家事も「名もなき家事」から残せるよ。','一緒にやった家事は「ふたりで」を押してね。','「完了の定義」はふたりで決めて、ときどき見直そう。'][new Date().getDate() % 4]);
   return msgs[talkIdx % msgs.length];
@@ -2861,6 +2882,71 @@ function creatureLayer(list, items, W, H, ground, U){
   return o;
 }
 
+/* ===== 花束 ===== */
+const WRAPS = { kraft:['クラフト', '#cfae82', '#b8945e'], white:['白', '#f7f3ea', '#ddd6c6'], pink:['ピンク', '#f6d3da', '#e6b0bc'], blue:['水色', '#d4e6f2', '#a8c8de'], green:['若草', '#dfeccb', '#b8d09a'] };
+const RIBBONS = { red:['赤', '#d8404a'], white:['白', '#fbfaf6'], gold:['金', '#e2b23a'], navy:['紺', '#2a4a7a'], pink:['ピンク', '#ec8aa8'] };
+function bouquetSVG(flowers, wrap = 'kraft', ribbon = 'red', seed = 'b'){
+  const [, wc, wd] = WRAPS[wrap] || WRAPS.kraft, rc = (RIBBONS[ribbon] || RIBBONS.red)[1], n = flowers.length;
+  const slots = [[0, -30, 1.15], [-12, -26, 1.05], [12, -26, 1.05], [-6, -40, 1], [7, -40, 1], [-19, -16, .95], [19, -16, .95]];
+  const order = n <= 3 ? [0, 1, 2] : n <= 5 ? [3, 4, 0, 1, 2] : [3, 4, 1, 2, 0, 5, 6];
+  const pos = order.slice(0, n).map((i, j) => slots[i]);
+  let o = `<defs>${LG('wp' + wrap, shade(wc, .12), wc, wd)}</defs>`;
+  // 包み紙（奥）
+  o += `<path d="M-30 -22 Q -14 -34 0 -30 Q 14 -34 30 -22 L 4 34 L -4 34Z" fill="${shade(wc, -.08)}" stroke="${shade(wd, -.25)}" stroke-opacity=".5" stroke-width=".4"/>`;
+  // 葉と茎
+  for (let i = 0; i < Math.max(3, n); i++){ const a = -50 + i * (100 / Math.max(2, Math.max(3, n) - 1)); o += `<path d="${leafPath('lance', 16, 4)}" fill="${i % 2 ? '#5f9a4a' : '#4f8a3a'}" stroke="#3a6a2a" stroke-opacity=".4" stroke-width=".3" transform="translate(0,-6) rotate(${a.toFixed(0)})"/>`; }
+  pos.forEach(([x, y]) => { o += `<path d="M${x} ${y} Q ${x * .5} ${(y + 20) / 2} 0 22" stroke="#6aa84f" stroke-width="1" fill="none"/>`; });
+  // 花（奥の列から）
+  pos.map((p, j) => [p, j]).sort((a, b) => a[0][1] - b[0][1]).forEach(([[x, y, k], j]) => {
+    const key = flowers[j]; if (!FL[key]) return;
+    o += `<g transform="translate(${x},${y}) scale(${(k * .95).toFixed(2)}) rotate(${((rnd(seed, j) - .5) * 24 + x * .6).toFixed(0)})">${flowerSVG(key, seed + j)}</g>`; });
+  // 包み紙（手前）
+  o += `<path d="M-26 -10 Q -10 -4 0 -6 Q 10 -4 26 -10 L 5 34 Q 0 36 -5 34Z" fill="url(#wp${wrap})" stroke="${shade(wd, -.25)}" stroke-opacity=".5" stroke-width=".4"/>`;
+  o += `<path d="M-26 -10 Q -10 -4 0 -6 Q 10 -4 26 -10" fill="none" stroke="${shade(wc, .25)}" stroke-width=".8"/><path d="M-12 -6 L -2 32 M10 -6 L 2 32" stroke="${shade(wd, -.1)}" stroke-width=".4" opacity=".6"/>`;
+  // リボン
+  o += `<path d="M-5.6 14 L 5.6 14 L 5 17 L -5 17Z" fill="${rc}" stroke="${shade(rc, -.3)}" stroke-width=".3"/><path d="M0 15.5 C -6 10 -11 13 -9 16.5 C -7.6 19 -3 17.4 0 15.5Z" fill="${rc}" stroke="${shade(rc, -.3)}" stroke-width=".3"/><path d="M0 15.5 C 6 10 11 13 9 16.5 C 7.6 19 3 17.4 0 15.5Z" fill="${rc}" stroke="${shade(rc, -.3)}" stroke-width=".3"/><path d="M-1 16.4 L -4 24 L -2 23 L -1.4 25 L 0 17 M1 16.4 L 4 24 L 2 23 L 1.4 25 L 0 17" fill="${shade(rc, -.08)}" stroke="${shade(rc, -.3)}" stroke-width=".3"/><circle cx="0" cy="15.6" r="1.4" fill="${shade(rc, .1)}" stroke="${shade(rc, -.3)}" stroke-width=".3"/>`;
+  return o;
+}
+const bouquetBox = (svg, cls = '') => `<svg class="bq ${cls}" viewBox="-34 -56 68 94">${svg}</svg>`;
+let BQ = null;
+function bloomStock(){ const m = {}; weekLogs(0).forEach(l => { const k = flowerOf(l); m[k] = (m[k] || 0) + 1; }); return m; }
+function sheetBouquet(){
+  if (!BQ) BQ = { sel:[], wrap:'kraft', ribbon:'red' };
+  const stock = bloomStock(), used = {}; BQ.sel.forEach(k => used[k] = (used[k] || 0) + 1);
+  const to = other(S.me);
+  let h = `<h3>花束を贈る</h3><p class="muted">今週の庭に咲いた花から選んで、${esc(nm(to))}に贈ろう（最大7輪）</p>
+    <div class="bqprev">${BQ.sel.length ? bouquetBox(bouquetSVG(BQ.sel, BQ.wrap, BQ.ribbon, 'prev')) : `<div class="empty">下の花をタップして選んでね</div>`}</div>`;
+  if (BQ.sel.length) h += `<div class="row" style="justify-content:center;margin-top:-4px"><button class="btn small ghost" data-act="bqundo">ひとつ戻す</button><button class="btn small ghost" data-act="bqclear">やり直す</button></div>`;
+  h += `<label class="f">花を選ぶ</label><div class="bqgrid">` + Object.entries(stock).sort((a, b) => b[1] - a[1]).map(([k, n]) => { const left = n - (used[k] || 0);
+    return `<button class="bqcell ${left ? '' : 'out'}" data-act="bqadd" data-k="${esc(k)}" ${left && BQ.sel.length < 7 ? '' : 'disabled'}><svg viewBox="-16 -18 32 32">${flowerSVG(k, k)}</svg><span>${esc(FL[k].n)}</span><small>のこり${left}</small></button>`; }).join('') + `</div>`;
+  h += `<label class="f">包み紙</label><div class="seg">${Object.entries(WRAPS).map(([v, [l]]) => `<button class="${BQ.wrap === v ? 'on' : ''}" data-act="bqwrap" data-v="${v}">${l}</button>`).join('')}</div>`;
+  h += `<label class="f">リボン</label><div class="seg">${Object.entries(RIBBONS).map(([v, [l]]) => `<button class="${BQ.ribbon === v ? 'on' : ''}" data-act="bqrib" data-v="${v}">${l}</button>`).join('')}</div>`;
+  h += `<button class="btn go wide" style="margin-top:18px" data-act="bqsend" ${BQ.sel.length ? '' : 'disabled style="opacity:.4;margin-top:18px"'}>${esc(nm(to))}に贈る</button>`;
+  const sc = $('sheet').classList.contains('open') ? $('sheet').scrollTop : 0;
+  openSheet(h); $('sheet').scrollTop = sc;
+}
+function sheetBouquetView(id){
+  const b = S.items[id]; if (!b) return;
+  if (b.to === S.me && !b.opened) put({ ...b, opened:true });
+  const counts = {}; b.flowers.forEach(k => counts[k] = (counts[k] || 0) + 1);
+  openSheet(`<div class="bqprev big">${bouquetBox(bouquetSVG(b.flowers, b.wrap, b.ribbon, b.id), 'pop')}</div>
+    <h3 style="text-align:center">${esc(nm(b.from))}から${esc(nm(b.to))}へ</h3><p class="muted" style="text-align:center">${dayKey(b.at).replace(/-/g, '/')}</p>
+    <div class="bloomlist" style="justify-content:center">${Object.entries(counts).map(([k, n]) => `<span><svg viewBox="-14 -16 28 28">${flowerSVG(k, k)}</svg>${esc(FL[k] ? FL[k].n : k)}${n > 1 ? ` ×${n}` : ''}</span>`).join('')}</div>`);
+}
+function bouquetBanner(){
+  const inbox = all('bouquet').filter(b => b.to === S.me && !b.opened).sort((a, b) => b.at - a.at);
+  if (!inbox.length) return '';
+  const b = inbox[0];
+  return `<button class="bqbanner" data-act="bqview" data-id="${b.id}"><svg viewBox="-34 -56 68 94">${bouquetSVG(b.flowers, b.wrap, b.ribbon, b.id)}</svg><span><b>${esc(nm(b.from))}から花束が届いたよ</b><small>タップしてひらく</small></span></button>`;
+}
+function bouquetSection(){
+  const stock = bloomStock(), list = all('bouquet').sort((a, b) => b.at - a.at);
+  let h = `<h2>花束</h2><div class="panel">`;
+  h += Object.keys(stock).length ? `<button class="btn go wide" data-act="bqnew">今週の花で花束を作る</button>` : `<div class="empty" style="padding:10px">今週の庭に花が咲いたら、花束を作れるよ</div>`;
+  if (list.length) h += `<div class="bqshelf">` + list.slice(0, 12).map(b => `<button data-act="bqview" data-id="${b.id}"><svg viewBox="-34 -56 68 94">${bouquetSVG(b.flowers, b.wrap, b.ribbon, b.id)}</svg><small>${esc(nm(b.from))}→${esc(nm(b.to))}<br>${dayKey(b.at).slice(5).replace('-', '/')}</small></button>`).join('') + `</div>`;
+  return h + `</div>`;
+}
+
 function gardenSVG(logs, big){
   const W = 360, H = big ? 210 : 160, ground = H - 52;
   const items = logs.map(l => {
@@ -2956,7 +3042,7 @@ function viewToday(){
   const dueIds = new Set(due.map(c => c.id));
   html0 = `<div class="talk" data-act="talk"><span class="tag">おうち</span><div class="msg" data-full="${esc(talkMsg(due, logs))}"></div><span class="next"></span></div>`;
   const wl = weekLogs(0);
-  let html = html0 + `<div class="panel gpanel"><div class="gtitle">今週の庭<span>${wl.length}輪</span></div>${gardenSVG(wl, false)}</div><div class="panel" style="margin-top:12px">${timeline(logs, true)}${legend()}</div>`;
+  let html = bouquetBanner() + html0 + `<div class="panel gpanel"><div class="gtitle">今週の庭<span>${wl.length}輪</span></div>${gardenSVG(wl, false)}</div><div class="panel" style="margin-top:12px">${timeline(logs, true)}${legend()}</div>`;
   for (const [slot,label] of SLOTS){
     const cs = due.filter(c => (c.slot||'any') === slot);
     if (!cs.length) continue;
@@ -3012,6 +3098,7 @@ function viewReview(){
   html += `<div style="margin-top:10px"><textarea class="t" id="newnote" placeholder="気になったこと・こうしたいこと（その場で言わずにここへ）"></textarea>
     <div class="row" style="margin-top:8px;justify-content:flex-end"><button class="btn small" data-act="addnote">入れる</button></div></div></div>`;
 
+  if (weekOff === 0) html += bouquetSection();
   html += `<h2>ふたりの1週間</h2>`;
   if (!reviewOpen){
     html += `<button class="reveal" data-act="reveal">ふたりで見るときにタップ<br><small>件数は振り返りの材料。比べるためではなく、担当を組み替えるために使う</small></button>`;
@@ -3213,6 +3300,14 @@ document.addEventListener('click', e => {
     case 'zm': zMode = el.dataset.v; zFilter = 'month'; render(); break;
     case 'zc': sheetCreature(el.dataset.k); break;
     case 'creature': { const g = el.querySelector('.tap'); if (g) { g.classList.remove('go'); void g.getBBox(); g.classList.add('go'); } chime('thanks'); toast(`${el.dataset.k}｜${CR[el.dataset.k].desc.split('。')[0]}`); break; }
+    case 'bqnew': BQ = null; sheetBouquet(); break;
+    case 'bqadd': if (BQ.sel.length < 7) { BQ.sel.push(el.dataset.k); sheetBouquet(); } break;
+    case 'bqundo': BQ.sel.pop(); sheetBouquet(); break;
+    case 'bqclear': BQ.sel = []; sheetBouquet(); break;
+    case 'bqwrap': BQ.wrap = el.dataset.v; sheetBouquet(); break;
+    case 'bqrib': BQ.ribbon = el.dataset.v; sheetBouquet(); break;
+    case 'bqsend': if (!BQ || !BQ.sel.length) break; put({ id:uid(), kind:'bouquet', from:S.me, to:other(S.me), flowers:BQ.sel.slice(), wrap:BQ.wrap, ribbon:BQ.ribbon, at:Date.now(), opened:false }); BQ = null; closeSheet(); chime('thanks'); toast(`花束を${nm(other(S.me))}に贈りました`); break;
+    case 'bqview': sheetBouquetView(el.dataset.id); break;
     case 'zf': zFilter = el.dataset.v; render(); break;
     case 'zk': sheetZukan(el.dataset.k); break;
     case 'talk': talkIdx++; lastTyped = ''; render(); break;
