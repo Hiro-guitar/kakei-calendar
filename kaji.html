@@ -26,6 +26,10 @@ header .date{font-size:13px;color:var(--sub);font-weight:400;margin-left:6px}
 .me-chip{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:13px}
 .dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
 .dot.h{background:var(--h)} .dot.y{background:var(--y)} .dot.any{background:var(--any)}
+.dot.both,.wday .dots i.both,.check.on.both{background:linear-gradient(90deg,var(--h) 50%,var(--y) 50%);border-color:transparent}
+.join{font-size:12px;padding:3px 9px;border-radius:999px;border:1px dashed #cfc8bc;color:var(--sub);background:#fff}
+.togglerow{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px}
+.togglerow input{width:20px;height:20px}
 .sync{width:8px;height:8px;border-radius:50%;background:#c9c3b8}
 .sync.ok{background:#58b368}.sync.pending{background:#f0b13b}.sync.err{background:#d9534f}
 main{padding:14px 16px calc(96px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto}
@@ -214,14 +218,19 @@ function freqText(c){
   return '';
 }
 
-function doChore(c){
+const cls = l => l.both ? 'both' : l.by;
+const bg = l => l.both ? 'linear-gradient(90deg,var(--h) 50%,var(--y) 50%)' : `var(--${l.by})`;
+const whoText = l => l.both ? 'ふたりで' : nm(l.by);
+const involves = (l,k) => l.by === k || !!l.both;
+function doChore(c, both){
   if (!S.me) return;
-  put({ id:uid(), kind:'log', choreId:c.id, name:c.name, by:S.me, at:Date.now(), thanks:false });
-  toast(`「${c.name}」やった！`);
+  put({ id:uid(), kind:'log', choreId:c.id, name:c.name, by:S.me, both:!!both, at:Date.now(), thanks:false });
+  toast(both ? `「${c.name}」ふたりでやった！` : `「${c.name}」やった！`);
 }
+let freeBoth = false;
 function doFree(name){
   name = name.trim(); if (!name || !S.me) return;
-  put({ id:uid(), kind:'log', choreId:null, name, by:S.me, at:Date.now(), thanks:false });
+  put({ id:uid(), kind:'log', choreId:null, name, by:S.me, both:freeBoth, at:Date.now(), thanks:false });
   toast(`「${name}」を記録しました`);
 }
 function toggleThanks(log){ put({ ...log, thanks: !log.thanks }); if (!log.thanks) toast('ありがとうを送りました'); }
@@ -323,7 +332,7 @@ function timeline(logs, showNow){
   const now = new Date(), nowMin = now.getHours()*60 + now.getMinutes();
   const ticks = [0,6,12,18,24].map(h => `<span class="tick" style="left:${h/24*100}%">${h}</span>`).join('');
   const dots = logs.map(l => { const d = new Date(l.at); const m = d.getHours()*60 + d.getMinutes();
-    return `<span class="d" style="left:${m/1440*100}%;background:var(--${l.by})" title="${esc(hm(l.at)+' '+l.name)}"></span>` }).join('');
+    return `<span class="d" style="left:${m/1440*100}%;background:${bg(l)}" title="${esc(hm(l.at)+' '+l.name)}"></span>` }).join('');
   return `<div class="tl"><div class="bar"></div>${ticks}${showNow?`<span class="now" style="left:${nowMin/1440*100}%"></span>`:''}${dots}</div>`;
 }
 const legend = () => `<div class="legend"><span><i class="dot h"></i>${esc(nm('h'))}</span><span><i class="dot y"></i>${esc(nm('y'))}</span></div>`;
@@ -333,13 +342,16 @@ function choreCard(c, todays){
   const last = todays[todays.length-1];
   let meta = `<span class="badge ${c.owner}">${esc(nm(c.owner))}</span>`;
   if (done){
-    meta = `<span>✓ ${hm(last.at)} ${esc(nm(last.by))}</span>`;
+    meta = `<span>✓ ${hm(last.at)} ${esc(whoText(last))}</span>`;
+    if (!last.both && last.by !== S.me) meta += `<button class="join" data-act="join" data-id="${last.id}">＋一緒にやった</button>`;
     if (last.by !== S.me) meta += `<button class="thanks ${last.thanks?'on':''}" data-act="thanks" data-id="${last.id}">${last.thanks?'♥ ありがとう済':'♡ ありがとう'}</button>`;
     else if (last.thanks) meta += `<span class="thanks on">♥ ありがとうが届いてる</span>`;
   }
   const ck = done ? (last.by === S.me
-      ? `<button class="check on ${last.by}" data-act="uncheck" data-id="${last.id}" aria-label="取り消す">✓</button>`
-      : `<button class="check on ${last.by}" data-act="notmine" aria-label="${esc(nm(last.by))}の記録">✓</button>`) : `<button class="check" data-act="do" data-id="${c.id}" aria-label="やった"></button>`;
+      ? `<button class="check on ${cls(last)}" data-act="uncheck" data-id="${last.id}" aria-label="取り消す">✓</button>`
+      : last.both
+        ? `<button class="check on both" data-act="leave" data-id="${last.id}" aria-label="一緒から外れる">✓</button>`
+        : `<button class="check on ${last.by}" data-act="notmine" aria-label="${esc(nm(last.by))}の記録">✓</button>`) : `<button class="check" data-act="do" data-id="${c.id}" aria-label="やった"></button>`;
   return `<div class="card ${done?'done':''}"><span class="stripe ${c.owner}"></span>
     <div class="body" data-act="open" data-id="${c.id}"><div class="name">${esc(c.name)}</div><div class="meta">${meta}</div></div>${ck}</div>`;
 }
@@ -361,7 +373,7 @@ function viewToday(){
   if (!due.length) html += `<div class="empty">今日の家事はまだ登録されていません。<br>設定から追加できます。</div>`;
   const extra = logs.filter(l => !l.choreId || !dueIds.has(l.choreId));
   if (extra.length){
-    html += `<h2>ほかにやったこと</h2><div class="panel">` + extra.map(l => `<div class="minirow"><span class="t">${hm(l.at)}</span><span class="dot ${l.by}"></span><span class="n">${esc(l.name)}</span>
+    html += `<h2>ほかにやったこと</h2><div class="panel">` + extra.map(l => `<div class="minirow"><span class="t">${hm(l.at)}</span><span class="dot ${cls(l)}"></span><span class="n">${esc(l.name)}</span>
       ${l.by!==S.me?`<button class="thanks ${l.thanks?'on':''}" data-act="thanks" data-id="${l.id}">${l.thanks?'♥':'♡'}</button>`:(l.thanks?'<span class="thanks on">♥</span>':`<button class="btn small ghost" data-act="undo" data-id="${l.id}">取消</button>`)}</div>`).join('') + `</div>`;
   }
   return html;
@@ -377,13 +389,13 @@ function viewWeek(){
     const k = dayKey(d.getTime()); const logs = logsOn(k);
     return `<button class="wday ${k===tk?'today':''} ${k===selDay?'sel':''}" data-act="selday" data-k="${k}">
       <span class="wd">${WD[d.getDay()]}</span><span class="dn">${d.getDate()}</span>
-      <span class="dots">${logs.map(l => `<i class="${l.by}"></i>`).join('')}</span></button>`;
+      <span class="dots">${logs.map(l => `<i class="${cls(l)}"></i>`).join('')}</span></button>`;
   }).join('') + `</div><div style="margin-top:8px">${legend()}</div>`;
   const k = selDay && days.some(d => dayKey(d.getTime()) === selDay) ? selDay : null;
   if (k){
     const logs = logsOn(k);
     html += `<h2>${k.slice(5).replace('-','/')} の家事</h2><div class="panel">${timeline(logs, k===tk)}`;
-    html += logs.length ? logs.map(l => `<div class="minirow"><span class="t">${hm(l.at)}</span><span class="dot ${l.by}"></span><span class="n">${esc(l.name)}${l.thanks?' <span style="color:#d0546b">♥</span>':''}</span></div>`).join('') : `<div class="empty">記録なし</div>`;
+    html += logs.length ? logs.map(l => `<div class="minirow"><span class="t">${hm(l.at)}</span><span class="dot ${cls(l)}"></span><span class="n">${esc(l.name)}${l.thanks?' <span style="color:#d0546b">♥</span>':''}</span></div>`).join('') : `<div class="empty">記録なし</div>`;
     html += `</div>`;
   } else {
     html += `<p class="hint">日付をタップすると、その日の流れが見られます。</p>`;
@@ -407,7 +419,7 @@ function viewReview(){
   if (!reviewOpen){
     html += `<button class="reveal" data-act="reveal">ふたりで見るときにタップ<br><small>件数は振り返りの材料。比べるためではなく、担当を組み替えるために使う</small></button>`;
   } else {
-    const per = k => { const m = {}; logs.filter(l => l.by === k).forEach(l => m[l.name] = (m[l.name]||0)+1); return Object.entries(m).sort((a,b) => b[1]-a[1]); };
+    const per = k => { const m = {}; logs.filter(l => involves(l,k)).forEach(l => m[l.name] = (m[l.name]||0)+1); return Object.entries(m).sort((a,b) => b[1]-a[1]); };
     const thx = k => logs.filter(l => l.by === k && l.thanks).length;
     html += `<div class="split">` + ['h','y'].map(k => `<div class="who ${k}"><div class="nm">${esc(nm(k))}</div>
       <ul>${per(k).map(([n,c]) => `<li>${esc(n)}${c>1?` ×${c}`:''}</li>`).join('') || '<li style="list-style:none;margin-left:-16px" class="muted">記録なし</li>'}</ul>
@@ -471,9 +483,9 @@ function sheetChore(id){
   let h = `<h3>${esc(c.name)}</h3><div class="meta muted" style="display:flex;gap:8px;align-items:center"><span class="badge ${c.owner}">担当：${esc(nm(c.owner))}</span>${freqText(c)}${ld&&!tl.length?`・前回 ${dayKey(ld).slice(5).replace('-','/')}`:''}</div>`;
   h += `<label class="f">完了の定義</label>`;
   h += (c.def||[]).length ? `<ul class="defs">${c.def.map((d,i) => `<li data-act="tick"><span class="bx">✓</span><span>${esc(d)}</span></li>`).join('')}</ul>` : `<p class="muted">まだ決まっていません（編集から追加）</p>`;
-  h += `<button class="btn wide" style="margin-top:16px" data-act="do" data-id="${c.id}" data-close="1">やった！</button>`;
+  h += `<div class="row" style="margin-top:16px"><button class="btn" style="flex:2;padding:13px" data-act="do" data-id="${c.id}" data-close="1">やった！</button><button class="btn ghost" style="flex:1;padding:13px" data-act="doboth" data-id="${c.id}" data-close="1">ふたりで</button></div>`;
   if (tl.length){
-    h += `<label class="f">今日の記録</label><div class="panel">` + tl.map(l => `<div class="minirow"><span class="t">${hm(l.at)}</span><span class="dot ${l.by}"></span><span class="n">${esc(nm(l.by))}</span>${l.by===S.me?`<button class="btn small ghost" data-act="undo" data-id="${l.id}" data-close="1">取り消す</button>`:''}</div>`).join('') + `</div>`;
+    h += `<label class="f">今日の記録</label><div class="panel">` + tl.map(l => `<div class="minirow"><span class="t">${hm(l.at)}</span><span class="dot ${cls(l)}"></span><span class="n">${esc(whoText(l))}</span>${l.by===S.me?`<button class="btn small ghost" data-act="undo" data-id="${l.id}" data-close="1">取り消す</button>`:''}</div>`).join('') + `</div>`;
   }
   h += `<label class="f">改善ボックスに入れる（その場で言わずに、週1で話す）</label><textarea class="t" id="cnote" placeholder="例：排水口のゴミも捨ててほしい"></textarea>
     <div class="row" style="margin-top:8px"><button class="btn ghost" style="flex:1" data-act="edit" data-id="${c.id}">家事を編集</button><button class="btn" style="flex:1" data-act="addcnote" data-id="${c.id}">入れる</button></div>`;
@@ -513,11 +525,13 @@ function captureEdit(){
 }
 
 function sheetFree(){
+  freeBoth = false;
   const recent = [...new Set(all('log').filter(l => !l.choreId).sort((a,b) => b.at-a.at).map(l => l.name))].slice(0,8);
   const base = ['洗剤・ティッシュの補充','保育園・幼稚園の連絡','ゴミ袋をセット','郵便物の整理','水筒を洗う','植物の水やり'];
   const chips = [...new Set([...recent, ...base])].slice(0,12);
   openSheet(`<h3>名もなき家事</h3><p class="muted">小さいけど誰かがやってること、ワンタップで残そう</p>
     <div class="chips">${chips.map(c => `<button data-act="free" data-v="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+    <label class="togglerow"><input type="checkbox" id="freeboth" ${freeBoth?'checked':''}>ふたりでやった</label>
     <label class="f">自由に入力</label><div class="row"><input class="t" id="freein" placeholder="例：網戸の掃除"><button class="btn" data-act="freein">記録</button></div>`);
 }
 
@@ -535,6 +549,9 @@ document.addEventListener('click', e => {
     case 'open': sheetChore(id); break;
     case 'thanks': toggleThanks(L); break;
     case 'undo': remove(L); toast('取り消しました'); if (el.dataset.close) closeSheet(); break;
+    case 'doboth': doChore(S.items[id], true); if (el.dataset.close) closeSheet(); break;
+    case 'join': put({ ...L, both:true }); toast('一緒にやったにしました'); break;
+    case 'leave': put({ ...L, both:false }); toast('一緒から外れました'); break;
     case 'uncheck': remove(L); toast('チェックを外しました'); break;
     case 'notmine': toast('相手がつけたチェックは外せません'); break;
     case 'tick': el.classList.toggle('on'); break;
@@ -574,6 +591,7 @@ document.addEventListener('click', e => {
   }
 });
 $('scrim').addEventListener('click', closeSheet);
+document.addEventListener('change', e => { if (e.target.id === 'freeboth') freeBoth = e.target.checked; });
 $('mechip').addEventListener('click', () => { tab = 'settings'; render(); });
 $('fab').addEventListener('click', sheetFree);
 $('tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; tab = b.dataset.t; weekOff = 0; selDay = null; reviewOpen = false; closeSheet(); render(); window.scrollTo(0,0); });
