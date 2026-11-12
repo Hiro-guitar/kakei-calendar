@@ -224,6 +224,21 @@ nav.tabs .tile{width:38px;height:38px}
 .zbig svg{width:130px;height:130px}
 .zbig{gap:10px;align-items:flex-end}
 .zbig .zplant{width:100px;height:120px}
+.cr-fly{animation:crfly 7s ease-in-out infinite alternate;transform-box:fill-box}
+@keyframes crfly{0%{transform:translate(0,0)}25%{transform:translate(14px,-8px)}50%{transform:translate(4px,6px)}75%{transform:translate(-12px,-4px)}100%{transform:translate(-4px,4px)}}
+.cr-fly .wing-l,.cr-fly .wing-r{animation:flap .28s ease-in-out infinite alternate;transform-box:fill-box}
+.cr-fly .wing-l{transform-origin:right center}.cr-fly .wing-r{transform-origin:left center}
+@keyframes flap{to{transform:scaleX(.35)}}
+.cr-perch{animation:bob2 3.2s ease-in-out infinite}
+@keyframes bob2{50%{transform:translateY(-1px) rotate(-3deg)}}
+.cr-hop{animation:hop 4s ease-in-out infinite}
+@keyframes hop{0%,70%,100%{transform:translate(0,0)}78%{transform:translate(3px,-4px)}86%{transform:translate(6px,0)}}
+.cr-ground{animation:crawl 12s linear infinite alternate}
+@keyframes crawl{to{transform:translateX(16px)}}
+.cr-hop2{animation:hop2 .5s ease-out}
+@keyframes hop2{40%{transform:translateY(-6px)}}
+.glow{animation:glow 1.6s ease-in-out infinite alternate}
+@keyframes glow{to{opacity:.05}}
 </style>
 </head>
 <body>
@@ -325,6 +340,7 @@ function talkMsg(due, logs){
   if (fromOther.length) msgs.push(`${nm(other(me))}が今日${fromOther.length}つやってくれたみたい。♡ありがとう、送ってみる？`);
   const wk = weekLogs(0);
   if (wk.length){ const top = bloomSummary(wk)[0]; msgs.push(`今週は庭に${wk.length}輪咲いたよ。いちばん多いのは${FL[top[0]].n}。`); }
+  const crw = creaturesFor(weekLogs(0)); if (crw.length) msgs.push(`今週は庭に${crw.slice(0, 2).join('と')}${crw.length > 2 ? 'たち' : ''}が遊びに来てるよ。タップしてみて。`);
   if (openNotes) msgs.push(`改善ボックスに${openNotes}つ入ってるよ。週に1回、ふたりで見てみよう。`);
   msgs.push(['気になったことは、その場で言わずに改善ボックスへ入れておこう。','小さな家事も「名もなき家事」から残せるよ。','一緒にやった家事は「ふたりで」を押してね。','「完了の定義」はふたりで決めて、ときどき見直そう。'][new Date().getDate() % 4]);
   return msgs[talkIdx % msgs.length];
@@ -2596,6 +2612,152 @@ function plantSVG(key, seed, U = 14){
   return back + mid + front;
 }
 
+/* ===== 庭に来る生き物 ===== */
+const CREATURE_DATA = `
+スズメ|1-12|bird|min:3|人のそばで暮らす身近な鳥。ほっぺの黒い斑点が目印で、地面をぴょんぴょん跳ねて歩く。
+シジュウカラ|1-12|bird|tree|胸の黒いネクタイ模様が特徴。「ツピーツピー」とよく通る声で鳴く。
+メジロ|12-3|bird|flower:ウメ,紅梅,ツバキ,ヤブツバキ,カンツバキ,ワビスケ,サザンカ,白いサザンカ,赤いサザンカ,サクラ,カワヅザクラ,ビワ|目のまわりの白い輪が名前の由来。花の蜜が大好きで、梅や椿によく来る。
+ウグイス|2-4|bird|tree|「ホーホケキョ」で春を知らせる鳥。姿は地味なうぐいす色で、やぶの中にいることが多い。
+ヒヨドリ|10-4|bird|tree|灰色の体に、ほっぺの茶色が目印。「ヒーヨ」と大きな声で鳴き、花の蜜や木の実を食べにくる。
+ジョウビタキ|11-3|bird|min:3|冬に大陸からやってくる渡り鳥。オレンジ色のお腹と、翼の白い斑点がかわいい。
+ツグミ|12-3|bird|min:2|冬鳥。地面を数歩進んでは立ち止まり、胸を張るしぐさをくり返す。
+ルリビタキ|12-3|bird|tree|オスは背中が瑠璃色に輝く冬の小鳥。「青い鳥」としても人気。
+モズ|10-2|bird|tree|秋に「キィーキィー」と高鳴きして縄張りを主張する。捕まえた獲物を枝に刺す「はやにえ」で有名。
+ハクセキレイ|1-12|bird|min:5|白と黒の体で、長い尾をいつも上下にふりながら歩く。
+キジバト|1-12|bird|min:6|「デーデーポッポー」と鳴くハト。首の横にしま模様がある。
+ツバメ|4-7|flyer|min:4|春に南の国から渡ってきて、軒下に巣を作る。燕尾服の由来になった、二股の尾が特徴。
+カワセミ|1-12|bird|water|水辺の宝石と呼ばれる青い鳥。水に飛び込んで魚をとる。
+ムクドリ|1-12|bird|min:8|黄色いくちばしと足が目印。群れで行動し、夕方には大勢でねぐらに集まる。
+モンシロチョウ|3-10|flyer|min:2|春の代表的なチョウ。白い羽に黒い点がある。幼虫はキャベツの葉が大好き。
+モンキチョウ|3-10|flyer|min:3|黄色い羽のチョウ。野原の低いところをひらひらと飛ぶ。
+アゲハ|4-10|flyer|min:4|黄色と黒の模様が美しい大きなチョウ。幼虫はミカンなどの葉を食べる。
+キアゲハ|4-10|flyer|min:7|アゲハによく似ているが、羽の付け根が黒っぽい。幼虫はニンジンやパセリの葉を食べる。
+ルリシジミ|3-10|flyer|min:3|羽の表が淡い瑠璃色の、小さなシジミチョウ。
+ヤマトシジミ|5-11|flyer|flower:カタバミ,オキザリス|道ばたでいちばんよく見る小さなチョウ。幼虫はカタバミを食べる。
+ツマグロヒョウモン|5-11|flyer|flower:パンジー,黄色いパンジー,ビオラ,白いビオラ,スミレ|オレンジ色にヒョウ柄の羽。メスは羽の先が黒い。幼虫はスミレの仲間を食べる。
+アサギマダラ|9-10|flyer|flower:フジバカマ,ユーパトリウム|海を渡って長い旅をするチョウ。フジバカマの花が大好き。
+ミツバチ|3-10|flyer|min:2|花から花へ蜜と花粉を集める。8の字ダンスで仲間に花の場所を伝える。
+マルハナバチ|4-7|flyer|min:4|ふわふわの毛におおわれた、丸っこいハチ。おとなしい性格。
+テントウムシ|4-10|perch|min:3|赤い背中に黒い七つの点。アブラムシを食べてくれる、畑の味方。
+カタツムリ|6-7|ground|flower:アジサイ,ピンクのアジサイ,ガクアジサイ,アナベル,カシワバアジサイ|雨の季節に出てくる。アジサイの葉の上でよく見かける。
+アマガエル|5-9|ground|min:5|鮮やかな緑色の小さなカエル。雨が近づくとよく鳴く。
+シオカラトンボ|6-8|flyer|min:4|オスは体が青白い粉をふいたような色になる。水辺の近くをすいすい飛ぶ。
+アキアカネ|9-11|flyer|min:3|秋に里へ下りてくる赤とんぼ。夏の間は涼しい山で過ごす。
+アブラゼミ|7-8|perch|tree|茶色い羽のセミ。「ジージリジリ」と油で揚げるような声で鳴く。
+ミンミンゼミ|7-8|perch|tree|「ミーンミンミン」と鳴く、緑と黒の模様のセミ。羽は透明。
+カブトムシ|7-8|perch|tree|夏の夜、木の樹液に集まる昆虫の王様。オスには大きな角がある。
+ゲンジボタル|6|flyer|water|初夏の夜、きれいな川の近くで光りながら飛ぶ。
+スズムシ|8-10|ground|min:5|「リーンリーン」と鈴のような声で鳴く秋の虫。平安時代から鳴き声が楽しまれてきた。
+カマキリ|8-10|perch|min:6|鎌のような前足で虫をつかまえるハンター。秋に卵を産む。
+ダンゴムシ|4-10|ground|min:1|さわると丸くなる。落ち葉を食べて土を豊かにしてくれる。
+ミノムシ|11-2|perch|tree|ガの幼虫が、葉や枝で作ったみのにくるまって冬を越す。
+`;
+const CR = {};
+CREATURE_DATA.trim().split('\n').forEach((line, i) => { const [n, ms, kind, cond, desc] = line.split('|'); const months = []; ms.split(',').forEach(r => { const [a, b] = r.split('-').map(Number); let m = a; for (let k = 0; k < 12; k++){ months.push(m); if (m === (b || a)) break; m = m % 12 + 1; } }); CR[n] = { n, months, kind, cond, desc, no: i + 1 }; });
+
+/* --- 生き物の絵（原点が体の中心） --- */
+const BIRD = {
+  スズメ:{ body:'#a8784a', belly:'#efe2cc', head:'#7a4a2a', wing:'#8a5a32', cheek:'#2a2020', bib:'#2a2020' },
+  シジュウカラ:{ body:'#7a8a5a', belly:'#f2f0e6', head:'#1a1a1a', wing:'#5a6a7a', cheek:'#ffffff', tie:'#1a1a1a' },
+  メジロ:{ body:'#8aa83a', belly:'#e8e0c0', head:'#8aa83a', wing:'#6a8a2a', ring:'#ffffff', throat:'#e8d83a' },
+  ウグイス:{ body:'#8a8a5a', belly:'#d8d4c0', head:'#8a8a5a', wing:'#7a7a4a', brow:'#d8d4c0' },
+  ヒヨドリ:{ body:'#7a7e88', belly:'#9a9ea8', head:'#6a6e78', wing:'#5a5e68', cheek:'#a8683a', crest:1, tail:1.5 },
+  ジョウビタキ:{ body:'#5a5050', belly:'#e8823a', head:'#c8c8c8', wing:'#2a2a2a', spot:'#ffffff' },
+  ツグミ:{ body:'#7a5a3a', belly:'#f2ead8', head:'#5a4a3a', wing:'#a8582a', brow:'#f2ead8', dots:'#4a3a2a' },
+  ルリビタキ:{ body:'#3a6ad0', belly:'#f2f0ea', head:'#3a6ad0', wing:'#2a4aa8', flank:'#f2a23a' },
+  モズ:{ body:'#a86a3a', belly:'#f0dcc0', head:'#c8783a', wing:'#5a4a3a', mask:'#2a2020', hook:1, tail:1.4 },
+  ハクセキレイ:{ body:'#9a9a9a', belly:'#ffffff', head:'#ffffff', wing:'#2a2a2a', cap:'#1a1a1a', bib:'#1a1a1a', tail:1.9 },
+  キジバト:{ body:'#a8887a', belly:'#c8a898', head:'#a8989a', wing:'#8a5a3a', neck:'#3a5a8a', big:1.3, scale:'#5a3a2a' },
+  カワセミ:{ body:'#2a9ad0', belly:'#e8822a', head:'#2a7ac0', wing:'#2a8ac8', throat:'#ffffff', beak:'#1a1a1a', longbeak:1 },
+  ムクドリ:{ body:'#5a4a40', belly:'#7a6a5a', head:'#3a3030', wing:'#4a3a32', cheek:'#e8e0d8', beak:'#f2b81a', legs:'#f2b81a' },
+};
+function birdSVG(n){ const b = BIRD[n] || BIRD.スズメ, k = b.big || 1, t = b.tail || 1;
+  let o = `<g transform="scale(${k})">`;
+  o += `<path d="M-3 1 L ${-7.5*t} ${3 + t} L ${-7*t} ${4.4 + t*.4} L -2.4 2.6Z" fill="${shade(b.wing, -.15)}"/>`;
+  if (b.legs || 1) o += `<path d="M-.6 3.6 L -1 6.2 M1 3.6 L 1.2 6.2" stroke="${b.legs || '#8a6a5a'}" stroke-width=".55"/>`;
+  o += `<ellipse cx="0" cy="1" rx="4.4" ry="3.4" fill="${b.body}"/><ellipse cx="1.2" cy="2" rx="3" ry="2.2" fill="${b.belly}"/>`;
+  if (b.flank) o += `<ellipse cx="0" cy="2.2" rx="1.4" ry="1.2" fill="${b.flank}"/>`;
+  if (b.dots) o += Array.from({length:6}, (_, i) => `<circle cx="${(.4 + (i % 3) * .9).toFixed(1)}" cy="${(1.4 + Math.floor(i / 3) * .9).toFixed(1)}" r=".35" fill="${b.dots}"/>`).join('');
+  if (b.scale) o += Array.from({length:4}, (_, i) => `<path d="M${-2.4 + i * 1.1} -.4 q .5 .7 1 0" stroke="${b.scale}" stroke-width=".4" fill="none"/>`).join('');
+  o += `<path d="M-3.6 -.4 C -2 -2 1.4 -1.4 1.6 .8 C 0 2.4 -3 2.2 -3.6 -.4Z" fill="${b.wing}"/>`;
+  if (b.spot) o += `<circle cx="-.6" cy=".6" r=".55" fill="${b.spot}"/>`;
+  o += `<circle cx="3.2" cy="-2" r="2.5" fill="${b.head}"/>`;
+  if (b.cap) o += `<path d="M1.6 -3.4 Q 3.2 -5 5 -3.2 Q 3.4 -3.8 1.6 -3.4Z" fill="${b.cap}"/>`;
+  if (b.crest) o += `<path d="M2 -3.8 L 1.4 -5.4 L 3 -4.2Z" fill="${b.head}"/>`;
+  if (b.cheek) o += `<ellipse cx="3.6" cy="-1.2" rx="1" ry=".7" fill="${b.cheek}"/>`;
+  if (b.bib) o += `<ellipse cx="4.4" cy=".2" rx=".9" ry=".7" fill="${b.bib}"/>`;
+  if (b.tie) o += `<path d="M3.4 -.2 L 2.6 3.6 L 3.2 3.8 L 4 .2Z" fill="${b.tie}"/>`;
+  if (b.throat) o += `<ellipse cx="4.6" cy="-.4" rx=".9" ry=".7" fill="${b.throat}"/>`;
+  if (b.neck) o += `<path d="M1.6 -.6 l .4 .9 M2.2 -.8 l .4 .9" stroke="${b.neck}" stroke-width=".4"/>`;
+  if (b.mask) o += `<path d="M2 -2.4 L 5.4 -2.2" stroke="${b.mask}" stroke-width=".9" stroke-linecap="round"/>`;
+  if (b.brow) o += `<path d="M2 -3 Q 3.6 -3.8 5 -2.8" stroke="${b.brow}" stroke-width=".5" fill="none"/>`;
+  if (b.ring) o += `<circle cx="4" cy="-2.2" r="1" fill="${b.ring}"/>`;
+  o += `<circle cx="4" cy="-2.2" r=".55" fill="#1a1a1a"/><circle cx="4.2" cy="-2.4" r=".18" fill="#fff"/>`;
+  o += b.longbeak ? `<path d="M5.2 -2 L 9 -1.4 L 5.4 -1Z" fill="${b.beak}"/>` : b.hook ? `<path d="M5.4 -2 Q 7 -2 6.6 -.8 L 5.4 -1.2Z" fill="#3a3030"/>` : `<path d="M5.4 -2.2 L 7 -1.6 L 5.4 -1Z" fill="${b.beak || '#3a3030'}"/>`;
+  return o + `</g>`; }
+function butterflySVG(n){ const P = {
+    モンシロチョウ:['#fbfbf6', '#2a2a2a', null], モンキチョウ:['#f6e05a', '#c87a2a', null], アゲハ:['#f6dc6a', '#1a1a1a', 'tail'], キアゲハ:['#f2d23a', '#1a1a1a', 'tail'],
+    ルリシジミ:['#9ab8f0', '#f6f6ff', 'small'], ヤマトシジミ:['#a8b8e0', '#e8eaf0', 'small'], ツマグロヒョウモン:['#f29a3a', '#2a1a1a', 'leopard'], アサギマダラ:['#c8e8f0', '#2a2a2a', 'asagi'] }[n] || ['#fff', '#333'];
+  const [c, m, t] = P, sm = t === 'small' ? .7 : 1, wing = (side) => {
+    let w = `<g transform="scale(${side},1)"><path d="M0 0 C 3 -6 9 -8 9.6 -4 C 10 -1 6 1 0 0Z" fill="${c}" stroke="${shade(c, -.4)}" stroke-width=".35"/><path d="M0 .4 C 2 4 6 6.4 7 4.4 C ${t === 'tail' ? '8 6 8.6 8.6 7.6 9 C 6.6 7.6 5.6 7 4.6 6.6' : '7.6 3 6 1.6 3 .8'} C 3 6 1 4 0 .4Z" fill="${shade(c, .05)}" stroke="${shade(c, -.4)}" stroke-width=".35"/>`;
+    if (t === 'tail') w += `<path d="M1 -1.4 L 8 -6.4 M2 -.6 L 9 -3 M9.4 -4 C 8 -5 6 -6.6 4 -6.6" stroke="${m}" stroke-width=".7" fill="none"/><path d="M0 0 C 2 -2 3.4 -4.6 3 -6.4 C 1.6 -5 .6 -2.4 0 0Z" fill="${m}"/><path d="M6.6 4.6 C 7.4 5 7.6 6 7 6.6" stroke="#3a6ad0" stroke-width=".8" fill="none"/><circle cx="2.2" cy="4.6" r=".6" fill="#e2582a"/>`;
+    else if (t === 'leopard') w += Array.from({length:9}, (_, i) => `<circle cx="${(2 + (i % 3) * 2.4).toFixed(1)}" cy="${(-4 + Math.floor(i / 3) * 3.4).toFixed(1)}" r=".6" fill="${m}"/>`).join('') + `<path d="M7 -6.4 C 9 -6 10 -3.4 9.6 -2.6 C 8.4 -3 7.6 -4.6 7 -6.4Z" fill="${m}"/>`;
+    else if (t === 'asagi') w += `<path d="M.4 -.6 C 3 -5.6 8.6 -7.6 9.4 -4.4 C 7 -4.6 3 -3 .4 -.6Z" fill="#3a2a2a" opacity=".85"/><path d="M1 -1.4 L 6.6 -5 M1 .8 L 5 4.6 M1.6 .6 L 6.4 3.4" stroke="#3a2a2a" stroke-width=".55"/><path d="M5 2 C 6.4 2.4 7 4 6.6 5 C 5 5 4 4 5 2Z" fill="#a85a3a"/>`;
+    else if (t === 'small') w += `<path d="M9.4 -3.8 C 9.4 -2 7.6 -.2 5 .4" stroke="${shade(c, -.35)}" stroke-width=".6" fill="none"/>`;
+    else w += `<circle cx="6.4" cy="-4.4" r=".9" fill="${m}"/><path d="M8 -6.4 C 9 -6 9.8 -5 9.6 -4.2 C 8.8 -4.6 8.2 -5.4 8 -6.4Z" fill="${m}" opacity=".7"/>`;
+    return w + `</g>`; };
+  return `<g transform="scale(${sm})"><g class="wing-l">${wing(-1)}</g><g class="wing-r">${wing(1)}</g><ellipse rx=".8" ry="4" cy="1" fill="#2a2a2a"/><circle cy="-3.4" r=".9" fill="#2a2a2a"/><path d="M-.3 -4 Q -1.6 -7 -2.6 -7.6 M.3 -4 Q 1.6 -7 2.6 -7.6" stroke="#2a2a2a" stroke-width=".35" fill="none"/><circle cx="-2.6" cy="-7.6" r=".4" fill="#2a2a2a"/><circle cx="2.6" cy="-7.6" r=".4" fill="#2a2a2a"/></g>`; }
+const BUG = {
+  ミツバチ: () => `<g class="wing-l"><ellipse cx="-2.2" cy="-2.6" rx="2.4" ry="1.4" fill="#e8f0fa" opacity=".8" transform="rotate(-30 -2.2 -2.6)"/></g><g class="wing-r"><ellipse cx="2.2" cy="-2.6" rx="2.4" ry="1.4" fill="#e8f0fa" opacity=".8" transform="rotate(30 2.2 -2.6)"/></g><ellipse rx="3" ry="2" fill="#f2b82a"/><path d="M-1 -1.9 L -1 1.9 M.8 -1.9 L .8 1.9" stroke="#3a2a1a" stroke-width=".8"/><circle cx="-3.2" r="1.4" fill="#3a2a1a"/><path d="M3 0 L 4 0" stroke="#3a2a1a" stroke-width=".6"/>`,
+  マルハナバチ: () => `<g class="wing-l"><ellipse cx="-2" cy="-3" rx="2.4" ry="1.4" fill="#e8f0fa" opacity=".8"/></g><g class="wing-r"><ellipse cx="2" cy="-3" rx="2.4" ry="1.4" fill="#e8f0fa" opacity=".8"/></g><ellipse rx="3.6" ry="2.8" fill="#2a2a2a"/><ellipse cx="-.8" rx="1.2" ry="2.7" fill="#f2c83a"/><ellipse cx="2.6" rx="1.2" ry="2.2" fill="#f2f0e6"/><circle cx="-3.6" r="1.6" fill="#2a2a2a"/>`,
+  テントウムシ: () => `<path d="M-2.6 -1 L -3.6 -2 M-2.6 1 L -3.6 2 M0 2.2 L 0 3.4" stroke="#1a1a1a" stroke-width=".4"/><ellipse rx="3" ry="2.4" fill="#d8282a"/><path d="M0 -2.4 L0 2.4" stroke="#1a1a1a" stroke-width=".4"/>${[[-1.4, -1], [1.4, -1], [-1.6, .9], [1.6, .9], [-.6, .2], [.6, .2], [0, -1.8]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r=".5" fill="#1a1a1a"/>`).join('')}<ellipse cx="0" cy="-2.6" rx="1.6" ry=".9" fill="#1a1a1a"/><circle cx="-.6" cy="-2.8" r=".3" fill="#fff"/><circle cx=".6" cy="-2.8" r=".3" fill="#fff"/><ellipse cx="-1" cy="-.6" rx=".8" ry=".4" fill="#fff" opacity=".35"/>`,
+  カタツムリ: () => `<path d="M-6 3 C -6 1.4 3 1.4 6 2 L 7.4 -.4 M6 2 L 8 -.2" stroke="#b8a898" stroke-width=".4" fill="#c8b8a8"/><path d="M-6.4 3.2 C -6 1.6 4 1.2 6.4 2.6 C 5 3.6 -4 3.8 -6.4 3.2Z" fill="#d8c8b8"/><circle cx="7.4" cy="-.6" r=".45" fill="#3a3030"/><circle cx="8" cy="-.4" r=".45" fill="#3a3030"/><circle cx="-1" cy="-1.4" r="4" fill="#b8784a"/><path d="M-1 -1.4 m 0 0 a 1 1 0 0 1 1.2 .4 a 1.8 1.8 0 0 1 -2.2 1.4 a 2.8 2.8 0 0 1 -1.6 -3.6 a 3.6 3.6 0 0 1 4.8 -.8" stroke="#7a4a2a" stroke-width=".55" fill="none"/>`,
+  アマガエル: () => `<path d="M-3 2.6 Q -6 3 -5.4 4.4 L -3.6 4.2 M3 2.6 Q 6 3 5.4 4.4 L 3.6 4.2" stroke="#4fa84a" stroke-width="1.3" fill="none" stroke-linecap="round"/><ellipse cx="0" cy="1.2" rx="4" ry="3" fill="#6ac84a"/><ellipse cx="0" cy="2.2" rx="2.8" ry="1.8" fill="#e8f2d8"/><circle cx="-2" cy="-1.4" r="1.4" fill="#6ac84a"/><circle cx="2" cy="-1.4" r="1.4" fill="#6ac84a"/><circle cx="-2" cy="-1.5" r=".7" fill="#1a1a1a"/><circle cx="2" cy="-1.5" r=".7" fill="#1a1a1a"/><path d="M-3.6 -.6 L -1.2 .2 M3.6 -.6 L 1.2 .2" stroke="#3a6a3a" stroke-width=".5"/><path d="M-1.2 .8 Q 0 1.4 1.2 .8" stroke="#3a6a3a" stroke-width=".4" fill="none"/>`,
+  シオカラトンボ: () => `<g class="wing-l"><ellipse cx="-4" cy="-1.4" rx="4.4" ry="1.1" fill="#e8f0f6" opacity=".7" stroke="#9aa8b8" stroke-width=".2"/><ellipse cx="-4" cy=".6" rx="4" ry="1" fill="#e8f0f6" opacity=".7" stroke="#9aa8b8" stroke-width=".2"/></g><g class="wing-r"><ellipse cx="4" cy="-1.4" rx="4.4" ry="1.1" fill="#e8f0f6" opacity=".7" stroke="#9aa8b8" stroke-width=".2"/><ellipse cx="4" cy=".6" rx="4" ry="1" fill="#e8f0f6" opacity=".7" stroke="#9aa8b8" stroke-width=".2"/></g><path d="M0 -.6 L0 9" stroke="#a8c0d8" stroke-width="1.1" stroke-linecap="round"/><path d="M0 6 L 0 9" stroke="#2a2a2a" stroke-width="1.1"/><ellipse cx="0" cy="-1.2" rx="1.1" ry="1.6" fill="#4a5a6a"/><circle cx="0" cy="-3" r="1.2" fill="#3a8a8a"/>`,
+  アキアカネ: () => `<g class="wing-l"><ellipse cx="-4" cy="-1.4" rx="4.4" ry="1.1" fill="#f6efe6" opacity=".7" stroke="#c8a888" stroke-width=".2"/><ellipse cx="-4" cy=".6" rx="4" ry="1" fill="#f6efe6" opacity=".7" stroke="#c8a888" stroke-width=".2"/></g><g class="wing-r"><ellipse cx="4" cy="-1.4" rx="4.4" ry="1.1" fill="#f6efe6" opacity=".7" stroke="#c8a888" stroke-width=".2"/><ellipse cx="4" cy=".6" rx="4" ry="1" fill="#f6efe6" opacity=".7" stroke="#c8a888" stroke-width=".2"/></g><path d="M0 -.6 L0 9" stroke="#d8402a" stroke-width="1.1" stroke-linecap="round"/><ellipse cx="0" cy="-1.2" rx="1.1" ry="1.6" fill="#a8582a"/><circle cx="0" cy="-3" r="1.2" fill="#a8482a"/>`,
+  アブラゼミ: () => `<path d="M0 -3 C -4 -2 -5 6 -1 9 L 0 3Z" fill="#7a4a2a" stroke="#4a2a1a" stroke-width=".3"/><path d="M0 -3 C 4 -2 5 6 1 9 L 0 3Z" fill="#8a5a32" stroke="#4a2a1a" stroke-width=".3"/><ellipse cy="-1" rx="2.4" ry="3" fill="#2a2a1a"/><ellipse cy="-3.6" rx="2.6" ry="1.2" fill="#3a3a2a"/><circle cx="-2.2" cy="-3.8" r=".6" fill="#8a5a3a"/><circle cx="2.2" cy="-3.8" r=".6" fill="#8a5a3a"/>`,
+  ミンミンゼミ: () => `<path d="M0 -3 C -4 -2 -5 6 -1 9 L 0 3Z" fill="#e8f0f0" opacity=".75" stroke="#7a9a8a" stroke-width=".3"/><path d="M0 -3 C 4 -2 5 6 1 9 L 0 3Z" fill="#e8f0f0" opacity=".75" stroke="#7a9a8a" stroke-width=".3"/><ellipse cy="-1" rx="2.4" ry="3" fill="#3a6a4a"/><path d="M-1.4 -2 L 1.4 -2 M-1 0 L 1 0" stroke="#1a2a1a" stroke-width=".5"/><ellipse cy="-3.6" rx="2.6" ry="1.2" fill="#2a4a3a"/>`,
+  カブトムシ: () => `<path d="M-2.4 -1 L -4 -2.4 M-2.6 1 L -4.2 1.4 M-2.4 3 L -4 4.4 M2.4 -1 L 4 -2.4 M2.6 1 L 4.2 1.4 M2.4 3 L 4 4.4" stroke="#2a1a10" stroke-width=".5"/><ellipse cy="1.4" rx="3" ry="4" fill="#5a2a1a"/><path d="M0 -2.6 L 0 5.4" stroke="#3a1a10" stroke-width=".4"/><ellipse cy="-3" rx="2.4" ry="1.6" fill="#4a2010"/><path d="M0 -4 Q -.4 -7 -2 -8.4 L -2.6 -7.6 M-2 -8.4 L -1 -9 M0 -4.4 Q .6 -5.4 1.4 -5.4" stroke="#3a1a10" stroke-width=".8" fill="none" stroke-linecap="round"/><ellipse cx="-1" cy="0" rx=".8" ry="1.6" fill="#fff" opacity=".2"/>`,
+  ゲンジボタル: () => `<circle cy="2.6" r="4" fill="#e8f86a" opacity=".35" class="glow"/><ellipse cy="0" rx="1.6" ry="3" fill="#2a2a2a"/><ellipse cy="2.4" rx="1.2" ry="1" fill="#f2f8a0"/><ellipse cy="-2.6" rx="1.4" ry=".9" fill="#e8582a"/>`,
+  スズムシ: () => `<path d="M-1 1 L -4 4.4 L -5.4 2 M1 1 L 4 4.4 L 5.4 2 M0 -3 Q -3 -8 -6 -9 M0 -3 Q 3 -8 6 -9" stroke="#2a2a1a" stroke-width=".4" fill="none"/><ellipse cy="1" rx="2.4" ry="3.6" fill="#2a2a20"/><ellipse cy="1.4" rx="3.4" ry="3" fill="#6a6a5a" opacity=".55"/><ellipse cy="-2.6" rx="1.4" ry="1" fill="#2a2a20"/>`,
+  カマキリ: () => `<path d="M0 0 Q -1 5 0 10 M0 3 L -3 7 M0 3 L 3 7 M0 4 L -2.6 9 M0 4 L 2.6 9" stroke="#6aa84a" stroke-width=".7" fill="none"/><ellipse cy="5" rx="1.6" ry="4" fill="#7ab85a"/><path d="M0 0 L0 -4" stroke="#7ab85a" stroke-width="1"/><path d="M0 -2 L -2.4 -4 L -2 -1 M0 -2 L 2.4 -4 L 2 -1" stroke="#6aa84a" stroke-width=".8" fill="none"/><path d="M-1.6 -5 L 0 -3.6 L 1.6 -5 L 0 -6Z" fill="#8ac86a"/><circle cx="-1.4" cy="-5" r=".4" fill="#3a5a2a"/><circle cx="1.4" cy="-5" r=".4" fill="#3a5a2a"/>`,
+  ダンゴムシ: () => `<ellipse cy="0" rx="3.6" ry="2.2" fill="#5a5a60"/>${[-2.2, -1.1, 0, 1.1, 2.2].map(x => `<path d="M${x} -2.1 L ${x} 2.1" stroke="#3a3a40" stroke-width=".4"/>`).join('')}<path d="M3.4 -.6 L 4.6 -1.6 M3.4 .2 L 4.8 -.4" stroke="#3a3a40" stroke-width=".3"/><ellipse cx="-.8" cy="-1" rx="1.6" ry=".5" fill="#fff" opacity=".25"/>`,
+  ミノムシ: () => `<path d="M0 -8 L 0 -3" stroke="#d8d0c0" stroke-width=".3"/><path d="M-1.6 -3 Q -2.4 2 -1 5 Q 0 6 1 5 Q 2.4 2 1.6 -3Z" fill="#8a6a4a"/>${[-1.4, 0, 1.4, 2.8].map(y => `<path d="M-1.8 ${y} L 1.8 ${y + .6}" stroke="#a88a6a" stroke-width=".5"/>`).join('')}<ellipse cy="-3" rx="1.6" ry=".6" fill="#6a4a2a"/>`,
+};
+function creatureSVG(n){ const c = CR[n]; if (!c) return ''; if (BIRD[n]) return birdSVG(n); if (n === 'ツバメ') return `<path d="M0 0 C -4 -3 -9 -3 -12 -1 C -8 -1 -5 0 -2 1.4Z" fill="#1a2a4a"/><path d="M0 0 C 4 -3 9 -3 12 -1 C 8 -1 5 0 2 1.4Z" fill="#1a2a4a"/><ellipse cx="0" cy="1" rx="2" ry="3" fill="#1a2a4a"/><ellipse cx="0" cy="2" rx="1.2" ry="1.8" fill="#f2f0ea"/><path d="M-1 3.6 L -2.4 8 M1 3.6 L 2.4 8" stroke="#1a2a4a" stroke-width=".9" stroke-linecap="round"/><circle cy="-1.4" r="1.4" fill="#1a2a4a"/><circle cy="-.6" r=".7" fill="#c8302a"/>`; if (BUG[n]) return BUG[n](); return butterflySVG(n); }
+
+/* --- どの生き物が来るか（週ごとに決まる） --- */
+function creaturesFor(logs){
+  if (!logs.length) return [];
+  const mo = new Date(logs[0].at).getMonth() + 1, wk = 'w' + Math.floor(Math.min(...logs.map(l => l.at)) / (7 * 864e5)) + ':';
+  const names = new Set(logs.map(flowerOf)), plants = logs.map(l => plantOf(flowerOf(l)).type);
+  const hasTree = plants.some(t => ['shrub', 'tree', 'twig', 'weep', 'cane', 'pergola', 'arch'].includes(t)), hasWater = plants.includes('water');
+  const ok = Object.values(CR).filter(c => c.months.includes(mo) && (() => { const [k, v] = c.cond.split(':');
+    if (k === 'min') return logs.length >= Number(v); if (k === 'tree') return hasTree; if (k === 'water') return hasWater; if (k === 'flower') return v.split(',').some(f => names.has(f)); return false; })());
+  const max = Math.min(5, 1 + Math.floor(logs.length / 5));
+  return ok.sort((a, b) => hash(wk.split(':')[0] + a.n) - hash(wk.split(':')[0] + b.n)).sort((a, b) => (b.cond.startsWith('flower') ? 1 : 0) - (a.cond.startsWith('flower') ? 1 : 0)).slice(0, max).map(c => c.n);
+}
+let crPending = new Set();
+function noteCreatures(list){
+  const fresh = list.filter(n => !S.items['cr_' + n] && !crPending.has(n)); if (!fresh.length) return;
+  fresh.forEach(n => crPending.add(n));
+  setTimeout(() => { fresh.forEach(n => { if (!S.items['cr_' + n]) { S.items['cr_' + n] = { id:'cr_' + n, kind:'creature', name:n, at:Date.now(), by:S.me, updatedAt:Date.now() }; S.queue.push(S.items['cr_' + n]); } crPending.delete(n); });
+    save(); push(); chime('thanks'); toast(`庭に${fresh[0]}が遊びに来たよ！`); }, 900);
+}
+function creatureLayer(list, items, W, H, ground, U){
+  let o = '';
+  const perches = items.filter(it => ['shrub', 'tree', 'twig', 'weep', 'cane', 'arch', 'pergola'].includes(plantOf(it.sp).type));
+  list.forEach((n, i) => { const c = CR[n], R = j => rnd(n + 'pos', j); let x, y, cls = '', sc = .9;
+    if (c.kind === 'flyer'){ x = 30 + R(1) * (W - 60); y = 18 + R(2) * (ground - 60); cls = 'cr-fly'; sc = n === 'ツバメ' ? 1.1 : .85; }
+    else if (c.kind === 'ground'){ x = 20 + R(3) * (W - 40); y = H - 14 - R(4) * 10; cls = 'cr-ground'; sc = 1; }
+    else if ((c.kind === 'bird' || c.kind === 'perch') && perches.length && (c.kind === 'perch' || R(5) > .35)){
+      const p = perches[Math.floor(R(6) * perches.length)], ph = plantOf(p.sp).h * U * p.k * .75; x = p.x + (R(7) - .5) * 14 * p.k; y = p.gy - ph * (.55 + R(8) * .3); cls = 'cr-perch'; sc = c.kind === 'perch' ? .8 : 1.05; }
+    else { x = 24 + R(9) * (W - 48); y = H - 16 - R(10) * 12; cls = 'cr-hop'; sc = 1.1; }
+    const flip = R(11) > .5 ? -1 : 1; sc *= U / 11;
+    o += `<g data-act="creature" data-k="${esc(n)}" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><g class="${cls}" style="animation-delay:-${(R(12) * 6).toFixed(1)}s"><g transform="scale(${(sc * flip).toFixed(2)},${sc})">${creatureSVG(n)}</g></g><rect x="-10" y="-10" width="20" height="20" fill="transparent"/></g>`; });
+  return o;
+}
+
 function gardenSVG(logs, big){
   const W = 360, H = big ? 210 : 160, ground = H - 52;
   const items = logs.map(l => {
@@ -2616,6 +2778,9 @@ function gardenSVG(logs, big){
       <rect x="-16" y="-90" width="32" height="92" fill="transparent"/></g>`;
   }
   if (!items.length) svg += `<text x="${W/2}" y="${ground-34}" text-anchor="middle" font-size="12" font-weight="700" fill="rgba(31,82,110,.5)">家事をすると、ここに季節の花が咲くよ</text>`;
+  const crs = creaturesFor(logs);
+  svg += creatureLayer(crs, items, W, H, ground, big ? 23 : 19);
+  if (crs.length && logs.every(l => l.at >= weekStart(0).getTime())) noteCreatures(crs);
   return svg + `</g></svg>`;
 }
 function weekLogs(off){ const ws = weekStart(off), we = new Date(ws); we.setDate(ws.getDate()+7); return all('log').filter(l => l.at >= ws.getTime() && l.at < we.getTime()); }
@@ -2804,8 +2969,31 @@ function viewSettings(){
   return html;
 }
 
-let zFilter = 'month';
+let zFilter = 'month', zMode = 'flower';
+function viewZukanCreature(){
+  const found = new Set(all('creature').map(c => c.name)), keys = Object.keys(CR), mo = new Date().getMonth() + 1;
+  let list = keys; if (zFilter === 'month') list = keys.filter(k => CR[k].months.includes(mo)); if (zFilter === 'found') list = keys.filter(k => found.has(k));
+  const nf = found.size;
+  let html = `<div class="seg" style="margin:6px 0 12px">${[['flower','花'],['creature','生き物']].map(([v,l]) => `<button class="${zMode===v?'on':''}" data-act="zm" data-v="${v}">${l}</button>`).join('')}</div>
+    <div class="panel zhead"><div class="ztitle">庭に来た生き物</div><div class="zcount"><b>${nf}</b> / ${keys.length}種</div>
+    <div class="zbar"><i style="width:${(nf/keys.length*100).toFixed(1)}%"></i></div><div class="muted" style="margin-top:6px">花が増えたり、木や水辺の植物が咲くと遊びに来るよ</div></div>
+    <div class="seg" style="margin:14px 0 12px">${[['month',`${mo}月の生き物`],['all','すべて'],['found','見つけた']].map(([v,l]) => `<button class="${zFilter===v?'on':''}" data-act="zf" data-v="${v}">${l}</button>`).join('')}</div>`;
+  if (!list.length) html += `<div class="empty">まだ見つけていません。</div>`;
+  html += `<div class="zgrid">` + list.map(k => { const ok = found.has(k); return `<button class="zcell ${ok?'':'un'}" data-act="zc" data-k="${esc(k)}"><span class="zno">No.${String(CR[k].no).padStart(2,'0')}</span><svg viewBox="-12 -11 24 22">${creatureSVG(k)}</svg><span class="zn">${ok?esc(k):'？？？'}</span></button>`; }).join('') + `</div>`;
+  return html;
+}
+function crHint(c){ const [k, v] = c.cond.split(':'); const m = c.months; const ms = m.length === 12 ? '一年中' : `${m[0]}〜${m[m.length-1]}月`;
+  if (k === 'min') return `${ms}、今週の庭に花が${v}輪以上咲くと来るかも`;
+  if (k === 'tree') return `${ms}、庭に木や枝ものの花が咲くと来るかも`;
+  if (k === 'water') return `${ms}、庭に水辺の花（ハス・スイレンなど）が咲くと来るかも`;
+  return `${ms}、${v.split(',').slice(0, 3).join('・')}などが咲くと来るかも`; }
+function sheetCreature(k){ const c = CR[k], rec = S.items['cr_' + k], ok = rec && !rec.deleted;
+  let h = `<div class="zbig ${ok?'':'un'}"><svg viewBox="-12 -11 24 22" style="width:150px;height:140px">${creatureSVG(k)}</svg></div><div class="zno" style="text-align:center">No.${String(c.no).padStart(2,'0')}</div><h3 style="text-align:center">${ok?esc(k):'？？？'}</h3>`;
+  if (ok) h += `<div class="panel" style="margin-top:12px;box-shadow:none;background:var(--paper)"><div style="line-height:1.85;font-weight:700;font-size:14px">${esc(c.desc)}</div></div><div class="minirow" style="margin-top:8px"><span class="n">はじめて来た日</span><span>${dayKey(rec.at).replace(/-/g,'/')}</span></div>`;
+  h += `<p class="hint" style="text-align:center;margin-top:12px">${esc(crHint(c))}</p>`;
+  openSheet(h); }
 function viewZukan(){
+  if (zMode === 'creature') return viewZukanCreature();
   const logs = all('log'), found = {}, first = {};
   for (const l of logs.sort((a,b) => a.at - b.at)){ const k = flowerOf(l); found[k] = (found[k]||0) + 1; if (!first[k]) first[k] = l; }
   const keys = Object.keys(FL), nf = Object.keys(found).length, mo = new Date().getMonth() + 1;
@@ -2813,7 +3001,7 @@ function viewZukan(){
   if (zFilter === 'month') list = keys.filter(k => SEASON[mo].includes(k));
   if (zFilter === 'found') list = keys.filter(k => found[k]);
   const mf = SEASON[mo].filter(k => found[k]).length;
-  let html = `<div class="panel zhead"><div class="ztitle">ふたりの花図鑑</div>
+  let html = `<div class="seg" style="margin:6px 0 12px">${[['flower','花'],['creature','生き物']].map(([v,l]) => `<button class="${zMode===v?'on':''}" data-act="zm" data-v="${v}">${l}</button>`).join('')}</div><div class="panel zhead"><div class="ztitle">ふたりの花図鑑</div>
     <div class="zcount"><b>${nf}</b> / ${keys.length}種</div>
     <div class="zbar"><i style="width:${(nf/keys.length*100).toFixed(1)}%"></i></div>
     <div class="muted" style="margin-top:6px">${mo}月に咲く花 ${mf} / ${SEASON[mo].length}種</div></div>
@@ -2919,6 +3107,9 @@ document.addEventListener('click', e => {
     case 'flower': { const l = S.items[id]; if (!l) break; const k = flowerOf(l);
       const g = el.querySelector('.bloom'); if (g) { g.classList.remove('sway'); void g.getBBox(); g.classList.add('sway'); }
       toast(`${FL[k].n}｜${dayKey(l.at).slice(5).replace('-','/')} ${l.name}`); break; }
+    case 'zm': zMode = el.dataset.v; zFilter = 'month'; render(); break;
+    case 'zc': sheetCreature(el.dataset.k); break;
+    case 'creature': { const g = el.querySelector('g'); if (g) { g.classList.remove('cr-hop2'); void g.getBBox(); g.classList.add('cr-hop2'); } chime('thanks'); toast(`${el.dataset.k}｜${CR[el.dataset.k].desc.split('。')[0]}`); break; }
     case 'zf': zFilter = el.dataset.v; render(); break;
     case 'zk': sheetZukan(el.dataset.k); break;
     case 'talk': talkIdx++; lastTyped = ''; render(); break;
