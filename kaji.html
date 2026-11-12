@@ -2993,14 +2993,16 @@ function swatches(act, map, cur, extra = ''){ return `<div class="sw">${extra}${
 function seg(act, map, cur){ return `<div class="seg">${Object.entries(map).map(([v, l]) => `<button class="${cur === v ? 'on' : ''}" data-act="${act}" data-v="${v}">${l}</button>`).join('')}</div>`; }
 function sheetBouquet(){
   if (!BQ) BQ = newBQ();
-  const to = other(S.me), week = bloomStock(), found = {}; all('log').forEach(l => { found[flowerOf(l)] = 1; });
+  const to = other(S.me), week = bloomStock();
   let h = `<div class="bqsticky"><div class="bqprev">${BQ.flowers.length ? bouquetBox(BQ) : `<div class="empty">花を選んでね</div>`}</div>
     <div class="seg bqtabs">${[['flower','花'],['shape','形'],['paper','包み紙'],['rib','リボン'],['green','グリーン']].map(([v, l]) => `<button class="${BQTAB === v ? 'on' : ''}" data-act="bqtab" data-v="${v}">${l}</button>`).join('')}</div></div>`;
   if (BQTAB === 'flower'){
     h += `<div class="row" style="justify-content:space-between;margin:10px 2px 6px"><span class="muted">${BQ.flowers.length} / 12輪</span><span class="row"><button class="btn small ghost" data-act="bqundo">ひとつ戻す</button><button class="btn small ghost" data-act="bqshuffle">並び替え</button><button class="btn small ghost" data-act="bqclear">空にする</button></span></div>`;
     h += `<label class="f" style="margin-top:4px">大きさ</label>${seg('bqsize', SIZES, BQ.size)}`;
-    const keys = Object.keys(found).sort((a, c) => (week[c] ? 1 : 0) - (week[a] ? 1 : 0) || FL[a].no - FL[c].no);
-    h += `<label class="f">花（今週咲いた花が先頭。図鑑で見つけた花から選べる）</label><div class="bqgrid">` + keys.map(k => `<button class="bqcell" data-act="bqadd" data-k="${esc(k)}" ${BQ.flowers.length < 12 ? '' : 'disabled'}><svg viewBox="-16 -18 32 32">${flowerSVG(k, k)}</svg><span>${esc(FL[k].n)}</span>${week[k] ? '<small>今週</small>' : ''}</button>`).join('') + `</div>`;
+    const used = {}; BQ.flowers.forEach(k => used[k] = (used[k] || 0) + 1);
+    const keys = Object.keys(week).sort((a, c) => week[c] - week[a] || FL[a].no - FL[c].no);
+    h += `<label class="f">花（今週の庭に咲いた花。咲いた数まで同じ花を選べる）</label><div class="bqgrid">` + keys.map(k => { const left = week[k] - (used[k] || 0);
+      return `<button class="bqcell ${left ? '' : 'out'}" data-act="bqadd" data-k="${esc(k)}" ${left && BQ.flowers.length < 12 ? '' : 'disabled'}><svg viewBox="-16 -18 32 32">${flowerSVG(k, k)}</svg><span>${esc(FL[k].n)}</span><small>のこり${left}</small></button>`; }).join('') + `</div>`;
   }
   if (BQTAB === 'shape') h += `<div class="bqshapes">${Object.entries(SHAPES).map(([v, l]) => `<button class="${BQ.shape === v ? 'on' : ''}" data-act="bqshape" data-v="${v}">${bouquetBox({ ...BQ, shape:v, flowers:BQ.flowers.length ? BQ.flowers : ['バラ', 'カスミソウ', 'ガーベラ'] })}<span>${l}</span></button>`).join('')}</div>`;
   if (BQTAB === 'paper'){
@@ -3031,7 +3033,7 @@ function bouquetBanner(){
 function bouquetSection(){
   const list = all('bouquet').sort((a, b) => b.at - a.at), any = all('log').length;
   let h = `<h2>花束</h2><div class="panel">`;
-  h += any ? `<button class="btn go wide" data-act="bqnew">花束を作る</button>` : `<div class="empty" style="padding:10px">庭に花が咲いたら、花束を作れるよ</div>`;
+  h += weekLogs(0).length ? `<button class="btn go wide" data-act="bqnew">今週の花で花束を作る</button>` : `<div class="empty" style="padding:10px">今週の庭に花が咲いたら、花束を作れるよ</div>`;
   if (list.length) h += `<div class="bqshelf">` + list.slice(0, 12).map(b => `<button data-act="bqview" data-id="${b.id}">${bouquetBox(b)}<small>${esc(nm(b.from))}→${esc(nm(b.to))}<br>${dayKey(b.at).slice(5).replace('-', '/')}</small></button>`).join('') + `</div>`;
   return h + `</div>`;
 }
@@ -3391,7 +3393,7 @@ document.addEventListener('click', e => {
     case 'creature': { const g = el.querySelector('.tap'); if (g) { g.classList.remove('go'); void g.getBBox(); g.classList.add('go'); } chime('thanks'); toast(`${el.dataset.k}｜${CR[el.dataset.k].desc.split('。')[0]}`); break; }
     case 'bqnew': BQ = null; BQTAB = 'flower'; sheetBouquet(); break;
     case 'bqtab': BQTAB = el.dataset.v; sheetBouquet(); break;
-    case 'bqadd': if (BQ.flowers.length < 12) { BQ.flowers.push(el.dataset.k); sheetBouquet(); } break;
+    case 'bqadd': if (BQ.flowers.length < 12 && BQ.flowers.filter(x => x === el.dataset.k).length < (bloomStock()[el.dataset.k] || 0)) { BQ.flowers.push(el.dataset.k); sheetBouquet(); } break;
     case 'bqundo': BQ.flowers.pop(); sheetBouquet(); break;
     case 'bqclear': BQ.flowers = []; sheetBouquet(); break;
     case 'bqshuffle': BQ.seed = uid(); sheetBouquet(); break;
