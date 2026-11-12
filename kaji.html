@@ -1197,53 +1197,318 @@ const shade = (hex, k) => { const n = parseInt(hex.slice(1), 16); let r = n >> 1
   const f = v => Math.max(0, Math.min(255, Math.round(k < 0 ? v * (1 + k) : v + (255 - v) * k)));
   return '#' + [f(r), f(g), f(b)].map(v => v.toString(16).padStart(2, '0')).join(''); };
 
+/* ---- 花びら・花芯の部品 ---- */
+const PET = {
+  round:  (L,w) => `M0 0 C ${w*1.25} ${-L*.18} ${w*1.15} ${-L*.92} 0 ${-L} C ${-w*1.15} ${-L*.92} ${-w*1.25} ${-L*.18} 0 0Z`,
+  oval:   (L,w) => `M0 0 C ${w} ${-L*.1} ${w*1.05} ${-L*.8} ${w*.35} ${-L*.97} Q 0 ${-L*1.03} ${-w*.35} ${-L*.97} C ${-w*1.05} ${-L*.8} ${-w} ${-L*.1} 0 0Z`,
+  pointed:(L,w) => `M0 0 C ${w*1.1} ${-L*.25} ${w*.8} ${-L*.7} 0 ${-L} C ${-w*.8} ${-L*.7} ${-w*1.1} ${-L*.25} 0 0Z`,
+  notch:  (L,w) => `M0 0 C ${w*1.2} ${-L*.2} ${w*1.1} ${-L*.85} ${w*.45} ${-L} Q ${w*.12} ${-L*.98} 0 ${-L*.86} Q ${-w*.12} ${-L*.98} ${-w*.45} ${-L} C ${-w*1.1} ${-L*.85} ${-w*1.2} ${-L*.2} 0 0Z`,
+  spoon:  (L,w) => `M0 0 C ${w*.5} ${-L*.3} ${w} ${-L*.65} ${w*.85} ${-L*.95} Q 0 ${-L*1.04} ${-w*.85} ${-L*.95} C ${-w} ${-L*.65} ${-w*.5} ${-L*.3} 0 0Z`,
+  ray:    (L,w) => `M0 0 C ${w*.7} ${-L*.25} ${w} ${-L*.75} ${w*.7} ${-L*.97} L ${w*.25} ${-L*.92} L 0 ${-L} L ${-w*.25} ${-L*.92} L ${-w*.7} ${-L*.97} C ${-w} ${-L*.75} ${-w*.7} ${-L*.25} 0 0Z`,
+  ruffle: (L,w) => { let d = `M0 0 C ${w*1.3} ${-L*.15} ${w*1.2} ${-L*.75} ${w} ${-L*.88}`; const n = 5; for (let i = 0; i < n; i++){ const x0 = w - (2*w)*(i/n), x1 = w - (2*w)*((i+1)/n), xm = (x0+x1)/2; d += ` Q ${xm} ${-L*(i%2?.93:1.06)} ${x1} ${-L*.9}`; } return d + ` C ${-w*1.2} ${-L*.75} ${-w*1.3} ${-L*.15} 0 0Z`; },
+  strap:  (L,w) => `M0 0 C ${w*.9} ${-L*.3} ${w*.7} ${-L*.75} ${w*.15} ${-L} Q 0 ${-L*1.02} ${-w*.15} ${-L} C ${-w*.7} ${-L*.75} ${-w*.9} ${-L*.3} 0 0Z`,
+  heart:  (L,w) => `M0 0 C ${w*1.4} ${-L*.1} ${w*1.4} ${-L*1.05} ${w*.4} ${-L} Q 0 ${-L*.97} 0 ${-L*.9} Q 0 ${-L*.97} ${-w*.4} ${-L} C ${-w*1.4} ${-L*1.05} ${-w*1.4} ${-L*.1} 0 0Z`,
+};
+let GID = 0;
+function grad(c1, c2, c3){ const id = 'pg' + hash(c1 + c2 + c3).toString(36); return { id, def: `<linearGradient id="${id}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${c1}"/><stop offset=".55" stop-color="${c2}"/><stop offset="1" stop-color="${c3}"/></linearGradient>` }; }
+function rgrad(c1, c2){ const id = 'rg' + hash(c1 + c2).toString(36); return { id, def: `<radialGradient id="${id}" cx=".42" cy=".38" r=".7"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></radialGradient>` }; }
+
+/* 花びらの輪：n枚、形、長さ、幅、色、ゆらぎ */
+function petals(o, seed){
+  const { n, shape='round', L=10, W=6, c, base, tip, off=0, vein=true, jit=1, sc=1, cup=0 } = o;
+  const g = grad(base || shade(c, -.18), c, tip || shade(c, .22));
+  let s = `<defs>${g.def}</defs>`;
+  for (let i = 0; i < n; i++){
+    const r = i * 360 / n + off + (rnd(seed, i) - .5) * 8 * jit, k = (1 + (rnd(seed, i + 50) - .5) * .14 * jit) * sc;
+    const Lk = L * k, wk = W / 2 * k;
+    s += `<g transform="rotate(${r.toFixed(1)})${cup ? ` scale(1 ${(1 - cup).toFixed(2)})` : ''}"><path d="${PET[shape](Lk, wk)}" fill="url(#${g.id})" stroke="${shade(c, -.32)}" stroke-opacity=".45" stroke-width=".35"/>`;
+    if (vein) s += `<path d="M0 ${-Lk*.08} L0 ${-Lk*.72}" stroke="${shade(c, -.3)}" stroke-opacity=".3" stroke-width=".35"/><path d="M0 ${-Lk*.15} Q ${wk*.45} ${-Lk*.4} ${wk*.5} ${-Lk*.65} M0 ${-Lk*.15} Q ${-wk*.45} ${-Lk*.4} ${-wk*.5} ${-Lk*.65}" fill="none" stroke="${shade(c, -.3)}" stroke-opacity=".18" stroke-width=".3"/>`;
+    s += `</g>`;
+  }
+  return s;
+}
+/* 花芯 */
+function center(o, seed){
+  const { type='dot', c='#f2c94a', r=2.6, n=14, len=4, anth } = o;
+  const a = anth || shade(c, -.1);
+  if (type === 'stamens'){
+    let s = '';
+    for (let i = 0; i < n; i++){ const ang = i * 360 / n + rnd(seed, i + 90) * 20, l = len * (.75 + rnd(seed, i + 70) * .45);
+      s += `<g transform="rotate(${ang.toFixed(0)})"><line x1="0" y1="0" x2="0" y2="${-l}" stroke="${shade(a, .2)}" stroke-width=".35"/><ellipse cx="0" cy="${-l}" rx=".55" ry=".75" fill="${a}"/></g>`; }
+    return s + `<circle r="${r*.5}" fill="${shade(c, -.1)}"/>`;
+  }
+  if (type === 'disc'){
+    const g = rgrad(shade(c, .15), shade(c, -.35));
+    let s = `<defs>${g.def}</defs><circle r="${r}" fill="url(#${g.id})"/>`;
+    for (let i = 0; i < 34; i++){ const ang = i * 137.5 * Math.PI / 180, d = Math.sqrt(i / 34) * r * .88;
+      s += `<circle cx="${(Math.cos(ang)*d).toFixed(2)}" cy="${(Math.sin(ang)*d).toFixed(2)}" r="${(r*.07).toFixed(2)}" fill="${shade(c, i % 3 ? -.45 : .25)}" opacity=".8"/>`; }
+    return s;
+  }
+  if (type === 'tube') return `<circle r="${r}" fill="${shade(c, .1)}"/><circle r="${r*.7}" fill="${c}"/>` + center({ type:'stamens', c, n:12, len:r*1.1, anth:shade(c,-.15) }, seed);
+  if (type === 'eye') return `<circle r="${r}" fill="${c}"/><circle r="${r*.45}" fill="${anth || '#fff'}"/>`;
+  if (type === 'none') return '';
+  return `<circle r="${r}" fill="${c}"/><circle r="${r*.45}" cx="${-r*.25}" cy="${-r*.25}" fill="#fff" opacity=".25"/>`;
+}
+
+/* ---- 型ごとの描き方 ---- */
+const DRAW = {
+  // 一重・多弁の放射状
+  radial(f, s){ const p = f.sp;
+    let g = '';
+    if (p.layers >= 2) g += petals({ n:p.n, shape:p.shape, L:p.L*1.02, W:p.W, c:shade(f.c, -.08), off:180/p.n, jit:p.jit }, s + 'b');
+    g += petals({ n:p.n, shape:p.shape, L:p.L * (p.layers >= 2 ? .82 : 1), W:p.W, c:f.c, base:p.base, tip:p.tip, jit:p.jit, vein:p.vein !== false }, s);
+    if (p.layers >= 3) g += petals({ n:Math.max(5, Math.round(p.n*.7)), shape:p.shape, L:p.L*.55, W:p.W*.9, c:shade(f.c, .08), off:90/p.n, jit:p.jit, vein:false }, s + 'c');
+    return g + center({ type:p.ctr || 'dot', c:f.c2, r:p.cr || 2.6, n:p.sn || 14, len:p.sl || 4, anth:p.anth }, s);
+  },
+  // キク類：細い舌状花を何重にも
+  chrysanthemum(f, s){ const n = f.sp.n || 22; let g = '';
+    g += petals({ n, shape:'spoon', L:12, W:3.2, c:shade(f.c, -.12), off:180/n }, s + 'a');
+    g += petals({ n, shape:'spoon', L:10, W:3, c:f.c }, s + 'b');
+    g += petals({ n:Math.round(n*.8), shape:'spoon', L:7.4, W:2.8, c:shade(f.c, .06), off:90/n, vein:false, cup:.15 }, s + 'c');
+    g += petals({ n:Math.round(n*.55), shape:'spoon', L:4.8, W:2.4, c:shade(f.c, .14), vein:false, cup:.2 }, s + 'd');
+    return g + `<circle r="1.6" fill="${f.c2}"/>`;
+  },
+  // デイジー類：細い舌状花＋つぶつぶの花芯
+  daisy(f, s){ const p = f.sp, n = p.n || 18;
+    let g = '';
+    if (n >= 18) g += petals({ n, shape:'ray', L:10.5, W:Math.max(1.6, 26/n), c:shade(f.c, -.06), off:180/n, vein:false }, s + 'a');
+    g += petals({ n, shape:n >= 14 ? 'ray' : 'spoon', L:11, W:Math.max(1.8, 30/n), c:f.c, vein:n < 18 }, s);
+    return g + center({ type:'disc', c:f.c2, r:p.cr || (n >= 20 ? 3.4 : 3.8) }, s);
+  },
+  sunflower(f, s){ let g = petals({ n:20, shape:'pointed', L:10, W:3.8, c:shade(f.c, -.1), off:9 }, s + 'a') + petals({ n:20, shape:'pointed', L:9.4, W:3.6, c:f.c }, s);
+    return g + center({ type:'disc', c:f.c2, r:6.8 }, s) + `<circle r="6.8" fill="none" stroke="${shade(f.c, -.2)}" stroke-width=".6" opacity=".6"/>`; },
+  // サクラ：切れ込みのある5弁＋長い雄しべ
+  sakura(f, s){ return petals({ n:5, shape:'notch', L:10, W:8.4, c:f.c, base:shade(f.c2, .25), tip:shade(f.c, .35) }, s) + center({ type:'stamens', c:f.c2, n:22, len:4.6, anth:'#e8b73a' }, s); },
+  // ウメ：丸い5弁＋放射状の雄しべ
+  ume(f, s){ return petals({ n:5, shape:'round', L:9, W:8.6, c:f.c, base:shade(f.c, -.08) }, s) + center({ type:'stamens', c:f.c2, n:28, len:4.4, anth:'#e3b13a' }, s); },
+  // ツバキ：丸い花びらの重なり＋筒状の雄しべ
+  camellia(f, s){ const n = f.sp.n || 6; return petals({ n, shape:'round', L:11, W:9, c:shade(f.c, -.06), off:180/n }, s + 'a') + petals({ n:Math.max(5, n-1), shape:'round', L:8.4, W:8, c:f.c, cup:.1 }, s) + center({ type:'tube', c:f.c2, r:2.8 }, s); },
+  // バラ：外側から内側へ重なる花びら
+  rose(f, s){ const c = f.c; let g = '';
+    const rings = [[5, 11, 10, -.16, 0], [5, 9, 9, -.08, 36], [5, 7, 8, 0, 10], [4, 5.2, 7, .06, 50], [3, 3.6, 5.4, .1, 20]];
+    rings.forEach(([n, L, W, k, off], i) => { g += petals({ n, shape:'round', L, W, c:shade(c, k), off, vein:false, cup:.12 * i }, s + i); });
+    return g + `<path d="M-2.2 .6 Q -2 -2.4 .6 -2.2 Q 2.4 -1.6 1.6 .8 Q .6 2.2 -.8 1.4" fill="none" stroke="${shade(c, -.38)}" stroke-width=".6" stroke-linecap="round"/><circle r="1" fill="${shade(c, -.25)}"/>`; },
+  // ボタン・シャクヤク：大きく波打つ花びらを何重にも
+  peony(f, s){ const c = f.c; return petals({ n:7, shape:'ruffle', L:12, W:9, c:shade(c, -.1) }, s + 'a') + petals({ n:7, shape:'ruffle', L:9.6, W:8, c, off:25 }, s + 'b') + petals({ n:6, shape:'ruffle', L:7, W:6.4, c:shade(c, .07), off:10, cup:.15 }, s + 'c') + petals({ n:5, shape:'ruffle', L:4.4, W:4.6, c:shade(c, .14), off:40, vein:false, cup:.2 }, s + 'd') + `<circle r="1.3" fill="${f.c2 || '#f2c94a'}"/>`; },
+  // カーネーション・ナデシコ：ギザギザの花びら
+  carnation(f, s){ const c = f.c; return petals({ n:8, shape:'ruffle', L:11, W:6.6, c:shade(c, -.1) }, s + 'a') + petals({ n:8, shape:'ruffle', L:8.6, W:6, c, off:22 }, s + 'b') + petals({ n:6, shape:'ruffle', L:5.6, W:4.8, c:shade(c, .08), off:10, cup:.2 }, s + 'c') + `<circle r="1.2" fill="${shade(c, -.2)}"/>`; },
+  pink(f, s){ return petals({ n:5, shape:'ruffle', L:10.5, W:7.6, c:f.c }, s) + `<circle r="2.6" fill="${shade(f.c2, -.05)}" opacity=".8"/>` + center({ type:'stamens', c:'#fff', n:8, len:3.2, anth:'#f6f0f6' }, s); },
+  // ダリア・マリーゴールドなど：丸く詰まった花びら
+  pompom(f, s){ const c = f.c; let g = '';
+    [[16, 11.5, 4.6, -.14, 0, 0], [14, 9.4, 4.4, -.06, 11, .1], [12, 7.2, 4.2, .02, 4, .2], [10, 5, 3.8, .1, 18, .28], [7, 3, 3, .18, 8, .35]]
+      .forEach(([n, L, W, k, off, cup], i) => { g += petals({ n, shape:'round', L, W, c:shade(c, k), off, vein:i < 2, cup }, s + i); });
+    return g + `<circle r="1" fill="${f.c2 || shade(c, -.2)}"/>`; },
+  // コスモス：先にギザギザのある8弁
+  cosmos(f, s){ const n = f.sp.n || 8; return petals({ n, shape:n <= 5 ? 'notch' : 'ray', L:11.5, W:n <= 5 ? 8 : 6.2, c:f.c, base:shade(f.c, -.2) }, s) + center({ type:'disc', c:f.c2, r:3 }, s); },
+  // ポピー・アネモネ：4〜6枚の大きな花びら＋黒っぽい花芯
+  poppy(f, s){ const c = f.c; return petals({ n:4, shape:'ruffle', L:11.5, W:11, c:shade(c, -.12), off:45 }, s + 'a') + petals({ n:4, shape:'ruffle', L:10.5, W:10, c }, s) + `<circle r="4.2" fill="${shade(f.c2, .1)}" opacity=".85"/>` + center({ type:'stamens', c:f.c2, n:26, len:4.2, anth:f.c2 }, s) + `<circle r="1.8" fill="${shade(f.c2, .25)}"/>`; },
+  // ユリ：反り返る6枚の花被片＋斑点＋長い雄しべ
+  lily(f, s){ const c = f.c, g = grad(shade(c, -.12), c, shade(c, .2)); let o = `<defs>${g.def}</defs>`;
+    for (let i = 0; i < 6; i++){ const r = i * 60 + 30 + (rnd(s, i) - .5) * 8;
+      o += `<g transform="rotate(${r.toFixed(1)})"><path d="M0 0 C 3.6 -3 3.4 -9 0 -13.5 C -3.4 -9 -3.6 -3 0 0Z" fill="url(#${g.id})" stroke="${shade(c, -.3)}" stroke-opacity=".4" stroke-width=".35"/><path d="M0 -1 L0 -11" stroke="${shade(c, -.25)}" stroke-width=".5" opacity=".5"/>`;
+      for (let j = 0; j < 4; j++) o += `<circle cx="${((rnd(s, i*9+j) - .5) * 2.6).toFixed(1)}" cy="${(-3 - j * 1.6).toFixed(1)}" r=".5" fill="${f.c2}" opacity=".85"/>`;
+      o += `</g>`; }
+    for (let i = 0; i < 6; i++){ const r = i * 60 + (rnd(s, i + 30) - .5) * 14; o += `<g transform="rotate(${r.toFixed(0)})"><path d="M0 0 Q .8 -5 0 -9.5" fill="none" stroke="#dfe6b8" stroke-width=".5"/><ellipse cx="0" cy="-9.8" rx=".7" ry="1.5" fill="${f.c2}"/></g>`; }
+    return o + `<path d="M0 0 Q -.6 -6 .4 -11" fill="none" stroke="#cfe0a0" stroke-width=".7"/><circle cx=".4" cy="-11" r=".9" fill="#b8cf7a"/>`; },
+  // アヤメ類：垂れる外花被と立ち上がる内花被
+  iris(f, s){ const c = f.c, g = grad(shade(c, -.2), c, shade(c, .18)); let o = `<defs>${g.def}</defs>`;
+    for (const r of [-120, 0, 120]) o += `<g transform="rotate(${r})"><path d="M0 0 C 6 2 6.5 11 0 12.5 C -6.5 11 -6 2 0 0Z" fill="url(#${g.id})" stroke="${shade(c, -.35)}" stroke-opacity=".4" stroke-width=".35"/><path d="M0 1.5 C 1.4 3 1.2 6 0 7.5 C -1.2 6 -1.4 3 0 1.5Z" fill="${f.c2}"/>${[-1.6, -.8, .8, 1.6].map(x => `<path d="M${x*.6} 3 L${x*1.6} 10" stroke="${shade(c, -.4)}" stroke-width=".3" opacity=".6"/>`).join('')}</g>`;
+    for (const r of [-60, 60, 180]) o += `<g transform="rotate(${r})"><path d="M0 0 C 3 -1 3.4 -7 0 -9.5 C -3.4 -7 -3 -1 0 0Z" fill="${shade(c, .14)}" stroke="${shade(c, -.3)}" stroke-opacity=".35" stroke-width=".3"/></g>`;
+    return o + `<circle r="1.4" fill="${shade(c, -.25)}"/>`; },
+  // パンジー・スミレ：上2枚、横2枚、下1枚＋顔模様
+  pansy(f, s){ const c = f.c, top = f.sp.top || shade(c, -.2); let o = '';
+    o += `<path d="${PET.round(10.5, 5.2)}" transform="rotate(-28) translate(0,-.5)" fill="${top}" stroke="${shade(top, -.3)}" stroke-opacity=".4" stroke-width=".3"/><path d="${PET.round(10.5, 5.2)}" transform="rotate(28) translate(0,-.5)" fill="${top}" stroke="${shade(top, -.3)}" stroke-opacity=".4" stroke-width=".3"/>`;
+    o += `<path d="${PET.round(9, 4.8)}" transform="rotate(-100)" fill="${c}"/><path d="${PET.round(9, 4.8)}" transform="rotate(100)" fill="${c}"/><path d="${PET.round(10.5, 6.6)}" transform="rotate(180)" fill="${c}" stroke="${shade(c, -.3)}" stroke-opacity=".35" stroke-width=".3"/>`;
+    for (const r of [-100, 100, 180]) o += `<g transform="rotate(${r})">${[-1.4, -.5, .5, 1.4].map(x => `<path d="M0 -.6 L${x*1.6} ${-(4.6 + Math.abs(x))}" stroke="${f.c2}" stroke-width=".5" stroke-linecap="round" opacity=".9"/>`).join('')}</g>`;
+    return o + `<circle r="1.7" cy=".3" fill="#f6cf3a"/><circle r=".7" cy=".1" fill="#fff" opacity=".7"/>`; },
+  // チューリップ：横から見た3枚の花びら
+  tulip(f, s){ const c = f.c, g = grad(shade(c, -.25), c, shade(c, .2)), g2 = grad(shade(c, -.35), shade(c, -.1), c);
+    return `<defs>${g.def}${g2.def}</defs><path d="M-7.5 -3 C -9 -10 -6 -14.5 -3.5 -15.5 C -2 -12 -1 -10 0 -9 C 1 -10 2 -12 3.5 -15.5 C 6 -14.5 9 -10 7.5 -3 C 6.5 4 3.5 6.5 0 6.5 C -3.5 6.5 -6.5 4 -7.5 -3Z" fill="url(#${g2.id})"/>
+      <path d="M-4.4 -2 C -5 -9 -2 -14 0 -16.5 C 2 -14 5 -9 4.4 -2 C 3.8 4 2 6 0 6 C -2 6 -3.8 4 -4.4 -2Z" fill="url(#${g.id})" stroke="${shade(c, -.3)}" stroke-opacity=".4" stroke-width=".35"/>
+      <path d="M0 -14 L0 4" stroke="${shade(c, -.2)}" stroke-width=".4" opacity=".4"/><path d="M-2.6 -10 Q -3 -4 -1.4 2" fill="none" stroke="#fff" stroke-width=".8" opacity=".35"/>`; },
+  // モクレン・カラー・クロッカスなど：細長いつぼみ形
+  cupflower(f, s){ const c = f.c, g = grad(shade(c, -.2), c, shade(c, .25));
+    return `<defs>${g.def}</defs><path d="M-6 -1 C -7 -9 -4 -14 -1.5 -16 C -1 -11 -.4 -9 0 -8 C .4 -9 1 -11 1.5 -16 C 4 -14 7 -9 6 -1 C 5 4 3 6 0 6 C -3 6 -5 4 -6 -1Z" fill="url(#${g.id})" stroke="${shade(c, -.3)}" stroke-opacity=".4" stroke-width=".35"/><path d="M-3 -1 C -3.2 -8 -1.5 -13 0 -15 C 1.5 -13 3.2 -8 3 -1 C 2.6 4 1.4 5.4 0 5.4 C -1.4 5.4 -2.6 4 -3 -1Z" fill="${shade(c, .12)}" opacity=".9"/><path d="M0 -13 L0 3" stroke="${shade(c, -.2)}" stroke-width=".35" opacity=".4"/>`; },
+  // アサガオ類：漏斗形＋星形の筋
+  trumpet(f, s){ const c = f.c, g = rgrad('#fbf8f0', c), dk = shade(c, -.28);
+    let o = `<defs>${g.def}</defs><path d="${Array.from({length:5}, (_, i) => { const a1 = (i*72 - 90) * Math.PI/180, a2 = ((i+.5)*72 - 90) * Math.PI/180, a3 = ((i+1)*72 - 90) * Math.PI/180;
+      return `${i ? '' : `M${(Math.cos(a1)*11).toFixed(2)} ${(Math.sin(a1)*11).toFixed(2)}`} Q ${(Math.cos(a2)*12.6).toFixed(2)} ${(Math.sin(a2)*12.6).toFixed(2)} ${(Math.cos(a3)*11).toFixed(2)} ${(Math.sin(a3)*11).toFixed(2)}`; }).join(' ')}Z" fill="url(#${g.id})" stroke="${dk}" stroke-opacity=".35" stroke-width=".4"/>`;
+    for (let i = 0; i < 5; i++) o += `<path d="M0 0 L0 -10.6" stroke="${dk}" stroke-width=".9" opacity=".55" transform="rotate(${i*72})"/><path d="M0 -3 Q 1.6 -7 0 -10.6 Q -1.6 -7 0 -3" fill="${dk}" opacity=".18" transform="rotate(${i*72})"/>`;
+    return o + `<circle r="2.6" fill="#fbfaf2"/><circle r="1.1" fill="#f1e8a8"/>`; },
+  // スイセン：6枚の花被＋ラッパ形の副花冠
+  daffodil(f, s){ return petals({ n:6, shape:'pointed', L:11, W:7, c:f.c, base:shade(f.c, -.1) }, s) + `<circle r="5.2" fill="${shade(f.c2, -.12)}"/><circle r="4.6" fill="${f.c2}"/><circle r="4.6" fill="none" stroke="${shade(f.c2, -.2)}" stroke-width=".6" stroke-dasharray="1.2 .8"/><circle r="2.6" fill="${shade(f.c2, -.25)}"/>` + center({ type:'stamens', c:'#f6e08a', n:6, len:1.6, anth:'#f6e08a' }, s); },
+  // ヒガンバナ類：細く波打ち反り返る花びら＋長い雄しべ
+  spider(f, s){ const c = f.c; let o = '';
+    for (let i = 0; i < 6; i++){ const r = i * 60 + (rnd(s, i) - .5) * 10; o += `<path d="M0 0 C 2.4 -2 2.6 -5.5 1.4 -8.5 Q .4 -10.5 -1.2 -9.6 Q -.4 -8.4 -.6 -6.5 C -1.2 -4 -1.4 -2 0 0Z" fill="${i%2 ? c : shade(c, -.08)}" stroke="${shade(c, -.3)}" stroke-opacity=".4" stroke-width=".3" transform="rotate(${r.toFixed(1)})"/>`; }
+    for (let i = 0; i < 7; i++){ const r = -75 + i * 25 + (rnd(s, i + 20) - .5) * 10; o += `<g transform="rotate(${r.toFixed(0)})"><path d="M0 0 Q 4.5 -9 2.2 -16.5 Q 1.5 -17.6 .6 -17" fill="none" stroke="${c}" stroke-width=".55"/><ellipse cx=".6" cy="-17" rx=".5" ry=".9" fill="#e8b53a"/></g>`; }
+    return o; },
+  // シクラメン：上に反り返る花びら（横から）
+  cyclamen(f, s){ const c = f.c, g = grad(shade(c, -.3), c, shade(c, .2)); let o = `<defs>${g.def}</defs>`;
+    for (const [r, k] of [[-34, .92], [-12, 1], [12, 1.02], [34, .9]]) o += `<path d="M0 2 C 3 -3 2.6 -10 .2 -13.5 C -2.6 -10 -3 -3 0 2Z" fill="url(#${g.id})" stroke="${shade(c, -.3)}" stroke-opacity=".4" stroke-width=".35" transform="rotate(${r}) scale(${k})"/>`;
+    return o + `<path d="M-3.2 1.6 Q 0 4.6 3.2 1.6 Q 2 4.2 0 4.4 Q -2 4.2 -3.2 1.6Z" fill="${shade(c, -.4)}"/><path d="M0 4.4 Q .6 7 0 9" stroke="#6a8a4a" stroke-width=".8" fill="none"/>`; },
+  // ベル形（スズラン・リンドウなど）：横から見た釣鐘
+  bell(f, s){ const c = f.c, g = grad(shade(c, -.22), c, shade(c, .25)); let o = `<defs>${g.def}</defs><path d="M-8 -9 Q 0 -13 8 -8" stroke="#6aa84f" stroke-width=".8" fill="none"/>`;
+    const n = f.sp.n || 3, pos = n === 1 ? [[0, -2, 1.25]] : [[-5.4, -4.5, .9], [.4, -1.6, 1.05], [5.8, -3.4, .85]];
+    pos.forEach(([x, y, k], i) => { o += `<g transform="translate(${x},${y}) scale(${k}) rotate(${(rnd(s, i) - .5) * 14})"><path d="M0 -8 Q .3 -6.5 0 -5" stroke="#6aa84f" stroke-width=".7" fill="none"/><path d="M-4 3.4 C -4.6 -1.4 -3.2 -5 0 -5.2 C 3.2 -5 4.6 -1.4 4 3.4 L 5.4 4.8 Q 3.6 4.2 2.6 5 Q 1.4 4 0 4.9 Q -1.4 4 -2.6 5 Q -3.6 4.2 -5.4 4.8Z" fill="url(#${g.id})" stroke="${shade(c, -.3)}" stroke-opacity=".45" stroke-width=".35"/><path d="M-1.6 -3 Q -2.6 0 -2.2 3" stroke="#fff" stroke-width=".6" opacity=".45" fill="none"/></g>`; });
+    return o; },
+  // 穂状（ラベンダー・サルビア・ルピナスなど）：小花が穂になる
+  spike(f, s){ const c = f.c, c2 = f.c2 || shade(c, .2), n = 11; let o = `<path d="M0 12 L0 -14" stroke="#6aa84f" stroke-width=".8"/>`;
+    for (let i = 0; i < n; i++){ const y = 11 - i * 2.4, w = 3.6 - i * .22, side = i % 2 ? 1 : -1, col = i > n - 3 ? shade(c, -.15) : (i % 3 ? c : c2);
+      o += `<g transform="translate(${(side * w * .55).toFixed(1)},${y.toFixed(1)}) rotate(${side * 35})"><path d="${PET.round(w * 1.3, w * .55)}" fill="${col}" stroke="${shade(c, -.3)}" stroke-opacity=".35" stroke-width=".25"/></g>`;
+      o += `<g transform="translate(${(-side * w * .5).toFixed(1)},${(y - 1.2).toFixed(1)}) rotate(${-side * 35})"><path d="${PET.round(w * 1.2, w * .5)}" fill="${shade(col, .08)}" stroke="${shade(c, -.3)}" stroke-opacity=".3" stroke-width=".25"/></g>`; }
+    return o; },
+  // フジ：垂れ下がる房
+  wisteria(f, s){ const c = f.c; let o = `<path d="M0 -10 Q .6 0 0 13" stroke="#7a9a5a" stroke-width=".6" fill="none"/>`;
+    for (let i = 0; i < 12; i++){ const y = -9 + i * 1.9, w = 3.6 - i * .2, side = i % 2 ? 1 : -1, col = i > 8 ? shade(c, .25) : (i % 2 ? c : shade(c, -.08));
+      o += `<g transform="translate(${(side * w * .55).toFixed(1)},${y.toFixed(1)})"><ellipse rx="${(w*.62).toFixed(2)}" ry="${(w*.5).toFixed(2)}" fill="${col}" stroke="${shade(c, -.3)}" stroke-opacity=".3" stroke-width=".25"/><ellipse cx="0" cy="${(w*.18).toFixed(2)}" rx="${(w*.35).toFixed(2)}" ry="${(w*.25).toFixed(2)}" fill="${shade(c, -.2)}" opacity=".5"/></g>`; }
+    return o; },
+  // アジサイ類：4枚のがくの小花がまとまる
+  hydrangea(f, s){ const c = f.c, c2 = f.c2; let o = '';
+    for (let i = 0; i < 16; i++){ const a = i * 2.4, d = 2.6 * Math.sqrt(i + .5), x = Math.cos(a) * d, y = Math.sin(a) * d * .92, col = rnd(s, i) > .5 ? c2 : c;
+      o += `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${(rnd(s, i + 9) * 90).toFixed(0)})">${[0, 90, 180, 270].map(q => `<path d="${PET.round(3.4, 1.6)}" fill="${col}" stroke="${shade(col, -.3)}" stroke-opacity=".4" stroke-width=".25" transform="rotate(${q})"/>`).join('')}<circle r=".45" fill="${shade(col, .4)}"/></g>`; }
+    return o; },
+  // ガクアジサイ：中心の粒＋まわりの装飾花
+  lacecap(f, s){ const c = f.c; let o = '';
+    for (let i = 0; i < 26; i++){ const a = i * 2.4, d = .9 * Math.sqrt(i + .5) * 1.4; o += `<circle cx="${(Math.cos(a)*d).toFixed(1)}" cy="${(Math.sin(a)*d).toFixed(1)}" r=".75" fill="${rnd(s, i) > .5 ? f.c2 : shade(f.c2, .2)}"/>`; }
+    for (let i = 0; i < 7; i++){ const a = i * 360 / 7 + rnd(s, i) * 12; o += `<g transform="rotate(${a.toFixed(0)}) translate(0,-8.6) rotate(${(rnd(s, i+5)*90).toFixed(0)})">${[0, 90, 180, 270].map(q => `<path d="${PET.round(3.4, 1.7)}" fill="${c}" stroke="${shade(c, -.3)}" stroke-opacity=".4" stroke-width=".25" transform="rotate(${q})"/>`).join('')}<circle r=".5" fill="${shade(c, .4)}"/></g>`; }
+    return o; },
+  // 小花の集まり（キンモクセイ・ナノハナ・ランタナなど）
+  cluster(f, s){ const c = f.c, c2 = f.c2 || shade(c, .2), p = f.sp, k = p.k || 13, petalsN = p.pn || 4, r = p.r || 2.4; let o = '';
+    for (let i = 0; i < k; i++){ const a = i * 2.4, d = r * .95 * Math.sqrt(i + .5), x = Math.cos(a) * d, y = Math.sin(a) * d * .9, col = rnd(s, i) > .5 ? c2 : c;
+      o += `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${(rnd(s, i + 9) * 90).toFixed(0)})">${Array.from({length:petalsN}, (_, q) => `<path d="${PET.round(r, r * .5)}" fill="${col}" stroke="${shade(col, -.3)}" stroke-opacity=".4" stroke-width=".2" transform="rotate(${q * 360 / petalsN})"/>`).join('')}<circle r="${(r*.2).toFixed(2)}" fill="${p.eye || shade(col, -.25)}"/></g>`; }
+    return o; },
+  // 球状（シロツメクサ・センニチコウ・ミモザなど）
+  ball(f, s){ const c = f.c, c2 = f.c2 || shade(c, .2), p = f.sp; let o = '';
+    if (p.fuzzy){ const balls = p.balls || 5;
+      for (let b = 0; b < balls; b++){ const a = b * 2.4, d = b ? 5.4 : 0, x = Math.cos(a) * d, y = Math.sin(a) * d * .9;
+        o += `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><circle r="3.2" fill="${shade(c, -.06)}"/>${Array.from({length:14}, (_, i) => `<line x1="0" y1="0" x2="0" y2="-3.3" stroke="${i%2 ? c : c2}" stroke-width=".7" stroke-linecap="round" transform="rotate(${i * 360 / 14})"/>`).join('')}</g>`; }
+      return o; }
+    for (let i = 0; i < 26; i++){ const a = i * 137.5 * Math.PI / 180, d = Math.sqrt(i / 26) * 8, x = Math.cos(a) * d, y = Math.sin(a) * d - 1;
+      o += `<path d="${PET.round(3.2, 1.4)}" fill="${i % 3 ? c : c2}" stroke="${shade(c, -.3)}" stroke-opacity=".35" stroke-width=".2" transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${(Math.atan2(y, x) * 180 / Math.PI + 90).toFixed(0)})"/>`; }
+    return o + `<circle r="1.6" cy="-1" fill="${shade(c, -.15)}"/>`; },
+  // アザミ・ネムノキ：刷毛のような花
+  thistle(f, s){ const c = f.c, silk = f.sp.silk; let o = silk ? '' : `<path d="M-5 5 Q -6 1 -3.6 -.4 L 3.6 -.4 Q 6 1 5 5 Q 0 9 -5 5Z" fill="#7da35c"/>${[-3, -1, 1, 3].map(x => `<path d="M${x} 1 l.8 1.6 l-1.6 0Z" fill="#5f8a45"/>`).join('')}`;
+    for (let i = 0; i < 26; i++){ const r = -80 + i * 6.4 + (rnd(s, i) - .5) * 6, l = (silk ? 13 : 10.5) * (.85 + rnd(s, i + 40) * .25);
+      o += `<g transform="rotate(${r.toFixed(1)})"><line x1="0" y1="${silk ? 2 : -.5}" x2="0" y2="${-l}" stroke="${i % 3 ? c : shade(c, .25)}" stroke-width="${silk ? .45 : .9}" stroke-linecap="round"/>${silk ? `<circle cy="${-l}" r=".45" fill="${shade(c, -.1)}"/>` : ''}</g>`; }
+    return o; },
+  // スカビオサ：周りの大きな花＋中心の粒
+  pincushion(f, s){ return petals({ n:12, shape:'ruffle', L:11, W:5.6, c:f.c }, s) + Array.from({length:30}, (_, i) => { const a = i * 2.4, d = Math.sqrt(i + .5) * .95; return `<circle cx="${(Math.cos(a)*d).toFixed(1)}" cy="${(Math.sin(a)*d).toFixed(1)}" r=".7" fill="${i % 2 ? shade(f.c, -.15) : '#fff'}"/>`; }).join(''); },
+  // ハス：横から見た盃形
+  lotus(f, s){ const c = f.c, g = grad('#fbf6f0', shade(c, .15), c); let o = `<defs>${g.def}</defs>`;
+    for (const [r, k] of [[-62, .82], [62, .82], [-36, .95], [36, .95], [-12, 1], [12, 1], [0, .86]]) o += `<path d="M0 4 C 4.4 0 3.8 -8 0 -12.5 C -3.8 -8 -4.4 0 0 4Z" fill="url(#${g.id})" stroke="${shade(c, -.3)}" stroke-opacity=".45" stroke-width=".35" transform="rotate(${r}) scale(${k})"/>`;
+    return o + `<ellipse cx="0" cy="-1.5" rx="2.4" ry="1" fill="#e8d36a"/>`; },
+  // スイレン：水面に浮かぶ尖った花びら
+  waterlily(f, s){ return petals({ n:12, shape:'pointed', L:11.5, W:4.4, c:shade(f.c, -.08), off:15 }, s + 'a') + petals({ n:10, shape:'pointed', L:9, W:4.2, c:f.c, cup:.15 }, s) + petals({ n:8, shape:'pointed', L:6, W:3.4, c:shade(f.c, .15), off:20, cup:.2, vein:false }, s + 'c') + center({ type:'stamens', c:f.c2, n:16, len:2.6, anth:f.c2 }, s); },
+  // ポインセチア：先のとがった苞
+  bract(f, s){ const n = f.sp.n || 7; return petals({ n, shape:'pointed', L:12.5, W:5.8, c:shade(f.c, -.08), off:180/n }, s + 'a') + petals({ n:n-1, shape:'pointed', L:9, W:4.8, c:f.c }, s) + Array.from({length:7}, (_, i) => `<circle cx="${(Math.cos(i)*1.6).toFixed(1)}" cy="${(Math.sin(i)*1.6).toFixed(1)}" r=".9" fill="${i%2 ? f.c2 : '#7aa04a'}"/>`).join(''); },
+  // ハボタン：葉のロゼット
+  kale(f, s){ return petals({ n:8, shape:'ruffle', L:12, W:9, c:f.c2, base:shade(f.c2, -.1) }, s + 'a') + petals({ n:7, shape:'ruffle', L:9, W:8, c:shade(f.c, -.05), off:20, cup:.1 }, s + 'b') + petals({ n:6, shape:'ruffle', L:6, W:6, c:f.c, off:5, cup:.2 }, s + 'c') + petals({ n:5, shape:'ruffle', L:3.4, W:4, c:shade(f.c, .2), vein:false }, s + 'd'); },
+  // ストロー状（ススキ）
+  grass(f, s){ let o = `<path d="M0 12 Q .6 0 0 -13" stroke="#b8a67a" stroke-width=".7" fill="none"/>`;
+    for (let i = 0; i < 9; i++){ const y = -12 + i * 2.6, side = i % 2 ? 1 : -1; o += `<path d="M0 ${y} Q ${side * 4} ${y + 1} ${side * 6.5} ${y + 5}" stroke="${i % 3 ? f.c : f.c2}" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".9"/>`; }
+    return o; },
+  // マンサク：ちぢれたリボン状の花びら
+  ribbon(f, s){ let o = '';
+    for (let i = 0; i < 4; i++) o += `<path d="M0 0 Q 2 -3 0 -6 Q -2 -9 0 -12" fill="none" stroke="${f.c}" stroke-width="1.6" stroke-linecap="round" transform="rotate(${i*90 + 20 + (rnd(s,i)-.5)*20})"/>`;
+    return o + `<circle r="1.8" fill="#9a3a2a"/>`; },
+  // トケイソウ：糸状の副花冠
+  passion(f, s){ return petals({ n:10, shape:'oval', L:11, W:4.6, c:f.c }, s) + Array.from({length:40}, (_, i) => `<line x1="0" y1="-2.4" x2="0" y2="-8" stroke="${i%2 ? f.c2 : '#fff'}" stroke-width=".35" transform="rotate(${i*9})"/>`).join('') + `<circle r="2.4" fill="#cfe0a0"/>` + [0, 72, 144, 216, 288].map(r => `<ellipse cx="0" cy="-3" rx=".8" ry="1.4" fill="#e8c33a" transform="rotate(${r})"/>`).join(''); },
+  // ドクダミ・ハナミズキ・ヤマボウシ：4枚の苞
+  bract4(f, s){ return petals({ n:4, shape:f.sp.shape || 'oval', L:11, W:8, c:f.c, base:shade(f.c, -.05) }, s) + `<ellipse rx="1.6" ry="${f.sp.cone ? 4 : 1.8}" cy="${f.sp.cone ? -2 : 0}" fill="${f.c2}"/>` + (f.sp.cone ? '' : Array.from({length:8}, (_, i) => `<circle cx="${(Math.cos(i*.8)*1.3).toFixed(1)}" cy="${(Math.sin(i*.8)*1.3).toFixed(1)}" r=".5" fill="${shade(f.c2, -.25)}"/>`).join('')); },
+  // ランの仲間（シラン・エビネ・シンビジウムなど）
+  orchid(f, s){ const c = f.c, c2 = f.c2; return petals({ n:3, shape:'oval', L:10.5, W:4.4, c:shade(c, -.06), off:0 }, s + 'a') + petals({ n:2, shape:'oval', L:9.5, W:6, c, off:-60 }, s + 'b').replace(/rotate\(([\d.-]+)\)/g, (m, r) => `rotate(${Number(r) < 0 ? -60 : 60})`) + `<path d="M-4 1 C -5 6 -2 10 0 10 C 2 10 5 6 4 1 C 2.6 2.4 -2.6 2.4 -4 1Z" fill="${c2}" stroke="${shade(c2, -.3)}" stroke-opacity=".4" stroke-width=".3"/>${[-1.2, 0, 1.2].map(x => `<path d="M${x} 3 L${x*1.5} 8" stroke="${shade(c2, -.35)}" stroke-width=".35"/>`).join('')}<ellipse cy="-1" rx="1.2" ry="2" fill="#fbf6e6"/>`; },
+};
+
+/* ---- 花ごとの描き方の指定 ---- */
+const SPEC = {};
+const sp = (names, draw, p = {}) => names.split(' ').forEach(n => SPEC[n] = [draw, p]);
+sp('ウメ 紅梅', 'ume');
+sp('サクラ ヤマザクラ カワヅザクラ', 'sakura');
+sp('ヤエザクラ ハナモモ', 'radial', { n:5, shape:'notch', L:10.5, W:8, layers:3, ctr:'stamens', sn:12, sl:2.4 });
+sp('モモ アンズ スモモ ナシ リンゴ ハナカイドウ ボケ ノイバラ ハマナス イチゴ ワイルドストロベリー チングルマ ナツツバキ ニリンソウ イチリンソウ', 'radial', { n:5, shape:'round', L:10, W:8.4, ctr:'stamens', sn:24, sl:3.8 });
+sp('ツバキ ヤブツバキ カンツバキ ワビスケ サザンカ', 'camellia');
+sp('ロウバイ ソシンロウバイ', 'radial', { n:8, shape:'oval', L:9.5, W:5.4, layers:2, ctr:'dot', cr:2 });
+sp('バラ ラナンキュラス', 'rose');
+sp('モッコウバラ ヤエヤマブキ ヘリクリサム 八重ヒマワリ', 'pompom');
+sp('ボタン シャクヤク', 'peony');
+sp('カーネーション マリーゴールド フレンチマリーゴールド', 'carnation');
+sp('ナデシコ カワラナデシコ', 'pink');
+sp('キク キンセンカ', 'chrysanthemum', { n:22 });
+sp('ダリア ジニア', 'pompom');
+sp('皇帝ダリア', 'radial', { n:8, shape:'oval', L:11.5, W:6, ctr:'disc', cr:3 });
+sp('ヒマワリ ミニヒマワリ', 'sunflower');
+sp('コスモス キバナコスモス チョコレートコスモス ウインターコスモス', 'cosmos');
+sp('スイレン', 'waterlily');
+sp('ハス', 'lotus');
+sp('ユリ ヤマユリ オニユリ カサブランカ スカシユリ ササユリ ノカンゾウ ヤブカンゾウ ニッコウキスゲ キツネノカミソリ アマリリス カンナ ヒメヒオウギズイセン ホトトギス タマスダレ ゼフィランサス シャコバサボテン カタクリ ゲッカビジン ジンジャー コブシ', 'lily');
+sp('ミズバショウ カラー ハクモクレン シモクレン クロッカス コルチカム サフラン', 'cupflower');
+sp('シラン エビネ シンビジウム', 'orchid');
+sp('アイリス ジャーマンアイリス アヤメ カキツバタ ハナショウブ シャガ', 'iris');
+sp('パンジー ビオラ スミレ トレニア ネメシア', 'pansy');
+sp('アサガオ ヒルガオ ユウガオ ハマヒルガオ ペチュニア カリブラコア オシロイバナ ノウゼンカズラ', 'trumpet');
+sp('スズラン ツリガネニンジン ギボウシ スノーフレーク アセビ ヒュウガミズキ トサミズキ エゴノキ ブルーベリー ヘクソカズラ カンパニュラ ペンステモン ツリフネソウ カキ', 'bell');
+sp('ホタルブクロ リンドウ スノードロップ ホオズキ', 'bell', { n:1 });
+sp('ススキ', 'grass');
+sp('フジ シダレザクラ ニセアカシア', 'wisteria');
+sp('アジサイ アナベル', 'hydrangea');
+sp('ガクアジサイ', 'lacecap');
+sp('キンモクセイ ギンモクセイ', 'cluster', { pn:4, r:2.2, k:16 });
+sp('ナノハナ ムラサキハナナ', 'cluster', { pn:4, r:3.2, k:9 });
+sp('ジンチョウゲ ライラック', 'cluster', { pn:4, r:2.8, k:13 });
+sp('ランタナ ペンタス バーベナ クリンソウ ルリマツリ プリムラ・マラコイデス', 'cluster', { pn:5, r:2.8, k:13 });
+sp('シャクナゲ', 'cluster', { pn:5, r:3.8, k:8 });
+sp('サルスベリ', 'cluster', { pn:6, r:2.8, k:12 });
+sp('ユキヤナギ カスミソウ', 'cluster', { pn:5, r:1.9, k:18, eye:'#e8dca0' });
+sp('アリッサム ナズナ', 'cluster', { pn:4, r:2, k:16 });
+sp('ゼラニウム', 'cluster', { pn:5, r:3, k:11 });
+sp('ブーゲンビリア', 'cluster', { pn:3, r:3.6, k:7, eye:'#fbf8f0' });
+sp('アガパンサス アリウム チャイブ', 'cluster', { pn:6, r:2.6, k:16 });
+sp('ムラサキシキブ ハナズオウ ヤツデ ビワ サンシュユ ミツマタ オミナエシ ハゼラン ヒメツルソバ ワレモコウ フキノトウ', 'cluster', { pn:4, r:1.8, k:18 });
+sp('シロツメクサ アカツメクサ レンゲソウ センニチコウ クローバー（四つ葉）', 'ball');
+sp('ミモザ アゲラタム ユーパトリウム フジバカマ', 'ball', { fuzzy:1, balls:5 });
+sp('アザミ ノアザミ', 'thistle');
+sp('ネムノキ', 'thistle', { silk:1 });
+sp('スカビオサ', 'pincushion');
+sp('ヒガンバナ リコリス ネリネ クレオメ ハマユウ カラスウリ スイカズラ クサギ ショウジョウバカマ', 'spider');
+sp('マンサク', 'ribbon');
+sp('ポインセチア', 'bract', { n:7 });
+sp('ハナミズキ', 'bract4', { shape:'notch' });
+sp('ヤマボウシ', 'bract4', { shape:'pointed' });
+sp('ドクダミ', 'bract4', { shape:'oval', cone:1 });
+sp('ハボタン', 'kale');
+sp('トケイソウ', 'passion');
+sp('キキョウ', 'radial', { n:5, shape:'pointed', L:11, W:8.6, ctr:'stamens', sn:5, sl:3, anth:'#fbf8f0' });
+sp('ナス ツルニチニチソウ ウツギ ジャスミン ルコウソウ ハナニラ ニゲラ', 'radial', { shape:'pointed', L:10.5, W:6.4, ctr:'stamens', sn:6, sl:2.6 });
+sp('シバザクラ', 'radial', { n:5, shape:'notch', L:10, W:6.6, ctr:'eye', cr:1.6 });
+sp('クレマチス', 'radial', { n:6, shape:'oval', L:11.5, W:6.6, ctr:'stamens', sn:30, sl:3.4 });
+sp('オダマキ イカリソウ', 'radial', { shape:'pointed', L:11, W:5, layers:2, ctr:'dot', cr:2.2 });
+sp('レンギョウ', 'radial', { n:4, shape:'strap', L:11, W:4.8, ctr:'dot', cr:1.2 });
+sp('ハイビスカス フヨウ ムクゲ タチアオイ オクラ', 'radial', { n:5, shape:'ruffle', L:11, W:9, ctr:'stamens', sn:10, sl:6.5, base:null });
+sp('ザクロ', 'radial', { n:6, shape:'ruffle', L:9.5, W:7, ctr:'stamens', sn:26, sl:3.2 });
+sp('ガーベラ', 'daisy', { n:22 });
+sp('ネモフィラ ワスレナグサ ロベリア', 'radial', { n:5, shape:'round', L:9.5, W:8.4, ctr:'eye', cr:2.4 });
+sp('クリスマスローズ', 'radial', { n:5, shape:'round', L:10.5, W:9, ctr:'stamens', sn:30, sl:3.6 });
+sp('セツブンソウ', 'radial', { n:5, shape:'oval', L:9.5, W:6.6, ctr:'stamens', sn:14, sl:2.6 });
+sp('ムラサキツユクサ', 'radial', { n:3, shape:'round', L:10.5, W:10, ctr:'stamens', sn:6, sl:4, anth:'#f6d03a' });
+sp('ヤマブキ', 'radial', { n:5, shape:'round', L:10, W:8, ctr:'stamens', sn:30, sl:3.4 });
+sp('ハナカンザシ', 'daisy', { n:18 });
+const TPLMAP = { round:'radial', star:'radial', daisy:'daisy', double:'chrysanthemum', sunflower:'sunflower', pompom:'pompom', rose:'rose', carnation:'carnation', poppy:'poppy', tulip:'tulip', lily:'lily', iris:'iris', pansy:'pansy', trumpet:'trumpet', bell:'bell', spike:'spike', wisteria:'wisteria', thistle:'thistle', cluster4:'cluster', cluster:'cluster', ball:'ball', spider:'spider', daffodil:'daffodil', cyclamen:'cyclamen', cosmos:'cosmos' };
+const SIDEVIEW = new Set(['tulip', 'bell', 'spike', 'wisteria', 'cyclamen', 'lotus', 'cupflower', 'grass']);
+function specOf(n){
+  const f = FL[n], base = n.replace(/^(白い|黄色い|ピンクの|紫の|赤い|オレンジの)/, '');
+  if (SPEC[base]) return SPEC[base];
+  const d = TPLMAP[f.t] || 'radial', p = {};
+  if (d === 'radial'){ const k = f.p || 5; Object.assign(p, { shape: f.t === 'star' ? 'pointed' : (k >= 10 ? 'oval' : 'round'), W: k <= 4 ? 9 : k <= 6 ? 7.6 : k <= 8 ? 6 : 4.4, L:10.5, ctr: k <= 6 ? 'stamens' : 'dot', sn:16, sl:3.4 }); }
+  if (f.t === 'cluster4') Object.assign(p, { pn:4, r:3, k:12 });
+  if (f.t === 'cluster') Object.assign(p, { pn:5, r:3, k:12 });
+  return [d, p];
+}
 function flowerSVG(key, seed){
   const f = FL[key]; if (!f) return '';
-  const c = f.c, c2 = f.c2 || shade(c, -.25), dk = shade(c, -.22), lt = shade(c, .35);
-  const P = (n, l, w, col, off=0, sc=1) => { let s = ''; for (let i = 0; i < n; i++) s += `<ellipse cx="0" cy="${-l*0.55*sc}" rx="${w/2*sc}" ry="${l/2*sc}" fill="${col}" transform="rotate(${i*360/n+off})"/>`; return s; };
-  const ring = (n, r, rr, col) => { let s = ''; for (let i = 0; i < n; i++) s += `<circle cx="0" cy="${-r}" r="${rr}" fill="${col}" transform="rotate(${i*360/n})"/>`; return s; };
-  let g = '';
-  switch (f.t){
-    case 'round': { const n = f.p || 5, w = n <= 4 ? 8.5 : n <= 6 ? 7.5 : 6.5;
-      g = P(n, 10, w, c) + P(n, 6, w*0.5, lt, 0) ;
-      g += ring(10, 3.6, .75, c2) + `<circle r="2.6" fill="${c2}"/>`; break; }
-    case 'cosmos': { const n = f.p || 8; g = P(n, 11, n <= 5 ? 7.5 : 5.6, c);
-      g += ring(n, 11.2, n <= 5 ? 1.4 : 1.1, '#f3ead3') + `<circle r="2.9" fill="${c2}"/>`; break; }
-    case 'daisy': { const n = f.p || 16, w = Math.max(1.8, 30 / n);
-      g = P(n, 10.5, w, c) + `<circle r="${n > 18 ? 3.2 : 3.6}" fill="${c2}"/><circle r="1.6" fill="${shade(c2, -.2)}"/>`; break; }
-    case 'double': { const n = f.p || 16; g = P(n, 11, 3.2, dk, 180/n) + P(n, 8.6, 3, c) + P(Math.round(n*0.7), 5.5, 2.6, lt, 90/n) + `<circle r="2.2" fill="${c2}"/>`; break; }
-    case 'sunflower': g = P(18, 9.5, 4.2, shade(c, -.08), 10) + P(18, 9, 3.8, c) + `<circle r="6.8" fill="${c2}"/><circle r="4.4" fill="${shade(c2, -.25)}"/>`; break;
-    case 'star': { const n = f.p || 5; for (let i = 0; i < n; i++) g += `<path d="M0 0 Q ${-4.6*5/n} -6 0 -11.5 Q ${4.6*5/n} -6 0 0Z" fill="${c}" transform="rotate(${i*360/n})"/>`;
-      for (let i = 0; i < n; i++) g += `<path d="M0 0 L0 -7" stroke="${dk}" stroke-width=".7" transform="rotate(${i*360/n})"/>`;
-      g += `<circle r="2.4" fill="${c2}"/>`; break; }
-    case 'pompom': g = P(14, 11, 4.6, dk, 12) + P(12, 8.5, 4.4, c) + P(9, 5.8, 4, lt, 20) + `<circle r="2.4" fill="${c2}"/>`; break;
-    case 'rose': g = `<circle r="10" fill="${c}"/>` + P(5, 8, 7, dk, 36, 1.15) + `<circle r="8.2" fill="${c}"/><path d="M-6 2 A7 7 0 0 1 6 -3 M-4 -4 A5 5 0 0 1 5 3 M-2 2 A3 3 0 0 1 2 -2" fill="none" stroke="${c2}" stroke-width="1.4" stroke-linecap="round"/>`; break;
-    case 'carnation': g = `<circle r="9" fill="${c}"/>` + ring(14, 9.6, 1.9, c) + ring(10, 6, 1.6, dk) + `<circle r="4.5" fill="${lt}"/>` + ring(7, 3.6, 1.2, c); break;
-    case 'poppy': g = P(4, 11, 10, dk, 45) + P(4, 10.5, 10, c) + `<circle r="3.4" fill="${c2}"/>` + ring(12, 4.3, .7, c2); break;
-    case 'tulip': g = `<path d="M-8 -2 Q-9 -14 -4 -15 L0 -9 L4 -15 Q9 -14 8 -2 Q7 6 0 6 Q-7 6 -8 -2Z" fill="${c}"/><path d="M-3 -2 Q-2 -14 0 -16 Q2 -14 3 -2 Q2 5 0 5 Q-2 5 -3 -2Z" fill="${c2}"/>`; break;
-    case 'lily': for (let i = 0; i < 6; i++) g += `<path d="M0 0 Q -4 -7 0 -13 Q 4 -7 0 0Z" fill="${i%2?c:shade(c,-.06)}" transform="rotate(${i*60+30})"/>`;
-      for (let i = 0; i < 6; i++) g += `<circle cx="0" cy="-5.5" r=".8" fill="${c2}" transform="rotate(${i*60+30})"/><path d="M0 0 L0 -9" stroke="${c2}" stroke-width=".6" transform="rotate(${i*60})"/><circle cx="0" cy="-9.4" r="1" fill="${c2}" transform="rotate(${i*60})"/>`; break;
-    case 'iris': g = `<ellipse cx="0" cy="-6" rx="3.6" ry="6.5" fill="${lt}"/>` + [-115, 0, 115].map(r => `<g transform="rotate(${r})"><ellipse cx="0" cy="5.5" rx="5" ry="7" fill="${c}"/><ellipse cx="0" cy="4" rx="1.3" ry="3" fill="${c2}"/></g>`).join(''); break;
-    case 'pansy': g = `<ellipse cx="-4.5" cy="-5.5" rx="5.2" ry="6" fill="${dk}"/><ellipse cx="4.5" cy="-5.5" rx="5.2" ry="6" fill="${dk}"/><ellipse cx="-6" cy="1" rx="5" ry="4.6" fill="${c}"/><ellipse cx="6" cy="1" rx="5" ry="4.6" fill="${c}"/><ellipse cx="0" cy="5" rx="6.6" ry="5.4" fill="${c}"/><ellipse cx="0" cy="2.4" rx="3.6" ry="3" fill="${c2}"/><circle r="1.4" cy="0.6" fill="#f6d03a"/>`; break;
-    case 'trumpet': g = `<circle r="11" fill="${c}"/><circle r="11" fill="none" stroke="${lt}" stroke-width="1.2"/>` + [0,72,144,216,288].map(r => `<line x1="0" y1="0" x2="0" y2="-10.5" stroke="${dk}" stroke-width="1.1" transform="rotate(${r})"/>`).join('') + `<circle r="4.3" fill="#fbf8f0"/><circle r="1.5" fill="#ece3a0"/>`; break;
-    case 'bell': for (const [x, y, s] of [[-5, -4, .9], [4, -1, 1], [-1, 5, .85]]) g += `<g transform="translate(${x},${y}) scale(${s})"><path d="M0 -8 L0 -4" stroke="#6aa84f" stroke-width="1"/><path d="M-4.5 4 Q-5 -4 0 -4.5 Q5 -4 4.5 4 L5.5 5.6 Q0 4.2 -5.5 5.6Z" fill="${c}"/><path d="M-2 0 Q-2 -3 0 -3.4" stroke="${lt}" stroke-width="1" fill="none"/></g>`; break;
-    case 'spike': for (let i = 0; i < 9; i++){ const y = 10 - i * 2.6, r = 3.4 - i * 0.22; g += `<circle cx="${-r*0.75}" cy="${y}" r="${r}" fill="${i%2?c:c2}"/><circle cx="${r*0.75}" cy="${y-1.2}" r="${r}" fill="${i%2?c2:c}"/>`; } break;
-    case 'wisteria': for (let i = 0; i < 9; i++){ const y = -8 + i * 2.6, r = 3.3 - i * 0.24; g += `<circle cx="${-r*0.7}" cy="${y}" r="${r}" fill="${i%2?c:lt}"/><circle cx="${r*0.7}" cy="${y+1.2}" r="${r}" fill="${i%2?lt:c}"/>`; } break;
-    case 'thistle': g = `<ellipse cx="0" cy="4" rx="5.5" ry="5" fill="#7da35c"/>`; for (let i = 0; i < 15; i++) g += `<line x1="0" y1="1" x2="0" y2="-11" stroke="${i%2?c:lt}" stroke-width="1.5" stroke-linecap="round" transform="rotate(${-70 + i*10})"/>`; break;
-    case 'cluster4': case 'cluster': case 'ball': {
-      const k = f.t === 'ball' ? 11 : 12, r = f.t === 'cluster4' ? 3.4 : f.t === 'ball' ? 3 : 3.3;
-      for (let i = 0; i < k; i++){
-        const a = i * 2.4, d = 2.3 * Math.sqrt(i + .5) * (r/3), x = Math.cos(a)*d, y = Math.sin(a)*d*.9, col = rnd(seed, i) > .5 ? c2 : c;
-        if (f.t === 'cluster4') g += `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${(rnd(seed, i+9)*90).toFixed(0)})">${[0,90,180,270].map(q => `<ellipse cx="0" cy="${-r*.45}" rx="${r*.42}" ry="${r*.5}" fill="${col}" transform="rotate(${q})"/>`).join('')}<circle r="${r*.18}" fill="#fff8"/></g>`;
-        else if (f.t === 'cluster') g += `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)})">${[0,72,144,216,288].map(q => `<ellipse cx="0" cy="${-r*.42}" rx="${r*.36}" ry="${r*.48}" fill="${col}" transform="rotate(${q})"/>`).join('')}<circle r="${r*.2}" fill="${lt}"/></g>`;
-        else g += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="${col}"/><circle cx="${(x-r*.3).toFixed(1)}" cy="${(y-r*.3).toFixed(1)}" r="${r*.35}" fill="#fff6"/>`;
-      } break; }
-    case 'spider': for (let i = 0; i < 6; i++) g += `<path d="M0 0 Q 3 -6 1 -11 Q 0 -13 -2 -11" fill="none" stroke="${c}" stroke-width="2.4" stroke-linecap="round" transform="rotate(${i*60})"/>`;
-      for (let i = 0; i < 6; i++){ const r = -70 + i*28; g += `<path d="M0 0 Q 4 -10 2 -17" fill="none" stroke="${c}" stroke-width=".9" transform="rotate(${r})"/><circle cx="2" cy="-17" r="1" fill="#e8b53a" transform="rotate(${r})"/>`; } break;
-    case 'daffodil': g = P(6, 10, 6.5, c) + `<circle r="5" fill="${c2}"/><circle r="5" fill="none" stroke="${shade(c2,-.15)}" stroke-width="1.2" stroke-dasharray="1.5 1"/><circle r="2.2" fill="${shade(c2,-.2)}"/>`; break;
-    case 'cyclamen': for (const r of [-38, -12, 14, 40]) g += `<ellipse cx="0" cy="-8" rx="3.2" ry="8" fill="${r%2?c:shade(c,-.06)}" transform="rotate(${r})"/>`; g += `<ellipse cx="0" cy="1" rx="4" ry="2.4" fill="${dk}"/>`; break;
-  }
-  return g;
+  const [d, p] = specOf(key);
+  const spx = Object.assign({ n: f.p || 5, shape:'round', L:10.5, W:7.6 }, p);
+  if (spx.n === undefined || p.n === undefined) spx.n = p.n || f.p || 5;
+  return DRAW[d]({ c:f.c, c2:f.c2 || shade(f.c, -.25), sp:spx }, String(seed));
 }
 
 function gardenSVG(logs, big){
@@ -1264,7 +1529,7 @@ function gardenSVG(logs, big){
     svg += `<g data-act="flower" data-id="${it.l.id}" class="fl">
       <path d="M${it.x+lean} ${stemBot} Q ${it.x+lean*0.3} ${(stemTop+stemBot)/2} ${it.x} ${stemTop}" stroke="#6aa84f" stroke-width="2" fill="none" stroke-linecap="round"/>
       <ellipse cx="${it.x + 5 + lean*0.5}" cy="${(stemTop+stemBot)/2+4}" rx="5" ry="2.3" fill="#7dbb5e" transform="rotate(-30 ${it.x + 5 + lean*0.5} ${(stemTop+stemBot)/2+4})"/>
-      <g transform="translate(${it.x.toFixed(1)},${it.y.toFixed(1)}) scale(${it.s.toFixed(2)})"><g class="bloom">${flowerSVG(it.sp, it.l.id)}</g></g>
+      <g transform="translate(${it.x.toFixed(1)},${it.y.toFixed(1)}) scale(${it.s.toFixed(2)},${(it.s*(SIDEVIEW.has(specOf(it.sp)[0]) ? 1 : .72 + rnd(it.l.id,6)*.28)).toFixed(2)})"><g class="bloom">${flowerSVG(it.sp, it.l.id)}</g></g>
       <rect x="${it.x-14}" y="${it.y-14}" width="28" height="${stemBot-it.y+14}" fill="transparent"/></g>`;
   }
   if (!items.length) svg += `<text x="${W/2}" y="${ground-30}" text-anchor="middle" font-size="12" font-weight="700" fill="rgba(31,82,110,.5)">家事をすると、ここに季節の花が咲くよ</text>`;
