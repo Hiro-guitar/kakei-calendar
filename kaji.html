@@ -7,6 +7,8 @@
 <meta name="apple-mobile-web-app-title" content="うちの家事">
 <meta name="theme-color" content="#faf6ef">
 <title>うちの家事</title>
+<link rel="apple-touch-icon" href="kaji-icon.png">
+<link rel="icon" href="kaji-icon.png">
 <style>
 :root{
   --bg:#faf6ef; --card:#fff; --ink:#2b2a28; --sub:#8a857c; --line:#ece6db;
@@ -18,6 +20,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-syst
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 input,textarea,select{font:inherit;color:inherit}
 header{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(env(safe-area-inset-top) + 12px) 18px 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
+header .logo{width:28px;height:28px;border-radius:7px;flex:none}
 header h1{font-size:18px;margin:0;font-weight:700;flex:1}
 header .date{font-size:13px;color:var(--sub);font-weight:400;margin-left:6px}
 .me-chip{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:13px}
@@ -131,6 +134,7 @@ textarea.t{min-height:70px;resize:vertical}
 </head>
 <body>
 <header>
+  <img class="logo" src="kaji-icon.png" alt="">
   <h1>うちの家事<span class="date" id="hdate"></span></h1>
   <span class="sync" id="sync" title="同期"></span>
   <button class="me-chip" id="mechip"></button>
