@@ -2822,8 +2822,9 @@ const BUG2 = {
 function creatureSVG(n){ if (!CR[n]) return ''; if (BIRD2[n]) return birdSVG(n); if (n === 'ツバメ') return swallowSVG(); if (BUG2[n]) return BUG2[n](); return butterflySVG(n); }
 
 /* --- どの生き物が来るか（週ごとに決まる） --- */
+const CREATURES_ON = false; // 生き物はいったんお休み
 function creaturesFor(logs){
-  if (!logs.length) return [];
+  if (!CREATURES_ON || !logs.length) return [];
   const mo = new Date(logs[0].at).getMonth() + 1, wk = 'w' + Math.floor(Math.min(...logs.map(l => l.at)) / (7 * 864e5)) + ':';
   const names = new Set(logs.map(flowerOf)), plants = logs.map(l => plantOf(flowerOf(l)).type);
   const hasTree = plants.some(t => ['shrub', 'tree', 'twig', 'weep', 'cane', 'pergola', 'arch'].includes(t)), hasWater = plants.includes('water');
@@ -3095,7 +3096,7 @@ function sheetCreature(k){ const c = CR[k], rec = S.items['cr_' + k], ok = rec &
   h += `<p class="hint" style="text-align:center;margin-top:12px">${esc(crHint(c))}</p>`;
   openSheet(h); }
 function viewZukan(){
-  if (zMode === 'creature') return viewZukanCreature();
+  if (CREATURES_ON && zMode === 'creature') return viewZukanCreature();
   const logs = all('log'), found = {}, first = {};
   for (const l of logs.sort((a,b) => a.at - b.at)){ const k = flowerOf(l); found[k] = (found[k]||0) + 1; if (!first[k]) first[k] = l; }
   const keys = Object.keys(FL), nf = Object.keys(found).length, mo = new Date().getMonth() + 1;
@@ -3103,7 +3104,7 @@ function viewZukan(){
   if (zFilter === 'month') list = keys.filter(k => SEASON[mo].includes(k));
   if (zFilter === 'found') list = keys.filter(k => found[k]);
   const mf = SEASON[mo].filter(k => found[k]).length;
-  let html = `<div class="seg" style="margin:6px 0 12px">${[['flower','花'],['creature','生き物']].map(([v,l]) => `<button class="${zMode===v?'on':''}" data-act="zm" data-v="${v}">${l}</button>`).join('')}</div><div class="panel zhead"><div class="ztitle">ふたりの花図鑑</div>
+  let html = `${CREATURES_ON ? `<div class="seg" style="margin:6px 0 12px">${[['flower','花'],['creature','生き物']].map(([v,l]) => `<button class="${zMode===v?'on':''}" data-act="zm" data-v="${v}">${l}</button>`).join('')}</div>` : ''}<div class="panel zhead"><div class="ztitle">ふたりの花図鑑</div>
     <div class="zcount"><b>${nf}</b> / ${keys.length}種</div>
     <div class="zbar"><i style="width:${(nf/keys.length*100).toFixed(1)}%"></i></div>
     <div class="muted" style="margin-top:6px">${mo}月に咲く花 ${mf} / ${SEASON[mo].length}種</div></div>
