@@ -9,147 +9,207 @@
 <title>うちの家事</title>
 <link rel="apple-touch-icon" href="kaji-icon.png">
 <link rel="icon" href="kaji-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#faf6ef; --card:#fff; --ink:#2b2a28; --sub:#8a857c; --line:#ece6db;
-  --h:#2f8f83; --h-soft:#dff0ed; --y:#e0785a; --y-soft:#fbe6df; --any:#a59f94; --any-soft:#efebe4;
-  --accent:#3d3a35;
+  --sand:#efe6d2; --cream:#fffbed; --paper:#fbf4e2; --navy:#1f526e; --sub:rgba(31,82,110,.62); --line:rgba(31,82,110,.10);
+  --brown:#937c60; --amber:#e3a83b; --amber-hi:#f3c15a; --red:#d4665f;
+  --h:#2fa39b; --h-soft:#d7efe9; --y:#ec8a6b; --y-soft:#fbe3d9; --any:#b5a68c; --any-soft:#efe7d6;
+  --sh:0 6px 16px rgba(31,82,110,.10), 0 2px 4px rgba(31,82,110,.06);
+  --sh-lift:0 10px 22px rgba(31,82,110,.14), 0 3px 6px rgba(31,82,110,.08);
+  --ink:var(--navy); --card:var(--cream); --accent:var(--navy);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;font-size:15px}
+html,body{margin:0;color:var(--navy);font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif;font-weight:500;font-size:15px}
+body{background-color:var(--sand);background-image:radial-gradient(rgba(147,124,96,.13) 1.6px,transparent 1.8px);background-size:18px 18px}
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 input,textarea,select{font:inherit;color:inherit}
-header{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(env(safe-area-inset-top) + 12px) 18px 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
-header .logo{width:28px;height:28px;border-radius:7px;flex:none}
-header h1{font-size:18px;margin:0;font-weight:700;flex:1}
-header .date{font-size:13px;color:var(--sub);font-weight:400;margin-left:6px}
-.me-chip{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:13px}
-.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+b,strong,h1,h2,h3{font-weight:800}
+
+/* ヘッダー：浮いた名札 */
+header{position:sticky;top:0;z-index:5;padding:calc(env(safe-area-inset-top) + 10px) 14px 8px;background:linear-gradient(var(--sand) 70%,rgba(239,230,210,0))}
+.hbar{display:flex;align-items:center;gap:10px;background:var(--cream);border-radius:999px;padding:7px 8px 7px 8px;box-shadow:var(--sh);max-width:640px;margin:0 auto}
+header .logo{width:32px;height:32px;border-radius:10px;flex:none}
+header h1{font-size:17px;margin:0;flex:1;letter-spacing:.02em}
+header .date{font-size:12px;color:var(--sub);font-weight:700;margin-left:6px}
+.me-chip{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:var(--paper);font-size:13px;font-weight:700}
+.dot{width:11px;height:11px;border-radius:50%;display:inline-block;flex:none}
 .dot.h{background:var(--h)} .dot.y{background:var(--y)} .dot.any{background:var(--any)}
-.dot.both,.wday .dots i.both,.check.on.both{background:linear-gradient(90deg,var(--h) 50%,var(--y) 50%);border-color:transparent}
-.join{font-size:12px;padding:3px 9px;border-radius:999px;border:1px dashed #cfc8bc;color:var(--sub);background:#fff}
-.togglerow{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px}
-.togglerow input{width:20px;height:20px}
-.sync{width:8px;height:8px;border-radius:50%;background:#c9c3b8}
-.sync.ok{background:#58b368}.sync.pending{background:#f0b13b}.sync.err{background:#d9534f}
-main{padding:14px 16px calc(96px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto}
-nav.tabs{position:fixed;left:0;right:0;bottom:0;background:rgba(250,246,239,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);display:flex;padding:6px 6px calc(6px + env(safe-area-inset-bottom));z-index:6}
-nav.tabs button{flex:1;padding:6px 0;font-size:11px;color:var(--sub);display:flex;flex-direction:column;align-items:center;gap:2px}
-nav.tabs button .ic{font-size:20px;line-height:1}
-nav.tabs button.on{color:var(--ink);font-weight:700}
-h2{font-size:13px;color:var(--sub);font-weight:600;margin:22px 4px 8px;letter-spacing:.04em}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.sync{width:9px;height:9px;border-radius:50%;background:#d6cbb5}
+.sync.ok{background:#7cc27a}.sync.pending{background:var(--amber)}.sync.err{background:var(--red)}
+
+main{padding:6px 14px calc(110px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto}
+
+/* 下のメニュー：角丸の色タイル */
+nav.tabs{position:fixed;left:10px;right:10px;bottom:calc(8px + env(safe-area-inset-bottom));max-width:620px;margin:0 auto;background:var(--cream);border-radius:26px;box-shadow:var(--sh-lift);display:flex;padding:8px 6px;z-index:6}
+nav.tabs button{flex:1;padding:2px 0;font-size:11px;font-weight:700;color:var(--sub);display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
+nav.tabs .tile{width:40px;height:40px;border-radius:13px;display:flex;align-items:center;justify-content:center;transition:transform .18s cubic-bezier(.3,1.6,.5,1);opacity:.55}
+nav.tabs .tile svg{width:22px;height:22px;fill:none;stroke:#fffbed;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button[data-t=today] .tile{background:var(--amber)}
+nav.tabs button[data-t=week] .tile{background:var(--h)}
+nav.tabs button[data-t=review] .tile{background:var(--y)}
+nav.tabs button[data-t=settings] .tile{background:var(--brown)}
+nav.tabs button.on{color:var(--navy)}
+nav.tabs button.on .tile{opacity:1;transform:translateY(-3px) scale(1.06)}
+.badge-n{position:absolute;top:-4px;left:calc(50% + 10px);min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--red);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px var(--cream)}
+
+/* 見出し：ちょっと傾いた札 */
+h2{display:inline-block;font-size:13px;color:var(--cream);margin:22px 4px 10px;padding:4px 14px;border-radius:999px;background:var(--brown);transform:rotate(-2deg);letter-spacing:.06em;box-shadow:0 2px 0 rgba(31,82,110,.08)}
+h2.s-morning{background:var(--amber)} h2.s-day{background:var(--h)} h2.s-night{background:#5b6fa8} h2.s-any{background:var(--brown)}
+.panel{background:var(--cream);border-radius:26px;padding:16px;box-shadow:var(--sh)}
 .muted{color:var(--sub);font-size:13px}
-/* timeline */
-.tl{position:relative;height:46px;margin:4px 2px 0}
-.tl .bar{position:absolute;left:0;right:0;top:18px;height:4px;border-radius:2px;background:var(--line)}
-.tl .now{position:absolute;top:10px;width:2px;height:20px;background:var(--accent);border-radius:1px}
-.tl .d{position:absolute;top:13px;width:14px;height:14px;margin-left:-7px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.15)}
-.tl .tick{position:absolute;top:32px;font-size:10px;color:var(--sub);transform:translateX(-50%)}
-.legend{display:flex;gap:14px;font-size:12px;color:var(--sub);margin-top:2px}
+
+/* 話しかけてくる吹き出し */
+.talk{position:relative;margin:14px 2px 6px;background:var(--cream);border-radius:34px 30px 36px 28px;padding:24px 20px 18px;box-shadow:var(--sh);min-height:86px}
+.talk .tag{position:absolute;top:-12px;left:18px;background:var(--amber);color:var(--navy);font-weight:800;font-size:13px;padding:4px 14px;border-radius:999px;transform:rotate(-4deg);box-shadow:0 2px 6px rgba(31,82,110,.12)}
+.talk .msg{font-size:16px;line-height:1.7;font-weight:700;min-height:1.7em}
+.talk .next{position:absolute;right:20px;bottom:10px;width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:9px solid var(--amber);animation:bob 1s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(3px)}}
+
+/* タイムライン */
+.tl{position:relative;height:48px;margin:2px 4px 0}
+.tl .bar{position:absolute;left:0;right:0;top:18px;height:8px;border-radius:4px;background:repeating-linear-gradient(90deg,#e9dfc9 0 12px,#e2d6bc 12px 24px)}
+.tl .now{position:absolute;top:8px;width:4px;height:28px;margin-left:-2px;background:var(--navy);border-radius:2px}
+.tl .d{position:absolute;top:13px;width:18px;height:18px;margin-left:-9px;border-radius:50%;border:3px solid var(--cream);box-shadow:0 2px 4px rgba(31,82,110,.18)}
+.tl .tick{position:absolute;top:34px;font-size:10px;font-weight:700;color:var(--sub);transform:translateX(-50%)}
+.legend{display:flex;gap:14px;font-size:12px;font-weight:700;color:var(--sub);margin-top:4px}
 .legend span{display:flex;align-items:center;gap:5px}
-/* chore cards */
-.card{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 12px 12px 0;margin-bottom:8px;overflow:hidden;position:relative}
-.card .stripe{width:5px;align-self:stretch;border-radius:0 4px 4px 0;flex:none}
-.stripe.h{background:var(--h)}.stripe.y{background:var(--y)}.stripe.any{background:var(--any)}
+
+/* 家事カード */
+.card{display:flex;align-items:center;gap:12px;background:var(--cream);border-radius:24px;padding:13px 12px 13px 16px;margin-bottom:10px;box-shadow:var(--sh);position:relative;transition:transform .15s}
+.card:active{transform:scale(.985)}
+.card .stripe{display:none}
 .card .body{flex:1;min-width:0}
-.card .name{font-weight:600;font-size:15px}
-.card .meta{font-size:12px;color:var(--sub);margin-top:2px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.card.done{background:#fdfbf7}
-.card.done .name{color:var(--sub);text-decoration:line-through;text-decoration-color:#cfc8bc}
-.check{width:38px;height:38px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;flex:none}
-.check:active{transform:scale(.92)}
-.check.on.h{background:var(--h);border-color:var(--h)}.check.on.y{background:var(--y);border-color:var(--y)}
-.thanks{font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--sub)}
-.thanks.on{background:#fff0f2;border-color:#f3c1c9;color:#d0546b}
-.badge{font-size:11px;padding:1px 7px;border-radius:999px}
-.badge.h{background:var(--h-soft);color:var(--h)}.badge.y{background:var(--y-soft);color:var(--y)}.badge.any{background:var(--any-soft);color:#6f6a62}
-.empty{text-align:center;padding:24px 10px;color:var(--sub);font-size:13px}
-.fab{position:fixed;right:18px;bottom:calc(78px + env(safe-area-inset-bottom));background:var(--accent);color:#fff;border-radius:999px;padding:12px 18px;font-weight:600;box-shadow:0 6px 18px rgba(0,0,0,.18);z-index:4}
-.minirow{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line);font-size:14px}
+.card .name{font-weight:800;font-size:15.5px}
+.card .meta{font-size:12px;color:var(--sub);margin-top:4px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-weight:700}
+.card.done{background:var(--paper);box-shadow:0 2px 6px rgba(31,82,110,.05)}
+.card.done .name{color:var(--sub)}
+.check{width:44px;height:44px;border-radius:50%;border:3px dashed #d9ccb1;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;flex:none;background:var(--paper);transition:transform .2s cubic-bezier(.3,1.8,.5,1)}
+.check:active{transform:scale(.85)}
+.check.on{border-style:solid;border-color:transparent}
+.check.on.h{background:var(--h)}.check.on.y{background:var(--y)}
+.check.pop{animation:pop .45s cubic-bezier(.3,1.8,.5,1)}
+@keyframes pop{0%{transform:scale(.5)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
+.thanks{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#fff;color:var(--sub);box-shadow:0 1px 3px rgba(31,82,110,.12)}
+.thanks.on{background:#ffe9ee;color:#d0546b}
+.badge{font-size:11px;font-weight:800;padding:2px 9px;border-radius:999px}
+.badge.h{background:var(--h-soft);color:#1f7d76}.badge.y{background:var(--y-soft);color:#c4603f}.badge.any{background:var(--any-soft);color:var(--brown)}
+.empty{text-align:center;padding:24px 10px;color:var(--sub);font-size:13px;font-weight:700}
+
+.fab{position:fixed;right:16px;bottom:calc(98px + env(safe-area-inset-bottom));background:linear-gradient(var(--amber-hi),var(--amber));color:var(--navy);border-radius:999px;padding:12px 18px;font-weight:800;box-shadow:var(--sh-lift),inset 0 0 0 2px rgba(255,255,255,.3);z-index:4}
+.fab:active{transform:translateY(2px)}
+.minirow{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:2px dotted var(--line);font-size:14px;font-weight:700}
 .minirow:last-child{border-bottom:0}
 .minirow .t{color:var(--sub);font-size:12px;width:40px;flex:none}
 .minirow .n{flex:1}
-/* week */
-.weeknav{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 10px}
-.weeknav button{padding:6px 12px;border-radius:10px;background:var(--card);border:1px solid var(--line)}
+
+/* 週 */
+.weeknav{display:flex;align-items:center;justify-content:space-between;margin:10px 2px 12px}
+.weeknav button{padding:7px 14px;border-radius:999px;background:var(--cream);box-shadow:var(--sh);font-weight:700}
+.weeknav b{background:var(--cream);padding:6px 16px;border-radius:999px;box-shadow:var(--sh)}
 .wgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.wday{background:var(--card);border:1px solid var(--line);border-radius:12px;min-height:118px;padding:6px 5px;display:flex;flex-direction:column;align-items:center}
-.wday.today{border-color:var(--accent)}
-.wday.sel{background:#f3eee5}
-.wday .wd{font-size:11px;color:var(--sub)}
-.wday .dn{font-size:15px;font-weight:700;margin-bottom:6px}
+.wday{background:var(--cream);border-radius:18px;min-height:122px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;box-shadow:var(--sh)}
+.wday.today{box-shadow:0 0 0 3px var(--amber),var(--sh)}
+.wday.sel{background:var(--paper);transform:translateY(-2px)}
+.wday .wd{font-size:11px;font-weight:700;color:var(--sub)}
+.wday .dn{font-size:16px;font-weight:800;margin-bottom:6px}
 .wday .dots{display:flex;flex-wrap:wrap;gap:3px;justify-content:center}
-.wday .dots i{width:8px;height:8px;border-radius:50%;display:block}
+.wday .dots i{width:9px;height:9px;border-radius:50%;display:block}
 .wday .dots i.h{background:var(--h)}.wday .dots i.y{background:var(--y)}
-/* review */
-.reveal{width:100%;padding:14px;border-radius:14px;border:1px dashed #cfc8bc;color:var(--sub);background:transparent}
+
+/* 振り返り */
+.reveal{width:100%;padding:16px;border-radius:24px;border:3px dashed #d9ccb1;color:var(--sub);background:var(--paper);font-weight:700}
 .split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.who{border-radius:14px;padding:12px}
+.who{border-radius:22px;padding:14px}
 .who.h{background:var(--h-soft)}.who.y{background:var(--y-soft)}
-.who .nm{font-weight:700;font-size:14px;margin-bottom:6px}
-.who ul{margin:0;padding-left:16px;font-size:13px;line-height:1.7}
-.note{padding:10px 2px;border-bottom:1px solid var(--line)}
+.who .nm{font-weight:800;font-size:14px;margin-bottom:6px}
+.who ul{margin:0;padding-left:16px;font-size:13px;line-height:1.75}
+.note{padding:12px 2px;border-bottom:2px dotted var(--line)}
 .note:last-child{border-bottom:0}
-.note .txt{font-size:14px;white-space:pre-wrap}
-.note .m{font-size:12px;color:var(--sub);margin-top:4px;display:flex;gap:8px;align-items:center}
-.btn{padding:10px 16px;border-radius:12px;background:var(--accent);color:#fff;font-weight:600}
-.btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
-.btn.small{padding:5px 10px;font-size:12px;border-radius:9px}
-.btn.danger{background:#fff;color:#c0392b;border:1px solid #f0c9c4}
-.btn.wide{width:100%;padding:13px}
+.note .txt{font-size:14px;font-weight:700;white-space:pre-wrap}
+.note .m{font-size:12px;color:var(--sub);margin-top:6px;display:flex;gap:8px;align-items:center}
+
+/* ボタン */
+.btn{padding:11px 18px;border-radius:999px;background:linear-gradient(#3b7394,var(--navy));color:var(--cream);font-weight:800;box-shadow:0 3px 8px rgba(31,82,110,.2),inset 0 0 0 2px rgba(255,255,255,.18)}
+.btn:active{transform:translateY(2px)}
+.btn.go{background:linear-gradient(var(--amber-hi),var(--amber));color:var(--navy)}
+.btn.ghost{background:#fff;color:var(--navy);box-shadow:0 2px 6px rgba(31,82,110,.12)}
+.btn.small{padding:6px 12px;font-size:12px}
+.btn.danger{background:#fff;color:var(--red);box-shadow:inset 0 0 0 2px #f1cdc9}
+.btn.wide{width:100%;padding:14px}
 .row{display:flex;gap:8px;align-items:center}
-.list-item{display:flex;align-items:center;gap:10px;padding:11px 2px;border-bottom:1px solid var(--line)}
+.list-item{display:flex;align-items:center;gap:10px;padding:12px 2px;border-bottom:2px dotted var(--line)}
 .list-item:last-child{border-bottom:0}
-.list-item .n{flex:1;min-width:0}
+.list-item .n{flex:1;min-width:0;font-weight:700}
 .list-item .n small{display:block;color:var(--sub);font-size:12px}
 .ord{display:flex;flex-direction:column}
 .ord button{font-size:11px;color:var(--sub);padding:1px 6px}
-label.f{display:block;font-size:12px;color:var(--sub);margin:14px 0 6px}
-input.t,textarea.t,select.t{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:#fff;outline:none}
-textarea.t{min-height:70px;resize:vertical}
-.seg{display:flex;background:#f1ece3;border-radius:12px;padding:3px;gap:3px}
-.seg button{flex:1;padding:8px 4px;border-radius:9px;font-size:13px;color:var(--sub)}
-.seg button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+label.f{display:block;font-size:12px;font-weight:700;color:var(--sub);margin:16px 0 6px}
+input.t,textarea.t,select.t{width:100%;padding:12px 14px;border-radius:18px;border:0;background:#fff;outline:none;box-shadow:inset 0 0 0 2px var(--line);font-weight:700}
+input.t:focus,textarea.t:focus{box-shadow:inset 0 0 0 2px var(--amber)}
+textarea.t{min-height:72px;resize:vertical}
+.seg{display:flex;background:var(--paper);border-radius:999px;padding:4px;gap:3px;box-shadow:inset 0 0 0 2px var(--line)}
+.seg button{flex:1;padding:8px 4px;border-radius:999px;font-size:13px;font-weight:700;color:var(--sub)}
+.seg button.on{background:linear-gradient(var(--amber-hi),var(--amber));color:var(--navy);box-shadow:0 2px 5px rgba(31,82,110,.15)}
 .days{display:flex;gap:5px;margin-top:8px}
-.days button{flex:1;padding:8px 0;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:13px}
-.days button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-/* sheet */
-.scrim{position:fixed;inset:0;background:rgba(30,25,20,.35);z-index:20;opacity:0;pointer-events:none;transition:opacity .2s}
+.days button{flex:1;padding:9px 0;border-radius:14px;background:#fff;font-size:13px;font-weight:700;box-shadow:inset 0 0 0 2px var(--line)}
+.days button.on{background:var(--navy);color:var(--cream);box-shadow:none}
+
+/* シート：下からせり上がるメモ帳 */
+.scrim{position:fixed;inset:0;background:rgba(31,82,110,.30);z-index:20;opacity:0;pointer-events:none;transition:opacity .2s}
 .scrim.open{opacity:1;pointer-events:auto}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--bg);border-radius:20px 20px 0 0;max-height:88vh;overflow:auto;padding:8px 18px calc(22px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .25s ease;max-width:640px;margin:0 auto}
+.sheet{position:fixed;left:8px;right:8px;bottom:8px;z-index:21;background:var(--cream);border-radius:32px;max-height:86vh;overflow:auto;padding:14px 18px calc(20px + env(safe-area-inset-bottom));transform:translateY(110%);transition:transform .32s cubic-bezier(.3,1.25,.5,1);max-width:620px;margin:0 auto;box-shadow:var(--sh-lift)}
 .sheet.open{transform:none}
-.sheet .grab{width:40px;height:4px;border-radius:2px;background:#d6cfc3;margin:4px auto 12px}
-.sheet h3{margin:4px 0 4px;font-size:19px}
+.sheet .grab{display:none}
+.sheet .x{position:sticky;top:0;float:right;width:34px;height:34px;border-radius:50%;background:var(--red);color:#fff;font-weight:800;font-size:16px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.3);z-index:2}
+.sheet h3{margin:4px 0 6px;font-size:20px}
 .defs{list-style:none;padding:0;margin:8px 0 0}
-.defs li{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.defs li{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:2px dotted var(--line);font-size:14px;font-weight:700}
 .defs li:last-child{border-bottom:0}
-.defs li .bx{width:20px;height:20px;border-radius:6px;border:2px solid #cfc8bc;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
-.defs li.on .bx{background:var(--accent);border-color:var(--accent)}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.chips button{padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:13px}
-.toast{position:fixed;left:50%;bottom:calc(140px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--accent);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;opacity:0;transition:all .2s;z-index:30;pointer-events:none;white-space:nowrap}
+.defs li .bx{width:22px;height:22px;border-radius:8px;box-shadow:inset 0 0 0 2px #d9ccb1;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
+.defs li.on .bx{background:var(--h);box-shadow:none}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.chips button{padding:7px 13px;border-radius:999px;background:#fff;font-size:13px;font-weight:700;box-shadow:0 2px 5px rgba(31,82,110,.1)}
+.chips button:active{transform:scale(.95)}
+
+/* トースト：小さな吹き出し */
+.toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(16px) scale(.9);background:var(--cream);color:var(--navy);padding:12px 20px;border-radius:24px;font-size:14px;font-weight:800;opacity:0;transition:all .25s cubic-bezier(.3,1.6,.5,1);z-index:30;pointer-events:none;white-space:nowrap;box-shadow:var(--sh-lift)}
+.toast::after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-8px;border:8px solid transparent;border-bottom:0;border-top-color:var(--cream)}
 .toast.show{opacity:1;transform:translateX(-50%)}
+
+/* きらきら */
+.spark{position:fixed;width:10px;height:10px;pointer-events:none;z-index:40;animation:spark .7s ease-out forwards}
+.spark.star{background:var(--amber-hi);clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)}
+.spark.leaf{background:#8fcf7e;border-radius:0 70% 0 70%}
+.spark.heart{color:#e2657e;font-size:16px;width:auto;height:auto;font-weight:800}
+@keyframes spark{0%{opacity:1;transform:translate(0,0) scale(.6) rotate(0)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.1) rotate(160deg)}}
+
 .onboard{min-height:70vh;display:flex;flex-direction:column;justify-content:center;gap:14px;text-align:center}
-.onboard .big{padding:22px;border-radius:18px;font-size:18px;font-weight:700;color:#fff}
+.onboard .big{padding:22px;border-radius:999px;font-size:18px;font-weight:800;color:#fff;box-shadow:var(--sh-lift)}
 .onboard .big.h{background:var(--h)}.onboard .big.y{background:var(--y)}
-.hint{font-size:12px;color:var(--sub);line-height:1.6;margin-top:8px}
+.hint{font-size:12px;color:var(--sub);line-height:1.7;margin-top:8px;font-weight:700}
+.dot.both,.wday .dots i.both,.check.on.both{background:linear-gradient(90deg,var(--h) 50%,var(--y) 50%);border-color:transparent}
+.join{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;border:2px dashed #d9ccb1;color:var(--sub);background:#fff}
+.togglerow{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:14px;font-weight:700}
+.togglerow input{width:20px;height:20px;accent-color:var(--h)}
 </style>
 </head>
 <body>
-<header>
+<header><div class="hbar">
   <img class="logo" src="kaji-icon.png" alt="">
   <h1>うちの家事<span class="date" id="hdate"></span></h1>
   <span class="sync" id="sync" title="同期"></span>
   <button class="me-chip" id="mechip"></button>
-</header>
+</div></header>
 <main id="view"></main>
 <button class="fab" id="fab">＋ 名もなき家事</button>
 <nav class="tabs" id="tabs">
-  <button data-t="today"><span class="ic">☀︎</span>今日</button>
-  <button data-t="week"><span class="ic">▦</span>週</button>
-  <button data-t="review"><span class="ic">✎</span>振り返り</button>
-  <button data-t="settings"><span class="ic">⚙︎</span>設定</button>
+  <button data-t="today"><span class="tile"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg></span>今日</button>
+  <button data-t="week"><span class="tile"><svg viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="3.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/><circle cx="9" cy="15" r=".6"/><circle cx="15" cy="15" r=".6"/></svg></span>週</button>
+  <button data-t="review"><span class="tile"><svg viewBox="0 0 24 24"><path d="M5 6.5c0-1.4 1.1-2.5 2.5-2.5h9c1.4 0 2.5 1.1 2.5 2.5v7c0 1.4-1.1 2.5-2.5 2.5H11l-4 3.5V16h0c-1.1 0-2-.9-2-2z"/><path d="M9 9h6M9 12h4"/></svg></span>振り返り</button>
+  <button data-t="settings"><span class="tile"><svg viewBox="0 0 24 24"><path d="M14.5 5.5a3.5 3.5 0 0 0-4.6 4.4L4.5 15.3a1.8 1.8 0 0 0 2.5 2.6l5.4-5.4a3.5 3.5 0 0 0 4.5-4.6l-2.1 2.1-2-.5-.5-2z"/></svg></span>設定</button>
 </nav>
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet"></div>
@@ -218,13 +278,64 @@ function freqText(c){
   return '';
 }
 
+let popId = null, talkIdx = 0, lastTyped = '', typeT = null, html0 = '';
+function talkMsg(due, logs){
+  const me = S.me, h = new Date().getHours();
+  const greet = h < 5 ? '夜ふかしだね。' : h < 10 ? 'おはよう！' : h < 17 ? 'こんにちは！' : 'おつかれさま！';
+  const doneIds = new Set(logs.map(l => l.choreId));
+  const left = due.filter(c => !doneIds.has(c.id));
+  const mine = left.filter(c => c.owner === me).length;
+  const fromOther = logs.filter(l => l.by !== me && !l.thanks);
+  const openNotes = all('note').filter(n => n.status !== 'done').length;
+  const msgs = [];
+  if (!due.length) msgs.push(`${greet} 家事を登録すると、ここで今日の様子をお知らせするね。`);
+  else if (!left.length) msgs.push(`今日の家事はぜんぶ終わり！ おつかれさま。あとはゆっくりしよう。`);
+  else msgs.push(`${greet} 今日の家事は、あと${left.length}つ。${nm(me)}の担当は${mine ? mine + 'つ' : 'もう終わり'}だよ。`);
+  if (fromOther.length) msgs.push(`${nm(other(me))}が今日${fromOther.length}つやってくれたみたい。♡ありがとう、送ってみる？`);
+  if (openNotes) msgs.push(`改善ボックスに${openNotes}つ入ってるよ。週に1回、ふたりで見てみよう。`);
+  msgs.push(['気になったことは、その場で言わずに改善ボックスへ入れておこう。','小さな家事も「名もなき家事」から残せるよ。','一緒にやった家事は「ふたりで」を押してね。','「完了の定義」はふたりで決めて、ときどき見直そう。'][new Date().getDate() % 4]);
+  return msgs[talkIdx % msgs.length];
+}
+function typeTalk(){
+  const el = document.querySelector('.talk .msg'); if (!el) return;
+  const full = el.dataset.full;
+  clearInterval(typeT);
+  if (full === lastTyped) { el.textContent = full; return; }
+  lastTyped = full; let i = 0; el.textContent = '';
+  typeT = setInterval(() => { i += 1; el.textContent = full.slice(0, i); if (i >= full.length) clearInterval(typeT); }, 38);
+}
+let actx;
+function chime(kind){
+  if (S.sound === false) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const notes = kind === 'thanks' ? [988, 1319] : kind === 'undo' ? [587, 440] : [784, 1175];
+    notes.forEach((f, i) => { const o = actx.createOscillator(), g = actx.createGain(); o.type = 'sine'; o.frequency.value = f;
+      const t = actx.currentTime + i * 0.09; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.13, t + 0.012); g.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
+      o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.42); });
+  } catch(e) {}
+}
+function burst(el, kind){
+  if (!el) return;
+  const r = el.getBoundingClientRect(), cx = r.left + r.width/2, cy = r.top + r.height/2;
+  const n = kind === 'heart' ? 6 : 10;
+  for (let i = 0; i < n; i++){
+    const s = document.createElement('span'), a = Math.random() * Math.PI * 2, d = 28 + Math.random() * 30;
+    s.className = 'spark ' + (kind === 'heart' ? 'heart' : (i % 2 ? 'star' : 'leaf'));
+    if (kind === 'heart') s.textContent = '♥';
+    s.style.left = cx + 'px'; s.style.top = cy + 'px';
+    s.style.setProperty('--dx', Math.cos(a) * d + 'px'); s.style.setProperty('--dy', (Math.sin(a) * d - (kind === 'heart' ? 34 : 0)) + 'px');
+    document.body.appendChild(s); setTimeout(() => s.remove(), 760);
+  }
+}
 const cls = l => l.both ? 'both' : l.by;
 const bg = l => l.both ? 'linear-gradient(90deg,var(--h) 50%,var(--y) 50%)' : `var(--${l.by})`;
 const whoText = l => l.both ? 'ふたりで' : nm(l.by);
 const involves = (l,k) => l.by === k || !!l.both;
 function doChore(c, both){
   if (!S.me) return;
-  put({ id:uid(), kind:'log', choreId:c.id, name:c.name, by:S.me, both:!!both, at:Date.now(), thanks:false });
+  const lg = { id:uid(), kind:'log', choreId:c.id, name:c.name, by:S.me, both:!!both, at:Date.now(), thanks:false };
+  popId = lg.id; chime('do'); put(lg); setTimeout(() => { popId = null; }, 600);
   toast(both ? `「${c.name}」ふたりでやった！` : `「${c.name}」やった！`);
 }
 let freeBoth = false;
@@ -233,7 +344,7 @@ function doFree(name){
   put({ id:uid(), kind:'log', choreId:null, name, by:S.me, both:freeBoth, at:Date.now(), thanks:false });
   toast(`「${name}」を記録しました`);
 }
-function toggleThanks(log){ put({ ...log, thanks: !log.thanks }); if (!log.thanks) toast('ありがとうを送りました'); }
+function toggleThanks(log){ if (!log.thanks) chime('thanks'); put({ ...log, thanks: !log.thanks }); if (!log.thanks) toast('ありがとうを送りました'); }
 
 /* ========== 初期データ（仮） ========== */
 function seedIfEmpty(){
@@ -315,6 +426,10 @@ function render(){
   const v = $('view');
   if (!me) { v.innerHTML = viewOnboard(); return; }
   v.innerHTML = { today:viewToday, week:viewWeek, review:viewReview, settings:viewSettings }[tab]();
+  const rb = document.querySelector('#tabs button[data-t=review]'); rb.querySelector('.badge-n')?.remove();
+  const on = all('note').filter(n => n.status !== 'done').length;
+  if (on) rb.insertAdjacentHTML('beforeend', `<span class="badge-n">${on}</span>`);
+  typeTalk();
   setSync();
 }
 
@@ -348,7 +463,7 @@ function choreCard(c, todays){
     else if (last.thanks) meta += `<span class="thanks on">♥ ありがとうが届いてる</span>`;
   }
   const ck = done ? (last.by === S.me
-      ? `<button class="check on ${cls(last)}" data-act="uncheck" data-id="${last.id}" aria-label="取り消す">✓</button>`
+      ? `<button class="check on ${cls(last)} ${last.id===popId?'pop':''}" data-act="uncheck" data-id="${last.id}" aria-label="取り消す">✓</button>`
       : last.both
         ? `<button class="check on both" data-act="leave" data-id="${last.id}" aria-label="一緒から外れる">✓</button>`
         : `<button class="check on ${last.by}" data-act="notmine" aria-label="${esc(nm(last.by))}の記録">✓</button>`) : `<button class="check" data-act="do" data-id="${c.id}" aria-label="やった"></button>`;
@@ -362,13 +477,14 @@ function viewToday(){
   const chores = choresSorted();
   const due = chores.filter(isDueToday);
   const dueIds = new Set(due.map(c => c.id));
-  let html = `<div class="panel">${timeline(logs, true)}${legend()}</div>`;
+  html0 = `<div class="talk" data-act="talk"><span class="tag">おうち</span><div class="msg" data-full="${esc(talkMsg(due, logs))}"></div><span class="next"></span></div>`;
+  let html = html0 + `<div class="panel">${timeline(logs, true)}${legend()}</div>`;
   for (const [slot,label] of SLOTS){
     const cs = due.filter(c => (c.slot||'any') === slot);
     if (!cs.length) continue;
     const withLogs = cs.map(c => [c, logs.filter(l => l.choreId === c.id)]);
     withLogs.sort((a,b) => (a[1].length>0) - (b[1].length>0));
-    html += `<h2>${label}</h2>` + withLogs.map(([c,t]) => choreCard(c,t)).join('');
+    html += `<h2 class="s-${slot}">${label}</h2>` + withLogs.map(([c,t]) => choreCard(c,t)).join('');
   }
   if (!due.length) html += `<div class="empty">今日の家事はまだ登録されていません。<br>設定から追加できます。</div>`;
   const extra = logs.filter(l => !l.choreId || !dueIds.has(l.choreId));
@@ -450,7 +566,7 @@ function viewSettings(){
     <div class="n" data-act="edit" data-id="${c.id}"><div>${esc(c.name)}</div><small>${esc(nm(c.owner))}・${SLOTS.find(s=>s[0]===(c.slot||'any'))[1]}・${freqText(c)}</small></div>
     <div class="ord"><button data-act="mv" data-id="${c.id}" data-d="-1" ${i===0?'disabled':''}>▲</button><button data-act="mv" data-id="${c.id}" data-d="1" ${i===cs.length-1?'disabled':''}>▼</button></div></div>`).join('')
     || `<div class="empty">家事がありません</div>`;
-  html += `<button class="btn wide" style="margin-top:10px" data-act="edit" data-id="">＋ 家事を追加</button></div>`;
+  html += `<button class="btn go wide" style="margin-top:12px" data-act="edit" data-id="">＋ 家事を追加</button></div>`;
 
   html += `<h2>ふたりの名前</h2><div class="panel">
     <div class="row"><span class="dot h"></span><input class="t" id="name_h" value="${esc(n.h)}"></div>
@@ -468,12 +584,15 @@ function viewSettings(){
     <button class="btn small" data-act="savesync">保存して同期</button></div>
     <p class="hint">2台のスマホで同じURLと合言葉を入れると、記録が共有されます。</p></div>`;
 
+  html += `<h2>おと</h2><div class="panel"><div class="seg">
+    <button class="${S.sound!==false?'on':''}" data-act="sound" data-v="1">鳴らす</button>
+    <button class="${S.sound===false?'on':''}" data-act="sound" data-v="0">鳴らさない</button></div></div>`;
   html += `<h2>バックアップ</h2><div class="panel row"><button class="btn small ghost" data-act="export">書き出す（JSON）</button><span class="muted">全データをファイルに保存</span></div>`;
   return html;
 }
 
 /* ========== シート ========== */
-function openSheet(html){ $('sheet').innerHTML = `<div class="grab"></div>` + html; $('sheet').classList.add('open'); $('scrim').classList.add('open'); }
+function openSheet(html){ $('sheet').innerHTML = `<button class="x" data-act="close" aria-label="閉じる">✕</button>` + html; $('sheet').classList.add('open'); $('scrim').classList.add('open'); }
 function closeSheet(){ $('sheet').classList.remove('open'); $('scrim').classList.remove('open'); }
 
 function sheetChore(id){
@@ -483,7 +602,7 @@ function sheetChore(id){
   let h = `<h3>${esc(c.name)}</h3><div class="meta muted" style="display:flex;gap:8px;align-items:center"><span class="badge ${c.owner}">担当：${esc(nm(c.owner))}</span>${freqText(c)}${ld&&!tl.length?`・前回 ${dayKey(ld).slice(5).replace('-','/')}`:''}</div>`;
   h += `<label class="f">完了の定義</label>`;
   h += (c.def||[]).length ? `<ul class="defs">${c.def.map((d,i) => `<li data-act="tick"><span class="bx">✓</span><span>${esc(d)}</span></li>`).join('')}</ul>` : `<p class="muted">まだ決まっていません（編集から追加）</p>`;
-  h += `<div class="row" style="margin-top:16px"><button class="btn" style="flex:2;padding:13px" data-act="do" data-id="${c.id}" data-close="1">やった！</button><button class="btn ghost" style="flex:1;padding:13px" data-act="doboth" data-id="${c.id}" data-close="1">ふたりで</button></div>`;
+  h += `<div class="row" style="margin-top:16px"><button class="btn go" style="flex:2;padding:13px" data-act="do" data-id="${c.id}" data-close="1">やった！</button><button class="btn ghost" style="flex:1;padding:13px" data-act="doboth" data-id="${c.id}" data-close="1">ふたりで</button></div>`;
   if (tl.length){
     h += `<label class="f">今日の記録</label><div class="panel">` + tl.map(l => `<div class="minirow"><span class="t">${hm(l.at)}</span><span class="dot ${cls(l)}"></span><span class="n">${esc(whoText(l))}</span>${l.by===S.me?`<button class="btn small ghost" data-act="undo" data-id="${l.id}" data-close="1">取り消す</button>`:''}</div>`).join('') + `</div>`;
   }
@@ -512,7 +631,7 @@ function renderEdit(){
   h += `<label class="f">完了の定義（ここまでやったら完了、を短く）</label>` +
     d.def.map((x,i) => `<input class="t e_def" style="margin-bottom:6px" value="${esc(x)}" placeholder="${['例：シンクに何も残っていない','例：台を拭く','（任意）'][i]||'（任意）'}">`).join('') +
     `<button class="btn small ghost" data-act="addline">＋ 行を追加</button>`;
-  h += `<div class="row" style="margin-top:18px"><button class="btn ghost" style="flex:1" data-act="close">キャンセル</button><button class="btn" style="flex:2" data-act="saveedit">保存</button></div>`;
+  h += `<div class="row" style="margin-top:18px"><button class="btn ghost" style="flex:1" data-act="close">キャンセル</button><button class="btn go" style="flex:2" data-act="saveedit">保存</button></div>`;
   if (!d._new) h += `<button class="btn danger wide" style="margin-top:10px" data-act="delchore" id="delbtn">この家事を削除</button>`;
   openSheet(h);
 }
@@ -545,15 +664,17 @@ document.addEventListener('click', e => {
   const L = id && S.items[id];
   switch(a){
     case 'setme': S.me = el.dataset.k; save(); render(); break;
-    case 'do': doChore(S.items[id]); if (el.dataset.close) closeSheet(); break;
+    case 'talk': talkIdx++; lastTyped = ''; render(); break;
+    case 'do': burst(el, 'star'); doChore(S.items[id]); if (el.dataset.close) closeSheet(); break;
     case 'open': sheetChore(id); break;
-    case 'thanks': toggleThanks(L); break;
+    case 'thanks': if (!L.thanks) burst(el, 'heart'); toggleThanks(L); break;
     case 'undo': remove(L); toast('取り消しました'); if (el.dataset.close) closeSheet(); break;
-    case 'doboth': doChore(S.items[id], true); if (el.dataset.close) closeSheet(); break;
+    case 'doboth': burst(el, 'star'); doChore(S.items[id], true); if (el.dataset.close) closeSheet(); break;
     case 'join': put({ ...L, both:true }); toast('一緒にやったにしました'); break;
     case 'leave': put({ ...L, both:false }); toast('一緒から外れました'); break;
-    case 'uncheck': remove(L); toast('チェックを外しました'); break;
+    case 'uncheck': chime('undo'); remove(L); toast('チェックを外しました'); break;
     case 'notmine': toast('相手がつけたチェックは外せません'); break;
+    case 'sound': S.sound = el.dataset.v === '1'; save(); render(); if (S.sound) chime('do'); break;
     case 'tick': el.classList.toggle('on'); break;
     case 'free': doFree(el.dataset.v); closeSheet(); break;
     case 'freein': doFree($('freein').value); closeSheet(); break;
