@@ -222,6 +222,8 @@ nav.tabs .tile{width:38px;height:38px}
 .zno{font-size:10px;font-weight:800;color:var(--sub)}
 .zbig{display:flex;justify-content:center;margin:4px 0 2px}
 .zbig svg{width:130px;height:130px}
+.zbig{gap:10px;align-items:flex-end}
+.zbig .zplant{width:100px;height:120px}
 </style>
 </head>
 <body>
@@ -1511,29 +1513,366 @@ function flowerSVG(key, seed){
   return DRAW[d]({ c:f.c, c2:f.c2 || shade(f.c, -.25), sp:spx }, String(seed));
 }
 
-function gardenSVG(logs, big){
-  const W = 360, H = big ? 170 : 130, ground = H - 26;
-  const items = logs.map(l => {
-    const sp = flowerOf(l), x = 18 + rnd(l.id, 1) * (W - 36), y = (big ? 40 : 34) + rnd(l.id, 2) * (ground - (big ? 48 : 42)), s = 0.95 + rnd(l.id, 3) * 0.35;
-    return { l, sp, x, y, s };
-  }).sort((a,b) => a.y - b.y);
-  let svg = `<svg class="garden" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
-    <defs><linearGradient id="gsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eaf4f2"/><stop offset="1" stop-color="#f6f0dd"/></linearGradient></defs>
-    <rect width="${W}" height="${H}" rx="20" fill="url(#gsky)"/>
-    <path d="M0 ${ground-6} Q 90 ${ground-16} 180 ${ground-8} T 360 ${ground-10} V ${H} H 0Z" fill="#a9d18e"/>
-    <path d="M0 ${ground+4} Q 120 ${ground-4} 240 ${ground+3} T 360 ${ground} V ${H} H 0Z" fill="#94c47a"/>`;
-  for (let i = 0; i < 26; i++){ const gx = (i*14 + 7) % W, gy = ground + 6 + (i*7 % 14); svg += `<path d="M${gx} ${gy} l2 -5 l2 5" fill="none" stroke="#7fb265" stroke-width="1.3" stroke-linecap="round"/>`; }
-  for (const it of items){
-    const stemTop = it.y + 6, stemBot = Math.min(H - 6, it.y + 30 + rnd(it.l.id,4)*10);
-    const lean = (rnd(it.l.id,5) - .5) * 6;
-    svg += `<g data-act="flower" data-id="${it.l.id}" class="fl">
-      <path d="M${it.x+lean} ${stemBot} Q ${it.x+lean*0.3} ${(stemTop+stemBot)/2} ${it.x} ${stemTop}" stroke="#6aa84f" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <ellipse cx="${it.x + 5 + lean*0.5}" cy="${(stemTop+stemBot)/2+4}" rx="5" ry="2.3" fill="#7dbb5e" transform="rotate(-30 ${it.x + 5 + lean*0.5} ${(stemTop+stemBot)/2+4})"/>
-      <g transform="translate(${it.x.toFixed(1)},${it.y.toFixed(1)}) scale(${it.s.toFixed(2)},${(it.s*(SIDEVIEW.has(specOf(it.sp)[0]) ? 1 : .72 + rnd(it.l.id,6)*.28)).toFixed(2)})"><g class="bloom">${flowerSVG(it.sp, it.l.id)}</g></g>
-      <rect x="${it.x-14}" y="${it.y-14}" width="28" height="${stemBot-it.y+14}" fill="transparent"/></g>`;
+/* ===== 11月の花：専用の描き方 ===== */
+const ring = (n, r, el, rot0 = 0) => Array.from({length:n}, (_, i) => `<g transform="rotate(${(i*360/n + rot0).toFixed(1)}) translate(0,${-r})">${el(i)}</g>`).join('');
+Object.assign(DRAW, {
+  pansy2(f, s){ const c = f.c, top = f.sp.topC2 ? f.c2 : (f.sp.top || shade(c, -.25)), bl = f.sp.blotch, wh = f.sp.topC2 ? shade(f.c2, -.2) : f.c2;
+    const P2 = (L, w) => PET.ruffle(L, w);
+    let o = `<g transform="rotate(-30) translate(0,-.6)"><path d="${P2(11, 5.6)}" fill="${top}" stroke="${shade(top,-.3)}" stroke-opacity=".4" stroke-width=".3"/></g><g transform="rotate(30) translate(0,-.6)"><path d="${P2(11, 5.6)}" fill="${shade(top, .05)}" stroke="${shade(top,-.3)}" stroke-opacity=".4" stroke-width=".3"/></g>`;
+    o += `<g transform="rotate(-102)"><path d="${P2(9.6, 5.2)}" fill="${c}" stroke="${shade(c,-.3)}" stroke-opacity=".35" stroke-width=".3"/></g><g transform="rotate(102)"><path d="${P2(9.6, 5.2)}" fill="${c}" stroke="${shade(c,-.3)}" stroke-opacity=".35" stroke-width=".3"/></g><g transform="rotate(180)"><path d="${P2(11, 7)}" fill="${shade(c, .04)}" stroke="${shade(c,-.3)}" stroke-opacity=".35" stroke-width=".3"/></g>`;
+    if (bl) o += `<path d="M-6 -2 Q -5 4 0 7.5 Q 5 4 6 -2 Q 3 1 0 .8 Q -3 1 -6 -2Z" fill="${bl}" opacity=".92"/><path d="M-5.8 -4 Q -4 -2.4 -3 -1 M5.8 -4 Q 4 -2.4 3 -1" stroke="${bl}" stroke-width="1.4" stroke-linecap="round" opacity=".9"/>`;
+    else o += [-102, 102, 180].map(r => `<g transform="rotate(${r})">${[-1.5, -.6, .6, 1.5].map(x => `<path d="M0 -.6 L${x*1.7} ${-(4.4 + Math.abs(x)*.8)}" stroke="${wh}" stroke-width=".45" stroke-linecap="round"/>`).join('')}</g>`).join('');
+    return o + `<path d="M-1.6 -.4 Q 0 2.6 1.6 -.4 Q 0 .6 -1.6 -.4Z" fill="#f6cf3a"/><circle r=".9" cy="-.6" fill="#fff" opacity=".85"/><circle r=".45" cy="-.6" fill="#7aa04a"/>`; },
+  rose2(f, s){ const c = f.c, dk = shade(c, -.3), lt = shade(c, .25), g = grad(shade(c, -.2), c, lt); let o = `<defs>${g.def}</defs>`;
+    const outer = (r, L, W, cl) => `<g transform="rotate(${r})"><path d="M0 -2 C ${W} -3 ${W*1.1} ${-L*.7} ${W*.35} ${-L} Q 0 ${-L*.9} ${-W*.2} ${-L*1.02} C ${-W*1.1} ${-L*.75} ${-W} -3 0 -2Z" fill="${cl}" stroke="${dk}" stroke-opacity=".4" stroke-width=".35"/><path d="M${W*.35} ${-L} Q ${W*.1} ${-L*.82} ${-W*.2} ${-L*1.02}" fill="none" stroke="${lt}" stroke-width=".6"/></g>`;
+    for (let i = 0; i < 5; i++) o += outer(i*72 + 10 + (rnd(s,i)-.5)*10, 12, 6.4, `url(#${g.id})`);
+    for (let i = 0; i < 5; i++) o += outer(i*72 + 46 + (rnd(s,i+9)-.5)*10, 9.4, 5.6, shade(c, .02));
+    o += `<path d="M-5.6 1.4 C -6.4 -4.6 -2 -7.4 1.4 -6.6 C 5.6 -5.6 6.2 -1 4.8 2 C 3 5.4 -3 5.6 -5.6 1.4Z" fill="${shade(c, -.06)}" stroke="${dk}" stroke-opacity=".45" stroke-width=".4"/>`;
+    o += `<path d="M-3.6 1.2 C -4.4 -3 -1 -5 1.6 -4.2 C 4 -3.4 4.2 .2 2.4 2 C .6 3.6 -2.4 3.2 -3.6 1.2Z" fill="${c}" stroke="${dk}" stroke-opacity=".5" stroke-width=".4"/>`;
+    return o + `<path d="M-1.6 .6 C -2 -1.8 .6 -2.8 1.6 -1.4 C 2.4 -.2 1.4 1.4 0 1.2" fill="none" stroke="${dk}" stroke-width=".6" stroke-linecap="round"/><path d="M-4.4 -1 Q -3.4 -3.6 -.6 -4" fill="none" stroke="${lt}" stroke-width=".5"/>`; },
+  geranium(f, s){ const c = f.c, c2 = f.c2; let o = '';
+    for (let i = 0; i < 9; i++){ const a = i * 2.4, d = 2.9 * Math.sqrt(i + .4), x = Math.cos(a) * d, y = Math.sin(a) * d * .85 - .5, col = i % 3 ? c : c2;
+      o += `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${(rnd(s,i)*72).toFixed(0)})">${[0,72,144,216,288].map(q => `<g transform="rotate(${q})"><path d="${PET.round(3.6, 2)}" fill="${col}" stroke="${shade(c,-.35)}" stroke-opacity=".4" stroke-width=".2"/><path d="M0 -.6 L0 -2.6" stroke="${shade(c,-.35)}" stroke-width=".25" opacity=".5"/></g>`).join('')}<circle r=".5" fill="${shade(c,-.3)}"/></g>`; }
+    return o; },
+  gerbera(f, s){ const c = f.c; return petals({ n:26, shape:'ray', L:12, W:2.8, c:shade(c, -.08), off:7, vein:false }, s+'a') + petals({ n:24, shape:'ray', L:10.6, W:2.8, c }, s) + petals({ n:22, shape:'ray', L:5.8, W:1.3, c:shade(c, .12), off:4, vein:false }, s+'c') + center({ type:'disc', c:f.c2, r:3.6 }, s) + `<circle r="1.6" fill="#3a4a2a"/>`; },
+  calibrachoa(f, s){ const c = f.c, dk = shade(c, -.32); let o = `<circle r="9.6" fill="${c}" stroke="${dk}" stroke-opacity=".4" stroke-width=".4"/>`;
+    o += ring(5, 9.4, () => `<circle r="2.6" fill="${c}"/>`);
+    o += Array.from({length:5}, (_, i) => `<path d="M0 0 L0 -8.5" stroke="${dk}" stroke-width=".55" opacity=".6" transform="rotate(${i*72 + 36})"/>`).join('');
+    return o + `<circle r="3.6" fill="#f6cf3a"/>` + Array.from({length:10}, (_, i) => `<path d="M0 -1 L0 -4.6" stroke="${shade('#f6cf3a', -.4)}" stroke-width=".35" transform="rotate(${i*36})"/>`).join('') + `<circle r="1" fill="#6a5a2a"/>`; },
+  begonia(f, s){ const c = f.c; return `<g transform="rotate(90)"><path d="${PET.round(10, 8.4)}" fill="${c}" stroke="${shade(c,-.3)}" stroke-opacity=".4" stroke-width=".35"/></g><g transform="rotate(-90)"><path d="${PET.round(10, 8.4)}" fill="${c}" stroke="${shade(c,-.3)}" stroke-opacity=".4" stroke-width=".35"/></g><path d="${PET.oval(6.6, 4.6)}" fill="${shade(c, .1)}" stroke="${shade(c,-.3)}" stroke-opacity=".35" stroke-width=".3"/><g transform="rotate(180)"><path d="${PET.oval(6.6, 4.6)}" fill="${shade(c, .1)}" stroke="${shade(c,-.3)}" stroke-opacity=".35" stroke-width=".3"/></g>` + Array.from({length:14}, (_, i) => `<circle cx="${(Math.cos(i*2.4)*Math.sqrt(i)*.7).toFixed(1)}" cy="${(Math.sin(i*2.4)*Math.sqrt(i)*.7).toFixed(1)}" r=".9" fill="${f.c2}"/>`).join(''); },
+  marigold(f, s){ const c = f.c; let o = '';
+    [[18, 11.5, 4.6, -.18], [16, 9.8, 4.4, -.1], [14, 8, 4.2, -.02], [12, 6, 4, .06], [9, 4, 3.4, .14], [6, 2.2, 2.4, .2]].forEach(([n, L, W, k], i) => { o += petals({ n, shape:'ruffle', L, W, c:shade(c, k), off:i*13, vein:i < 2, cup:i*.06 }, s+i); });
+    return o; },
+  frenchmarigold(f, s){ const c = f.c, ed = f.c2; let o = petals({ n:8, shape:'ruffle', L:11, W:8.4, c, base:shade(c, -.25), tip:ed }, s+'a') + petals({ n:7, shape:'ruffle', L:7.2, W:6.4, c:shade(c, .05), off:24, tip:ed, cup:.1 }, s+'b');
+    return o + petals({ n:5, shape:'ruffle', L:4, W:4, c:ed, off:10, vein:false }, s+'c') + `<circle r="1.2" fill="${shade(ed, -.3)}"/>`; },
+  salvia(f, s){ const c = f.c, cal = shade(c, -.12); let o = `<path d="M0 14 L0 -13" stroke="#5f9a45" stroke-width=".9"/>`;
+    for (let i = 0; i < 8; i++){ const y = 11 - i * 3.2, side = i % 2 ? 1 : -1, k = 1 - i * .06;
+      o += `<g transform="translate(0,${y}) rotate(${side * 52}) scale(${k})"><path d="M-1.6 0 C -2 -3 -1.4 -4.6 0 -5 C 1.4 -4.6 2 -3 1.6 0Z" fill="${cal}" stroke="${shade(c,-.3)}" stroke-opacity=".4" stroke-width=".25"/><path d="M-.9 -4.4 C -1.2 -8 -.6 -10.6 .6 -11.6 C 1.4 -10 1.2 -7 .9 -4.4Z" fill="${c}" stroke="${shade(c,-.3)}" stroke-opacity=".4" stroke-width=".25"/><path d="M.5 -11.4 Q 1.8 -11 2.2 -9.6" stroke="${c}" stroke-width=".8" fill="none" stroke-linecap="round"/></g>`; }
+    return o + `<path d="M-1.2 -13 Q 0 -16 1.2 -13Z" fill="${cal}"/>`; },
+  dahlia(f, s){ const c = f.c; let o = '';
+    [[16, 12, 5.2, -.14, 0, 0], [16, 10, 5, -.07, 11, .05], [14, 8, 4.6, 0, 3, .12], [12, 6, 4, .06, 15, .2], [10, 4, 3.2, .12, 6, .28], [7, 2.2, 2.2, .18, 20, .3]]
+      .forEach(([n, L, W, k, off, cup], i) => { o += petals({ n, shape:'pointed', L, W, c:shade(c, k), off, vein:i < 3, cup }, s+i); });
+    return o + `<circle r=".9" fill="${shade(c, -.2)}"/>`; },
+  susuki(f, s){ const c = f.c; let o = `<path d="M0 14 Q .4 2 -.4 -6" stroke="#b9a676" stroke-width=".8" fill="none"/>`;
+    for (let i = 0; i < 9; i++){ const a = -50 + i * 12 + (rnd(s,i)-.5)*6, l = 12 + rnd(s, i+20) * 5;
+      o += `<g transform="translate(-.4,-6) rotate(${a.toFixed(0)})"><path d="M0 0 Q ${1.4} ${-l*.5} ${(rnd(s,i+40)-.5)*3} ${-l}" stroke="${shade(c, -.15)}" stroke-width=".5" fill="none"/>${Array.from({length:7}, (_, j) => `<path d="M0 ${-l*(j+1)/8} q 1.2 -.6 2.4 -2.4" stroke="${j%2 ? c : '#fbf8f0'}" stroke-width=".8" fill="none" stroke-linecap="round" opacity=".9"/><path d="M0 ${-l*(j+1)/8} q -1.2 -.6 -2.2 -2.2" stroke="${j%2 ? '#fbf8f0' : c}" stroke-width=".7" fill="none" stroke-linecap="round" opacity=".85"/>`).join('')}</g>`; }
+    return o; },
+  rindou(f, s){ const c = f.c, g = grad(shade(c, -.25), c, shade(c, .15)); let o = `<defs>${g.def}</defs><path d="M0 14 L0 0" stroke="#5f8a45" stroke-width=".9"/>`;
+    const bell = (x, y, r, k) => `<g transform="translate(${x},${y}) rotate(${r}) scale(${k})"><path d="M-2.6 6 L -2.8 -2 Q -4.6 -5 -4.4 -7.6 L -2.6 -6.4 L -1.4 -9 L 0 -6.8 L 1.4 -9 L 2.6 -6.4 L 4.4 -7.6 Q 4.6 -5 2.8 -2 L 2.6 6 Q 0 7.4 -2.6 6Z" fill="url(#${g.id})" stroke="${shade(c,-.35)}" stroke-opacity=".45" stroke-width=".35"/><path d="M0 5 L0 -6" stroke="${shade(c,-.35)}" stroke-width=".35" opacity=".5"/>${[0,1,2].map(j => `<circle cx="${(j-1)*.9}" cy="${-4 + j*.7}" r=".3" fill="#e8eaf6"/>`).join('')}<path d="M-2.6 6 Q 0 8.6 2.6 6 L 1.6 8.4 Q 0 9 -1.6 8.4Z" fill="#6a9a50"/></g>`;
+    return o + bell(-4.8, -1, -18, .82) + bell(4.6, -.4, 16, .86) + bell(0, -3.4, 0, 1); },
+  nogiku(f, s){ const c = f.c, n = f.sp.n || 20; return petals({ n, shape:'strap', L:11, W:2.2, c, vein:false, jit:1.6 }, s) + center({ type:'disc', c:f.c2, r:3 }, s); },
+  tsuwabuki(f, s){ const n = 11; let o = '';
+    for (let i = 0; i < n; i++){ const r = i * 360 / n + (rnd(s,i)-.5)*10, L = 11 * (.9 + rnd(s, i+30)*.2);
+      o += `<g transform="rotate(${r.toFixed(1)})"><path d="${PET.ray(L, 1.9)}" fill="${f.c}" stroke="${shade(f.c,-.3)}" stroke-opacity=".4" stroke-width=".3"/><path d="M0 -2 L0 ${-L*.8}" stroke="${shade(f.c,-.2)}" stroke-width=".3" opacity=".5"/></g>`; }
+    return o + center({ type:'disc', c:f.c2, r:3.6 }, s); },
+  kiku(f, s){ const c = f.c; let o = petals({ n:24, shape:'spoon', L:12.5, W:3, c:shade(c, -.14), off:7.5, jit:1.3 }, s+'a') + petals({ n:22, shape:'spoon', L:10.6, W:3, c:shade(c, -.06), jit:1.3 }, s+'b');
+    for (let i = 0; i < 16; i++){ const a = i * 2.4, d = Math.sqrt(i + .5) * 1.6; o += `<g transform="translate(${(Math.cos(a)*d).toFixed(1)},${(Math.sin(a)*d - 1).toFixed(1)}) rotate(${(a*57.3+90).toFixed(0)})"><path d="M-1.6 1 Q -1.8 -2.6 0 -3.4 Q 1.8 -2.6 1.6 1 Q 0 -.4 -1.6 1Z" fill="${shade(c, .04 + i*.01)}" stroke="${shade(c,-.3)}" stroke-opacity=".4" stroke-width=".25"/></g>`; }
+    return o; },
+  kogiku(f, s){ const c = f.c; return petals({ n:18, shape:'spoon', L:11, W:3, c:shade(c, -.1), off:10 }, s+'a') + petals({ n:16, shape:'spoon', L:8.4, W:3, c }, s) + petals({ n:12, shape:'spoon', L:5.6, W:2.6, c:shade(c, .08), off:6, vein:false, cup:.15 }, s+'c') + center({ type:'disc', c:f.c2, r:2.2 }, s); },
+  kouteidahlia(f, s){ const c = f.c; let o = '';
+    for (let i = 0; i < 8; i++){ const r = i * 45 + (rnd(s,i)-.5)*8; o += `<g transform="rotate(${r.toFixed(1)})"><path d="${PET.pointed(12.5, 4)}" fill="${c}" stroke="${shade(c,-.3)}" stroke-opacity=".45" stroke-width=".35"/><path d="M0 -1.5 L0 -10" stroke="${shade(c,-.25)}" stroke-width=".35" opacity=".5"/><path d="M-1.4 -2 Q -1.6 -6 -.6 -9 M1.4 -2 Q 1.6 -6 .6 -9" stroke="${shade(c,-.2)}" stroke-width=".25" fill="none" opacity=".4"/></g>`; }
+    return o + center({ type:'disc', c:f.c2, r:3.2 }, s); },
+  sazanka(f, s){ const c = f.c, n = 6; return petals({ n, shape:'ruffle', L:11.5, W:8.6, c, base:shade(c, -.06), tip:shade(c, .12), jit:1.4 }, s) + center({ type:'stamens', c:'#f6e6a0', n:30, len:4.6, anth:'#e9b83a' }, s) + `<circle r="1.3" fill="#f2e8b0"/>`; },
+  yatsude(f, s){ let o = '';
+    const ball = (x, y, r) => { let b = `<g transform="translate(${x},${y})"><path d="M0 0 L0 ${r+3}" stroke="#d8d3a0" stroke-width=".4"/>`; for (let i = 0; i < 12; i++){ const a = i * 2.4, d = Math.sqrt(i + .5) * r * .32; b += `<line x1="0" y1="${r*.9}" x2="${(Math.cos(a)*d).toFixed(1)}" y2="${(Math.sin(a)*d).toFixed(1)}" stroke="#e8e4c0" stroke-width=".25"/><circle cx="${(Math.cos(a)*d).toFixed(1)}" cy="${(Math.sin(a)*d).toFixed(1)}" r=".85" fill="${i%3 ? f.c : f.c2}"/>`; } return b + `</g>`; };
+    o += `<path d="M0 12 L0 2 M0 4 L-6 -2 M0 4 L6 -2 M0 2 L0 -5" stroke="#cfcaa0" stroke-width=".7" fill="none"/>`;
+    return o + ball(-6, -3, 4.2) + ball(6, -3, 4.2) + ball(0, -7, 4.6); },
+  biwa(f, s){ let o = `<path d="M0 12 L0 -2 M0 3 L-4 -4 M0 1 L5 -5" stroke="#9a7a5a" stroke-width=".8" fill="none"/>`;
+    for (let i = 0; i < 12; i++){ const x = (rnd(s,i)-.5)*13, y = -3 - rnd(s,i+20)*9, open = i % 3 === 0;
+      o += open ? `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)})">${[0,72,144,216,288].map(q => `<path d="${PET.round(2.6, 1.3)}" fill="${f.c}" transform="rotate(${q})"/>`).join('')}<circle r=".6" fill="#e8d36a"/></g>`
+        : `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><ellipse rx="1.6" ry="1.9" fill="#b08a62"/><ellipse rx="1" ry="1.2" cx="-.4" cy="-.4" fill="#c9a47c"/></g>`; }
+    return o; },
+  poinsettia(f, s){ const c = f.c, dk = shade(c, -.25), g = grad(dk, c, shade(c, .1)); let o = `<defs>${g.def}</defs>`;
+    const br = (r, L, W, cl) => `<g transform="rotate(${r.toFixed(1)})"><path d="M0 0 C ${W} ${-L*.25} ${W*.9} ${-L*.62} ${W*.25} ${-L*.92} L 0 ${-L} L ${-W*.25} ${-L*.92} C ${-W*.9} ${-L*.62} ${-W} ${-L*.25} 0 0Z" fill="${cl}" stroke="${shade(c,-.4)}" stroke-opacity=".45" stroke-width=".35"/><path d="M0 -1 L0 ${-L*.88}" stroke="${shade(c,-.35)}" stroke-width=".4" opacity=".6"/>${[.3,.5,.7].map(t => `<path d="M0 ${-L*t} L ${W*.55} ${-L*(t+.12)} M0 ${-L*t} L ${-W*.55} ${-L*(t+.12)}" stroke="${shade(c,-.35)}" stroke-width=".25" opacity=".45"/>`).join('')}</g>`;
+    for (let i = 0; i < 7; i++) o += br(i * 51.4 + 25 + (rnd(s,i)-.5)*8, 13, 4.2, `url(#${g.id})`);
+    for (let i = 0; i < 6; i++) o += br(i * 60 + (rnd(s,i+9)-.5)*8, 9, 3.4, c);
+    return o + Array.from({length:8}, (_, i) => `<g transform="translate(${(Math.cos(i*.785)*1.9).toFixed(1)},${(Math.sin(i*.785)*1.9).toFixed(1)})"><circle r=".95" fill="#7aa04a"/><circle r=".5" fill="${i%2 ? '#e9c93a' : '#d84a3a'}"/></g>`).join(''); },
+  cyclamen2(f, s){ const c = f.c, g = grad(shade(c, -.32), c, shade(c, .2)); let o = `<defs>${g.def}</defs>`;
+    for (const [r, k, tw] of [[-40, .9, -8], [-14, 1, 4], [12, 1.04, -4], [38, .92, 8], [0, .8, 0]]) o += `<g transform="rotate(${r}) scale(${k})"><path d="M0 1.6 C 3.4 -2 ${3 + tw*.1} -9.6 ${tw*.12} -14 C ${-3 + tw*.1} -9.6 -3.4 -2 0 1.6Z" fill="url(#${g.id})" stroke="${shade(c,-.35)}" stroke-opacity=".45" stroke-width=".35"/><path d="M0 0 Q ${tw*.06} -6 ${tw*.1} -11" stroke="${shade(c,-.3)}" stroke-width=".3" fill="none" opacity=".5"/></g>`;
+    return o + `<path d="M-3.4 1.4 Q 0 4.8 3.4 1.4 Q 2.4 4.6 0 4.8 Q -2.4 4.6 -3.4 1.4Z" fill="${shade(c, -.45)}"/><path d="M0 4.8 Q 1 7.6 .2 10" stroke="#6a5a4a" stroke-width=".8" fill="none"/>`; },
+  habotan(f, s){ const inner = f.c, outer = f.c2; let o = '';
+    [[9, 12.5, 9.5, outer, -.12, 0], [8, 10.5, 8.6, shade(outer, .06), 0, 20], [8, 8.4, 7.4, shade(inner, -.18), 0, 8, .1], [7, 6.2, 6, inner, 0, 30, .15], [6, 4, 4.4, shade(inner, .12), 0, 12, .2], [5, 2.2, 3, shade(inner, .25), 0, 40, .25]]
+      .forEach(([n, L, W, c, k, off, cup], i) => { o += petals({ n, shape:'ruffle', L, W, c:shade(c, k || 0), off, vein:i < 3, cup:cup || 0, jit:1.3 }, s+i); });
+    return o; },
+  shakoba(f, s){ const c = f.c, lt = shade(c, .3), g = grad(lt, shade(c, .1), c); return `<defs>${g.def}</defs><g transform="rotate(-20)"><path d="M0 8 C -1.6 4 -1.6 0 0 -2 C 1.6 0 1.6 4 0 8Z" fill="${lt}"/>
+      <path d="M0 -1 C -3 -3 -8 -4 -11 -2 C -8 -5.6 -3.4 -6 0 -3Z" fill="url(#${g.id})" stroke="${shade(c,-.3)}" stroke-opacity=".4" stroke-width=".3"/><path d="M0 -1 C 3 -3 8 -4 11 -2 C 8 -5.6 3.4 -6 0 -3Z" fill="url(#${g.id})" stroke="${shade(c,-.3)}" stroke-opacity=".4" stroke-width=".3"/>
+      <path d="M0 -2.4 C -2.4 -6 -6.4 -9.6 -9.4 -9 C -6 -11 -2 -8.6 0 -5Z" fill="${c}" stroke="${shade(c,-.3)}" stroke-opacity=".4" stroke-width=".3"/><path d="M0 -2.4 C 2.4 -6 6.4 -9.6 9.4 -9 C 6 -11 2 -8.6 0 -5Z" fill="${c}" stroke="${shade(c,-.3)}" stroke-opacity=".4" stroke-width=".3"/>
+      <path d="M0 -4 C -1 -8 -.4 -11 0 -12 C .4 -11 1 -8 0 -4Z" fill="${shade(c, -.05)}"/>${[-.8, 0, .8].map(x => `<path d="M0 -3 Q ${x} -9 ${x*2.2} -14.5" stroke="${lt}" stroke-width=".35" fill="none"/><circle cx="${x*2.2}" cy="-14.6" r=".45" fill="#f6e6a0"/>`).join('')}<path d="M0 -3 Q -.2 -10 .2 -16" stroke="${shade(c,-.15)}" stroke-width=".5" fill="none"/></g>`; },
+  stock(f, s){ const c = f.c; let o = `<path d="M0 14 L0 -14" stroke="#7a9a6a" stroke-width=".9"/>`;
+    for (let i = 0; i < 10; i++){ const y = 11 - i * 2.6, side = i % 2 ? 1 : -1, k = 1 - i * .07, x = side * 2.6 * k, col = i % 3 ? c : shade(c, .1);
+      o += i > 7 ? `<ellipse cx="${x*.5}" cy="${y}" rx="${1.6*k}" ry="${2.2*k}" fill="#8fb27a"/>` : `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${k.toFixed(2)})">${[0, 90, 180, 270].map(q => `<path d="${PET.ruffle(3.6, 2.6)}" fill="${col}" stroke="${shade(c,-.3)}" stroke-opacity=".4" stroke-width=".25" transform="rotate(${q + 45})"/>`).join('')}${[0, 90, 180, 270].map(q => `<path d="${PET.round(2.2, 1.6)}" fill="${shade(col, .08)}" transform="rotate(${q})"/>`).join('')}<circle r=".5" fill="${shade(c,-.35)}"/></g>`; }
+    return o; },
+  wintercosmos(f, s){ return petals({ n:8, shape:'notch', L:11, W:6.4, c:f.c, base:shade(f.c, -.25), tip:'#fbf6dc' }, s) + center({ type:'disc', c:f.c2, r:3 }, s); },
+  erica(f, s){ const c = f.c; let o = `<path d="M0 14 L0 -14" stroke="#7a6a4a" stroke-width=".7"/>`;
+    for (let i = 0; i < 26; i++){ const y = 12 - i * 1.05, side = (i % 3) - 1, k = 1 - i * .02;
+      o += `<g transform="translate(${(side * 2.2 + (rnd(s,i)-.5)).toFixed(1)},${y.toFixed(1)}) scale(${k.toFixed(2)})"><path d="M0 -1.6 C 1.4 -1.6 1.6 .4 1 1.6 L -1 1.6 C -1.6 .4 -1.4 -1.6 0 -1.6Z" fill="${i%2 ? c : shade(c, .12)}" stroke="${shade(c,-.3)}" stroke-opacity=".35" stroke-width=".2"/><circle cy="1.7" r=".35" fill="${shade(c,-.4)}"/></g>`; }
+    for (let i = 0; i < 10; i++) o += `<line x1="0" y1="${12 - i*2.4}" x2="${(i%2?1:-1)*1.6}" y2="${11 - i*2.4}" stroke="#4f7a3f" stroke-width=".4"/>`;
+    return o; },
+  rosemary(f, s){ const c = f.c; let o = `<path d="M0 14 Q -.8 0 .6 -14" stroke="#6a7a5a" stroke-width=".8" fill="none"/>`;
+    for (let i = 0; i < 14; i++){ const y = 13 - i * 2, side = i % 2 ? 1 : -1; o += `<path d="M0 ${y} q ${side*3.4} -.6 ${side*4.4} -2.2" stroke="#4f7a4f" stroke-width=".9" fill="none" stroke-linecap="round"/><path d="M0 ${y} q ${side*3.4} -.6 ${side*4.4} -2.2" stroke="#a9c4a0" stroke-width=".25" fill="none"/>`; }
+    for (let i = 0; i < 6; i++){ const y = 4 - i * 3.2, side = i % 2 ? 1 : -1;
+      o += `<g transform="translate(${side * 1.6},${y}) rotate(${side * 30})"><path d="M0 0 C -2 -1 -2.4 -3.4 -.6 -4.4 C .6 -3.6 .8 -1.6 0 0Z" fill="${c}"/><path d="M0 0 C 2.2 .4 3 1.6 2.4 2.6 C 1 2.2 .2 1.2 0 0Z" fill="${shade(c, .15)}"/><path d="M0 0 C -.6 1.4 -2 2 -2.8 1.6 C -2 .6 -1 0 0 0Z" fill="${shade(c, .1)}"/><path d="M-.3 -1 Q -1 -2.4 -.4 -3.6" stroke="${shade(c,-.4)}" stroke-width=".25" fill="none"/></g>`; }
+    return o; },
+  alyssum(f, s){ const c = f.c; let o = '';
+    for (let i = 0; i < 22; i++){ const a = i * 2.4, d = Math.sqrt(i + .5) * 2.2, x = Math.cos(a) * d, y = Math.sin(a) * d * .7;
+      o += `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${(rnd(s,i)*90).toFixed(0)})">${[0,90,180,270].map(q => `<path d="${PET.round(1.9, 1.3)}" fill="${i%4 ? c : shade(c, -.06)}" stroke="${shade(c,-.3)}" stroke-opacity=".35" stroke-width=".15" transform="rotate(${q})"/>`).join('')}<circle r=".38" fill="${f.c2 === c ? '#d8c060' : shade(f.c2, -.3)}"/></g>`; }
+    return o; },
+  ageratum(f, s){ const c = f.c; let o = '';
+    for (let b = 0; b < 7; b++){ const a = b * 2.4, d = b ? 3.4 + (b % 2) * 2.2 : 0, x = Math.cos(a) * d, y = Math.sin(a) * d * .8;
+      o += `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><circle r="2.8" fill="${shade(c, -.1)}"/>${Array.from({length:18}, (_, i) => { const l = 2.2 + rnd(s, b*30+i) * 1.6; return `<line x1="0" y1="0" x2="0" y2="${-l}" stroke="${i%3 ? c : f.c2}" stroke-width=".5" stroke-linecap="round" transform="rotate(${i*20 + rnd(s,b+i)*10})"/>`; }).join('')}</g>`; }
+    return o; },
+  himetsuru(f, s){ const c = f.c; let o = '';
+    for (const [x, y, r] of [[-3.6, 1.6, 3.6], [3.4, 2.2, 3.2], [0, -2.6, 4]]){ o += `<g transform="translate(${x},${y})"><circle r="${r}" fill="${shade(c, -.06)}"/>`;
+      for (let i = 0; i < 22; i++){ const a = i * 2.4, d = Math.sqrt(i / 22) * r * .9; o += `<circle cx="${(Math.cos(a)*d).toFixed(2)}" cy="${(Math.sin(a)*d).toFixed(2)}" r="${(r*.2).toFixed(2)}" fill="${i%2 ? c : f.c2}"/>`; }
+      o += `<circle r="${r}" fill="none" stroke="${shade(c,-.3)}" stroke-opacity=".3" stroke-width=".3"/><circle cx="${-r*.3}" cy="${-r*.35}" r="${r*.3}" fill="#fff" opacity=".25"/></g>`; }
+    return o; },
+  goldenrod(f, s){ const c = f.c; let o = `<path d="M0 14 L0 -6" stroke="#7a9a5a" stroke-width=".9"/>`;
+    for (let i = 0; i < 7; i++){ const y = 8 - i * 2.6, side = i % 2 ? 1 : -1, l = 9 - i * .8;
+      o += `<path d="M0 ${y} Q ${side*l*.6} ${y-3} ${side*l} ${y-1}" stroke="#7a9a5a" stroke-width=".5" fill="none"/>`;
+      for (let j = 0; j < 7; j++){ const t = (j + 1) / 8, px = side * l * t, py = y - 3 * Math.sin(t * Math.PI) - t; o += `<circle cx="${px.toFixed(1)}" cy="${(py - .9).toFixed(1)}" r="${(.9 - t*.2).toFixed(2)}" fill="${j%2 ? c : f.c2}"/>`; } }
+    for (let j = 0; j < 8; j++) o += `<circle cx="${((rnd(s,j)-.5)*1.6).toFixed(1)}" cy="${(-7 - j*1.1).toFixed(1)}" r=".9" fill="${j%2 ? c : f.c2}"/>`;
+    return o; },
+  mexsage(f, s){ const c = f.c; let o = `<path d="M-4 14 Q 2 2 6 -12" stroke="#6a8a5a" stroke-width=".9" fill="none"/>`;
+    for (let i = 0; i < 10; i++){ const t = i / 10, x = -4 + 10 * t * t + 0, y = 14 - 26 * t, side = i % 2 ? 1 : -1;
+      o += `<g transform="translate(${(x + side*1.2).toFixed(1)},${y.toFixed(1)}) rotate(${side*40 + 20})"><path d="M-1.4 1 C -1.8 -1.6 -1 -3.6 0 -4 C 1 -3.6 1.8 -1.6 1.4 1Z" fill="${c}" stroke="${shade(c,-.3)}" stroke-opacity=".4" stroke-width=".25"/><path d="M-1 -1 C -1.2 -2.6 -.6 -3.6 0 -3.6 C .6 -3.6 1.2 -2.6 1 -1" fill="none" stroke="${shade(c, .35)}" stroke-width=".35"/>${i % 3 === 0 ? `<path d="M0 -3.6 Q 1 -6 2.6 -6.4 Q 1.6 -5 .8 -3.4Z" fill="#fbf8ff"/>` : ''}</g>`; }
+    return o; },
+  pinesage(f, s){ const c = f.c; let o = `<path d="M0 14 L0 -13" stroke="#6a9a4a" stroke-width=".8"/>`;
+    for (let i = 0; i < 7; i++){ const y = 10 - i * 3.6, side = i % 2 ? 1 : -1;
+      o += `<g transform="translate(0,${y}) rotate(${side * 30})"><path d="M-.6 0 L-.8 -2 L .8 -2 L .6 0Z" fill="#8a4a3a"/><path d="M-.9 -2 C -1.1 -6 -.8 -9 .2 -10 C 1.2 -9 1.1 -6 .9 -2Z" fill="${c}" stroke="${shade(c,-.3)}" stroke-opacity=".4" stroke-width=".25"/><path d="M.2 -10 Q 1.6 -10.2 2 -9" stroke="${c}" stroke-width=".7" fill="none"/></g>`; }
+    return o; },
+  saffron(f, s){ const c = f.c, g = grad(shade(c, -.3), c, shade(c, .15)); let o = `<defs>${g.def}</defs>`;
+    for (let i = 0; i < 6; i++){ const r = i * 60 + (i % 2 ? 30 : 0) * 0 + (rnd(s,i)-.5)*8; o += `<g transform="rotate(${r.toFixed(1)}) scale(1 ${i % 2 ? .9 : 1})"><path d="${PET.oval(11.5, 6.6)}" fill="url(#${g.id})" stroke="${shade(c,-.35)}" stroke-opacity=".45" stroke-width=".35"/>${[-1.2, 0, 1.2].map(x => `<path d="M${x*.4} -1.5 Q ${x} -5 ${x*1.4} -9" stroke="${shade(c,-.4)}" stroke-width=".35" fill="none" opacity=".6"/>`).join('')}</g>`; }
+    for (const r of [-30, 30, 180]) o += `<path d="M0 0 Q 1 -5 0 -10.5" stroke="#d8402a" stroke-width="1.2" fill="none" stroke-linecap="round" transform="rotate(${r})"/>`;
+    return o + [-120, 0, 120].map(r => `<path d="M0 0 L0 -5" stroke="#f2c43a" stroke-width="1.1" stroke-linecap="round" transform="rotate(${r + 60})"/>`).join('') + `<circle r="1.2" fill="#f6e6a0"/>`; },
+  nerine(f, s){ const c = f.c; let o = '';
+    for (let fl = 0; fl < 5; fl++){ const a = -70 + fl * 35, d = fl === 2 ? 2 : 6;
+      o += `<g transform="rotate(${a}) translate(0,${-d}) rotate(${-a*.4}) scale(.62)">`;
+      for (let i = 0; i < 6; i++){ const r = i * 60 + (rnd(s, fl*9+i)-.5)*12; o += `<path d="M0 0 C 2 -2 1.6 -5 2.2 -7.6 Q 2.4 -9.8 .4 -10 Q 1 -8 -.4 -6 Q -1.4 -4 -.8 -2.4 Q -.8 -.8 0 0Z" fill="${i%2 ? c : shade(c, .08)}" stroke="${shade(c,-.3)}" stroke-opacity=".4" stroke-width=".3" transform="rotate(${r.toFixed(0)})"/><path d="M.4 -2 Q 1.4 -5 1.2 -8" stroke="#fff" stroke-width=".45" opacity=".55" fill="none" transform="rotate(${r.toFixed(0)})"/>`; }
+      for (let i = 0; i < 6; i++) o += `<g transform="rotate(${-60 + i*24})"><path d="M0 0 Q 2 -6 .6 -11" stroke="${c}" stroke-width=".45" fill="none"/><circle cx=".6" cy="-11" r=".6" fill="#7a2a4a"/></g>`;
+      o += `</g>`; }
+    for (let i = 0; i < 4; i++) o += `<circle cx="${(rnd(s,i+60)-.5)*16}" cy="${(rnd(s,i+70)-.5)*14}" r=".35" fill="#fff" opacity=".9"/>`;
+    return o; },
+  nemesia(f, s){ const c = f.c, up = shade(c, .08); let o = '';
+    for (const r of [-54, -18, 18, 54]) o += `<g transform="rotate(${r})"><path d="${PET.round(7.4, 3.6)}" fill="${up}" stroke="${shade(c,-.3)}" stroke-opacity=".4" stroke-width=".3"/></g>`;
+    o += `<g transform="rotate(180)"><path d="M0 0 C 7 1 7.4 9 3.6 11 Q 0 12.4 -3.6 11 C -7.4 9 -7 1 0 0Z" fill="${c}" stroke="${shade(c,-.3)}" stroke-opacity=".4" stroke-width=".3"/></g>`;
+    return o + `<ellipse cy="2.6" rx="2.6" ry="2" fill="${f.c2}"/><circle cy="2" r="1.1" fill="${shade(f.c2, .2)}"/>` + Array.from({length:6}, (_, i) => `<circle cx="${(i-2.5)*.7}" cy="${3.8 + (i%2)*.4}" r=".25" fill="${shade(c,-.4)}"/>`).join(''); },
+  erigeron(f, s){ let o = '';
+    for (const [x, y, k, t] of [[-5, 2.4, .62, 0], [4.6, 3, .58, .5], [0, -3, .7, 1], [-2, 6.4, .44, .2]]){
+      const col = t > .4 ? f.c : '#fdfbf6';
+      o += `<g transform="translate(${x},${y}) scale(${k})">${petals({ n:30, shape:'strap', L:9.6, W:1.4, c:col, vein:false, jit:1.4 }, s + x)}${center({ type:'disc', c:f.c2, r:3 }, s + x)}</g>`; }
+    return o; },
+  oxalis(f, s){ const c = f.c; let o = '';
+    for (let i = 0; i < 5; i++){ const r = i * 72; o += `<g transform="rotate(${r}) skewX(-12)"><path d="${PET.oval(11, 7.6)}" fill="${c}" stroke="${shade(c,-.3)}" stroke-opacity=".4" stroke-width=".3"/>${[-1, 0, 1].map(x => `<path d="M${x*.5} -1.6 Q ${x*1.3} -4.6 ${x*1.8} -7.4" stroke="${shade(c,-.25)}" stroke-width=".3" fill="none" opacity=".55"/>`).join('')}</g>`; }
+    return o + `<circle r="3.2" fill="${f.c2}"/><circle r="1.4" fill="${shade(f.c2, .2)}"/>`; },
+  tibouchina(f, s){ const c = f.c; let o = '';
+    for (let i = 0; i < 5; i++){ const r = i * 72 + (rnd(s,i)-.5)*6; o += `<g transform="rotate(${r.toFixed(1)})"><path d="${PET.round(11.4, 10.4)}" fill="${c}" stroke="${shade(c,-.3)}" stroke-opacity=".45" stroke-width=".35"/>${[-1.4, 0, 1.4].map(x => `<path d="M${x*.3} -1.4 Q ${x*1.4} -5 ${x*2.2} -9.4" stroke="${shade(c,-.25)}" stroke-width=".3" fill="none" opacity=".55"/>`).join('')}</g>`; }
+    o += `<circle r="2.4" fill="${shade(c, .3)}"/>`;
+    for (let i = 0; i < 10; i++) o += `<g transform="rotate(${i*36 + 10})"><path d="M0 -1 Q 1.6 -4.6 .6 -7.4 Q -.6 -8.4 -1.2 -7.2" stroke="${i%2 ? shade(c, -.25) : shade(c, .15)}" stroke-width=".55" fill="none" stroke-linecap="round"/></g>`;
+    return o; },
+});
+sp('パンジー', 'pansy2', { top:null, blotch:'#2a1a3a' });
+sp('ビオラ', 'pansy2', { topC2:1 });
+sp('バラ', 'rose2'); sp('ゼラニウム', 'geranium'); sp('ガーベラ', 'gerbera'); sp('カリブラコア', 'calibrachoa'); sp('ベゴニア', 'begonia');
+sp('マリーゴールド', 'marigold'); sp('フレンチマリーゴールド', 'frenchmarigold'); sp('サルビア', 'salvia'); sp('ダリア', 'dahlia'); sp('ススキ', 'susuki');
+sp('リンドウ', 'rindou'); sp('ノコンギク ノギク', 'nogiku', { n:22 }); sp('ツワブキ', 'tsuwabuki'); sp('キク', 'kiku'); sp('コギク', 'kogiku'); sp('皇帝ダリア', 'kouteidahlia');
+sp('サザンカ', 'sazanka'); sp('ヤツデ', 'yatsude'); sp('ビワ', 'biwa'); sp('ポインセチア', 'poinsettia'); sp('シクラメン ガーデンシクラメン', 'cyclamen2'); sp('ハボタン', 'habotan');
+sp('シャコバサボテン', 'shakoba'); sp('ストック', 'stock'); sp('ウインターコスモス', 'wintercosmos'); sp('エリカ', 'erica'); sp('ローズマリー', 'rosemary'); sp('アリッサム', 'alyssum');
+sp('アゲラタム', 'ageratum'); sp('ヒメツルソバ', 'himetsuru'); sp('セイタカアワダチソウ', 'goldenrod'); sp('アメジストセージ', 'mexsage'); sp('パイナップルセージ', 'pinesage');
+sp('サフラン', 'saffron'); sp('ネリネ', 'nerine'); sp('ネメシア', 'nemesia'); sp('エリゲロン', 'erigeron'); sp('オキザリス', 'oxalis'); sp('ノボタン', 'tibouchina');
+
+/* ===== 草姿（茎・葉・生え方） ===== */
+function leafPath(type, l, w){
+  switch (type){
+    case 'lance':  return `M0 0 C ${w} ${-l*.25} ${w*.7} ${-l*.75} 0 ${-l} C ${-w*.7} ${-l*.75} ${-w} ${-l*.25} 0 0Z`;
+    case 'strap':  return `M0 0 C ${w*.6} ${-l*.3} ${w*.5} ${-l*.8} 0 ${-l} C ${-w*.5} ${-l*.8} ${-w*.6} ${-l*.3} 0 0Z`;
+    case 'oval':   return `M0 0 C ${w*1.1} ${-l*.15} ${w*1.1} ${-l*.85} 0 ${-l} C ${-w*1.1} ${-l*.85} ${-w*1.1} ${-l*.15} 0 0Z`;
+    case 'heart':  return `M0 ${-l*.05} C ${w*.3} ${l*.12} ${w*1.3} ${-l*.05} ${w*.9} ${-l*.55} C ${w*.6} ${-l*.85} ${w*.15} ${-l*.9} 0 ${-l} C ${-w*.15} ${-l*.9} ${-w*.6} ${-l*.85} ${-w*.9} ${-l*.55} C ${-w*1.3} ${-l*.05} ${-w*.3} ${l*.12} 0 ${-l*.05}Z`;
+    case 'round':  return `M0 0 C ${w*1.3} 0 ${w*1.3} ${-l} 0 ${-l} C ${-w*1.3} ${-l} ${-w*1.3} 0 0 0Z`;
+    case 'serrate': { let d = `M0 0`; const n = 6; for (let i = 1; i <= n; i++){ const t = i / n, x = w * Math.sin(Math.PI * Math.min(t, .92)) * (1 - t*.2); d += ` L ${(x*1.05).toFixed(2)} ${(-l*t + l*.05).toFixed(2)} L ${(x*.85).toFixed(2)} ${(-l*t).toFixed(2)}`; } d += ` L 0 ${-l}`; for (let i = n; i >= 1; i--){ const t = i / n, x = w * Math.sin(Math.PI * Math.min(t, .92)) * (1 - t*.2); d += ` L ${(-x*.85).toFixed(2)} ${(-l*t).toFixed(2)} L ${(-x*1.05).toFixed(2)} ${(-l*t + l*.05).toFixed(2)}`; } return d + 'Z'; }
+    case 'lobed':  { let d = `M0 0`; for (let i = 1; i <= 5; i++){ const t = i / 5.5; d += ` Q ${w*1.3} ${-l*(t - .08)} ${w*.45} ${-l*t}`; } d += ` Q 0 ${-l*1.05} ${-w*.45} ${-l*(5/5.5)}`; for (let i = 4; i >= 0; i--){ const t = i / 5.5; d += ` Q ${-w*1.3} ${-l*(t + .1)} ${i ? -w*.45 : 0} ${-l*t}`; } return d + 'Z'; }
+    case 'fern':   { let d = ''; for (let i = 1; i <= 6; i++){ const y = -l * i / 7, s2 = w * (1 - i / 8); d += `M0 ${y} q ${s2} ${-s2*.3} ${s2*1.1} ${-s2*.9} M0 ${y} q ${-s2} ${-s2*.3} ${-s2*1.1} ${-s2*.9} `; } return d; }
+    case 'needle': return `M0 0 L0 ${-l}`;
   }
-  if (!items.length) svg += `<text x="${W/2}" y="${ground-30}" text-anchor="middle" font-size="12" font-weight="700" fill="rgba(31,82,110,.5)">家事をすると、ここに季節の花が咲くよ</text>`;
-  return svg + `</svg>`;
+  return `M0 0 C ${w} ${-l*.25} ${w*.7} ${-l*.75} 0 ${-l} C ${-w*.7} ${-l*.75} ${-w} ${-l*.25} 0 0Z`;
+}
+function leaf(type, l, w, col, x, y, rot, stalk = 0){
+  const dk = shade(col, -.3), lt = shade(col, .15);
+  if (type === 'needle') return `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${rot.toFixed(0)})"><path d="M0 0 L0 ${-l}" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/></g>`;
+  if (type === 'fern') return `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${rot.toFixed(0)})"><path d="M0 0 L0 ${-l}" stroke="${col}" stroke-width=".7"/><path d="${leafPath('fern', l, w)}" stroke="${col}" stroke-width="1.2" stroke-linecap="round" fill="none"/></g>`;
+  if (type === 'palmate'){ let o = `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${rot.toFixed(0)})"><path d="M0 0 L0 ${-stalk}" stroke="${shade(col, .2)}" stroke-width=".9"/><g transform="translate(0,${-stalk})">`;
+    for (let i = 0; i < 7; i++){ const a = -75 + i * 25; o += `<path d="${leafPath('lance', l * (1 - Math.abs(i - 3) * .08), w)}" fill="${i%2 ? col : lt}" stroke="${dk}" stroke-width=".3" stroke-opacity=".5" transform="rotate(${a})"/><path d="M0 0 L0 ${-l*.8}" stroke="${dk}" stroke-width=".3" opacity=".5" transform="rotate(${a})"/>`; }
+    return o + `</g></g>`; }
+  if (type === 'clover'){ let o = `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${rot.toFixed(0)})"><path d="M0 0 L0 ${-stalk}" stroke="${shade(col, .2)}" stroke-width=".5"/><g transform="translate(0,${-stalk})">`;
+    for (const a of [-110, 0, 110]) o += `<path d="${leafPath('heart', l, w)}" fill="${col}" stroke="${dk}" stroke-width=".25" stroke-opacity=".5" transform="rotate(${a + 180}) translate(0,${l})"/>`;
+    return o + `</g></g>`; }
+  if (type === 'compound'){ let o = `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${rot.toFixed(0)})"><path d="M0 0 L0 ${-l}" stroke="${shade(col, .1)}" stroke-width=".5"/>`;
+    for (let i = 0; i < 3; i++){ const yy = -l * (.35 + i * .3); o += `<path d="${leafPath('serrate', l*.4, w*.5)}" fill="${col}" stroke="${dk}" stroke-width=".25" stroke-opacity=".5" transform="translate(0,${yy}) rotate(55)"/><path d="${leafPath('serrate', l*.4, w*.5)}" fill="${lt}" stroke="${dk}" stroke-width=".25" stroke-opacity=".5" transform="translate(0,${yy}) rotate(-55)"/>`; }
+    return o + `<path d="${leafPath('serrate', l*.45, w*.55)}" fill="${col}" stroke="${dk}" stroke-width=".25" stroke-opacity=".5" transform="translate(0,${-l})"/></g>`; }
+  return `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${rot.toFixed(0)})">${stalk ? `<path d="M0 0 L0 ${-stalk}" stroke="${shade(col, .2)}" stroke-width=".7"/>` : ''}<g transform="translate(0,${-stalk})"><path d="${leafPath(type, l, w)}" fill="${col}" stroke="${dk}" stroke-width=".3" stroke-opacity=".5"/><path d="M0 ${-l*.05} L0 ${-l*.85}" stroke="${dk}" stroke-width=".3" opacity=".55"/></g></g>`;
+}
+/* 生え方の指定：type, 高さh(花の大きさに対する倍率), 葉, 葉色, 花の数n, 花の大きさfs */
+const PLANT = {};
+const pl = (names, o) => names.split(' ').forEach(n => PLANT[n] = o);
+pl('パンジー ビオラ ネメシア', { type:'mound', h:1.1, leaf:'oval', lc:'#5f9a4a', n:3, fs:.62 });
+pl('バラ', { type:'shrub', h:3.2, leaf:'compound', lc:'#4f7f3f', n:2, fs:.78, wood:'#6a7a4a', thorn:1 });
+pl('ゼラニウム', { type:'rosette', h:2, leaf:'round', lc:'#5f9a4a', n:2, fs:.75, zone:1 });
+pl('ガーベラ', { type:'rosette', h:2.6, leaf:'lobed', lc:'#5a8f42', n:1, fs:.85 });
+pl('カリブラコア', { type:'trail', h:1, leaf:'oval', lc:'#5f9a4a', n:5, fs:.45 });
+pl('ベゴニア', { type:'mound', h:1.3, leaf:'round', lc:'#4f8a3a', n:4, fs:.42, gloss:1 });
+pl('マリーゴールド フレンチマリーゴールド', { type:'bush', h:1.8, leaf:'fern', lc:'#4f7f3a', n:3, fs:.55 });
+pl('サルビア パイナップルセージ', { type:'spike', h:2.4, leaf:'oval', lc:'#4f8a3a', n:2, fs:.75 });
+pl('アメジストセージ', { type:'spike', h:2.8, leaf:'lance', lc:'#6a8f5a', n:3, fs:.8, arch:1 });
+pl('ストック', { type:'spike', h:2.4, leaf:'lance', lc:'#8aa88a', n:1, fs:.95 });
+pl('セイタカアワダチソウ', { type:'spike', h:3.8, leaf:'lance', lc:'#6a8f4a', n:1, fs:1.1 });
+pl('ダリア', { type:'bush', h:3, leaf:'compound', lc:'#4f7f3f', n:2, fs:.95 });
+pl('皇帝ダリア', { type:'cane', h:4.4, leaf:'compound', lc:'#4f7f3f', n:3, fs:.62 });
+pl('ススキ', { type:'grass', h:3.6, leaf:'strap', lc:'#7f9f5f', n:3, fs:.9 });
+pl('リンドウ', { type:'single', h:2.2, leaf:'lance', lc:'#4f7f3f', n:1, fs:.75, opp:1 });
+pl('ノコンギク ノギク コギク', { type:'bush', h:2.4, leaf:'lance', lc:'#5a8a42', n:5, fs:.4 });
+pl('キク', { type:'single', h:2.8, leaf:'lobed', lc:'#4f7f3a', n:1, fs:1 });
+pl('ツワブキ', { type:'rosette', h:2.4, leaf:'round', lc:'#3f7a2f', n:3, fs:.6, gloss:1, big:1 });
+pl('サザンカ', { type:'shrub', h:3.4, leaf:'oval', lc:'#2f6a2f', n:3, fs:.72, wood:'#6a5a4a', gloss:1 });
+pl('ヤツデ', { type:'shrub', h:3.6, leaf:'palmate', lc:'#2f6a2f', n:2, fs:.8, wood:'#7a7a5a', big:1 });
+pl('ビワ', { type:'shrub', h:3.8, leaf:'lance', lc:'#3f6a3a', n:2, fs:.8, wood:'#7a6a5a', big:1 });
+pl('ポインセチア', { type:'shrub', h:2.2, leaf:'oval', lc:'#3f6a2f', n:1, fs:1.15, wood:'#5f7a4a' });
+pl('シクラメン ガーデンシクラメン', { type:'rosette', h:1.7, leaf:'heart', lc:'#3a5f3a', n:3, fs:.62, marble:1 });
+pl('ハボタン', { type:'flat', h:.4, n:1, fs:1.25 });
+pl('シャコバサボテン', { type:'cactus', h:1.6, lc:'#4f8a3a', n:3, fs:.6 });
+pl('ウインターコスモス', { type:'bush', h:2.6, leaf:'fern', lc:'#5a8a42', n:4, fs:.5 });
+pl('エリカ', { type:'spike', h:2, leaf:'needle', lc:'#4f7a3f', n:3, fs:.8 });
+pl('ローズマリー', { type:'spike', h:2.2, leaf:'needle', lc:'#4f7a4f', n:3, fs:.85 });
+pl('アリッサム', { type:'mound', h:.7, leaf:'lance', lc:'#6a9a5a', n:4, fs:.5 });
+pl('アゲラタム', { type:'mound', h:1.2, leaf:'heart', lc:'#5a8f4a', n:3, fs:.55 });
+pl('ヒメツルソバ', { type:'trail', h:.6, leaf:'heart', lc:'#5f7f4a', n:5, fs:.38, marble:1 });
+pl('サフラン', { type:'bulb', h:.9, leaf:'strap', lc:'#5f8f4a', n:1, fs:.75, short:1 });
+pl('ネリネ', { type:'bulb', h:2.4, leaf:'strap', lc:'#5f8f4a', n:1, fs:.9 });
+pl('エリゲロン', { type:'mound', h:1.2, leaf:'lance', lc:'#6a9a5a', n:3, fs:.6 });
+pl('オキザリス', { type:'clover', h:1.1, leaf:'clover', lc:'#5f9a4a', n:3, fs:.45 });
+pl('ノボタン', { type:'shrub', h:3, leaf:'oval', lc:'#4f7a3f', n:3, fs:.62, wood:'#6a5a4a', veins:1 });
+function plantOf(key){
+  const base = key.replace(/^(白い|黄色い|ピンクの|紫の|赤い|オレンジの)/, '');
+  if (PLANT[base]) return PLANT[base];
+  const d = specOf(key)[0];
+  if (['spike', 'salvia'].includes(d)) return { type:'spike', h:2.2, leaf:'lance', lc:'#5a8a42', n:1, fs:.85 };
+  if (['bell'].includes(d)) return { type:'single', h:2, leaf:'lance', lc:'#5a8a42', n:1, fs:.85, nod:1 };
+  if (['wisteria'].includes(d)) return { type:'shrub', h:3.4, leaf:'compound', lc:'#5a8a42', n:2, fs:.85, wood:'#7a6a5a', hang:1 };
+  if (['tulip', 'cupflower', 'lily', 'iris', 'daffodil', 'spider'].includes(d)) return { type:'bulb', h:2.4, leaf:'strap', lc:'#5f8f4a', n:1, fs:.9 };
+  if (['camellia', 'ume', 'sakura', 'hydrangea', 'lacecap', 'cluster'].includes(d)) return { type:'shrub', h:3.2, leaf:'oval', lc:'#3f7a3a', n:3, fs:.7, wood:'#7a6a5a' };
+  if (['cyclamen', 'pansy', 'kale'].includes(d)) return { type:'mound', h:1.1, leaf:'oval', lc:'#5f9a4a', n:3, fs:.62 };
+  if (['ball', 'thistle'].includes(d)) return { type:'bush', h:1.8, leaf:'lance', lc:'#5a8a42', n:3, fs:.6 };
+  if (['waterlily', 'lotus'].includes(d)) return { type:'water', h:1.4, leaf:'round', lc:'#4f8a3a', n:1, fs:.9 };
+  if (['sunflower'].includes(d)) return { type:'single', h:4, leaf:'heart', lc:'#4f8a3a', n:1, fs:1.1 };
+  if (['daisy', 'cosmos', 'chrysanthemum', 'nogiku'].includes(d)) return { type:'bush', h:2.4, leaf:d === 'cosmos' ? 'fern' : 'lance', lc:'#5a8a42', n:3, fs:.55 };
+  if (['rose', 'peony', 'pompom', 'carnation'].includes(d)) return { type:'bush', h:2.4, leaf:'lance', lc:'#4f7f3f', n:2, fs:.8 };
+  return { type:'bush', h:2, leaf:'lance', lc:'#5a8a42', n:3, fs:.6 };
+}
+/* 1株を描く：原点が根元、上がマイナス。U＝花の基準サイズ */
+function plantSVG(key, seed, U = 14){
+  const P = plantOf(key), R = i => rnd(seed, 300 + i), H = P.h * U * (.85 + R(0) * .3), fs = P.fs * U / 14;
+  const stemC = '#6aa84f', lc = P.lc || '#5a8a42', n = P.n || 1;
+  let back = '', mid = '', front = '';
+  const fl = (x, y, k = 1, rot = 0) => `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${rot.toFixed(0)}) scale(${(fs*k).toFixed(2)},${(fs*k*(SIDEVIEW.has(specOf(key)[0]) || P.type === 'spike' ? 1 : .78 + R(9)*.22)).toFixed(2)})"><g class="bloom">${flowerSVG(key, seed + ':' + x.toFixed(0))}</g></g>`;
+  const stem = (x0, y0, x1, y1, w = 1, c = stemC, bend = 0) => `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)} Q ${((x0+x1)/2 + bend).toFixed(1)} ${((y0+y1)/2).toFixed(1)} ${x1.toFixed(1)} ${y1.toFixed(1)}" stroke="${c}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;
+  const L = (U * .55) * (P.big ? 1.6 : 1);
+  switch (P.type){
+    case 'single': case 'spike': {
+      for (let i = 0; i < n; i++){
+        const x = (i - (n-1)/2) * U * .55 + (R(i+1)-.5) * 3, top = -H * (1 - i * .12) * (.9 + R(i+5)*.15), bend = (R(i+10)-.5) * 6 + (P.arch ? 6 : 0);
+        back += stem(x * .3, 0, x, top + (P.type === 'spike' ? 10 * fs : 0), 1.1, stemC, bend);
+        const nl = P.leaf === 'needle' ? 12 : 4;
+        for (let j = 0; j < nl; j++){ const t = (j + 1) / (nl + 2), y = top * t * (P.type === 'spike' ? .85 : .7), side = (j % 2 ? 1 : -1);
+          mid += P.leaf === 'needle' ? leaf('needle', U*.32, 1.1, lc, x * t, y, side * 50) : leaf(P.leaf, L * (1 - t*.35), L * .32, lc, x * t + bend * t * .5, y, side * (P.opp ? 70 : 55)); if (P.opp) mid += leaf(P.leaf, L * (1 - t*.35), L * .32, lc, x*t, y, -side * 70); }
+        front += P.nod ? fl(x + 3, top + 2, 1, 20) : fl(x, top, 1, P.arch ? 20 : 0);
+      } break; }
+    case 'rosette': {
+      for (let j = 0; j < 7; j++){ const a = -80 + j * 27 + (R(j+20)-.5) * 10;
+        back += P.leaf === 'round' || P.leaf === 'heart' ? leaf(P.leaf, L * .75, L * .55, j % 2 ? lc : shade(lc, .08), (j - 3) * 1.4, 0, a, L * .5) : leaf(P.leaf, L * 1.1, L * .32, j % 2 ? lc : shade(lc, .08), 0, 0, a); }
+      if (P.marble) back += Array.from({length:4}, (_, j) => `<ellipse cx="${(j - 1.5) * L * .55}" cy="${-L * .75}" rx="${L*.2}" ry="${L*.12}" fill="#c9d8c0" opacity=".45"/>`).join('');
+      for (let i = 0; i < n; i++){ const x = (i - (n-1)/2) * U * .6 + (R(i+30)-.5)*3, top = -H * (.8 + R(i+40)*.25);
+        mid += stem(0, -2, x, top, P.marble ? .6 : 1, P.marble ? '#8a4a5a' : stemC, (R(i+50)-.5)*5); front += fl(x, top, 1); }
+      break; }
+    case 'bush': {
+      const st = Math.max(n, 3);
+      for (let i = 0; i < st; i++){ const a = (i - (st-1)/2) * 16 + (R(i+60)-.5) * 8, len = H * (.75 + R(i+70)*.3), x = Math.sin(a * Math.PI/180) * len, y = -Math.cos(a * Math.PI/180) * len;
+        back += stem(0, 0, x, y, 1, stemC, (R(i+80)-.5)*4);
+        for (let j = 0; j < 3; j++){ const t = .25 + j * .22; mid += leaf(P.leaf, L * .85, L * .3, j % 2 ? lc : shade(lc, .06), x * t, y * t, a + (j % 2 ? 55 : -55)); }
+        if (i < n) front += fl(x, y, .9 + R(i+90)*.2); else front += `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${1.6*fs}" ry="${2.2*fs}" fill="#7aa05a"/>`; }
+      break; }
+    case 'mound': case 'trail': {
+      const w = U * (P.type === 'trail' ? 1.5 : 1.05);
+      for (let j = 0; j < 11; j++){ const a = -85 + j * 17, r = w * (.6 + R(j+100)*.4);
+        back += leaf(P.leaf, L * .65, L * .45, j % 2 ? lc : shade(lc, .08), Math.sin(a*Math.PI/180) * r * .4, -Math.abs(Math.cos(a*Math.PI/180)) * H * .2, a, P.type === 'trail' ? 0 : 2); }
+      if (P.type === 'trail') back += `<path d="M${-w} 2 Q ${-w*.5} ${-H*.2} 0 ${-H*.3} Q ${w*.5} ${-H*.2} ${w} 2" stroke="${stemC}" stroke-width=".8" fill="none"/>`;
+      for (let i = 0; i < n; i++){ const x = (i - (n-1)/2) * (w * 1.6 / Math.max(n, 2)) + (R(i+110)-.5)*3, y = -H * (.35 + R(i+120) * .45) * (P.type === 'trail' ? .8 : 1);
+        mid += stem(x * .6, -H * .15, x, y, .7); front += fl(x, y, .9 + R(i+130)*.2); }
+      break; }
+    case 'shrub': {
+      const wood = P.wood || '#7a6a5a', br = 3;
+      back += stem(0, 0, 0, -H * .45, 2.2, wood);
+      for (let i = 0; i < br; i++){ const a = (i - 1) * 32 + (R(i+140)-.5)*10, len = H * (.55 + R(i+150)*.15), x0 = 0, y0 = -H * (.3 + i * .08), x = Math.sin(a*Math.PI/180) * len * .8, y = y0 - Math.cos(a*Math.PI/180) * len * .75;
+        back += stem(x0, y0, x, y, 1.4, wood, (R(i+160)-.5)*5);
+        const nl = P.leaf === 'palmate' ? 1 : 4;
+        for (let j = 0; j < nl; j++){ const t = .35 + j * .18, lx = x0 + (x - x0) * t, ly = y0 + (y - y0) * t;
+          mid += P.leaf === 'palmate' ? leaf('palmate', L * .9, L * .26, lc, lx, ly, a + (i - 1) * 30, L * .5) : leaf(P.leaf, L * .9, L * .36, j % 2 ? lc : shade(lc, .1), lx, ly, a + (j % 2 ? 60 : -60), 0);
+          if (P.gloss && P.leaf !== 'palmate') mid += `<ellipse cx="${lx.toFixed(1)}" cy="${(ly - 2).toFixed(1)}" rx=".6" ry="1.4" fill="#fff" opacity=".25" transform="rotate(${a + (j % 2 ? 60 : -60)} ${lx.toFixed(1)} ${ly.toFixed(1)})"/>`; }
+        if (P.thorn) for (let j = 0; j < 3; j++){ const t = .3 + j * .2; back += `<path d="M${(x0 + (x-x0)*t).toFixed(1)} ${(y0 + (y-y0)*t).toFixed(1)} l 1.4 -.4 l -1.2 -.6Z" fill="#8a5a4a"/>`; }
+        if (i < n) front += P.hang ? fl(x, y + 10 * fs, 1) : fl(x, y, .95 + R(i+170)*.15); }
+      break; }
+    case 'cane': {
+      const wood = '#7a8a5a';
+      back += stem(0, 0, 1, -H, 2, wood, 2);
+      for (let j = 1; j < 6; j++) back += `<path d="M-1.4 ${(-H*j/6).toFixed(1)} h2.8" stroke="${shade(wood, -.3)}" stroke-width=".6"/>`;
+      for (let j = 0; j < 4; j++){ const y = -H * (.25 + j * .17); mid += leaf('compound', L * 1.1, L * .5, lc, 0, y, j % 2 ? 60 : -60); }
+      for (let i = 0; i < n; i++){ const a = (i - (n-1)/2) * 40, x = Math.sin(a*Math.PI/180) * U * .9, y = -H - Math.cos(a*Math.PI/180) * U * .5 + 4;
+        back += stem(1, -H + 4, x, y, .7); front += fl(x, y, 1, a * .3); }
+      break; }
+    case 'bulb': {
+      const nl = P.short ? 7 : 5;
+      for (let j = 0; j < nl; j++){ const a = -40 + j * (80 / (nl - 1)) + (R(j+180)-.5)*8; back += `<path d="M0 0 Q ${(Math.sin(a*Math.PI/180) * H * .3).toFixed(1)} ${(-H * (P.short ? .5 : .35)).toFixed(1)} ${(Math.sin(a*Math.PI/180) * H * (P.short ? .35 : .55)).toFixed(1)} ${(-H * (P.short ? .8 : .45)).toFixed(1)}" stroke="${j % 2 ? lc : shade(lc, .1)}" stroke-width="${P.short ? 1 : 2}" fill="none" stroke-linecap="round"/>`; }
+      for (let i = 0; i < n; i++){ const x = (R(i+190)-.5) * 4, top = -H; mid += stem(0, 0, x, top, 1, stemC, (R(i+195)-.5)*3); front += fl(x, top, 1); }
+      break; }
+    case 'grass': {
+      for (let j = 0; j < 12; j++){ const a = -60 + j * 11 + (R(j+200)-.5)*6, len = H * (.55 + R(j+210)*.35), ex = Math.sin(a*Math.PI/180) * len * 1.1, ey = -Math.cos(a*Math.PI/180) * len * .8;
+        back += `<path d="M0 0 Q ${(ex*.3).toFixed(1)} ${(ey*.9).toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}" stroke="${j % 2 ? lc : shade(lc, .12)}" stroke-width="1.1" fill="none" stroke-linecap="round"/>`; }
+      for (let i = 0; i < n; i++){ const x = (i - (n-1)/2) * U * .5, top = -H * (1 + R(i+220)*.12); mid += stem(0, 0, x, top + 6 * fs, .8, '#b9a676'); front += fl(x, top, 1, (i - 1) * 12); }
+      break; }
+    case 'flat': front += fl(0, -U * .45, 1); back += leaf('oval', U * .8, U * .45, '#5f8f5a', -U * .5, 0, -70) + leaf('oval', U * .8, U * .45, '#6a9a5f', U * .5, 0, 70); break;
+    case 'clover': {
+      for (let j = 0; j < 6; j++) back += leaf('clover', U * .22, U * .2, j % 2 ? lc : shade(lc, .08), (j - 2.5) * 3, 0, (j - 2.5) * 14, H * (.35 + R(j+230)*.2));
+      for (let i = 0; i < n; i++){ const x = (i - (n-1)/2) * U * .5, top = -H * (.85 + R(i+240)*.2); mid += stem(0, 0, x, top, .6); front += fl(x, top, 1); }
+      break; }
+    case 'cactus': {
+      for (let i = 0; i < n; i++){ const a = (i - (n-1)/2) * 38; let x = 0, y = 0, o = '';
+        for (let j = 0; j < 4; j++){ const ang = (a + j * a * .25) * Math.PI / 180, nx = x + Math.sin(ang) * U * .36, ny = y - Math.cos(ang) * U * .36;
+          o += `<g transform="translate(${((x+nx)/2).toFixed(1)},${((y+ny)/2).toFixed(1)}) rotate(${(a + j*a*.25).toFixed(0)})"><path d="M0 ${U*.2} L ${-U*.12} ${U*.1} L ${-U*.14} ${-U*.02} L ${-U*.1} ${-U*.18} L 0 ${-U*.2} L ${U*.1} ${-U*.18} L ${U*.14} ${-U*.02} L ${U*.12} ${U*.1}Z" fill="${j % 2 ? lc : shade(lc, .08)}" stroke="${shade(lc, -.3)}" stroke-width=".3"/></g>`; x = nx; y = ny; }
+        back += o; front += fl(x, y - 2, 1, a); }
+      break; }
+    case 'water': back += `<ellipse cx="0" cy="0" rx="${U*1.2}" ry="${U*.25}" fill="#4f8a3a"/><path d="M0 0 L ${U*.5} ${-U*.2}" stroke="#3f7a2f" stroke-width=".8"/>`; front += fl(0, -U * .25, 1); break;
+  }
+  return back + mid + front;
+}
+
+function gardenSVG(logs, big){
+  const W = 360, H = big ? 210 : 160, ground = H - 52;
+  const items = logs.map(l => {
+    const sp = flowerOf(l), depth = rnd(l.id, 2), gy = ground + 4 + depth * (H - ground - 10), x = 16 + rnd(l.id, 1) * (W - 32), k = .78 + depth * .32;
+    return { l, sp, x, gy, k };
+  }).sort((a,b) => a.gy - b.gy);
+  let svg = `<svg class="garden" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+    <defs><linearGradient id="gsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3f1f0"/><stop offset="1" stroke="none" stop-color="#f6f0dd"/></linearGradient>
+    <linearGradient id="gsoil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a9d18e"/><stop offset="1" stop-color="#8cbf72"/></linearGradient>
+    <clipPath id="gclip"><rect width="${W}" height="${H}" rx="20"/></clipPath></defs>
+    <g clip-path="url(#gclip)"><rect width="${W}" height="${H}" fill="url(#gsky)"/>
+    <path d="M0 ${ground-14} Q 60 ${ground-30} 130 ${ground-18} T 260 ${ground-20} T 360 ${ground-16} V ${ground+4} H 0Z" fill="#cfe3bf" opacity=".7"/>
+    <path d="M0 ${ground-2} Q 90 ${ground-12} 180 ${ground-4} T 360 ${ground-6} V ${H} H 0Z" fill="url(#gsoil)"/>`;
+  for (let i = 0; i < 34; i++){ const gx = (i*11 + 5) % W, gy = ground + 2 + (i*7 % (H - ground - 4)); svg += `<path d="M${gx} ${gy} l1.6 -4 l1.6 4" fill="none" stroke="#78ab5e" stroke-width="1.1" stroke-linecap="round" opacity=".8"/>`; }
+  for (const it of items){
+    svg += `<g data-act="flower" data-id="${it.l.id}" class="fl" transform="translate(${it.x.toFixed(1)},${it.gy.toFixed(1)}) scale(${it.k.toFixed(2)})">
+      <ellipse cx="0" cy="1" rx="9" ry="2.2" fill="#5f8f45" opacity=".35"/>${plantSVG(it.sp, it.l.id, big ? 23 : 19)}
+      <rect x="-16" y="-90" width="32" height="92" fill="transparent"/></g>`;
+  }
+  if (!items.length) svg += `<text x="${W/2}" y="${ground-34}" text-anchor="middle" font-size="12" font-weight="700" fill="rgba(31,82,110,.5)">家事をすると、ここに季節の花が咲くよ</text>`;
+  return svg + `</g></svg>`;
 }
 function weekLogs(off){ const ws = weekStart(off), we = new Date(ws); we.setDate(ws.getDate()+7); return all('log').filter(l => l.at >= ws.getTime() && l.at < we.getTime()); }
 function bloomSummary(logs){
@@ -1745,7 +2084,7 @@ function viewZukan(){
 let ZCACHE = { found:{}, first:{} };
 function sheetZukan(k){
   const f = FL[k], ok = !!ZCACHE.found[k], fl = ZCACHE.first[k];
-  let h = `<div class="zbig ${ok?'':'un'}"><svg viewBox="-16 -18 32 32">${flowerSVG(k,k)}</svg></div>
+  let h = `<div class="zbig ${ok?'':'un'}"><svg viewBox="-16 -18 32 32">${flowerSVG(k,k)}</svg><svg class="zplant" viewBox="-34 -78 68 82"><ellipse cx="0" cy="1.5" rx="22" ry="3" fill="#a9d18e"/>${plantSVG(k, k, 14)}</svg></div>
     <div class="zno" style="text-align:center">No.${String(f.no).padStart(3,'0')}</div>
     <h3 style="text-align:center">${ok?esc(f.n):'？？？'}</h3>
     <div style="text-align:center"><span class="badge any">咲く時期：${flMonths(k)}</span></div>`;
