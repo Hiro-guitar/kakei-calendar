@@ -3438,6 +3438,36 @@ ribbonSVG = function(r, x, y, w){
   return `<g class="bqr"><g transform="translate(${x},${y + .6}) scale(1.22) translate(${-x},${-y})">${back}</g></g>` + _ribW2(r, x, y, w);
 };
 
+/* ===== 花瓶の種類 ===== */
+const VASES = { glass:'ガラス', bud:'一輪挿し', bowl:'まるいガラス', jar:'ジャー', milk:'ピッチャー', tin:'ブリキ缶', pot:'陶器のつぼ' };
+const VASE_RIB = { glass:[0, 0, 16], bud:[0, 5, 7], bowl:[0, -1.4, 14], jar:[0, 2.6, 20], milk:[0, 5, 18], tin:[0, 7, 21], pot:[0, -.6, 13] };
+function vaseBody(t, tint, id){
+  const dk = shade(tint, -.3), glassF = `fill="${tint}" fill-opacity=".38" stroke="${dk}" stroke-opacity=".6" stroke-width=".5"`, hi = (d, w = 1.2) => `<path d="${d}" stroke="#fff" stroke-width="${w}" opacity=".5" fill="none" stroke-linecap="round"/>`;
+  if (t === 'bud') return `<path d="M-2.8 -4 L -2.6 8 C -11 12 -12 28 -6 33 L 6 33 C 12 28 11 12 2.6 8 L 2.8 -4Z" ${glassF}/><path d="M-10.4 20 C -10 26 -8 31 -5.6 32.4 L 5.6 32.4 C 8 31 10 26 10.4 20Z" fill="#c8e0ec" opacity=".45"/>` + hi('M-1.6 -2 V 7') + hi('M-6 13 C -9 18 -9 25 -6 30') + `<ellipse cy="-4" rx="2.8" ry=".6" fill="none" stroke="${dk}" stroke-opacity=".6" stroke-width=".5"/>`;
+  if (t === 'bowl') return `<path d="M-7 -4 C -7 -1 -8 0 -10 1.6 A 17 16.5 0 1 0 10 1.6 C 8 0 7 -1 7 -4Z" ${glassF}/><path d="M-16.4 14 A 17 16.5 0 0 0 16.4 14Z" fill="#c8e0ec" opacity=".45"/>` + hi('M-11 6 C -15 12 -15 20 -11 26', 1.6) + hi('M8 3 C 10 4 11.5 5.5 12.5 7', .8) + `<ellipse cy="-4" rx="7" ry="1.3" fill="none" stroke="${dk}" stroke-opacity=".6" stroke-width=".5"/>`;
+  if (t === 'jar') return `<path d="M-8.4 -4 L -8.4 -.6 C -10.6 .4 -10.8 2 -10.8 4 L -10.8 31 Q -10.8 33 -8.8 33 L 8.8 33 Q 10.8 33 10.8 31 L 10.8 4 C 10.8 2 10.6 .4 8.4 -.6 L 8.4 -4Z" ${glassF}/><path d="M-10.4 14 L -10.4 31 Q -10.4 32.6 -8.6 32.6 L 8.6 32.6 Q 10.4 32.6 10.4 31 L 10.4 14Z" fill="#c8e0ec" opacity=".45"/>${[-3.4, -2.2].map(y => `<path d="M-8.4 ${y} H 8.4" stroke="${dk}" stroke-opacity=".45" stroke-width=".35"/>`).join('')}<rect x="-6" y="12" width="12" height="10" rx="1.4" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width=".5"/>` + hi('M-8.6 6 V 29', 1.4) + `<ellipse cy="-4" rx="8.4" ry="1.3" fill="none" stroke="${dk}" stroke-opacity=".6" stroke-width=".5"/>`;
+  if (t === 'milk'){ const c = tint, rim = shade(c, -.45);
+    return `<path d="M8.6 4 C 16 3 17 14 9.6 20" stroke="${rim}" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M8.6 4 C 15 3.4 15.6 13.4 9.6 19" stroke="${c}" stroke-width="1.2" fill="none" stroke-linecap="round"/><linearGradient id="${id}m" x1="0" x2="1"><stop offset="0" stop-color="${shade(c, -.12)}"/><stop offset=".35" stop-color="${shade(c, .18)}"/><stop offset="1" stop-color="${shade(c, -.2)}"/></linearGradient><path d="M-9 -4 L -12 -6 L -8.6 -1 C -10.4 6 -11.6 20 -9.6 33 L 9.6 33 C 11.6 20 10.4 6 8.8 -4Z" fill="url(#${id}m)" stroke="${rim}" stroke-width=".5"/><path d="M-12 -6 L -9 -4 L 8.8 -4" stroke="${rim}" stroke-width="1" fill="none" stroke-linejoin="round"/><path d="M-9.6 32.4 H 9.6" stroke="${rim}" stroke-width="1"/>` + hi('M-6 2 C -7.4 10 -7.6 20 -6.6 28', 1.3); }
+  if (t === 'tin') return `<linearGradient id="${id}t" x1="0" x2="1"><stop offset="0" stop-color="#9aa0a8"/><stop offset=".3" stop-color="#eef0f2"/><stop offset=".55" stop-color="#b8bec6"/><stop offset=".8" stop-color="#dfe2e6"/><stop offset="1" stop-color="#8a9098"/></linearGradient><path d="M-10.4 -2 L -10.4 31 Q 0 34 10.4 31 L 10.4 -2Z" fill="url(#${id}t)" stroke="#7a8088" stroke-width=".5"/><ellipse cy="-2" rx="10.4" ry="1.6" fill="#c8ccd2" stroke="#7a8088" stroke-width=".5"/>${[1.6, 28.6].map(y => `<path d="M-10.4 ${y} Q 0 ${y + 2.2} 10.4 ${y}" stroke="#8a9098" stroke-width=".5" fill="none"/>`).join('')}<path d="M-6 12 L 6 12 L 6 21 L -6 21Z" fill="#e2cfa8" stroke="#a8885a" stroke-width=".3" transform="rotate(-4)"/><path d="M-3.6 15.4 H 3.4 M-3.6 17.6 H 2" stroke="#8a6a44" stroke-width=".4" opacity=".6" transform="rotate(-4)"/>`;
+  if (t === 'pot'){ const c = tint;
+    return `<radialGradient id="${id}p" cx=".38" cy=".35" r=".75"><stop offset="0" stop-color="${shade(c, .22)}"/><stop offset="1" stop-color="${shade(c, -.22)}"/></radialGradient><path d="M-6 -4 C -6 0 -5 1 -6.4 3 C -15 8 -16.4 22 -9 31 L -8 33 L 8 33 L 9 31 C 16.4 22 15 8 6.4 3 C 5 1 6 0 6 -4Z" fill="url(#${id}p)" stroke="${shade(c, -.4)}" stroke-width=".5"/><path d="M-8.8 30.6 L -8 33 L 8 33 L 8.8 30.6 Q 0 32.4 -8.8 30.6Z" fill="#d8b890" stroke="#a88660" stroke-width=".3"/><path d="M-13.4 22 Q -11 26 -9 25 Q -8 28 -6 27 Q -3 30 0 28 Q 3 30.4 6 27.4 Q 8 28.6 9.4 25.4 Q 11.4 26 13.4 22" stroke="${shade(c, -.32)}" stroke-width=".5" fill="none" opacity=".7"/><ellipse cy="-4" rx="6" ry="1.1" fill="${shade(c, -.45)}" stroke="${shade(c, -.4)}" stroke-width=".4"/>` + hi('M-8 8 C -11 12 -11.6 17 -10.6 21', 1.4); }
+  return null;
+}
+var VASE_SKIP = false;
+const _ribW3 = ribbonSVG;
+ribbonSVG = function(r, x, y, w){ return VASE_SKIP ? '' : _ribW3(r, x, y, w); };
+const _core2 = _bqsvg;
+_bqsvg = function(raw, opts){
+  const b = normBq(raw), t = b.vt || 'glass';
+  if (b.shape !== 'vase' || t === 'glass') return _core2(raw, opts);
+  VASE_SKIP = true; let r; try { r = _core2(raw, opts); } finally { VASE_SKIP = false; }
+  const P = paperFill('vz', b.paper.c, 'plain'), body = vaseBody(t, P.base, 'vb' + hash(String(b.seed) + t + b.paper.c).toString(36));
+  const s0 = r.svg.indexOf('<path d="M-9 4 C -14 12'), e0 = r.svg.indexOf('/>', r.svg.indexOf('<ellipse cy="-4" rx="8" ry="1.4"')) + 2;
+  let svg = s0 >= 0 && e0 > s0 ? r.svg.slice(0, s0) + body + r.svg.slice(e0) : r.svg;
+  const [rx, ry, rw] = VASE_RIB[t]; svg += ribbonSVG(b.rib, rx, ry, rw);
+  return { ...r, svg };
+};
+
 let BQ = null, BQTAB = 'flower';
 function bloomStock(){ const m = {}; weekLogs(0).forEach(l => { const k = flowerOf(l); m[k] = (m[k] || 0) + 1; }); return m; }
 function newBQ(){ return { deco:[], flowers:[], shape:'bouquet', paper:{ c:'kraft', c2:'', pat:'plain' }, rib:{ st:'bow', c:'red' }, green:{ t:'leaf', n:'m' }, size:'m', seed:uid() }; }
@@ -3455,9 +3485,11 @@ function sheetBouquet(){
     const keys = Object.keys(week).sort((a, c) => week[c] - week[a] || FL[a].no - FL[c].no);
     h += `<label class="f">花（今週の庭に咲いた${keys.length}種から。同じ花も何本でも）</label><div class="bqgrid">` + keys.map(k => `<button class="bqcell ${used[k] ? 'picked' : ''}" data-act="bqadd" data-k="${esc(k)}" ${BQ.flowers.length < 12 ? '' : 'disabled'}><svg viewBox="-16 -18 32 32">${flowerSVG(k, k)}</svg><span>${esc(FL[k].n)}</span>${used[k] ? `<small>×${used[k]}</small>` : ''}</button>`).join('') + `</div>`;
   }
-  if (BQTAB === 'shape') h += `<div class="bqshapes">${Object.entries(SHAPES).map(([v, l]) => `<button class="${BQ.shape === v ? 'on' : ''}" data-act="bqshape" data-v="${v}">${bouquetBox({ ...BQ, shape:v, flowers:BQ.flowers.length ? BQ.flowers : ['バラ', 'カスミソウ', 'ガーベラ'] })}<span>${l}</span></button>`).join('')}</div>`;
+  if (BQTAB === 'shape'){ const ex = BQ.flowers.length ? BQ.flowers : ['バラ', 'カスミソウ', 'ガーベラ'];
+    h += `<div class="bqshapes">${Object.entries(SHAPES).map(([v, l]) => `<button class="${BQ.shape === v ? 'on' : ''}" data-act="bqshape" data-v="${v}">${bouquetBox({ ...BQ, shape:v, flowers:ex })}<span>${l}</span></button>`).join('')}</div>`;
+    if (BQ.shape === 'vase') h += `<label class="f">花瓶の種類 <span class="muted" style="font-weight:600">（色は「包み紙」タブで選べるよ）</span></label><div class="bqshapes">${Object.entries(VASES).map(([v, l]) => `<button class="${(BQ.vt || 'glass') === v ? 'on' : ''}" data-act="bqvt" data-v="${v}">${bouquetBox({ ...BQ, vt:v, flowers:ex })}<span>${l}</span></button>`).join('')}</div>`; }
   if (BQTAB === 'paper'){
-    h += BQ.shape === 'vase' ? `<p class="hint">花瓶のときは、選んだ色がガラスの色になるよ</p>` : '';
+    h += BQ.shape === 'vase' ? `<p class="hint">花瓶のときは、選んだ色が花瓶の色になるよ（ブリキ缶はそのまま）</p>` : '';
     const [mo_, d_] = nowMD(), sp_ = Object.entries(SEASON_PAT).filter(([k, v]) => v.on(mo_, d_));
     h += `<label class="f">外側の紙</label>${swatches('bqpc', PAPER_C, BQ.paper.c)}<label class="f">柄</label>${seg('bqpat', PATTERNS, BQ.paper.pat)}`;
     if (sp_.length) h += `<label class="f">季節限定の柄 <span class="ltd">いまだけ</span></label><div class="seg">${sp_.map(([k, v]) => `<button class="${BQ.paper.pat === k ? 'on' : ''}" data-act="bqpat" data-v="${k}">${v.l}</button>`).join('')}</div>`;
@@ -3947,6 +3979,7 @@ document.addEventListener('click', e => {
     case 'bqdecoclear': BQ.deco = []; sheetBouquet(); break;
     case 'bqcharm': BQ.rib.charm = el.dataset.v; sheetBouquet(); break;
     case 'bqrc': BQ.rib.c = el.dataset.v; sheetBouquet(); break;
+    case 'bqvt': BQ.vt = el.dataset.v; sheetBouquet(); break;
     case 'bqrc2': BQ.rib.c2 = el.dataset.v; sheetBouquet(); break;
     case 'bqpm': BQ.paper.m = el.dataset.v; sheetBouquet(); break;
     case 'bqpe': BQ.paper.e = el.dataset.v; sheetBouquet(); break;
