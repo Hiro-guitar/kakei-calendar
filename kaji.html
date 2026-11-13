@@ -3364,10 +3364,80 @@ var bouquetSVG = function(raw, opts = {}){
 };
 function coverPath(vb){ const [x, y, w, h] = vb.split(' ').map(Number); const L = x + w * .14, Rr = x + w * .86, top = y + h * .03, bot = y + h * .62;
   return `<g class="cover"><path d="M${L} ${bot} C ${L - 2} ${(top + bot) / 2} ${x + w * .3} ${top + 6} ${x + w / 2} ${top} C ${x + w * .7} ${top + 6} ${Rr + 2} ${(top + bot) / 2} ${Rr} ${bot} Q ${x + w / 2} ${bot + 6} ${L} ${bot}Z" fill="COVERFILL" stroke="#00000022" stroke-width=".5"/><path d="M${x + w / 2} ${top} L ${x + w * .42} ${bot + 2} M${x + w / 2} ${top} L ${x + w * .6} ${bot + 3} M${x + w * .3} ${top + 10} L ${x + w * .26} ${bot}" stroke="#ffffff55" stroke-width=".8" fill="none"/></g>`; }
-const _bqsvg = bouquetSVG;
+var _bqsvg = bouquetSVG;
 bouquetSVG = function(raw, opts = {}){ const r = _bqsvg(raw, opts); if (!opts.cover) return r; const b = normBq(raw), P = paperFill('cv' + hash(String(b.seed)).toString(36), b.paper.c, b.paper.pat);
   const cv = `<defs>${P.def}</defs>` + coverPath(r.vb).replace('COVERFILL', P.fill); const i = r.svg.lastIndexOf('<g class="bqr">'); return { ...r, svg: i >= 0 ? r.svg.slice(0, i) + cv + r.svg.slice(i) : r.svg + cv }; };
 const bouquetBox = (raw, cls = '') => { const r = bouquetSVG(raw); return `<svg class="bq ${cls}" viewBox="${r.vb}" preserveAspectRatio="xMidYMax meet">${r.svg}</svg>`; };
+/* ===== 包み紙の質感・ふちの形、2色リボン ===== */
+const PAPER_M = { plain:'ふつう', trace:'トレーシング', wax:'ワックス', washi:'和紙' };
+const PAPER_E = { straight:'まっすぐ', wave:'なみなみ', zig:'ギザギザ', scallop:'スカラップ' };
+const f1 = v => v.toFixed(1);
+function edgeD(pts, style, nrm, closed){
+  const n = pts.length, seg = closed ? n : n - 1; let d = `M${f1(pts[0][0])} ${f1(pts[0][1])}`;
+  for (let i = 0; i < seg; i++){ const a = pts[i], b = pts[(i + 1) % n], mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, [nx, ny] = nrm(mx, my);
+    if (style === 'scallop') d += ` Q ${f1(mx + nx * 3.2)} ${f1(my + ny * 3.2)} ${f1(b[0])} ${f1(b[1])}`;
+    else if (style === 'wave'){ const s = i % 2 ? -1 : 1; d += ` Q ${f1(mx + nx * 2 * s)} ${f1(my + ny * 2 * s)} ${f1(b[0])} ${f1(b[1])}`; }
+    else if (style === 'zig') d += ` L ${f1(mx + nx * 1.9)} ${f1(my + ny * 1.9)} L ${f1(b[0])} ${f1(b[1])}`;
+    else d += ` L ${f1(b[0])} ${f1(b[1])}`; }
+  return d;
+}
+function matLayer(m, clipD, bb, seed, base, id){
+  if (!m || m === 'plain') return '';
+  const [x0, y0, x1, y1] = bb, W = x1 - x0, H = y1 - y0, R = i => rnd(seed + m, i);
+  let o = '';
+  if (m === 'trace') o = `<path d="M${f1(x0 + W * .25)} ${f1(y0)} L ${f1(x0 + W * .42)} ${f1(y0)} L ${f1(x0 + W * .55)} ${f1(y1)} L ${f1(x0 + W * .4)} ${f1(y1)}Z" fill="#fff" opacity=".28"/><path d="M${f1(x0 + W * .62)} ${f1(y0)} L ${f1(x0 + W * .68)} ${f1(y0)} L ${f1(x0 + W * .74)} ${f1(y1)} L ${f1(x0 + W * .69)} ${f1(y1)}Z" fill="#fff" opacity=".22"/>`;
+  if (m === 'wax') for (let i = 0; i < 16; i++){ let x = x0 + R(i) * W, y = y0 + R(i + 50) * H, d = `M${f1(x)} ${f1(y)}`; for (let j = 0; j < 3; j++){ x += (R(i * 7 + j) - .5) * 7; y += 1.5 + R(i * 9 + j) * 4; d += ` L ${f1(x)} ${f1(y)}`; }
+    o += `<path d="${d}" stroke="#fff" stroke-width=".45" fill="none" opacity=".55" stroke-linejoin="bevel"/><path d="${d}" stroke="${shade(base, -.35)}" stroke-width=".3" fill="none" opacity=".22" transform="translate(.4,.3)"/>`; }
+  if (m === 'washi'){ for (let i = 0; i < 46; i++){ const x = x0 + R(i) * W, y = y0 + R(i + 90) * H, a = R(i + 200) * 6.28, l = 1.5 + R(i + 300) * 3.5;
+      o += `<path d="M${f1(x)} ${f1(y)} q ${f1(Math.cos(a) * l * .5 + 1)} ${f1(Math.sin(a) * l * .5)} ${f1(Math.cos(a) * l)} ${f1(Math.sin(a) * l)}" stroke="${i % 4 ? '#fffdf6' : shade(base, -.2)}" stroke-width="${i % 4 ? .3 : .2}" fill="none" opacity="${i % 4 ? .7 : .35}"/>`; }
+    for (let i = 0; i < 10; i++) o += `<circle cx="${f1(x0 + R(i + 400) * W)}" cy="${f1(y0 + R(i + 450) * H)}" r=".3" fill="${shade(base, -.3)}" opacity=".3"/>`; }
+  return `<clipPath id="${id}"><path d="${clipD}"/></clipPath><g clip-path="url(#${id})">${o}</g>`;
+}
+const TRACE_OP = ' fill-opacity=".62"';
+const _bqsvg2 = _bqsvg;
+/* 花束・ラウンドの紙を、質感とふちに合わせて描き直す */
+var bouquetCore = function(raw, opts){
+  const b = normBq(raw), m = b.paper.m || 'plain', e = b.paper.e || (b.shape === 'round' ? 'zig' : 'straight');
+  const r = _bqsvg2(raw, opts); if (b.shape !== 'bouquet' && b.shape !== 'round') return r;
+  const seed = b.seed || b.id || 'b', n = (b.flowers || []).length, R = 7 + Math.sqrt(Math.max(n, 1)) * 5.2, pid = 'pp' + hash(seed + JSON.stringify(b.paper)).toString(36);
+  const P = paperFill(pid, b.paper.c, b.paper.pat); let svg = r.svg; const op = m === 'trace' ? TRACE_OP : '';
+  if (b.shape === 'bouquet'){
+    const cy = -26, top = cy - R * .2, half = 18 + R * .55;
+    const q = (p0, c, p1, t) => [(1 - t) * (1 - t) * p0[0] + 2 * (1 - t) * t * c[0] + t * t * p1[0], (1 - t) * (1 - t) * p0[1] + 2 * (1 - t) * t * c[1] + t * t * p1[1]];
+    const A = [-half + 4, cy + 14], C1 = [-10, cy + 20], M = [0, cy + 18], C2 = [10, cy + 20], B = [half - 4, cy + 14], K = 7, pts = [];
+    for (let i = 0; i <= K; i++) pts.push(q(A, C1, M, i / K)); for (let i = 1; i <= K; i++) pts.push(q(M, C2, B, i / K));
+    const topD = edgeD(pts, e, () => [0, -1], false), frontD = `${topD} L 5 36 Q 0 38 -5 36Z`;
+    const oldFront = `<path d="M${-half + 4} ${cy + 14} Q -10 ${cy + 20} 0 ${cy + 18} Q 10 ${cy + 20} ${half - 4} ${cy + 14} L 5 36 Q 0 38 -5 36Z" fill="${P.fill}"`;
+    const oldHi = `<path d="M${-half + 4} ${cy + 14} Q -10 ${cy + 20} 0 ${cy + 18} Q 10 ${cy + 20} ${half - 4} ${cy + 14}" fill="none"`;
+    svg = svg.replace(oldFront, `<path d="${frontD}" fill="${P.fill}"${op}`).replace(oldHi, `<path d="${topD}" fill="none"`);
+    const backD = `M${-half} ${top} Q ${-half / 2} ${top - 12} 0 ${top - 8} Q ${half / 2} ${top - 12} ${half} ${top} L 4 36 L -4 36Z`;
+    if (op) svg = svg.replace(`<path d="${backD}" fill="`, `<path d="${backD}"${op} fill="`);
+    const fm = matLayer(m, frontD, [-half, cy + 10, half, 38], seed, P.base, pid + 'mc');
+    const bm = matLayer(m, backD, [-half, top - 14, half, cy + 16], seed + 'k', P.base, pid + 'mk');
+    // 後ろの紙の質感は花の下（後ろの紙の直後）、前の紙の質感はリボンの直前
+    const bi = svg.indexOf(backD) >= 0 ? svg.indexOf('/>', svg.indexOf(backD)) + 2 : -1;
+    if (bi > 1) svg = svg.slice(0, bi) + bm + svg.slice(bi);
+    const ri = svg.indexOf('<g class="bqr">'); svg = ri >= 0 ? svg.slice(0, ri) + fm + svg.slice(ri) : svg + fm;
+  } else {
+    const cy = -20, old = Array.from({length:18}, (_, i) => { const a = i / 18 * Math.PI * 2, rr = R + 7 + (i % 2 ? 2 : 0); return `${i ? 'L' : 'M'} ${(Math.cos(a) * rr * 1.15).toFixed(1)} ${(cy + 3 + Math.sin(a) * rr * .66).toFixed(1)}`; }).join(' ') + 'Z';
+    const N = e === 'zig' ? 18 : 22, pts = Array.from({length:N}, (_, i) => { const a = i / N * Math.PI * 2; return [Math.cos(a) * (R + 8) * 1.15, cy + 3 + Math.sin(a) * (R + 8) * .66]; });
+    const d = edgeD(pts, e, (x, y) => { const dx = x, dy = (y - cy - 3) / .58, L = Math.hypot(dx, dy) || 1; return [dx / L, dy / L * .7]; }, true) + 'Z';
+    svg = svg.replace(`<path d="${old}" fill="${P.fill}"`, `<path d="${d}" fill="${P.fill}"${op}`);
+    const ml = matLayer(m, d, [-(R + 12) * 1.15, cy + 3 - (R + 12) * .66, (R + 12) * 1.15, cy + 3 + (R + 12) * .66], seed, P.base, pid + 'mr');
+    const ai = svg.indexOf('/>', svg.indexOf(`<path d="${d}"`)) + 2; svg = svg.slice(0, ai) + ml + svg.slice(ai);
+  }
+  return { ...r, svg };
+};
+_bqsvg = bouquetCore;
+/* 2色リボン：うしろにもう1色を重ねる */
+const RIB2_OK = ['bow', 'knot', 'lace', 'double', 'organza', 'dotrib', 'striperib', 'velvet', 'rosette', 'pearl'];
+const _ribW2 = ribbonSVG;
+ribbonSVG = function(r, x, y, w){
+  if (!r || !r.c2 || !RIB2_OK.includes(r.st || 'bow') || !w) return _ribW2(r, x, y, w);
+  const back = ribbonSVG00({ st:r.st === 'lace' ? 'bow' : (r.st === 'knot' ? 'knot' : 'bow'), c:r.c2 }, x, y, w);
+  return `<g class="bqr"><g transform="translate(${x},${y + .6}) scale(1.22) translate(${-x},${-y})">${back}</g></g>` + _ribW2(r, x, y, w);
+};
+
 let BQ = null, BQTAB = 'flower';
 function bloomStock(){ const m = {}; weekLogs(0).forEach(l => { const k = flowerOf(l); m[k] = (m[k] || 0) + 1; }); return m; }
 function newBQ(){ return { deco:[], flowers:[], shape:'bouquet', paper:{ c:'kraft', c2:'', pat:'plain' }, rib:{ st:'bow', c:'red' }, green:{ t:'leaf', n:'m' }, size:'m', seed:uid() }; }
@@ -3391,11 +3461,15 @@ function sheetBouquet(){
     const [mo_, d_] = nowMD(), sp_ = Object.entries(SEASON_PAT).filter(([k, v]) => v.on(mo_, d_));
     h += `<label class="f">外側の紙</label>${swatches('bqpc', PAPER_C, BQ.paper.c)}<label class="f">柄</label>${seg('bqpat', PATTERNS, BQ.paper.pat)}`;
     if (sp_.length) h += `<label class="f">季節限定の柄 <span class="ltd">いまだけ</span></label><div class="seg">${sp_.map(([k, v]) => `<button class="${BQ.paper.pat === k ? 'on' : ''}" data-act="bqpat" data-v="${k}">${v.l}</button>`).join('')}</div>`;
+    if (BQ.shape === 'bouquet' || BQ.shape === 'round'){ const ex = BQ.flowers.length ? BQ.flowers : ['バラ', 'カスミソウ', 'ガーベラ'], defE = BQ.shape === 'round' ? 'zig' : 'straight';
+      h += `<label class="f">紙の質感</label><div class="bqshapes four">${Object.entries(PAPER_M).map(([v, l]) => `<button class="${(BQ.paper.m || 'plain') === v ? 'on' : ''}" data-act="bqpm" data-v="${v}">${bouquetBox({ ...BQ, flowers:ex, paper:{ ...BQ.paper, m:v } })}<span>${l}</span></button>`).join('')}</div>`;
+      h += `<label class="f">ふちの形</label><div class="bqshapes four">${Object.entries(PAPER_E).map(([v, l]) => `<button class="${(BQ.paper.e || defE) === v ? 'on' : ''}" data-act="bqpe" data-v="${v}">${bouquetBox({ ...BQ, flowers:ex, paper:{ ...BQ.paper, e:v } })}<span>${l}</span></button>`).join('')}</div>`; }
     if (BQ.shape === 'bouquet' || BQ.shape === 'round') h += `<label class="f">内側の紙（重ね）</label>${swatches('bqpc2', PAPER_C, BQ.paper.c2, `<button class="${!BQ.paper.c2 ? 'on' : ''}" data-act="bqpc2" data-v=""><i style="background:repeating-linear-gradient(45deg,#fff 0 3px,#eee 3px 6px)"></i><small>なし</small></button>`)}`;
   }
   if (BQTAB === 'rib'){ const [mo_, d_] = nowMD(), sr_ = Object.entries(SEASON_RIB).filter(([k, v]) => v.on(mo_, d_)), rc_ = ['twine', 'mizuhiki', 'xmas'].includes(BQ.rib.st) ? 'red' : BQ.rib.c;
     h += `<label class="f">結び方</label><div class="ribgrid">${Object.entries(RIB_ST).map(([k, l]) => `<button class="${BQ.rib.st === k ? 'on' : ''}" data-act="bqrst" data-v="${k}">${ribbonTile(k, rc_)}<span>${l}</span></button>`).join('')}${sr_.map(([k, v]) => `<button class="${BQ.rib.st === k ? 'on' : ''}" data-act="bqrst" data-v="${k}">${ribbonTile(k, 'red')}<span>${v.l}</span><em>いまだけ</em></button>`).join('')}</div>`;
     if (!['twine', 'mizuhiki', 'xmas'].includes(BQ.rib.st)) h += `<label class="f">色</label>${swatches('bqrc', RIB_C, BQ.rib.c)}`;
+    if (RIB2_OK.includes(BQ.rib.st)) h += `<label class="f">うしろに重ねる色（2色リボン）</label>${swatches('bqrc2', RIB_C, BQ.rib.c2 || '', `<button class="${!BQ.rib.c2 ? 'on' : ''}" data-act="bqrc2" data-v=""><i style="background:repeating-linear-gradient(45deg,#fff 0 3px,#eee 3px 6px)"></i><small>なし</small></button>`)}`;
   }
   if (BQTAB === 'deco'){ const [mo_, d_] = nowMD(), ch_ = Object.entries(CHARMS).filter(([k, v]) => v.on(mo_, d_)), always = ALWAYS_CH, cur = BQ.deco || [];
     h += `<label class="f">チャーム（1つ選べる・もう一度押すと外れる）</label><div class="ribgrid charms">${ch_.map(([k, v]) => `<button class="${cur.includes(k) ? 'on' : ''}" data-act="bqdeco" data-v="${k}"><svg viewBox="-5 -5 10 10">${charmArt(k)}</svg><span>${v.l}</span>${always.includes(k) ? '' : '<em>いまだけ</em>'}</button>`).join('')}</div>`;
@@ -3873,6 +3947,9 @@ document.addEventListener('click', e => {
     case 'bqdecoclear': BQ.deco = []; sheetBouquet(); break;
     case 'bqcharm': BQ.rib.charm = el.dataset.v; sheetBouquet(); break;
     case 'bqrc': BQ.rib.c = el.dataset.v; sheetBouquet(); break;
+    case 'bqrc2': BQ.rib.c2 = el.dataset.v; sheetBouquet(); break;
+    case 'bqpm': BQ.paper.m = el.dataset.v; sheetBouquet(); break;
+    case 'bqpe': BQ.paper.e = el.dataset.v; sheetBouquet(); break;
     case 'bqgt': BQ.green.t = el.dataset.v; sheetBouquet(); break;
     case 'bqgn': BQ.green.n = el.dataset.v; sheetBouquet(); break;
     case 'bqsend': if (!BQ || !BQ.flowers.length) break; { const nb = { id:uid(), kind:'bouquet', from:S.me, to:other(S.me), ...JSON.parse(JSON.stringify(BQ)), at:Date.now(), opened:false }; nb.name = bqNameOf(nb); put(nb); } BQ = null; closeSheet(); chime('thanks'); toast(`花束を${nm(other(S.me))}に贈りました`); break;
