@@ -3441,7 +3441,7 @@ ribbonSVG = function(r, x, y, w){
 /* ===== 花瓶の種類 ===== */
 const VASES = { glass:'ガラス', bud:'一輪挿し', bowl:'まるいガラス', jar:'ジャー', milk:'ピッチャー', tin:'ブリキ缶', pot:'陶器のつぼ' };
 const VASE_RIB = { glass:[0, 0, 16], bud:[0, 5, 7], bowl:[0, -1.4, 14], jar:[0, 2.6, 20], milk:[0, 5, 18], tin:[0, 7, 21], pot:[0, -.6, 13] };
-function vaseBody(t, tint, id){
+var vaseBody = function(t, tint, id){
   const dk = shade(tint, -.3), glassF = `fill="${tint}" fill-opacity=".38" stroke="${dk}" stroke-opacity=".6" stroke-width=".5"`, hi = (d, w = 1.2) => `<path d="${d}" stroke="#fff" stroke-width="${w}" opacity=".5" fill="none" stroke-linecap="round"/>`;
   if (t === 'bud') return `<path d="M-2.8 -4 L -2.6 8 C -11 12 -12 28 -6 33 L 6 33 C 12 28 11 12 2.6 8 L 2.8 -4Z" ${glassF}/><path d="M-10.4 20 C -10 26 -8 31 -5.6 32.4 L 5.6 32.4 C 8 31 10 26 10.4 20Z" fill="#c8e0ec" opacity=".45"/>` + hi('M-1.6 -2 V 7') + hi('M-6 13 C -9 18 -9 25 -6 30') + `<ellipse cy="-4" rx="2.8" ry=".6" fill="none" stroke="${dk}" stroke-opacity=".6" stroke-width=".5"/>`;
   if (t === 'bowl') return `<path d="M-7 -4 C -7 -1 -8 0 -10 1.6 A 17 16.5 0 1 0 10 1.6 C 8 0 7 -1 7 -4Z" ${glassF}/><path d="M-16.4 14 A 17 16.5 0 0 0 16.4 14Z" fill="#c8e0ec" opacity=".45"/>` + hi('M-11 6 C -15 12 -15 20 -11 26', 1.6) + hi('M8 3 C 10 4 11.5 5.5 12.5 7', .8) + `<ellipse cy="-4" rx="7" ry="1.3" fill="none" stroke="${dk}" stroke-opacity=".6" stroke-width=".5"/>`;
@@ -3466,6 +3466,39 @@ _bqsvg = function(raw, opts){
   let svg = s0 >= 0 && e0 > s0 ? r.svg.slice(0, s0) + body + r.svg.slice(e0) : r.svg;
   const [rx, ry, rw] = VASE_RIB[t]; svg += ribbonSVG(b.rib, rx, ry, rw);
   return { ...r, svg };
+};
+
+/* ===== おしゃれ花瓶 ===== */
+Object.assign(VASES, { rib:'リブガラス', bubble:'気泡ガラス', ombre:'グラデーション', cube:'キューブ', wave:'ウェーブ', nordic:'北欧ボトル', rattan:'ラタン巻き', brass:'真鍮のゴブレット' });
+Object.assign(VASE_RIB, { rib:[0, 3, 19], bubble:[0, 2, 11], ombre:[0, 3, 15], cube:[0, 12, 23], wave:[0, 1, 16], nordic:[0, 3, 7], rattan:[0, 2, 10], brass:[0, 2, 20] });
+const _vaseBody0 = vaseBody;
+vaseBody = function(t, tint, id){
+  const dk = shade(tint, -.3), gF = (op = .38) => `fill="${tint}" fill-opacity="${op}" stroke="${dk}" stroke-opacity=".6" stroke-width=".5"`, hi = (d, w = 1.2, o = .5) => `<path d="${d}" stroke="#fff" stroke-width="${w}" opacity="${o}" fill="none" stroke-linecap="round"/>`, rim = (rx, y = -4, c = '#d8b048') => `<ellipse cy="${y}" rx="${rx}" ry="${(rx * .17).toFixed(2)}" fill="none" stroke="${c}" stroke-width=".7"/>`;
+  const water = (d) => `<path d="${d}" fill="#c8e0ec" opacity=".42"/>`;
+  if (t === 'rib'){ let o = `<path d="M-9 -4 L -10.6 31 Q -10.6 33 -8.6 33 L 8.6 33 Q 10.6 33 10.6 31 L 9 -4Z" ${gF(.32)}/>` + water('M-10 14 L -10.4 31 Q -10.4 32.6 -8.6 32.6 L 8.6 32.6 Q 10.4 32.6 10.4 31 L 10 14Z');
+    for (let i = 0; i < 11; i++){ const xt = -8.2 + i * 1.64, xb = xt * 1.17; o += `<path d="M${xt.toFixed(2)} -3.4 L ${xb.toFixed(2)} 32" stroke="${i % 2 ? '#fff' : dk}" stroke-width="${i % 2 ? .7 : .35}" opacity="${i % 2 ? .45 : .35}"/>`; }
+    return o + `<path d="M-10.4 30 Q 0 31.6 10.4 30 L 10.6 31 Q 10.6 33 8.6 33 L -8.6 33 Q -10.6 33 -10.6 31Z" fill="${dk}" opacity=".18"/>` + rim(9); }
+  if (t === 'bubble'){ const d = 'M-5 -4 L -5 2 C -12 5 -12.4 10 -12.4 16 L -12.4 29 Q -12.4 33 -8.4 33 L 8.4 33 Q 12.4 33 12.4 29 L 12.4 16 C 12.4 10 12 5 5 2 L 5 -4Z';
+    let o = `<path d="${d}" ${gF(.45)}/>` + water('M-12 16 L -12 29 Q -12 32.6 -8.4 32.6 L 8.4 32.6 Q 12 32.6 12 29 L 12 16Z') + `<path d="M-12.2 28.6 Q 0 31 12.2 28.6 L 12.4 29 Q 12.4 33 8.4 33 L -8.4 33 Q -12.4 33 -12.4 29Z" fill="${dk}" opacity=".3"/>`;
+    for (let i = 0; i < 26; i++){ const a = rnd('bub' + t, i), bb = rnd('bub2', i), y = 4 + bb * 26, w = y < 6 ? 4 : 10.6, x = (a - .5) * 2 * w, r = .25 + rnd('bub3', i) * .55; o += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(2)}" fill="#fff" fill-opacity=".25" stroke="#fff" stroke-opacity=".75" stroke-width=".18"/>`; }
+    return o + hi('M-10 9 C -11 15 -11 22 -10 27', 1.4) + `<ellipse cy="-4" rx="5" ry="1" fill="none" stroke="${dk}" stroke-opacity=".7" stroke-width=".7"/>`; }
+  if (t === 'ombre') return `<linearGradient id="${id}o" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tint}" stop-opacity=".12"/><stop offset=".45" stop-color="${tint}" stop-opacity=".35"/><stop offset="1" stop-color="${shade(tint, -.35)}" stop-opacity=".95"/></linearGradient><path d="M-7 -4 C -7 8 -8.4 22 -7.6 33 L 7.6 33 C 8.4 22 7 8 7 -4Z" fill="url(#${id}o)" stroke="${dk}" stroke-opacity=".45" stroke-width=".45"/>` + hi('M-5.2 0 C -5.6 10 -6.4 20 -6 29', 1.1) + rim(7);
+  if (t === 'cube') return `<path d="M-11.4 8 L 11.4 8 L 11.4 33 L -11.4 33Z" ${gF(.28)}/>` + water('M-11 16 L 11 16 L 11 32.6 L -11 32.6Z') + `<path d="M-11.4 28 L 11.4 28 L 11.4 33 L -11.4 33Z" fill="${dk}" opacity=".22"/><path d="M-11.4 8 L 11.4 8" stroke="#fff" stroke-width=".8" opacity=".7"/>` + hi('M-9.4 10 V 26', 1.4) + hi('M8.6 10 V 18', .7, .4) + `<path d="M-11.4 8 V 33 M11.4 8 V 33" stroke="${dk}" stroke-width=".9" opacity=".5"/>`;
+  if (t === 'wave'){ const L = [[-6, -4], [-8.6, 1], [-6.6, 6], [-11, 12], [-8.6, 18], [-12.4, 25], [-9, 33]], R = L.map(([x, y]) => [-x, y]).reverse();
+    const sm = pts => pts.slice(1).map((p, i) => { const a = pts[i]; return `Q ${a[0].toFixed(1)} ${((a[1] + p[1]) / 2).toFixed(1)} ${((a[0] + p[0]) / 2).toFixed(1)} ${((a[1] + p[1]) / 2 + (p[1] - a[1]) / 2).toFixed(1)}`; }).join(' ');
+    const d = `M-6 -4 ${L.slice(1).map(([x, y]) => `S ${x} ${y - 2.6} ${x} ${y}`).join(' ')} L 9 33 ${R.slice(1).map(([x, y]) => `S ${x} ${y + 2.6} ${x} ${y}`).join(' ')}Z`;
+    let o = `<path d="${d}" fill="${tint}" stroke="${shade(tint, -.25)}" stroke-width=".45"/>`;
+    for (let i = 0; i < 40; i++) o += `<circle cx="${((rnd('wv', i) - .5) * 16).toFixed(1)}" cy="${(-2 + rnd('wv2', i) * 33).toFixed(1)}" r=".18" fill="${shade(tint, -.3)}" opacity=".35"/>`;
+    return `<clipPath id="${id}w"><path d="${d}"/></clipPath>` + o + `<g clip-path="url(#${id}w)"><path d="M-14 -6 L -3 -6 L -6 36 L -14 36Z" fill="#fff" opacity=".12"/><path d="M4 -6 L 14 -6 L 14 36 L 6 36Z" fill="#000" opacity=".08"/></g><ellipse cy="-4" rx="6" ry="1" fill="${shade(tint, -.4)}"/>`; }
+  if (t === 'nordic'){ const d = 'M-2.6 -4 L -2.6 4 C -2.6 6 -11 9 -11 20 C -11 28 -8 33 0 33 C 8 33 11 28 11 20 C 11 9 2.6 6 2.6 4 L 2.6 -4Z', ln = shade(tint, -.25);
+    return `<path d="${d}" fill="#f6f2ea" stroke="#cfc6b4" stroke-width=".45"/><clipPath id="${id}n"><path d="${d}"/></clipPath><g clip-path="url(#${id}n)"><path d="M-12 26.6 H 12" stroke="${ln}" stroke-width="1.6"/><path d="M-12 29 H 12" stroke="${ln}" stroke-width=".5"/><path d="M0 24 C -.4 18 .4 13 0 9" stroke="${ln}" stroke-width=".5" fill="none"/>${[[10, 1], [13, -1], [16, 1], [19, -1]].map(([y, s]) => `<path d="M0 ${y + 2} q ${s * 2.6} -1.2 ${s * 3.6} -3.6 q ${-s * 2.4} .4 ${-s * 3.6} 3.6Z" fill="${ln}" opacity=".85"/>`).join('')}<path d="M-12 8 L 12 8 L 12 36 L 4 36 Z" fill="#000" opacity=".05"/></g>` + hi('M-8 14 C -9.4 18 -9.4 23 -8 27', 1, .7) + `<ellipse cy="-4" rx="2.6" ry=".5" fill="#8a8274"/>`; }
+  if (t === 'rattan'){ const d = 'M-4.6 -4 L -4.6 3 C -10.6 6 -10.6 9 -10.6 13 L -10.6 30 Q -10.6 33 -7.6 33 L 7.6 33 Q 10.6 33 10.6 30 L 10.6 13 C 10.6 9 10.6 6 4.6 3 L 4.6 -4Z';
+    let o = `<path d="${d}" ${gF(.32)}/>` + `<clipPath id="${id}r"><path d="M-11 11 H 11 V 34 H -11Z"/></clipPath><g clip-path="url(#${id}r)"><path d="${d}" fill="#d8b47a"/>`;
+    for (let i = 0; i < 9; i++) o += `<path d="M-11 ${11.6 + i * 2.5} Q 0 ${12.8 + i * 2.5} 11 ${11.6 + i * 2.5}" stroke="#a8804a" stroke-width=".9" fill="none"/>`;
+    for (let i = 0; i < 12; i++){ const x = -10 + i * 1.82; o += `<path d="M${x.toFixed(1)} 11 V 33" stroke="${i % 2 ? '#e8c890' : '#b88e58'}" stroke-width=".7" stroke-dasharray="1.25 1.25" stroke-dashoffset="${i % 2 ? 0 : 1.25}"/>`; }
+    return o + `<path d="M-11 11 L -4 11 L -6 34 L -11 34Z" fill="#fff" opacity=".12"/></g><path d="M-10.6 11 Q 0 12.4 10.6 11" stroke="#8a6232" stroke-width="1" fill="none"/>` + hi('M-3.4 -2 V 3', .9) + `<ellipse cy="-4" rx="4.6" ry=".9" fill="none" stroke="${dk}" stroke-opacity=".6" stroke-width=".5"/>`; }
+  if (t === 'brass') return `<linearGradient id="${id}b" x1="0" x2="1"><stop offset="0" stop-color="#8a6420"/><stop offset=".28" stop-color="#f6dc8a"/><stop offset=".5" stop-color="#c8962e"/><stop offset=".78" stop-color="#e8c060"/><stop offset="1" stop-color="#7a5418"/></linearGradient><path d="M-11 -4 C -10.4 6 -6 12 -2 15 L -1.8 26 C -1.8 28 -8 29.4 -8 31.6 L -8 33 L 8 33 L 8 31.6 C 8 29.4 1.8 28 1.8 26 L 2 15 C 6 12 10.4 6 11 -4Z" fill="url(#${id}b)" stroke="#6a4810" stroke-width=".4"/><ellipse cy="-4" rx="11" ry="1.7" fill="#5a3a10" stroke="#e8c060" stroke-width=".5"/><ellipse cy="20" rx="2.6" ry=".8" fill="url(#${id}b)" stroke="#6a4810" stroke-width=".3"/><ellipse cy="33" rx="8" ry="1" fill="#6a4810" opacity=".5"/>` + hi('M-8 0 C -6.6 5 -4.6 9 -2.4 11.6', .9, .55);
+  return _vaseBody0(t, tint, id);
 };
 
 let BQ = null, BQTAB = 'flower';
