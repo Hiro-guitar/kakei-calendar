@@ -158,6 +158,9 @@ details.more textarea{margin-top:6px}
 .edbtns{display:flex;gap:10px;align-items:center;margin-left:auto}
 .bikein .small{flex-basis:100%;padding-left:calc(7.5em + 8px);margin-top:-4px}
 html,body{overflow-x:hidden}
+.notice{background:var(--leaf-soft);border-radius:10px;padding:10px 14px;display:grid;gap:6px;font-size:.9rem}
+.notice p{margin:0}.notice ul{margin:0;padding-left:1.1em;display:grid;gap:4px}.notice .who{display:flex;gap:8px}
+.notice [data-seen]{justify-self:end}
 /* calendar */
 .tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tabs button{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 14px;border-radius:999px;cursor:pointer}
@@ -371,7 +374,7 @@ async function refreshDb(){
   if(state.mode!=='sheet')return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
 }
-const BUILD='1794618761';
+const BUILD='1794619073';
 async function checkUpdate(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});const s=await r.text();const m=s.match(/const BUILD='([0-9]+)'/);if(m&&m[1]!==BUILD){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))location.reload()}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshDb();checkUpdate()}});
 setTimeout(checkUpdate,3000);
@@ -462,7 +465,31 @@ const DAY=1300,SNACK=200,BIKE_SHARE=0.5; // 1日1,300kcal。夜のおやつ200�
 state.bike=lsGet('kondate-bike',{});state.eat=lsGet('kondate-eat',{});
 const bikeOf=k=>{const d=(state.days[k]||{}).bikemin;if(d)return d;const v=state.bike[k];return typeof v==='number'?{g:v}:(v||{})};
 const eatOf=k=>(state.days[k]||{}).eat||state.eat[k]||[];
-function setDayField(k,f,val){const o={...(state.days[k]||{})};if(val==null)delete o[f];else o[f]=val;saveDay(k,o)}
+function setDayField(k,f,val){const o={...(state.days[k]||{})};if(val==null)delete o[f];else o[f]=val;commitDay(k,o)}
+/* ---- 相手が入力したものを知らせる ---- */
+const WHO={h:'ひろき',y:'佑理'};
+const meOf=()=>{try{return localStorage.getItem('kondate-me')||''}catch(e){return ''}};
+const SLOTN={b:'朝ごはん',l:'昼ごはん',s:'夜のおやつ'};
+function diffDay(k,a,b){const out=[];const d=new Date(k+'T00:00');const pre=k===today?'':(d.getMonth()+1)+'/'+d.getDate()+'の';
+  const ea=(a.eat||[]).map(x=>[x[0],+x[1],slotOf(x)]),eb=(b.eat||[]).map(x=>[x[0],+x[1],slotOf(x)]);const key=x=>x.join('|');
+  const rest=ea.map(key);const added=[];eb.forEach(x=>{const i=rest.indexOf(key(x));if(i>=0)rest.splice(i,1);else added.push(x)});
+  const removed=rest.map(r=>ea.find(x=>key(x)===r));
+  if(added.length===1&&removed.length===1)out.push(pre+SLOTN[removed[0][2]]+'の「'+removed[0][0]+'」を「'+added[0][0]+' '+added[0][1]+'kcal」'+(added[0][2]!==removed[0][2]?'（'+SLOTN[added[0][2]]+'）':'')+'に直しました');
+  else{added.forEach(x=>out.push(pre+SLOTN[x[2]]+'に「'+x[0]+' '+x[1]+'kcal」を追加しました'));removed.forEach(x=>out.push(pre+SLOTN[x[2]]+'の「'+x[0]+'」を消しました'))}
+  if(JSON.stringify(a.dinpi||null)!==JSON.stringify(b.dinpi||null)||(a.dinp||null)!==(b.dinp||null)){const p=PLAN[k];
+    if(p&&p.t){const fs=b.dinpi||p.t.D.map(()=>b.dinp!=null?b.dinp/baseP(k):1);const ch=p.t.D.map((it,i)=>[it,fs[i]]).filter(([,f])=>Math.abs(f-1)>0.001).map(([it,f])=>{const ib=itemBase(it),v=Math.round(f*ib.base/ib.step)*ib.step;return it[0].replace(/（.*?）/g,'')+' '+(ib.unit==='g'?Math.round(v)+'g':(Math.round(v*10)/10)+'人前')});
+      out.push(pre+'夜ごはんの量を'+(ch.length?'直しました（'+ch.join('、')+'）':'献立どおりに戻しました'))}}
+  if(JSON.stringify(a.bikemin||{})!==JSON.stringify(b.bikemin||{})||(a.steps||0)!==(b.steps||0)){const v=b.bikemin||{},t=[];BK.forEach(([id,n])=>{if(v[id])t.push(n+v[id]+'分')});if(b.steps)t.push(b.steps+'歩');out.push(pre+'自転車・歩数を入れました'+(t.length?'（'+t.join('、')+'）':'（0）'))}
+  if((a.memo||'')!==(b.memo||'')&&b.memo)out.push(pre+'メモを書きました');
+  return out}
+function commitDay(k,o){const me=meOf(),old=state.days[k]||{};if(me){const m=diffDay(k,old,o);if(m.length){const now=Date.now();o.log=[...(old.log||[]),...m.map(t=>[me,t,now])].slice(-20)}}saveDay(k,o)}
+function unseenLogs(){const me=meOf();if(!me)return [];const seen=lsGet('kondate-seen',0);const out=[];
+  Object.values(state.days).forEach(d=>(d.log||[]).forEach(l=>{if(l[0]!==me&&l[2]>seen)out.push(l)}));return out.sort((a,b)=>a[2]-b[2])}
+function noticeHtml(){const me=meOf();
+  if(!me)return '<div class="notice"><p>このスマホを使うのは誰ですか？ 相手が入力したものを、次に開いたときに知らせます。</p><div class="who"><button type="button" class="btn" data-me="h">ひろき</button><button type="button" class="btn" data-me="y">佑理</button></div></div>';
+  const u=unseenLogs();if(!u.length)return '';
+  const fmt=ts=>{const d=new Date(ts);return (d.getMonth()+1)+'/'+d.getDate()+' '+d.getHours()+':'+pad(d.getMinutes())};
+  return '<div class="notice"><ul>'+u.slice(-8).map(l=>'<li><b>'+WHO[l[0]]+'</b>が'+esc(l[1])+'<span class="muted small"> '+fmt(l[2])+'</span></li>').join('')+'</ul>'+(u.length>8?'<p class="small muted">ほか'+(u.length-8)+'件</p>':'')+'<button type="button" class="link small" data-seen="1">見ました</button></div>'}
 const STEP_K=0.035; // 1歩あたりの消費（約75kg・歩幅65cm、安静時の分を除いた正味）
 const stepsOf=k=>+((state.days[k]||{}).steps)||0;
 const burnOf=k=>{const v=bikeOf(k);return Math.round(BK.reduce((a,[id,,r])=>a+(v[id]||0)*r,0)+stepsOf(k)*STEP_K)};
@@ -734,7 +761,7 @@ function renderCard(){
   const p=PLAN[sel],d=new Date(sel+'T00:00'),card=document.getElementById('card');
   const dow=W[(d.getDay()+6)%7];
   const ks=Object.keys(PLAN).sort(),ix=ks.indexOf(sel);
-  let h='<div class="daynav"><button type="button" class="navb" data-go="'+(ks[ix-1]||'')+'"'+(ix>0?'':' disabled')+' aria-label="前の日">‹</button><h2>'+(d.getMonth()+1)+'月'+d.getDate()+'日（'+dow+'）'+(sel===today?'<span class="todaytag">今日</span>':'')+'</h2><button type="button" class="navb" data-go="'+(ks[ix+1]||'')+'"'+(ix<ks.length-1?'':' disabled')+' aria-label="次の日">›</button></div>';
+  let h=noticeHtml()+'<div class="daynav"><button type="button" class="navb" data-go="'+(ks[ix-1]||'')+'"'+(ix>0?'':' disabled')+' aria-label="前の日">‹</button><h2>'+(d.getMonth()+1)+'月'+d.getDate()+'日（'+dow+'）'+(sel===today?'<span class="todaytag">今日</span>':'')+'</h2><button type="button" class="navb" data-go="'+(ks[ix+1]||'')+'"'+(ix<ks.length-1?'':' disabled')+' aria-label="次の日">›</button></div>';
   if(sel!==today&&PLAN[today])h+='<button type="button" class="link small backtoday" data-go="'+today+'">今日に戻る</button>';
   const dn=p.t?mainName(p.t.D):'';
   h+='<div class="tonight">'+(p.t?(p.t.D[0][6]==='free'?(p.t.cheat?'<p class="lead">今夜は</p><p class="dish"><span>'+esc(p.t.D[0][0])+'</span></p>':'<p class="free-day">今夜は好きなものを</p>'):'<p class="lead">今夜は</p><p class="dish"><span>'+esc(dn)+'</span></p>'):'<p class="free-day">お正月</p>')+'</div>';
@@ -789,13 +816,15 @@ function renderCard(){
   const dd=state.days[sel]||{};
   h+='<details class="more"'+(dd.memo?' open':'')+'><summary>メモ</summary><textarea id="memo" aria-label="メモ" placeholder="体調・外食など">'+esc(dd.memo||'')+'</textarea></details>';
   card.innerHTML=h;
+  card.querySelectorAll('[data-me]').forEach(b=>b.onclick=()=>{try{localStorage.setItem('kondate-me',b.dataset.me)}catch(e){}lsSet('kondate-seen',Date.now());renderCard()});
+  card.querySelectorAll('[data-seen]').forEach(b=>b.onclick=()=>{const u=unseenLogs();lsSet('kondate-seen',u.length?u[u.length-1][2]:Date.now());renderCard()});
   card.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{if(b.dataset.go){sel=b.dataset.go;addSlot=null;editIx=null;favEdit=false;renderCard();window.scrollTo(0,0)}});
   card.querySelectorAll('[data-slot]').forEach(b=>b.onclick=()=>{addSlot=b.dataset.slot;renderCard();const n=card.querySelector('#eat-n');if(n)n.focus()});
   const setItem=(ix,dir)=>{const p=PLAN[sel],it=p.t.D[ix],ib=itemBase(it),fs=factorsOf(sel);
     let v=Math.round(fs[ix]*ib.base/ib.step)*ib.step+dir*ib.step;v=Math.max(0,Math.min(ib.base*3,v));fs[ix]=Math.round(v/ib.base*100)/100;
-    const o={...(state.days[sel]||{})};delete o.dinp;if(fs.every(f=>Math.abs(f-1)<0.001))delete o.dinpi;else o.dinpi=fs;saveDay(sel,o);renderCard()};
+    const o={...(state.days[sel]||{})};delete o.dinp;if(fs.every(f=>Math.abs(f-1)<0.001))delete o.dinpi;else o.dinpi=fs;commitDay(sel,o);renderCard()};
   card.querySelectorAll('[data-istep]').forEach(b=>b.onclick=()=>{const [ix,dir]=b.dataset.istep.split(':');setItem(+ix,+dir)});
-  card.querySelectorAll('[data-ireset]').forEach(b=>b.onclick=()=>{const o={...(state.days[sel]||{})};delete o.dinp;delete o.dinpi;saveDay(sel,o);renderCard()});
+  card.querySelectorAll('[data-ireset]').forEach(b=>b.onclick=()=>{const o={...(state.days[sel]||{})};delete o.dinp;delete o.dinpi;commitDay(sel,o);renderCard()});
   const ea=card.querySelector('#eat-add');if(ea){ea.onclick=()=>addEat(card.querySelector('#eat-n').value,card.querySelector('#eat-k').value);card.querySelector('#eat-k').onkeydown=e=>{if(e.key==='Enter')ea.click()};}
   card.querySelectorAll('[data-eatq]').forEach(b=>b.onclick=()=>{const [n,k]=state.fav[+b.dataset.eatq];addEat(n,k)});
   card.querySelectorAll('[data-fav]').forEach(b=>b.onclick=()=>{const x=eatOf(sel)[+b.dataset.fav];if(!x||!x[0])return;const i=state.fav.findIndex(f=>f[0]===x[0]&&f[1]===x[1]);saveFav(i>=0?state.fav.filter((_,j)=>j!==i):[...state.fav,[x[0],x[1]]])});
@@ -809,9 +838,9 @@ function renderCard(){
   card.querySelectorAll('[data-favdel2]').forEach(b=>b.onclick=()=>{b.closest('li').remove()});
   card.querySelectorAll('[data-favdone]').forEach(b=>b.onclick=()=>{const o=[];card.querySelectorAll('.favlist li').forEach(li=>{const n=li.querySelector('[data-fn]').value.trim().slice(0,40),k=Math.round(+li.querySelector('[data-fk]').value);if(n&&k>0&&k<5000)o.push([n,k])});favEdit=false;saveFav(o)});
   card.querySelectorAll('[data-eatdel]').forEach(b=>b.onclick=()=>{const l=eatOf(sel).slice();l.splice(+b.dataset.eatdel,1);setDayField(sel,'eat',l.length?l:null);renderCard()});
-  card.querySelectorAll('input[data-steps]').forEach(si=>si.onchange=()=>{const val=Math.max(0,Math.min(60000,parseInt(si.value)||0));const o={...(state.days[sel]||{})};if(val)o.steps=val;else delete o.steps;saveDay(sel,o);renderCard();const dt=document.querySelector('details.bike');if(dt)dt.open=true});
-  card.querySelectorAll('input[data-bk]').forEach(bi=>bi.onchange=()=>{const val=Math.max(0,Math.min(300,parseInt(bi.value)||0));const cur={...bikeOf(sel)};if(val)cur[bi.dataset.bk]=val;else delete cur[bi.dataset.bk];const o={...(state.days[sel]||{})};if(Object.keys(cur).length)o.bikemin=cur;else delete o.bikemin;saveDay(sel,o);renderCard();const dt=document.querySelector('details.bike');if(dt)dt.open=true});
-  const memo=card.querySelector('#memo');memo.onchange=()=>{const o={...(state.days[sel]||{})};o.memo=memo.value.slice(0,500);saveDay(sel,o)};
+  card.querySelectorAll('input[data-steps]').forEach(si=>si.onchange=()=>{const val=Math.max(0,Math.min(60000,parseInt(si.value)||0));const o={...(state.days[sel]||{})};if(val)o.steps=val;else delete o.steps;commitDay(sel,o);renderCard();const dt=document.querySelector('details.bike');if(dt)dt.open=true});
+  card.querySelectorAll('input[data-bk]').forEach(bi=>bi.onchange=()=>{const val=Math.max(0,Math.min(300,parseInt(bi.value)||0));const cur={...bikeOf(sel)};if(val)cur[bi.dataset.bk]=val;else delete cur[bi.dataset.bk];const o={...(state.days[sel]||{})};if(Object.keys(cur).length)o.bikemin=cur;else delete o.bikemin;commitDay(sel,o);renderCard();const dt=document.querySelector('details.bike');if(dt)dt.open=true});
+  const memo=card.querySelector('#memo');memo.onchange=()=>{const o={...(state.days[sel]||{})};o.memo=memo.value.slice(0,500);commitDay(sel,o)};
 }
 
 /* スワイプで前後の日へ */
