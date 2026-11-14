@@ -374,7 +374,7 @@ async function refreshDb(){
   if(state.mode!=='sheet')return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
 }
-const BUILD='1794619481';
+const BUILD='1794619695';
 async function checkUpdate(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});const s=await r.text();const m=s.match(/const BUILD='([0-9]+)'/);if(m&&m[1]!==BUILD){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))location.reload()}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshDb();checkUpdate()}});
 setTimeout(checkUpdate,3000);
@@ -487,7 +487,7 @@ function unseenLogs(){const me=meOf();if(!me)return [];const seen=lsGet('kondate
   Object.values(state.days).forEach(d=>(d.log||[]).forEach(l=>{if(l[0]!==me&&l[2]>seen)out.push(l)}));
   (DATA.news||[]).forEach(l=>{if(l[0]!==me&&l[2]>seen)out.push(l)});return out.sort((a,b)=>a[2]-b[2])}
 function noticeHtml(){const me=meOf();
-  if(!me)return '<div class="notice"><p>このスマホを使うのは誰ですか？ 相手が入力したものを、次に開いたときに知らせます。</p><div class="who"><button type="button" class="btn" data-me="h">拓輝</button><button type="button" class="btn" data-me="y">佑理</button></div></div>';
+  if(!me)return '<div class="notice"><p>このスマホを使うのは誰ですか？ 相手が入力したものを、次に開いたときに知らせます（今日の分から）。</p><div class="who"><button type="button" class="btn" data-me="h">拓輝</button><button type="button" class="btn" data-me="y">佑理</button></div></div>';
   const u=unseenLogs();if(!u.length)return '';
   const fmt=ts=>{const d=new Date(ts);return (d.getMonth()+1)+'/'+d.getDate()+' '+d.getHours()+':'+pad(d.getMinutes())};
   return '<div class="notice"><ul>'+u.slice(-8).map(l=>'<li><b>'+WHO[l[0]]+'</b>が'+esc(l[1])+'<span class="muted small"> '+fmt(l[2])+'</span></li>').join('')+'</ul>'+(u.length>8?'<p class="small muted">ほか'+(u.length-8)+'件</p>':'')+'<button type="button" class="link small" data-seen="1">見ました</button></div>'}
@@ -817,7 +817,7 @@ function renderCard(){
   const dd=state.days[sel]||{};
   h+='<details class="more"'+(dd.memo?' open':'')+'><summary>メモ</summary><textarea id="memo" aria-label="メモ" placeholder="体調・外食など">'+esc(dd.memo||'')+'</textarea></details>';
   card.innerHTML=h;
-  card.querySelectorAll('[data-me]').forEach(b=>b.onclick=()=>{try{localStorage.setItem('kondate-me',b.dataset.me)}catch(e){}lsSet('kondate-seen',Date.now());renderCard()});
+  card.querySelectorAll('[data-me]').forEach(b=>b.onclick=()=>{try{localStorage.setItem('kondate-me',b.dataset.me)}catch(e){}lsSet('kondate-seen',new Date(today+'T00:00').getTime());renderCard()});
   card.querySelectorAll('[data-seen]').forEach(b=>b.onclick=()=>{const u=unseenLogs();lsSet('kondate-seen',u.length?u[u.length-1][2]:Date.now());renderCard()});
   card.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{if(b.dataset.go){sel=b.dataset.go;addSlot=null;editIx=null;favEdit=false;renderCard();window.scrollTo(0,0)}});
   card.querySelectorAll('[data-slot]').forEach(b=>b.onclick=()=>{addSlot=b.dataset.slot;renderCard();const n=card.querySelector('#eat-n');if(n)n.focus()});
