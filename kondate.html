@@ -161,6 +161,12 @@ html,body{overflow-x:hidden}
 .notice{background:var(--leaf-soft);border-radius:10px;padding:10px 14px;display:grid;gap:6px;font-size:.9rem}
 .notice p{margin:0}.notice ul{margin:0;padding-left:1.1em;display:grid;gap:4px}.notice .who{display:flex;gap:8px}
 .notice [data-seen]{justify-self:end}
+#whogate{position:fixed;inset:0;z-index:1000;background:var(--bg);display:grid;place-items:center;padding:24px}
+.whobox{max-width:360px;width:100%;display:grid;gap:16px;text-align:center}
+.whobox h2{font-size:1.3rem;line-height:1.5;text-wrap:balance}.whobox p{margin:0;color:var(--muted)}
+.whobtns{display:grid;gap:12px;margin-top:8px}
+.whobtns button{font:inherit;font-family:var(--display);font-weight:600;font-size:1.4rem;padding:18px;border-radius:14px;border:0;background:var(--leaf);color:var(--surface);cursor:pointer}
+.whobtns button+button{background:var(--olive)}
 /* calendar */
 .tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tabs button{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 14px;border-radius:999px;cursor:pointer}
@@ -374,7 +380,7 @@ async function refreshDb(){
   if(state.mode!=='sheet')return;
   try{const d=await api();state.days=d.days||{};state.ms=d.ms||{};lsSet('kondate-days',state.days);lsSet('kondate-ms',state.ms);rerender()}catch(e){}
 }
-const BUILD='1794619695';
+const BUILD='1794620092';
 async function checkUpdate(){try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});const s=await r.text();const m=s.match(/const BUILD='([0-9]+)'/);if(m&&m[1]!==BUILD){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))location.reload()}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshDb();checkUpdate()}});
 setTimeout(checkUpdate,3000);
@@ -486,8 +492,12 @@ function commitDay(k,o){const me=meOf(),old=state.days[k]||{};if(me){const m=dif
 function unseenLogs(){const me=meOf();if(!me)return [];const seen=lsGet('kondate-seen',0);const out=[];
   Object.values(state.days).forEach(d=>(d.log||[]).forEach(l=>{if(l[0]!==me&&l[2]>seen)out.push(l)}));
   (DATA.news||[]).forEach(l=>{if(l[0]!==me&&l[2]>seen)out.push(l)});return out.sort((a,b)=>a[2]-b[2])}
+function showWhoGate(){if(document.getElementById('whogate'))return;const g=document.createElement('div');g.id='whogate';g.setAttribute('role','dialog');g.setAttribute('aria-modal','true');g.setAttribute('aria-labelledby','whogate-t');
+  g.innerHTML='<div class="whobox"><h2 id="whogate-t">このスマホを使うのは誰ですか？</h2><p>相手が入力したものや献立の変更を、アプリを開いたときに知らせます。</p><div class="whobtns"><button type="button" data-me2="h">拓輝</button><button type="button" data-me2="y">佑理</button></div></div>';
+  document.body.appendChild(g);document.body.style.overflow='hidden';
+  g.querySelectorAll('[data-me2]').forEach(b=>b.onclick=()=>{try{localStorage.setItem('kondate-me',b.dataset.me2)}catch(e){}lsSet('kondate-seen',new Date(today+'T00:00').getTime());g.remove();document.body.style.overflow='';rerender()});}
 function noticeHtml(){const me=meOf();
-  if(!me)return '<div class="notice"><p>このスマホを使うのは誰ですか？ 相手が入力したものを、次に開いたときに知らせます（今日の分から）。</p><div class="who"><button type="button" class="btn" data-me="h">拓輝</button><button type="button" class="btn" data-me="y">佑理</button></div></div>';
+  if(!me){showWhoGate();return ''}
   const u=unseenLogs();if(!u.length)return '';
   const fmt=ts=>{const d=new Date(ts);return (d.getMonth()+1)+'/'+d.getDate()+' '+d.getHours()+':'+pad(d.getMinutes())};
   return '<div class="notice"><ul>'+u.slice(-8).map(l=>'<li><b>'+WHO[l[0]]+'</b>が'+esc(l[1])+'<span class="muted small"> '+fmt(l[2])+'</span></li>').join('')+'</ul>'+(u.length>8?'<p class="small muted">ほか'+(u.length-8)+'件</p>':'')+'<button type="button" class="link small" data-seen="1">見ました</button></div>'}
@@ -956,6 +966,6 @@ function renderPlan(){
 </div>`;
 }
 
-storeNote();route();initDb();
+storeNote();route();initDb();if(!meOf())showWhoGate();
 </script>
 </body></html>
