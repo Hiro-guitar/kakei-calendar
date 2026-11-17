@@ -196,6 +196,16 @@ textarea.t{min-height:72px;resize:vertical}
 .togglerow input{width:20px;height:20px;accent-color:var(--h)}
 .gpanel{padding:12px 12px 10px}
 .gtitle{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:14px;margin:0 4px 8px}
+.garden.tree .xsnow{animation:xfall var(--d) linear infinite;animation-delay:var(--s)}
+@keyframes xfall{from{transform:translateY(-30px)}to{transform:translateY(220px)}}
+.garden.tree .xbulb{animation:xtw 2.4s ease-in-out infinite;animation-delay:var(--s)}
+@keyframes xtw{0%,100%{opacity:1}50%{opacity:.35}}
+.garden.tree .orn .sw{transform-box:fill-box;transform-origin:50% 0;animation:xsw 3.2s ease-in-out infinite;animation-delay:var(--s)}
+.garden.tree .orn .sw.tap{animation:xsw2 .9s ease-out}
+@keyframes xsw{0%,100%{transform:rotate(calc(var(--r) * .4))}50%{transform:rotate(calc(var(--r) * -.4))}}
+@keyframes xsw2{0%{transform:rotate(0)}25%{transform:rotate(22deg) scale(1.15)}55%{transform:rotate(-14deg)}80%{transform:rotate(6deg)}100%{transform:rotate(0)}}
+.garden.tree .xstar{animation:xst 3s ease-in-out infinite}
+@keyframes xst{0%,100%{opacity:1}50%{opacity:.8}}
 .gtitle span{font-size:12px;color:var(--sub);background:var(--paper);padding:2px 10px;border-radius:999px}
 .garden{width:100%;display:block}
 .garden .fl{cursor:pointer}
@@ -3667,6 +3677,103 @@ function gardenSVG(logs, big){
   if (crs.length && logs.every(l => l.at >= weekStart(0).getTime())) noteCreatures(crs);
   return svg + `</g></svg>`;
 }
+/* ===== クリスマス：ツリーとオーナメント ===== */
+const XMAS_FROM = [11, 15], XMAS_TO = [12, 25];
+function inXmas(ts){ const d = new Date(ts), m = d.getMonth() + 1, day = d.getDate(), v = m * 100 + day; return v >= XMAS_FROM[0] * 100 + XMAS_FROM[1] && v <= XMAS_TO[0] * 100 + XMAS_TO[1]; }
+function xmasOn(off = 0){ if ((settings().xmas || 'auto') === 'off') return false; const ws = weekStart(off); for (let i = 0; i < 7; i++){ const d = new Date(ws); d.setDate(ws.getDate() + i); if (inXmas(d.getTime())) return true; } return false; }
+const capS = (y = -4.2) => `<rect x="-1.3" y="${y - 1.4}" width="2.6" height="1.6" rx=".3" fill="#d8b048" stroke="#9a7420" stroke-width=".2"/><circle cx="0" cy="${y - 2}" r=".7" fill="none" stroke="#9a7420" stroke-width=".3"/>`;
+function ballArt(c, extra = '', id = ''){ const g = 'ob' + c.slice(1); return `<defs><radialGradient id="${g}" cx=".35" cy=".32" r=".75"><stop offset="0" stop-color="${shade(c, .45)}"/><stop offset=".45" stop-color="${c}"/><stop offset="1" stop-color="${shade(c, -.35)}"/></radialGradient></defs><circle r="4.4" fill="url(#${g})"/>${extra}<ellipse cx="-1.5" cy="-1.7" rx="1.1" ry=".7" fill="#fff" opacity=".7" transform="rotate(-35 -1.5 -1.7)"/>` + capS(); }
+const ORN = {
+  red:{ n:'赤いボール', r:1, a:() => ballArt('#d8303a') },
+  gold:{ n:'金のボール', r:1, a:() => ballArt('#e2b23a') },
+  silver:{ n:'銀のボール', r:1, a:() => ballArt('#b8c0cc') },
+  blue:{ n:'青いガラス玉', r:1, a:() => ballArt('#3a6ab8', `<path d="M-4.2 -.6 Q 0 1.2 4.2 -.6" stroke="#fff" stroke-width=".35" fill="none" opacity=".6"/>`) },
+  green:{ n:'みどりのボール', r:1, a:() => ballArt('#2f7a4a', [-2.4, 0, 2.4].map(x => `<circle cx="${x}" cy="${x === 0 ? 1.6 : .4}" r=".45" fill="#f6e08a"/>`).join('')) },
+  pinkst:{ n:'しましまボール', r:1, a:() => ballArt('#f2a6be', `<clipPath id="opk"><circle r="4.4"/></clipPath><g clip-path="url(#opk)">${[-3, -1, 1, 3].map(y => `<path d="M-5 ${y} Q 0 ${y + 1.2} 5 ${y}" stroke="#fff" stroke-width=".7" fill="none" opacity=".8"/>`).join('')}</g>`) },
+  star:{ n:'金の星', r:2, a:() => `<path d="M0 -5 L 1.4 -1.6 L 5 -1.5 L 2.2 .8 L 3.1 4.4 L 0 2.4 L -3.1 4.4 L -2.2 .8 L -5 -1.5 L -1.4 -1.6Z" fill="#f2c84a" stroke="#b8861a" stroke-width=".35" stroke-linejoin="round"/><path d="M0 -3 L .6 -1 L -1.4 .2Z" fill="#fff" opacity=".6"/><circle cy="-5.6" r=".6" fill="none" stroke="#9a7420" stroke-width=".3"/>` },
+  snow:{ n:'雪の結晶', r:2, a:() => `<g stroke="#fbfdff" stroke-width=".75" stroke-linecap="round">${[0, 60, 120].map(a => `<path d="M0 -4.6 V 4.6 M-1.2 -3.4 L 0 -2.4 L 1.2 -3.4 M-1.2 3.4 L 0 2.4 L 1.2 3.4" transform="rotate(${a})"/>`).join('')}</g><g stroke="#8ab4d8" stroke-width=".4" fill="none">${[0, 60, 120].map(a => `<path d="M0 -4.6 V 4.6" transform="rotate(${a})"/>`).join('')}</g><circle r=".9" fill="#fff"/>` },
+  bell:{ n:'金のベル', r:2, a:() => `<path d="M-3.6 2.6 Q -3.8 -3.6 0 -3.8 Q 3.8 -3.6 3.6 2.6 L 4.2 3.4 L -4.2 3.4Z" fill="#e2b23a" stroke="#9a7420" stroke-width=".3"/><path d="M-2.4 1.6 Q -2.6 -2 -.6 -2.8" stroke="#fff" stroke-width=".6" fill="none" opacity=".6"/><circle cy="3.9" r=".8" fill="#9a7420"/><path d="M-1.8 -4.2 Q 0 -6 1.8 -4.2" stroke="#d8303a" stroke-width=".9" fill="none"/>` },
+  candy:{ n:'キャンディケイン', r:2, a:() => `<path d="M1.2 5 V -2.4 A 2.2 2.2 0 0 0 -3.2 -2.4" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M1.2 5 V -2.4 A 2.2 2.2 0 0 0 -3.2 -2.4" stroke="#d8303a" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-dasharray="1 1"/>` },
+  pine:{ n:'松ぼっくり', r:2, a:() => `<ellipse cy=".6" rx="2.8" ry="4" fill="#7a4a2a"/>${Array.from({length:12}, (_, i) => { const r = Math.floor(i / 3), x = ((i % 3) - 1) * 1.5 * (1 - r * .12), y = -2.4 + r * 1.5; return `<path d="M${(x - .8).toFixed(1)} ${y.toFixed(1)} Q ${x.toFixed(1)} ${(y + 1.4).toFixed(1)} ${(x + .8).toFixed(1)} ${y.toFixed(1)}" fill="#a8703e" stroke="#4a2a12" stroke-width=".2"/>`; }).join('')}<path d="M-1.2 -3.6 Q 0 -4.4 1.2 -3.6" fill="#f6f6f2"/>` + capS(-3.4) },
+  ginger:{ n:'ジンジャーマン', r:2, a:() => `<path d="M0 -5 a 1.8 1.8 0 1 1 0.01 0 M-1 -1.6 L -4 -1 Q -4.6 .2 -3.6 .4 L -1.4 .2 L -2.6 3.8 Q -2.4 5 -1.2 4.4 L 0 2 L 1.2 4.4 Q 2.4 5 2.6 3.8 L 1.4 .2 L 3.6 .4 Q 4.6 .2 4 -1 L 1 -1.6Z" fill="#c8823a" stroke="#8a5420" stroke-width=".3"/><circle cx="-.7" cy="-3.6" r=".3" fill="#3a2010"/><circle cx=".7" cy="-3.6" r=".3" fill="#3a2010"/><path d="M-.6 -2.6 Q 0 -2.2 .6 -2.6" stroke="#fff" stroke-width=".25" fill="none"/>${[-.6, .6].map(y => `<circle cy="${y}" r=".35" fill="#d8303a"/>`).join('')}<path d="M-3.6 -.9 L -2.6 -.6 M2.6 -.6 L 3.6 -.9 M-2.4 3.6 L -1.6 3.2 M1.6 3.2 L 2.4 3.6" stroke="#fff" stroke-width=".3"/>` },
+  stocking:{ n:'くつした', r:2, a:() => `<path d="M-2 -3 L 2 -3 L 2 1.4 L 3.8 2.8 Q 4.6 4.4 3 4.8 L -.6 4.8 Q -2.2 4.6 -2 3Z" fill="#d8303a" stroke="#8a1a22" stroke-width=".3"/><rect x="-2.6" y="-4.6" width="5.2" height="1.9" rx=".8" fill="#fbfbf6" stroke="#d8d4cc" stroke-width=".2"/><path d="M2.2 3.6 Q 3.2 3.2 3.6 4.4" stroke="#fff" stroke-width=".5" fill="none"/>` },
+  gift:{ n:'プレゼント', r:2, a:() => `<rect x="-3.6" y="-2.4" width="7.2" height="6.6" rx=".5" fill="#2f7a4a" stroke="#1f4a2a" stroke-width=".3"/><path d="M0 -2.4 V 4.2 M-3.6 .8 H 3.6" stroke="#e2b23a" stroke-width="1"/><path d="M0 -2.4 C -2.6 -5.2 -3.6 -2.6 0 -2.4 C 2.6 -5.2 3.6 -2.6 0 -2.4" fill="#f2c84a" stroke="#9a7420" stroke-width=".25"/>` },
+  mitten:{ n:'てぶくろ', r:2, a:() => `<path d="M-2.6 -3 L 2.2 -3 L 2.4 1.6 Q 2.6 4.8 -.2 4.8 Q -3 4.8 -3 2 L -3 .2 L -4.2 -1 Q -4.6 -2 -3.4 -2 L -2.6 -1.4Z" fill="#3a6ab8" stroke="#1f3a6a" stroke-width=".3"/><rect x="-3" y="-4.4" width="5.6" height="1.6" rx=".6" fill="#fbfbf6"/>${[-1, .4, 1.8].map((x, i) => `<path d="M${x - .6} ${1 + (i % 2) * .4} l .6 -.7 l .6 .7 l -.6 .7z" fill="#fff" opacity=".8"/>`).join('')}` },
+  glassheart:{ n:'ガラスのハート', r:2, a:() => `<path d="M0 4.4 C -6 .4 -5 -4.4 -2.2 -4.4 C -1 -4.4 0 -3.6 0 -2.8 C 0 -3.6 1 -4.4 2.2 -4.4 C 5 -4.4 6 .4 0 4.4Z" fill="#f48aa8" fill-opacity=".72" stroke="#c8506a" stroke-width=".3"/><path d="M-3 -2.6 Q -3.6 -.4 -1.6 1.6" stroke="#fff" stroke-width=".6" fill="none" opacity=".7"/>` + capS(-3.6) },
+  apple:{ n:'赤いりんご', r:2, a:() => `<path d="M0 -2.4 C -1.6 -3.6 -4.4 -3 -4.2 .4 C -4 3.4 -1.6 4.8 0 4 C 1.6 4.8 4 3.4 4.2 .4 C 4.4 -3 1.6 -3.6 0 -2.4Z" fill="#c8202a" stroke="#7a1018" stroke-width=".3"/><path d="M0 -2.4 Q .2 -4 1 -4.8" stroke="#6a4a2a" stroke-width=".5" fill="none"/><path d="M.6 -3.6 C 1.8 -4.8 3 -4.2 3.2 -3.6 C 2.2 -3 1.2 -3 .6 -3.6Z" fill="#4a8a3a"/><ellipse cx="-2" cy="-.6" rx=".7" ry="1.1" fill="#fff" opacity=".45"/>` },
+  angel:{ n:'天使', r:3, a:() => `<path d="M-1 -1 C -5.6 -3 -5.6 1.6 -2 1.4 Z M1 -1 C 5.6 -3 5.6 1.6 2 1.4Z" fill="#fbfbf6" stroke="#d8d0c0" stroke-width=".25"/><path d="M0 -1.6 L -2.6 4.8 L 2.6 4.8Z" fill="#f6e6b8" stroke="#c8a85a" stroke-width=".3"/><circle cy="-2.6" r="1.4" fill="#f8dcc4"/><ellipse cy="-4.6" rx="1.5" ry=".45" fill="none" stroke="#e2b23a" stroke-width=".45"/><path d="M-1.4 -3 Q 0 -4.4 1.4 -3" fill="#e8b84a"/>` },
+  horse:{ n:'木馬', r:3, a:() => `<path d="M-4.4 4 Q 0 6 4.4 4" stroke="#8a4a22" stroke-width=".8" fill="none"/><path d="M-3 1.6 L -3.2 4.4 M3 1.6 L 3.2 4.4" stroke="#c8203a" stroke-width=".7"/><path d="M-3.4 -.2 Q 0 -1 2.4 -.4 L 3.4 -3.6 L 4.6 -3.2 L 4.2 -1.6 L 3.4 1.6 Q 0 2.6 -3.4 1.6 Q -4.4 .6 -3.4 -.2Z" fill="#fbf6ea" stroke="#8a6a44" stroke-width=".3"/><path d="M2.6 -.6 L 3.2 -3.6" stroke="#c8203a" stroke-width=".7"/><path d="M-3.6 .2 Q -5 1 -4.6 2.4" stroke="#8a6a44" stroke-width=".6" fill="none"/><rect x="-1.4" y="-.9" width="2.4" height="1.4" fill="#2a5a9a"/><circle cx="3.8" cy="-2.6" r=".25" fill="#3a2010"/>` },
+  deer:{ n:'トナカイ', r:3, a:() => `<path d="M-1.6 -3 L -2.6 -5 M-2.2 -4 L -3.4 -4.2 M1.6 -3 L 2.6 -5 M2.2 -4 L 3.4 -4.2" stroke="#7a4a22" stroke-width=".5" stroke-linecap="round"/><ellipse cy=".6" rx="3" ry="3.4" fill="#a8703e" stroke="#6a4020" stroke-width=".3"/><ellipse cy="2.2" rx="1.6" ry="1.3" fill="#e8c8a0"/><circle cy="2" r=".85" fill="#d8202a"/><circle cx="-1.1" cy="-.4" r=".35" fill="#2a1a10"/><circle cx="1.1" cy="-.4" r=".35" fill="#2a1a10"/><ellipse cx="-3.2" cy="-1.6" rx="1" ry=".5" fill="#a8703e" transform="rotate(-30 -3.2 -1.6)"/><ellipse cx="3.2" cy="-1.6" rx="1" ry=".5" fill="#a8703e" transform="rotate(30 3.2 -1.6)"/>` },
+  snowman:{ n:'雪だるま', r:3, a:() => `<circle cy="2.2" r="2.8" fill="#fbfdff" stroke="#c8d4e0" stroke-width=".3"/><circle cy="-1.8" r="2" fill="#fbfdff" stroke="#c8d4e0" stroke-width=".3"/><rect x="-1.6" y="-5.4" width="3.2" height="2" fill="#2a2a2e"/><rect x="-2.2" y="-3.6" width="4.4" height=".5" fill="#2a2a2e"/><path d="M-2 -.4 Q 0 .6 2 -.4 L 2.4 .4 L 1.6 1.4 L 1 .4 Q 0 .8 -2 0Z" fill="#d8303a"/><circle cx="-.7" cy="-2" r=".25" fill="#2a2a2e"/><circle cx=".7" cy="-2" r=".25" fill="#2a2a2e"/><path d="M0 -1.5 L 1.4 -1.2 L 0 -1.1Z" fill="#e8822a"/>` },
+  bird:{ n:'赤い小鳥', r:3, a:() => `<path d="M-3.8 1 C -3.4 -2.4 0 -3.6 2 -2.2 L 4 -2.6 L 3 -1.2 C 3.2 1.8 0 3.2 -2.2 2.4 L -4.4 3.4Z" fill="#d8303a" stroke="#8a1a22" stroke-width=".3"/><path d="M-1.6 -.6 Q .4 -.8 1 1.2 Q -.6 1.6 -1.6 -.6Z" fill="#a81a28"/><ellipse cx="1.4" cy="1.2" rx="1.1" ry=".8" fill="#f6d8c4"/><circle cx="1.8" cy="-1.4" r=".3" fill="#2a1a10"/><path d="M-4 3.6 H 3" stroke="#d8b048" stroke-width=".6"/>` },
+  moon:{ n:'月と星', r:3, a:() => `<path d="M1.6 -4.2 A 4.4 4.4 0 1 0 1.6 4.2 A 3.4 3.4 0 1 1 1.6 -4.2Z" fill="#f6dc7a" stroke="#c89a2a" stroke-width=".3"/><path d="M3.2 -.6 L 3.6 .4 L 4.6 .5 L 3.8 1.1 L 4.1 2.1 L 3.2 1.5 L 2.3 2.1 L 2.6 1.1 L 1.8 .5 L 2.8 .4Z" fill="#fff6c8"/>` + capS(-4.2) },
+  hearts:{ n:'ふたつのハート', r:0, both:1, a:() => `<path d="M-1.6 3.4 C -6 .6 -5.2 -3 -3.2 -3 C -2.4 -3 -1.6 -2.4 -1.6 -1.8 C -1.6 -2.4 -.8 -3 0 -3 C 2 -3 2.8 .6 -1.6 3.4Z" fill="#e8586a" stroke="#a82a3a" stroke-width=".3"/><path d="M1.8 4.6 C -1.8 2.4 -1.2 -.6 .4 -.6 C 1 -.6 1.8 -.1 1.8 .4 C 1.8 -.1 2.6 -.6 3.2 -.6 C 4.8 -.6 5.4 2.4 1.8 4.6Z" fill="#f2c84a" stroke="#b8861a" stroke-width=".3"/><path d="M-1.6 -3 V -4.6 M1.8 -.6 V -4.6 M-1.6 -4.6 H 1.8" stroke="#d8b048" stroke-width=".35" fill="none"/>` },
+  birds2:{ n:'つがいの小鳥', r:0, both:1, a:() => [[-2, 1], [2, -1]].map(([x, s]) => `<g transform="translate(${x},${s * .3}) scale(${-s * .62},.62)"><path d="M-3.8 1 C -3.4 -2.4 0 -3.6 2 -2.2 L 4 -2.6 L 3 -1.2 C 3.2 1.8 0 3.2 -2.2 2.4 L -4.4 3.4Z" fill="${s > 0 ? '#8ec0e0' : '#f2b8c8'}" stroke="#5a6a7a" stroke-width=".4"/><circle cx="1.8" cy="-1.4" r=".45" fill="#2a1a10"/></g>`).join('') + `<path d="M-4.4 2.8 H 4.4" stroke="#8a6232" stroke-width=".7"/>` },
+};
+const ORN_KEYS = Object.keys(ORN), ORN_W = { 1:6, 2:3, 3:1 };
+function ornamentOf(l){
+  const pool = l.both ? ORN_KEYS.filter(k => ORN[k].both) : ORN_KEYS.filter(k => !ORN[k].both);
+  const tot = pool.reduce((s, k) => s + (ORN_W[ORN[k].r] || 1), 0); let h = hash(l.id + 'orn') % (tot * 97) / 97;
+  for (const k of pool){ h -= ORN_W[ORN[k].r] || 1; if (h < 0) return k; } return pool[0];
+}
+const ornArt = k => ORN[k] ? ORN[k].a() : '';
+function treeSlots(W, ground, top, tw, gap){
+  const cx = W / 2, th = ground - top, out = [], rows = Math.floor((th - 26) / gap);
+  for (let row = 0; row < rows; row++){ const y = top + 20 + row * gap + gap * .3, t = (y - top - 8) / (th - 18), half = tw * (.18 + Math.min(1, t + .1) * .82) / 2 * .78;
+    const n = Math.max(1, Math.floor(half * 2 / gap) + 1); for (let i = 0; i < n; i++){ const x = cx + (n === 1 ? 0 : (-1 + 2 * i / (n - 1)) * half) + (row % 2 && n > 1 ? gap * .25 : 0); out.push([x, y]); } }
+  return out.map((p, i) => [p, hash('slot' + i) % 997]).sort((a, b) => a[1] - b[1]).map(a => a[0]);
+}
+function treeSVG(logs, big){
+  const W = 360, H = big ? 210 : 160, ground = H - 26, top = 10, cx = W / 2, th = ground - top, tw = th * .95;
+  const items = logs.slice().sort((a, b) => a.at - b.at), sc = big ? 1.75 : 1.4, slots = treeSlots(W, ground, top, tw, 11 * sc);
+  let svg = `<svg class="garden tree" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><defs>
+    <linearGradient id="xsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3e5a8a"/><stop offset="1" stop-color="#8aa2c8"/></linearGradient>
+    <radialGradient id="xglow" cx=".5" cy=".55" r=".5"><stop offset="0" stop-color="#ffe6a0" stop-opacity=".55"/><stop offset="1" stop-color="#ffe6a0" stop-opacity="0"/></radialGradient>
+    <linearGradient id="xtree" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2f7a4a"/><stop offset=".5" stop-color="#3f9058"/><stop offset="1" stop-color="#256a3e"/></linearGradient>
+    <clipPath id="xclip"><rect width="${W}" height="${H}" rx="20"/></clipPath></defs><g clip-path="url(#xclip)">
+    <rect width="${W}" height="${H}" fill="url(#xsky)"/>`;
+  for (let i = 0; i < 40; i++) svg += `<circle class="xsnow" style="--d:${(4 + rnd('sn', i) * 5).toFixed(1)}s;--s:${(-rnd('sd', i) * 8).toFixed(1)}s" cx="${(rnd('sx', i) * W).toFixed(0)}" cy="${(rnd('sy', i) * H).toFixed(0)}" r="${(.8 + rnd('sr', i) * 1.2).toFixed(1)}" fill="#fff" opacity="${(.5 + rnd('so', i) * .4).toFixed(2)}"/>`;
+  svg += `<path d="M0 ${ground - 10} Q 70 ${ground - 26} 150 ${ground - 12} T 300 ${ground - 14} T 360 ${ground - 12} V ${H} H 0Z" fill="#c8d8ec" opacity=".7"/>`;
+  [[34, .5], [70, .38], [292, .44], [328, .56], [250, .3], [110, .28]].forEach(([x, k]) => { const h = th * k, w = h * .55, gy = ground - 6;
+    svg += `<path d="M${x} ${(gy - h).toFixed(1)} L ${(x - w / 2).toFixed(1)} ${gy} L ${(x + w / 2).toFixed(1)} ${gy}Z" fill="#5a7a9a" opacity=".55"/><path d="M${x} ${(gy - h).toFixed(1)} L ${(x - w / 5).toFixed(1)} ${(gy - h * .6).toFixed(1)} Q ${x} ${(gy - h * .66).toFixed(1)} ${(x + w / 5).toFixed(1)} ${(gy - h * .6).toFixed(1)}Z" fill="#f4f8fc" opacity=".8"/>`; });
+  svg += `<ellipse cx="${cx}" cy="${ground - th * .45}" rx="${tw * 1.2}" ry="${th * .7}" fill="url(#xglow)"/>`;
+  svg += `<path d="M0 ${ground - 2} Q 90 ${ground - 10} 180 ${ground - 4} T 360 ${ground - 6} V ${H} H 0Z" fill="#f4f8fc"/>`;
+  svg += `<rect x="${cx - 6}" y="${ground - 10}" width="12" height="12" rx="2" fill="#8a5a32"/>`;
+  const tiers = 4; for (let i = 0; i < tiers; i++){ const t0 = i / tiers, t1 = (i + 1.35) / tiers, y0 = top + 8 + t0 * (th - 18), y1 = Math.min(top + 8 + t1 * (th - 18), ground - 8), hw = tw * (.18 + t1 * .82) / 2;
+    const k = 7, scal = Array.from({length:k + 1}, (_, j) => { const x = cx - hw + j * hw * 2 / k; return `${j ? 'Q ' + (x - hw / k).toFixed(1) + ' ' + (y1 + 4).toFixed(1) + ' ' : ''}${x.toFixed(1)} ${y1.toFixed(1)}`; }).join(' ');
+    svg += `<path d="M${cx} ${y0} L ${(cx - hw).toFixed(1)} ${y1.toFixed(1)} ${scal.replace(/^[\d.]+ [\d.]+/, '')} Z" fill="url(#xtree)" stroke="#1f5a34" stroke-width=".8" stroke-linejoin="round"/>`;
+    svg += `<path d="M${(cx - hw * .9).toFixed(1)} ${(y1 - 1).toFixed(1)} Q ${cx} ${(y1 + 3).toFixed(1)} ${(cx + hw * .9).toFixed(1)} ${(y1 - 1).toFixed(1)}" stroke="#fbfdff" stroke-width="2" fill="none" opacity=".75" stroke-linecap="round"/>`; }
+  // ガーランドと電球
+  for (let g = 0; g < 3; g++){ const t = .3 + g * .22, y = top + 8 + t * (th - 18), hw = tw * (.18 + (t + .2) * .82) / 2 * .8, y2 = y + 10;
+    svg += `<path d="M${(cx - hw).toFixed(1)} ${y.toFixed(1)} Q ${cx} ${(y2 + 6).toFixed(1)} ${(cx + hw).toFixed(1)} ${(y2 - 2).toFixed(1)}" stroke="#e8c870" stroke-width="1" fill="none" opacity=".85"/>`;
+    for (let j = 1; j < 8; j++){ const u = j / 8, x = (1 - u) * (1 - u) * (cx - hw) + 2 * (1 - u) * u * cx + u * u * (cx + hw), yy = (1 - u) * (1 - u) * y + 2 * (1 - u) * u * (y2 + 6) + u * u * (y2 - 2);
+      svg += `<circle class="xbulb" style="--s:${(-(j + g * 3) * .37).toFixed(2)}s" cx="${x.toFixed(1)}" cy="${(yy + 1).toFixed(1)}" r="1.5" fill="${['#ffe08a', '#ff9a8a', '#a8e0ff', '#c8f0a8'][(j + g) % 4]}"/>`; } }
+  // 感謝（♥）のぶんだけ、ツリーの下にプレゼント
+  const gifts = items.filter(l => l.thanks).slice(0, 8);
+  gifts.forEach((l, i) => { const side = i % 2 ? 1 : -1, x = cx + side * (16 + Math.floor(i / 2) * 15), w = 10 + (hash(l.id) % 4) * 1.4, h = 7 + (hash(l.id + 'h') % 4) * 1.4, c = ['#d8303a', '#3a6ab8', '#e2b23a', '#2f7a4a', '#c86aa8'][hash(l.id) % 5], rc = c === '#e2b23a' ? '#d8303a' : '#f2d870';
+    svg += `<g data-act="orn" data-id="${l.id}" data-gift="1"><rect x="${(x - w / 2).toFixed(1)}" y="${(ground - h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="1" fill="${c}" stroke="${shade(c, -.35)}" stroke-width=".5"/><path d="M${x.toFixed(1)} ${(ground - h).toFixed(1)} V ${ground} M${(x - w / 2).toFixed(1)} ${(ground - h / 2).toFixed(1)} H ${(x + w / 2).toFixed(1)}" stroke="${rc}" stroke-width="1.4"/><path d="M${x.toFixed(1)} ${(ground - h).toFixed(1)} c -3 -3.4 -4.4 -.4 0 0 c 3 -3.4 4.4 -.4 0 0" fill="${rc}" stroke="${shade(rc, -.3)}" stroke-width=".4"/></g>`; });
+  // オーナメント
+  items.forEach((l, i) => { const base = slots[i % slots.length], lap = Math.floor(i / slots.length), x = base[0] + lap * 5, y = base[1] + lap * 4, k = ornamentOf(l), sw = ((rnd(l.id, 5) - .5) * 14).toFixed(0);
+    svg += `<g class="orn" data-act="orn" data-id="${l.id}" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><g class="sw" style="--r:${sw}deg;--s:${(-rnd(l.id, 6) * 3).toFixed(2)}s"><path d="M0 -${(7 * sc).toFixed(1)} V -${(5.6 * sc).toFixed(1)}" stroke="#d8c890" stroke-width=".5"/><g transform="scale(${(sc * (lap ? .85 : 1)).toFixed(2)})">${ornArt(k)}</g></g><circle r="${(6 * sc).toFixed(1)}" fill="transparent"/></g>`; });
+  // てっぺんの星
+  svg += `<g class="xstar" transform="translate(${cx},${top + 7})"><circle r="9" fill="url(#xglow)"/><path d="M0 -7 L 2 -2.2 L 7 -2.1 L 3 1.1 L 4.4 6.2 L 0 3.4 L -4.4 6.2 L -3 1.1 L -7 -2.1 L -2 -2.2Z" fill="#f6d04a" stroke="#c8961a" stroke-width=".7" stroke-linejoin="round"/></g>`;
+  if (!items.length) svg += `<text x="${W / 2}" y="${H - 8}" text-anchor="middle" font-size="11" font-weight="700" fill="rgba(31,82,110,.55)">家事をすると、ツリーにオーナメントが飾られるよ</text>`;
+  return svg + `</g></svg>`;
+}
+function sceneSVG(logs, big, off = 0){ return xmasOn(off) ? treeSVG(logs, big) : gardenSVG(logs, big); }
+function sceneTitle(off, n){ return xmasOn(off) ? `${off === 0 ? '今週' : 'この週'}のツリー<span>${n}個</span>` : `${off === 0 ? '今週' : 'この週'}の庭<span>${n}輪</span>`; }
+function ornSummary(logs){ const m = {}; logs.forEach(l => { const k = ornamentOf(l); m[k] = (m[k] || 0) + 1; }); return Object.entries(m).sort((a, b) => b[1] - a[1]); }
+function ornFound(){ const f = {}, first = {}; all('log').filter(l => inXmas(l.at)).sort((a, b) => a.at - b.at).forEach(l => { const k = ornamentOf(l); if (!f[k]){ f[k] = 0; first[k] = l; } f[k]++; }); return { f, first }; }
+function viewZukanOrn(){
+  const { f, first } = ornFound(), nf = Object.keys(f).length, RL = { 0:'ふたりで', 1:'', 2:'ちょっとレア', 3:'レア' };
+  let html = zSeg() + `<div class="panel zhead"><div class="ztitle">クリスマスのオーナメント</div><div class="zcount"><b>${nf}</b> / ${ORN_KEYS.length}種</div><div class="zbar"><i style="width:${(nf / ORN_KEYS.length * 100).toFixed(1)}%"></i></div><div class="muted" style="margin-top:6px">11/15〜12/25の家事で集まるよ。ふたりでやった家事だけの特別なものも</div></div>`;
+  html += `<div class="zgrid" style="margin-top:14px">` + ORN_KEYS.map((k, i) => { const ok = !!f[k], o = ORN[k];
+    return `<button class="zcell ${ok ? '' : 'un'}" data-act="ornz" data-k="${k}"><span class="zno">${RL[o.r] || ('No.' + String(i + 1).padStart(2, '0'))}</span><svg viewBox="-7 -7.5 14 14">${ornArt(k)}</svg><span class="zn">${ok ? o.n : '？？？'}</span></button>`; }).join('') + `</div>`;
+  return html;
+}
+function zSeg(){ const opts = [['flower', '花']]; if (CREATURES_ON) opts.push(['creature', '生き物']); if (xmasOn(0) || Object.keys(ornFound().f).length) opts.push(['orn', 'オーナメント']);
+  return opts.length > 1 ? `<div class="seg" style="margin:6px 0 12px">${opts.map(([v, l]) => `<button class="${zMode === v ? 'on' : ''}" data-act="zm" data-v="${v}">${l}</button>`).join('')}</div>` : ''; }
+
 function weekLogs(off){ const ws = weekStart(off), we = new Date(ws); we.setDate(ws.getDate()+7); return all('log').filter(l => l.at >= ws.getTime() && l.at < we.getTime()); }
 function bloomSummary(logs){
   const m = {}; logs.forEach(l => { const k = flowerOf(l); m[k] = (m[k]||0) + 1; });
@@ -3738,7 +3845,7 @@ function viewToday(){
   html0 = `<div class="talk" data-act="talk"><span class="tag">おうち</span><div class="msg" data-full="${esc(talkMsg(due, logs))}"></div><span class="next"></span></div>`;
   const wl = weekLogs(0);
   setTimeout(checkPressed, 0);
-  let html = bouquetBanner() + html0 + roomPanel() + `<div class="panel gpanel"><div class="gtitle">今週の庭<span>${wl.length}輪</span></div>${gardenSVG(wl, false)}</div><div class="panel" style="margin-top:12px">${timeline(logs, true)}${legend()}</div>`;
+  let html = bouquetBanner() + html0 + roomPanel() + `<div class="panel gpanel"><div class="gtitle">${sceneTitle(0, wl.length)}</div>${sceneSVG(wl, false, 0)}</div><div class="panel" style="margin-top:12px">${timeline(logs, true)}${legend()}</div>`;
   for (const [slot,label] of SLOTS){
     const cs = due.filter(c => (c.slot||'any') === slot);
     if (!cs.length) continue;
@@ -3762,8 +3869,8 @@ function viewWeek(){
   const label = `${ws.getMonth()+1}/${ws.getDate()} 〜 ${days[6].getMonth()+1}/${days[6].getDate()}`;
   let html = `<div class="weeknav"><button data-act="wk" data-d="-1">‹ 前</button><b>${weekOff===0?'今週':label}</b><button data-act="wk" data-d="1" ${weekOff>=0?'disabled style="opacity:.3"':''}>次 ›</button></div>`;
   const wlg = weekLogs(weekOff), bs = bloomSummary(wlg);
-  html += `<div class="panel gpanel" style="margin-bottom:12px"><div class="gtitle">${weekOff===0?'今週':'この週'}の庭<span>${wlg.length}輪</span></div>${gardenSVG(wlg, true)}
-    ${bs.length?`<div class="bloomlist">${bs.slice(0,8).map(([k,n]) => `<span><svg viewBox="-14 -16 28 28">${flowerSVG(k,k)}</svg>${FL[k].n}${n>1?` ×${n}`:''}</span>`).join('')}${bs.length>8?`<span>ほか${bs.length-8}種</span>`:''}</div>`:''}</div>`;
+  html += `<div class="panel gpanel" style="margin-bottom:12px"><div class="gtitle">${sceneTitle(weekOff, wlg.length)}</div>${sceneSVG(wlg, true, weekOff)}
+    ${xmasOn(weekOff) ? (wlg.length ? `<div class="bloomlist">${ornSummary(wlg).slice(0,8).map(([k,n]) => `<span><svg viewBox="-7 -7.5 14 14">${ornArt(k)}</svg>${ORN[k].n}${n>1?` ×${n}`:''}</span>`).join('')}</div>` : '') : bs.length?`<div class="bloomlist">${bs.slice(0,8).map(([k,n]) => `<span><svg viewBox="-14 -16 28 28">${flowerSVG(k,k)}</svg>${FL[k].n}${n>1?` ×${n}`:''}</span>`).join('')}${bs.length>8?`<span>ほか${bs.length-8}種</span>`:''}</div>`:''}</div>`;
   html += `<div class="wgrid">` + days.map(d => {
     const k = dayKey(d.getTime()); const logs = logsOn(k);
     return `<button class="wday ${k===tk?'today':''} ${k===selDay?'sel':''}" data-act="selday" data-k="${k}">
@@ -3837,6 +3944,8 @@ function viewSettings(){
     <div class="row" style="margin-top:8px"><span class="dot y"></span><input class="t" id="name_y" value="${esc(n.y)}"></div>
     <div class="row" style="margin-top:10px;justify-content:flex-end"><button class="btn small" data-act="savenames">保存</button></div></div>`;
 
+  html += `<h2>季節のイベント</h2><div class="panel"><label class="f" style="margin-top:0">クリスマスツリー（11/15〜12/25は、庭がツリーになってオーナメントが集まる）</label><div class="seg">${[['auto','する'],['off','しない']].map(([v,l]) => `<button class="${(settings().xmas||'auto')===v?'on':''}" data-act="setxmas" data-v="${v}">${l}</button>`).join('')}</div></div>`;
+
   html += `<h2>この端末を使う人</h2><div class="panel"><div class="seg">
     <button class="${S.me==='h'?'on':''}" data-act="setme" data-k="h">${esc(n.h)}</button>
     <button class="${S.me==='y'?'on':''}" data-act="setme" data-k="y">${esc(n.y)}</button></div></div>`;
@@ -3880,6 +3989,7 @@ function sheetCreature(k){ const c = CR[k], rec = S.items['cr_' + k], ok = rec &
   openSheet(h); }
 function viewZukan(){
   if (CREATURES_ON && zMode === 'creature') return viewZukanCreature();
+  if (zMode === 'orn') return viewZukanOrn();
   const logs = all('log'), found = {}, first = {};
   for (const l of logs.sort((a,b) => a.at - b.at)){ const k = flowerOf(l); found[k] = (found[k]||0) + 1; if (!first[k]) first[k] = l; }
   const keys = Object.keys(FL), nf = Object.keys(found).length, mo = new Date().getMonth() + 1;
@@ -3887,7 +3997,7 @@ function viewZukan(){
   if (zFilter === 'month') list = keys.filter(k => SEASON[mo].includes(k));
   if (zFilter === 'found') list = keys.filter(k => found[k]);
   const mf = SEASON[mo].filter(k => found[k]).length;
-  let html = `${CREATURES_ON ? `<div class="seg" style="margin:6px 0 12px">${[['flower','花'],['creature','生き物']].map(([v,l]) => `<button class="${zMode===v?'on':''}" data-act="zm" data-v="${v}">${l}</button>`).join('')}</div>` : ''}<div class="panel zhead"><div class="ztitle">ふたりの花図鑑</div>
+  let html = `${zSeg()}<div class="panel zhead"><div class="ztitle">ふたりの花図鑑</div>
     <div class="zcount"><b>${nf}</b> / ${keys.length}種</div>
     <div class="zbar"><i style="width:${(nf/keys.length*100).toFixed(1)}%"></i></div>
     <div class="muted" style="margin-top:6px">${mo}月に咲く花 ${mf} / ${SEASON[mo].length}種</div></div>
@@ -3993,6 +4103,10 @@ document.addEventListener('click', e => {
     case 'flower': { const l = S.items[id]; if (!l) break; const k = flowerOf(l);
       const g = el.querySelector('.bloom'); if (g) { g.classList.remove('sway'); void g.getBBox(); g.classList.add('sway'); }
       toast(`${FL[k].n}｜${dayKey(l.at).slice(5).replace('-','/')} ${l.name}`); break; }
+    case 'orn': { const l = S.items[id]; if (!l) break; const g = el.querySelector('.sw'); if (g){ g.classList.remove('tap'); void g.getBBox(); g.classList.add('tap'); }
+      toast(el.dataset.gift ? `プレゼント｜${dayKey(l.at).slice(5).replace('-','/')} ${l.name} の「ありがとう」` : `${ORN[ornamentOf(l)].n}｜${dayKey(l.at).slice(5).replace('-','/')} ${l.name}`); break; }
+    case 'ornz': { const k = el.dataset.k, z = ornFound(); toast(z.f[k] ? `${ORN[k].n}｜${z.f[k]}個 ・ はじめて：${dayKey(z.first[k].at).slice(5).replace('-','/')} ${z.first[k].name}` : (ORN[k].both ? 'ふたりでやった家事で見つかるよ' : 'まだ見つけていないオーナメント')); break; }
+    case 'setxmas': put({ ...settings(), xmas:el.dataset.v }); break;
     case 'zm': zMode = el.dataset.v; zFilter = 'month'; render(); break;
     case 'zc': sheetCreature(el.dataset.k); break;
     case 'creature': { const g = el.querySelector('.tap'); if (g) { g.classList.remove('go'); void g.getBBox(); g.classList.add('go'); } chime('thanks'); toast(`${el.dataset.k}｜${CR[el.dataset.k].desc.split('。')[0]}`); break; }
