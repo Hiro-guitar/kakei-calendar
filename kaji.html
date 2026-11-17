@@ -103,16 +103,19 @@ h2.s-morning{background:var(--amber)} h2.s-day{background:var(--h)} h2.s-night{b
 .qbar{position:fixed;left:0;right:0;bottom:calc(88px + env(safe-area-inset-bottom));z-index:5;display:flex;gap:10px;overflow-x:auto;padding:10px 14px 12px;background:#e9dfc6;border-radius:22px 22px 0 0;box-shadow:0 -2px 10px rgba(80,60,20,.08);scrollbar-width:none;-webkit-overflow-scrolling:touch;max-width:660px;margin:0 auto}
 .qbar::-webkit-scrollbar{display:none}
 body.xfullmode main{padding-bottom:0}
-.xfull{position:fixed;left:0;right:0;top:66px;bottom:0;max-width:660px;margin:0 auto;z-index:0;overflow:hidden}
+.xfull{position:fixed;left:0;right:0;top:0;bottom:0;max-width:660px;margin:0 auto;z-index:0;overflow:hidden}
 .xfull-svg .garden{width:100%;height:100%}
 .xfull-svg{position:absolute;inset:0}
-.xfull-top{position:absolute;left:12px;right:12px;top:6px}
-.xfull-top .talk{margin:4px 0 0;background:rgba(255,252,240,.94);min-height:0;padding:16px 18px 14px}
-.xcount{display:inline-block;margin:8px 4px 0;padding:4px 12px;border-radius:999px;background:rgba(255,252,240,.88);font-size:12px;font-weight:800;color:var(--navy);box-shadow:var(--sh)}
+.xfull-top{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 74px)}
+body.xfullmode header{background:none}
+body.xfullmode .qbar{background:rgba(255,250,236,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.xchips{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.xfull-top .talk{margin:0;background:rgba(255,252,240,.9);min-height:0;padding:14px 16px 10px;font-size:14px}
+.xcount{display:inline-block;margin:0;padding:4px 12px;border-radius:999px;background:rgba(255,252,240,.88);font-size:12px;font-weight:800;color:var(--navy);box-shadow:var(--sh)}
 .xcount b{font-size:15px;color:#c8862a}
-.listhandle{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(206px + env(safe-area-inset-bottom));z-index:5;display:flex;align-items:center;gap:8px;padding:8px 16px 8px 12px;border-radius:999px;background:var(--cream);box-shadow:var(--sh-lift);font-weight:800;color:var(--navy);white-space:nowrap}
+.listhandle{display:flex;align-items:center;gap:6px;padding:5px 12px 5px 6px;font-size:13px;border-radius:999px;background:var(--cream);box-shadow:var(--sh-lift);font-weight:800;color:var(--navy);white-space:nowrap}
 .listhandle i{width:22px;height:22px;border-radius:50%;background:var(--amber);position:relative}
-.listhandle i::after{content:'';position:absolute;left:6px;top:8px;border:5px solid transparent;border-bottom:6px solid #fff;border-top:0}
+.listhandle i::after{content:'';position:absolute;left:6px;top:8px;border:5px solid transparent;border-top:6px solid #fff;border-bottom:0}
 .listhandle small{color:var(--sub);font-weight:700;font-size:12px}
 .listsheet{padding-top:6px}
 .ornsheet{display:flex;flex-direction:column;align-items:center;text-align:center;padding:10px 0 6px;gap:4px}
@@ -3958,7 +3961,7 @@ function treeSVG(logs, big, opt = {}){
   // オーナメントの位置：円すいの中に、段ごとに均等に並べてから順番をばらす
   const gap = 10.5 * sc, pts = [];
   for (let y = tTop + 34 * gs; y < bodyBot - 6; y += gap * .95){ const hw = hwAt(y) * .8, n = Math.max(1, Math.floor(hw * 2 / gap) + 1), row = pts.length;
-    for (let q = 0; q < n; q++) pts.push([cx + (n === 1 ? 0 : -hw + q * hw * 2 / (n - 1)) + (Math.round(y) % 2 ? gap * .2 : -gap * .2), y]); }
+    for (let q = 0; q < n; q++){ const x = cx + (n === 1 ? 0 : -hw + q * hw * 2 / (n - 1)) + (Math.round(y) % 2 ? gap * .2 : -gap * .2); if (x > 12 + gap * .5 && x < W - 12 - gap * .5) pts.push([x, y]); } }
   const slots2 = pts.map((p, q) => [p, hash('s2' + q) % 9973]).sort((a, b) => a[1] - b[1]).map(a => a[0]);
   // オーナメント（少し影を落として、ツリーにのっている感じに）
   items.forEach((l, i) => { const base = slots2[i % slots2.length], lap = Math.floor(i / slots2.length), x = base[0] + lap * 5, y = base[1] + lap * 4, k = ornamentOf(l), sw = ((rnd(l.id, 5) - .5) * 14).toFixed(0), s2 = (sc * (lap ? .85 : 1)).toFixed(2);
@@ -4193,10 +4196,9 @@ function viewToday(){
   if (!XM) return html;
   // ツリーを画面いっぱいに。リストは下から引き出すシートへ
   LIST_HTML = html;
-  const vw = Math.min(innerWidth, 660), topPx = 66, Hpx = innerHeight - topPx, k = 360 / vw, Hs = Math.round(Hpx * k), pad = Math.round(250 * k);
+  const vw = Math.min(innerWidth, 660), Hpx = innerHeight, k = 360 / vw, Hs = Math.round(Hpx * k), pad = Math.round(222 * k), topUi = Math.round(196 * k);
   const cur = currentSlot(), curLeft = cur ? due.filter(c => (c.slot || 'any') === cur && !logs.some(l => l.choreId === c.id)).length : 0, curLabel = cur ? SLOTS.find(x => x[0] === cur)[1] : '';
-  return `<div class="xfull"><div class="xfull-svg">${treeSVG(wl, 'full', { H:Hs, pad, maxTh:Math.min(360, Hs - pad - 90) })}</div><div class="xfull-top">${html0}<div class="xcount">今週のオーナメント <b>${wl.length}</b>個</div></div></div>
-    <button class="listhandle" data-act="listopen"><i></i><span>今日のリスト</span><small>${cur ? `いまは${curLabel}・あと${curLeft}つ` : '今日の家事はぜんぶ終わり！'}</small></button>`;
+  return `<div class="xfull"><div class="xfull-svg">${treeSVG(wl, 'full', { H:Hs, pad, maxTh:Hs - pad - topUi })}</div><div class="xfull-top">${html0}<div class="xchips"><span class="xcount">オーナメント <b>${wl.length}</b>個</span><button class="listhandle" data-act="listopen"><i></i><span>今日のリスト</span><small>${cur ? `${curLabel}・あと${curLeft}` : 'ぜんぶ終わり！'}</small></button></div></div></div>`;
 }
 let LIST_HTML = '', LISTOPEN = false;
 
