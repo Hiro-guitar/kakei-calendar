@@ -250,6 +250,15 @@ textarea.t{min-height:72px;resize:vertical}
 @keyframes xst{0%,100%{opacity:1}50%{opacity:.8}}
 .gpanel.xhero{padding:10px 8px 8px;margin:-4px -6px 12px}
 .gpanel.xhero .gtitle{font-size:16px;margin:2px 8px 8px}
+.reclist{padding:4px 14px}
+.recrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:2px dotted var(--line)}
+.recrow:last-child{border-bottom:0}
+.recrow .t{font-size:13px;font-weight:800;color:var(--sub);width:40px}
+.recrow .ric svg{width:34px;height:34px;display:block}
+.recrow .n{flex:1;font-weight:800;color:var(--navy);display:flex;flex-direction:column;font-size:15px}
+.recrow .n small{font-size:12px;color:var(--sub);font-weight:700;display:flex;align-items:center;gap:5px}
+.donly{font-size:0}
+.donly .date{font-size:16px;font-weight:800;color:var(--navy);margin:0}
 .gtitle span{font-size:12px;color:var(--sub);background:var(--paper);padding:2px 10px;border-radius:999px}
 .garden{width:100%;display:block}
 .garden .fl{cursor:pointer}
@@ -424,10 +433,10 @@ nav.tabs .tile{width:38px;height:38px}
 </head>
 <body>
 <header><div class="hbar">
-  <img class="logo" src="kaji-icon.png" alt="">
-  <h1>うちの家事<span class="date" id="hdate"></span></h1>
+  <img class="logo" src="kaji-icon.png" alt="" style="display:none">
+  <h1 class="donly"><span class="date" id="hdate"></span></h1>
   <span class="sync" id="sync" title="同期"></span>
-  <button class="me-chip" id="mechip"></button>
+  <button class="me-chip" id="mechip" style="display:none"></button>
 </div></header>
 <main id="view"></main>
 <button class="fab" id="fab" style="display:none">＋ 名もなき家事</button>
@@ -516,9 +525,8 @@ function talkMsg(due, logs){
   const fromOther = logs.filter(l => l.by !== me && !l.thanks);
   const openNotes = all('note').filter(n => n.status !== 'done').length;
   const msgs = [];
-  if (!due.length) msgs.push(`${greet} 家事を登録すると、ここで今日の様子をお知らせするね。`);
-  else if (!left.length) msgs.push(`今日の家事はぜんぶ終わり！ おつかれさま。あとはゆっくりしよう。`);
-  else msgs.push(`${greet} 今日の家事は、あと${left.length}つ。${nm(me)}の担当は${mine ? mine + 'つ' : 'もう終わり'}だよ。`);
+  if (!logs.length) msgs.push(`${greet} 家事をしたら、下のマークをタップして残してね。`);
+  else msgs.push(`${greet} 今日はふたりで${logs.length}回、家事を記録したよ。`);
   if (fromOther.length) msgs.push(`${nm(other(me))}が今日${fromOther.length}つやってくれたみたい。♡ありがとう、送ってみる？`);
   const wk = weekLogs(0);
   if (wk.length && xmasOn(0)){ const top = ornSummary(wk)[0]; msgs.push(`今週はツリーに${wk.length}個飾られたよ。いちばん多いのは${ORN[top[0]].n}。`); }
@@ -589,9 +597,9 @@ function qbarHTML(){
   const tk = dayKey(Date.now()), logs = logsOn(tk), cur = currentSlot(), cs = choresSorted(), due = new Set(cs.filter(isDueToday).map(c => c.id));
   const rank = c => { const s = c.slot || 'any', done = logs.some(l => l.choreId === c.id); if (!due.has(c.id)) return 50; if (done) return 40;
     if (s === cur) return 0; if (s === 'any') return 20; const si = SLOT_ORDER.indexOf(s), ci = SLOT_ORDER.indexOf(cur); return si > ci ? 10 + si : 30; };
-  const list = cs.slice().sort((a, b) => rank(a) - rank(b) || (a.order ?? 0) - (b.order ?? 0));
-  return list.map(c => { const n = logs.filter(l => l.choreId === c.id).length, r = rank(c);
-    return `<button class="qb ${n ? 'done' : ''} ${r === 0 ? 'now' : ''} ${r === 50 ? 'off' : ''}" data-act="qdo" data-id="${c.id}"><span class="qi">${QI[choreIcon(c)]}${n ? `<em>${n > 1 ? '×' + n : '✓'}</em>` : ''}</span><span class="ql">${esc(c.name.replace(/（.*?）/g, ''))}</span></button>`; }).join('')
+  const list = cs.slice();
+  return list.map(c => { const n = logs.filter(l => l.choreId === c.id).length;
+    return `<button class="qb" data-act="qdo" data-id="${c.id}"><span class="qi">${QI[choreIcon(c)]}${n ? `<em>${n}</em>` : ''}</span><span class="ql">${esc(c.name.replace(/（.*?）/g, ''))}</span></button>`; }).join('')
     + `<button class="qb" data-act="qfree"><span class="qi">${QI.plus}</span><span class="ql">ほかの家事</span></button>`;
 }
 function renderQbar(){ const q = $('qbar'); if (!q) return; const on = S.me && tab === 'today'; q.style.display = on ? '' : 'none'; if (!on) return; const x = q.scrollLeft; q.innerHTML = qbarHTML(); q.scrollLeft = x; }
@@ -3977,7 +3985,6 @@ function treeSVG(logs, big, opt = {}){
   const spots = [[-26, 0], [24, 0], [-44, 2], [44, 2], [-12, 3], [10, 3], [-60, 1], [60, 1]];
   gifts.map((l, i) => [l, i]).sort((a, b) => spots[a[1]][1] - spots[b[1]][1]).forEach(([l, i]) => { const [dx, dy] = spots[i], hh = hash(l.id), w = 13 + hh % 3 * 2.5, h = 10 + (hash(l.id + 'h') % 3) * 2.2, [c, rc] = GC[hh % GC.length], pat = GP[(hh >> 3) % GP.length];
     svg += `<g data-act="orn" data-id="${l.id}" data-gift="1">${giftSVG(cx + dx * gs, ground + 3 + dy * gs, w * gs, h * gs, 6.4 * gs, c, rc, pat, 'gf' + i + (hero ? 'h' : big ? 'b' : ''))}</g>`; });
-  if (!items.length) svg += `<text x="${W / 2}" y="${H - 9}" text-anchor="middle" font-size="11" font-weight="800" fill="rgba(31,82,110,.55)">家事をすると、ツリーにオーナメントが飾られるよ</text>`;
   return svg + `</g></svg>`;
 }
 /* ===== オーナメント150種 ===== */
@@ -4166,7 +4173,16 @@ function choreCard(c, todays){
     <div class="body" data-act="open" data-id="${c.id}"><div class="name">${esc(c.name)}</div><div class="meta">${meta}</div></div>${ck}</div>`;
 }
 
-let SLOTX = {};
+let SLOTX = {}; const TODO_MODE = false;
+function recordList(logs){
+  const L = logs.slice().sort((a, b) => b.at - a.at);
+  if (!L.length) return `<div class="empty">まだ記録はないよ。<br>やった家事は、下のマークをタップするだけで残せるよ。</div>`;
+  return `<h2>今日の記録</h2><div class="panel reclist">` + L.map(l => { const c = l.choreId && S.items[l.choreId], ic = QI[c ? choreIcon(c) : choreIcon({ name:l.name })];
+    let act = '';
+    if (l.by !== S.me){ act = `<button class="thanks ${l.thanks ? 'on' : ''}" data-act="thanks" data-id="${l.id}">${l.thanks ? '♥' : '♡'}</button>`; if (!l.both) act = `<button class="join" data-act="join" data-id="${l.id}">＋一緒に</button>` + act; }
+    else act = l.thanks ? '<span class="thanks on">♥</span>' : `<button class="btn small ghost" data-act="undo" data-id="${l.id}">取消</button>`;
+    return `<div class="recrow"><span class="t">${hm(l.at)}</span><span class="ric">${ic}</span><span class="n">${esc(l.name)}<small><span class="dot ${cls(l)}"></span>${esc(whoText(l))}</small></span>${act}</div>`; }).join('') + `</div>`;
+}
 function viewToday(){
   const tk = dayKey(Date.now());
   const logs = logsOn(tk);
@@ -4178,7 +4194,8 @@ function viewToday(){
   setTimeout(checkPressed, 0);
   const XM = xmasOn(0);
   let html = XM ? bouquetBanner() + roomPanel() + `<div class="panel" style="margin-top:12px">${timeline(logs, true)}${legend()}</div>` : bouquetBanner() + html0 + roomPanel() + `<div class="panel gpanel"><div class="gtitle">${sceneTitle(0, wl.length)}</div>${sceneSVG(wl, false, 0)}</div><div class="panel" style="margin-top:12px">${timeline(logs, true)}${legend()}</div>`;
-  for (const [slot,label] of SLOTS){
+  html += recordList(logs);
+  for (const [slot,label] of (TODO_MODE ? SLOTS : [])){
     const cs = due.filter(c => (c.slot||'any') === slot);
     if (!cs.length) continue;
     const withLogs = cs.map(c => [c, logs.filter(l => l.choreId === c.id)]);
@@ -4187,8 +4204,7 @@ function viewToday(){
     if (allDone && slot !== 'any' && !SLOTX[slot]){ html += `<button class="slotdone s-${slot}" data-act="slotx" data-v="${slot}"><b>${label}</b><span>✓ ぜんぶ終わり（${cs.length}件）</span><small>ひらく</small></button>`; continue; }
     html += `<h2 class="s-${slot}">${label}${slot === cur ? '<span class="nowchip">いまはここ</span>' : ''}${allDone && slot !== 'any' ? `<button class="slotfold" data-act="slotx" data-v="${slot}">とじる</button>` : ''}</h2>` + withLogs.map(([c,t]) => choreCard(c,t)).join('');
   }
-  if (!due.length) html += `<div class="empty">今日の家事はまだ登録されていません。<br>設定から追加できます。</div>`;
-  const extra = logs.filter(l => !l.choreId || !dueIds.has(l.choreId));
+  const extra = TODO_MODE ? logs.filter(l => !l.choreId || !dueIds.has(l.choreId)) : [];
   if (extra.length){
     html += `<h2>ほかにやったこと</h2><div class="panel">` + extra.map(l => `<div class="minirow"><span class="t">${hm(l.at)}</span><span class="dot ${cls(l)}"></span><span class="n">${esc(l.name)}</span>
       ${l.by!==S.me?`<button class="thanks ${l.thanks?'on':''}" data-act="thanks" data-id="${l.id}">${l.thanks?'♥':'♡'}</button>`:(l.thanks?'<span class="thanks on">♥</span>':`<button class="btn small ghost" data-act="undo" data-id="${l.id}">取消</button>`)}</div>`).join('') + `</div>`;
@@ -4198,7 +4214,7 @@ function viewToday(){
   LIST_HTML = html;
   const vw = Math.min(innerWidth, 660), Hpx = innerHeight, k = 360 / vw, Hs = Math.round(Hpx * k), pad = Math.round(222 * k), topUi = Math.round(196 * k);
   const cur = currentSlot(), curLeft = cur ? due.filter(c => (c.slot || 'any') === cur && !logs.some(l => l.choreId === c.id)).length : 0, curLabel = cur ? SLOTS.find(x => x[0] === cur)[1] : '';
-  return `<div class="xfull"><div class="xfull-svg">${treeSVG(wl, 'full', { H:Hs, pad, maxTh:Hs - pad - topUi })}</div><div class="xfull-top">${html0}<div class="xchips"><span class="xcount">オーナメント <b>${wl.length}</b>個</span><button class="listhandle" data-act="listopen"><i></i><span>今日のリスト</span><small>${cur ? `${curLabel}・あと${curLeft}` : 'ぜんぶ終わり！'}</small></button></div></div></div>`;
+  return `<div class="xfull"><div class="xfull-svg">${treeSVG(wl, 'full', { H:Hs, pad, maxTh:Hs - pad - topUi })}</div><div class="xfull-top">${html0}<div class="xchips"><span class="xcount">オーナメント <b>${wl.length}</b>個</span><button class="listhandle" data-act="listopen"><i></i><span>今日の記録</span><small>${logs.length}件</small></button></div></div></div>`;
 }
 let LIST_HTML = '', LISTOPEN = false;
 
