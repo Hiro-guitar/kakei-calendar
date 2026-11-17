@@ -40,7 +40,7 @@ header .date{font-size:12px;color:var(--sub);font-weight:700;margin-left:6px}
 .sync{width:9px;height:9px;border-radius:50%;background:#d6cbb5}
 .sync.ok{background:#7cc27a}.sync.pending{background:var(--amber)}.sync.err{background:var(--red)}
 
-main{padding:6px 14px calc(110px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto}
+main{padding:6px 14px calc(206px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto}
 
 /* 下のメニュー：角丸の色タイル */
 nav.tabs{position:fixed;left:10px;right:10px;bottom:calc(8px + env(safe-area-inset-bottom));max-width:620px;margin:0 auto;background:var(--cream);border-radius:26px;box-shadow:var(--sh-lift);display:flex;padding:8px 6px;z-index:6}
@@ -100,6 +100,24 @@ h2.s-morning{background:var(--amber)} h2.s-day{background:var(--h)} h2.s-night{b
 
 .fab{position:fixed;right:16px;bottom:calc(98px + env(safe-area-inset-bottom));background:linear-gradient(var(--amber-hi),var(--amber));color:var(--navy);border-radius:999px;padding:12px 18px;font-weight:800;box-shadow:var(--sh-lift),inset 0 0 0 2px rgba(255,255,255,.3);z-index:4}
 .fab:active{transform:translateY(2px)}
+.qbar{position:fixed;left:0;right:0;bottom:calc(88px + env(safe-area-inset-bottom));z-index:5;display:flex;gap:10px;overflow-x:auto;padding:10px 14px 12px;background:#e9dfc6;border-radius:22px 22px 0 0;box-shadow:0 -2px 10px rgba(80,60,20,.08);scrollbar-width:none;-webkit-overflow-scrolling:touch;max-width:660px;margin:0 auto}
+.qbar::-webkit-scrollbar{display:none}
+.slotdone{display:flex;align-items:center;gap:10px;width:100%;margin:14px 0 4px;padding:11px 16px;border-radius:18px;background:#eef6ea;box-shadow:var(--sh);font-size:14px;color:var(--navy);text-align:left}
+.slotdone b{font-size:15px}.slotdone span{flex:1;color:#4a8a5a;font-weight:800}.slotdone small{color:var(--sub);font-weight:700}
+.nowchip{margin-left:8px;font-size:11px;font-weight:800;color:#fff;background:var(--amber);padding:3px 9px;border-radius:999px;vertical-align:middle}
+.slotfold{margin-left:8px;font-size:11px;font-weight:700;color:var(--sub);background:var(--paper);padding:3px 9px;border-radius:999px}
+.qb{flex:0 0 auto;width:74px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.qb .qi{position:relative;width:64px;height:64px;border-radius:50%;background:var(--cream);box-shadow:var(--sh-lift);display:flex;align-items:center;justify-content:center;transition:transform .12s}
+.qb .qi svg{width:42px;height:42px}
+.qb:active .qi{transform:scale(.9)}
+.qb.now .qi{box-shadow:0 0 0 3px var(--amber),var(--sh-lift)}
+.qb.done .qi{background:#eef6ea}
+.qb.done .qi svg{opacity:.55}
+.qb.off .qi{opacity:.75}
+.qb .qi em{position:absolute;right:-2px;top:-2px;min-width:22px;height:22px;padding:0 5px;border-radius:11px;background:#5aaa6a;color:#fff;font:800 12px/22px sans-serif;font-style:normal;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.qb .ql{font-size:11px;font-weight:800;color:var(--navy);line-height:1.2;text-align:center;max-width:74px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.qb .qi.hit{animation:qhit .5s ease-out}
+@keyframes qhit{0%{transform:scale(1)}30%{transform:scale(1.18)}60%{transform:scale(.95)}100%{transform:scale(1)}}
 .minirow{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:2px dotted var(--line);font-size:14px;font-weight:700}
 .minirow:last-child{border-bottom:0}
 .minirow .t{color:var(--sub);font-size:12px;width:40px;flex:none}
@@ -394,7 +412,8 @@ nav.tabs .tile{width:38px;height:38px}
   <button class="me-chip" id="mechip"></button>
 </div></header>
 <main id="view"></main>
-<button class="fab" id="fab">＋ 名もなき家事</button>
+<button class="fab" id="fab" style="display:none">＋ 名もなき家事</button>
+<div class="qbar" id="qbar" style="display:none"></div>
 <nav class="tabs" id="tabs">
   <button data-t="today"><span class="tile"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg></span>今日</button>
   <button data-t="week"><span class="tile"><svg viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="3.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/><circle cx="9" cy="15" r=".6"/><circle cx="15" cy="15" r=".6"/></svg></span>週</button>
@@ -501,6 +520,64 @@ function typeTalk(){
   typeT = setInterval(() => { i += 1; el.textContent = full.slice(0, i); if (i >= full.length) clearInterval(typeT); }, 38);
 }
 let actx;
+/* ===== 下のクイックバー：家事ごとのマークをタップするだけで「やった」 ===== */
+const QI = (() => {
+  const c = (b, inner) => `<svg viewBox="0 0 40 40">${inner}</svg>`;
+  return {
+    egg: c(0, `<ellipse cx="17" cy="23" rx="12" ry="9" fill="#5a5f6a"/><path d="M28 21 L38 17" stroke="#3a3f4a" stroke-width="3.4" stroke-linecap="round"/><path d="M10 22 C 8 15 15 13 18 16 C 22 12 28 17 24 22 C 22 27 12 28 10 22Z" fill="#fff"/><circle cx="17.5" cy="20.5" r="3.6" fill="#ffc83a"/><circle cx="16.4" cy="19.4" r="1" fill="#fff6c8"/>`),
+    onigiri: c(0, `<path d="M20 6 C 26 6 35 22 34 28 C 33 34 7 34 6 28 C 5 22 14 6 20 6Z" fill="#fff" stroke="#e0dcd2" stroke-width="1"/><rect x="11" y="23" width="18" height="11" rx="2" fill="#2f4a3a"/><circle cx="20" cy="15" r="2.4" fill="#e8586a"/>`),
+    nabe: c(0, `<path d="M6 18 H 34 V 28 C 34 33 30 35 26 35 H 14 C 10 35 6 33 6 28Z" fill="#e85a4a"/><rect x="4" y="15.5" width="32" height="4" rx="2" fill="#c8402e"/><path d="M2 21 H 6 M34 21 H 38" stroke="#5a3a2a" stroke-width="3" stroke-linecap="round"/><path d="M14 13 C 13 10 16 9 15 6 M20 13 C 19 10 22 9 21 6 M26 13 C 25 10 28 9 27 6" stroke="#c8d4e0" stroke-width="1.8" fill="none" stroke-linecap="round"/><rect x="9" y="22" width="22" height="2" rx="1" fill="#fff" opacity=".3"/>`),
+    pan: c(0, `<circle cx="17" cy="22" r="11" fill="#4a4f5a"/><circle cx="17" cy="22" r="8.5" fill="#6a707c"/><path d="M27 18 L 37 12" stroke="#a8703e" stroke-width="3.6" stroke-linecap="round"/><path d="M12 22 q 5 -5 10 0" stroke="#ffc83a" stroke-width="2.4" fill="none" stroke-linecap="round"/>`),
+    dish: c(0, `<ellipse cx="20" cy="27" rx="15" ry="6" fill="#dfe8f0"/><ellipse cx="20" cy="25" rx="15" ry="6" fill="#fff" stroke="#c8d4e0" stroke-width="1"/><ellipse cx="20" cy="25" rx="9" ry="3.4" fill="#eef4f8"/>${[[9, 11, 3.4], [16, 7, 2.4], [27, 10, 4], [33, 16, 2.2]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#bfe4ff" opacity=".8" stroke="#8ac0e8" stroke-width=".8"/>`).join('')}`),
+    washer: c(0, `<rect x="7" y="5" width="26" height="31" rx="4" fill="#fff" stroke="#c8d4e0" stroke-width="1.2"/><rect x="7" y="5" width="26" height="6" rx="3" fill="#e2eaf2"/><circle cx="12" cy="8" r="1.2" fill="#7ab8e8"/><circle cx="20" cy="23" r="9" fill="#8ac8f0" stroke="#5a8ab0" stroke-width="1.6"/><path d="M12 24 q 4 -3 8 0 t 8 0" stroke="#fff" stroke-width="1.6" fill="none"/>`),
+    shirt: c(0, `<path d="M12 8 L 6 13 L 9 19 L 12 17 V 33 H 28 V 17 L 31 19 L 34 13 L 28 8 Q 20 13 12 8Z" fill="#7ab8e8" stroke="#4a88b8" stroke-width="1"/><path d="M12 25 H 28" stroke="#fff" stroke-width="1.4" stroke-dasharray="2 1.6"/>`),
+    bag: c(0, `<path d="M13 12 V 9 C 13 5 27 5 27 9 V 12" stroke="#c8503a" stroke-width="2.6" fill="none"/><rect x="8" y="12" width="24" height="23" rx="6" fill="#f07a5a"/><rect x="12" y="20" width="16" height="9" rx="3" fill="#ffb59a"/><circle cx="20" cy="17" r="1.6" fill="#ffd84a"/>`),
+    tub: c(0, `<path d="M4 20 H 36 V 25 C 36 31 31 33 26 33 H 14 C 9 33 4 31 4 25Z" fill="#fff" stroke="#c8d4e0" stroke-width="1.2"/><path d="M6 20 V 8 C 6 5 11 5 11 9" stroke="#b8c0cc" stroke-width="2" fill="none"/>${[[14, 15, 4], [21, 13, 5], [28, 16, 3.6]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#dff0ff" stroke="#9acce8" stroke-width=".8"/>`).join('')}<path d="M10 33 V 36 M30 33 V 36" stroke="#b8c0cc" stroke-width="2.4" stroke-linecap="round"/>`),
+    duck: c(0, `<path d="M8 24 C 8 32 32 34 33 24 C 33 20 28 20 25 21 C 27 17 26 10 19 10 C 13 10 12 17 15 21 C 12 19 8 19 8 24Z" fill="#ffd23a" stroke="#e0a81a" stroke-width="1"/><path d="M11 15 L 5 16.5 L 11 18Z" fill="#f08a2a"/><circle cx="16" cy="14.5" r="1.4" fill="#2a2a2e"/><path d="M4 33 q 4 -2 8 0 t 8 0 t 8 0 t 8 0" stroke="#8ac8f0" stroke-width="2" fill="none"/>`),
+    trash: c(0, `<path d="M10 14 C 6 20 7 33 12 35 H 28 C 33 33 34 20 30 14Z" fill="#7a8a9a"/><path d="M14 14 L 16 8 L 20 11 L 24 7 L 26 14Z" fill="#5a6a7a"/><path d="M14 20 Q 20 23 26 20" stroke="#9aaaba" stroke-width="1.6" fill="none"/><rect x="17" y="12" width="6" height="3" rx="1.4" fill="#ffd84a"/>`),
+    vacuum: c(0, `<path d="M26 6 L 18 28" stroke="#8a90a0" stroke-width="3" stroke-linecap="round"/><rect x="8" y="27" width="22" height="7" rx="3.5" fill="#5a8ad8"/><circle cx="12" cy="35" r="2" fill="#3a3f4a"/><circle cx="26" cy="35" r="2" fill="#3a3f4a"/><rect x="23" y="4" width="8" height="5" rx="2.4" fill="#f07a5a"/>`),
+    toilet: c(0, `<rect x="9" y="5" width="15" height="11" rx="3" fill="#fff" stroke="#c8d4e0" stroke-width="1.2"/><path d="M7 17 H 33 C 33 25 27 28 20 28 H 18 L 19 35 H 12 L 12 26 C 8 24 7 21 7 17Z" fill="#fff" stroke="#c8d4e0" stroke-width="1.2"/><ellipse cx="20" cy="18" rx="10" ry="2.4" fill="#dfeaf4"/><circle cx="32" cy="9" r="3" fill="#bfe4ff" stroke="#8ac0e8" stroke-width=".8"/>`),
+    basket: c(0, `<path d="M8 15 C 8 5 32 5 32 15" stroke="#c8965a" stroke-width="2.6" fill="none"/><path d="M5 15 H 35 L 31 34 H 9Z" fill="#e2b06a" stroke="#b8864a" stroke-width="1"/>${[11, 17, 23, 29].map(x => `<path d="M${x} 17 L ${x - (x - 20) * .15} 32" stroke="#b8864a" stroke-width="1.2"/>`).join('')}<path d="M7 22 H 33 M8 27 H 32" stroke="#b8864a" stroke-width="1.2"/><circle cx="14" cy="13" r="3.6" fill="#e85a4a"/><path d="M22 8 L 27 14" stroke="#4aa060" stroke-width="3.4" stroke-linecap="round"/>`),
+    pillow: c(0, `<path d="M6 12 C 6 8 34 8 34 12 L 33 30 C 33 34 7 34 7 30Z" fill="#fff" stroke="#c8d4e0" stroke-width="1.2"/><path d="M6 12 L 3 9 M34 12 L 37 9 M7 30 L 4 33 M33 30 L 36 33" stroke="#c8d4e0" stroke-width="2" stroke-linecap="round"/>${[13, 20, 27].map(x => `<circle cx="${x}" cy="21" r="1.6" fill="#f4b8c8"/>`).join('')}`),
+    spark: c(0, `<path d="M20 4 L 23 16 L 35 19 L 23 22 L 20 35 L 17 22 L 5 19 L 17 16Z" fill="#ffd84a" stroke="#e0a81a" stroke-width="1"/><circle cx="31" cy="8" r="2.4" fill="#ffe89a"/><circle cx="9" cy="30" r="2" fill="#ffe89a"/>`),
+    plus: c(0, `<circle cx="20" cy="20" r="14" fill="#fff" stroke="#e2b23a" stroke-width="2" stroke-dasharray="3 2.4"/><path d="M20 13 V 27 M13 20 H 27" stroke="#e2a020" stroke-width="3.4" stroke-linecap="round"/>`),
+  };
+})();
+function choreIcon(c){
+  const n = c.name || '';
+  if (c.icon && QI[c.icon]) return c.icon;
+  if (/朝ごはん|朝食|お弁当/.test(n)) return 'egg';
+  if (/昼ごはん|昼食|ランチ/.test(n)) return 'onigiri';
+  if (/夕飯|夕食|晩ごはん|夜ごはん|夜ご飯/.test(n)) return 'nabe';
+  if (/ごはん|ご飯|料理|調理|準備/.test(n)) return 'pan';
+  if (/洗い物|皿|食器/.test(n)) return 'dish';
+  if (/取り込|たたむ|畳む/.test(n)) return 'shirt';
+  if (/洗濯/.test(n)) return 'washer';
+  if (/子ども.*お風呂|子供.*お風呂|沐浴/.test(n)) return 'duck';
+  if (/風呂/.test(n)) return 'tub';
+  if (/支度|準備|保育|幼稚園|送り/.test(n)) return 'bag';
+  if (/ゴミ|ごみ/.test(n)) return 'trash';
+  if (/掃除機|掃除|片付/.test(n) && !/トイレ|風呂/.test(n)) return 'vacuum';
+  if (/トイレ/.test(n)) return 'toilet';
+  if (/買い|スーパー/.test(n)) return 'basket';
+  if (/シーツ|布団|枕/.test(n)) return 'pillow';
+  return 'spark';
+}
+const SLOT_ORDER = ['morning', 'day', 'night'];
+function currentSlot(){ const due = all('chore').filter(isDueToday), tk = dayKey(Date.now());
+  for (const s of SLOT_ORDER){ const cs = due.filter(c => (c.slot || 'any') === s); if (cs.length && cs.some(c => !logsOn(tk).some(l => l.choreId === c.id))) return s; }
+  return null; }
+function qbarHTML(){
+  const tk = dayKey(Date.now()), logs = logsOn(tk), cur = currentSlot(), cs = choresSorted(), due = new Set(cs.filter(isDueToday).map(c => c.id));
+  const rank = c => { const s = c.slot || 'any', done = logs.some(l => l.choreId === c.id); if (!due.has(c.id)) return 50; if (done) return 40;
+    if (s === cur) return 0; if (s === 'any') return 20; const si = SLOT_ORDER.indexOf(s), ci = SLOT_ORDER.indexOf(cur); return si > ci ? 10 + si : 30; };
+  const list = cs.slice().sort((a, b) => rank(a) - rank(b) || (a.order ?? 0) - (b.order ?? 0));
+  return list.map(c => { const n = logs.filter(l => l.choreId === c.id).length, r = rank(c);
+    return `<button class="qb ${n ? 'done' : ''} ${r === 0 ? 'now' : ''} ${r === 50 ? 'off' : ''}" data-act="qdo" data-id="${c.id}"><span class="qi">${QI[choreIcon(c)]}${n ? `<em>${n > 1 ? '×' + n : '✓'}</em>` : ''}</span><span class="ql">${esc(c.name.replace(/（.*?）/g, ''))}</span></button>`; }).join('')
+    + `<button class="qb" data-act="qfree"><span class="qi">${QI.plus}</span><span class="ql">ほかの家事</span></button>`;
+}
+function renderQbar(){ const q = $('qbar'); if (!q) return; const on = S.me && tab === 'today'; q.style.display = on ? '' : 'none'; if (!on) return; const x = q.scrollLeft; q.innerHTML = qbarHTML(); q.scrollLeft = x; }
+
 function chime(kind){
   if (S.sound === false) return;
   try {
@@ -3865,14 +3942,15 @@ function treeSVG(logs, big){
       svg += `<path d="${d}" stroke="#000" stroke-width="${w}" fill="none" opacity=".25" stroke-linecap="round" transform="translate(.3,1.3)"/><path d="${d}" stroke="#9a7414" stroke-width="${w + .5}" fill="none" stroke-linecap="round"/><path d="${d}" stroke="#d8ac2c" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-dasharray=".4 .35"/><path d="${d}" stroke="#ffe27a" stroke-width="${w * .55}" fill="none" stroke-dasharray=".3 .7" transform="translate(0,-.5)"/>`; }); }
   // オーナメントの位置：円すいの中に、段ごとに均等に並べてから順番をばらす
   const gap = 10.5 * sc, pts = [];
-  for (let y = tTop + 22; y < bodyBot - 6; y += gap * .95){ const hw = hwAt(y) * .8, n = Math.max(1, Math.floor(hw * 2 / gap) + 1), row = pts.length;
+  for (let y = tTop + 34 * gs; y < bodyBot - 6; y += gap * .95){ const hw = hwAt(y) * .8, n = Math.max(1, Math.floor(hw * 2 / gap) + 1), row = pts.length;
     for (let q = 0; q < n; q++) pts.push([cx + (n === 1 ? 0 : -hw + q * hw * 2 / (n - 1)) + (Math.round(y) % 2 ? gap * .2 : -gap * .2), y]); }
   const slots2 = pts.map((p, q) => [p, hash('s2' + q) % 9973]).sort((a, b) => a[1] - b[1]).map(a => a[0]);
   // オーナメント（少し影を落として、ツリーにのっている感じに）
   items.forEach((l, i) => { const base = slots2[i % slots2.length], lap = Math.floor(i / slots2.length), x = base[0] + lap * 5, y = base[1] + lap * 4, k = ornamentOf(l), sw = ((rnd(l.id, 5) - .5) * 14).toFixed(0), s2 = (sc * (lap ? .85 : 1)).toFixed(2);
     svg += `<g class="orn" data-act="orn" data-id="${l.id}" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><g class="sw" style="--r:${sw}deg;--s:${(-rnd(l.id, 6) * 3).toFixed(2)}s"><ellipse cx="${(1.4 * sc).toFixed(1)}" cy="${(1.8 * sc).toFixed(1)}" rx="${(4.2 * sc).toFixed(1)}" ry="${(4 * sc).toFixed(1)}" fill="#1f5a2a" opacity=".22"/><g transform="scale(${s2})">${ornArt(k)}</g></g><circle r="${(6 * sc).toFixed(1)}" fill="transparent"/></g>`; });
-  // てっぺんの星（8本のとがった光の金の星、短い軸つき）
-  svg += `<g class="xstar" transform="translate(${cx},${top + 6 * gs}) scale(${(gs * .95).toFixed(2)})"><circle r="9" fill="#fff3b0" opacity=".2"/><rect x="-.9" y="5" width="1.8" height="5" fill="#9a7420"/><g filter="url(#acnhF)"><path d="M0.00 -8.00 L 0.84 -2.03 L 3.96 -3.96 L 2.03 -0.84 L 8.00 0.00 L 2.03 0.84 L 3.96 3.96 L 0.84 2.03 L 0.00 8.00 L -0.84 2.03 L -3.96 3.96 L -2.03 0.84 L -8.00 0.00 L -2.03 -0.84 L -3.96 -3.96 L -0.84 -2.03Z" fill="#c8961e" stroke="#8a6410" stroke-width=".35" stroke-linejoin="round"/><path d="M0 0 L 0.00 -8.00 L 0.84 -2.03Z M0 0 L 3.96 -3.96 L 2.03 -0.84Z M0 0 L 8.00 0.00 L 2.03 0.84Z M0 0 L 3.96 3.96 L 0.84 2.03Z M0 0 L 0.00 8.00 L -0.84 2.03Z M0 0 L -3.96 3.96 L -2.03 0.84Z M0 0 L -8.00 0.00 L -2.03 -0.84Z M0 0 L -3.96 -3.96 L -0.84 -2.03Z" fill="#f0c850"/><circle r="1.2" fill="#f8dc80"/></g></g>`;
+  // てっぺんの星（大きな金の星。立体の面と光の筋）
+  svg += `<g class="xstar" transform="translate(${cx},${tTop - 2 * gs}) scale(${(gs * 1.15).toFixed(2)})"><circle r="15" fill="#fff3b0" opacity=".28"/><circle r="9" fill="#fff6c8" opacity=".35"/><path d="M7.05 -9.71 L 9.70 -13.35" stroke="#fff3b0" stroke-width="1.1" stroke-linecap="round" opacity=".8"/><path d="M11.41 3.71 L 15.69 5.10" stroke="#fff3b0" stroke-width="1.1" stroke-linecap="round" opacity=".8"/><path d="M0.00 12.00 L 0.00 16.50" stroke="#fff3b0" stroke-width="1.1" stroke-linecap="round" opacity=".8"/><path d="M-11.41 3.71 L -15.69 5.10" stroke="#fff3b0" stroke-width="1.1" stroke-linecap="round" opacity=".8"/><path d="M-7.05 -9.71 L -9.70 -13.35" stroke="#fff3b0" stroke-width="1.1" stroke-linecap="round" opacity=".8"/><g filter="url(#acnhF)"><path d="M0.00 -10.00 L 2.47 -3.40 L 9.51 -3.09 L 3.99 1.30 L 5.88 8.09 L 0.00 4.20 L -5.88 8.09 L -3.99 1.30 L -9.51 -3.09 L -2.47 -3.40Z" fill="#e0a82a" stroke="#a87810" stroke-width=".6" stroke-linejoin="round"/><path d="M0 0 L 0.00 -10.00 L 2.47 -3.40Z M0 0 L 9.51 -3.09 L 3.99 1.30Z M0 0 L 5.88 8.09 L 0.00 4.20Z M0 0 L -5.88 8.09 L -3.99 1.30Z M0 0 L -9.51 -3.09 L -2.47 -3.40Z" fill="#ffd95a"/><circle r="1.8" fill="#fff0a8"/></g></g>`;
+
 
   svg += `</g>`;
   // 「ありがとう」のプレゼント
@@ -4020,7 +4098,7 @@ function render(){
   const me = S.me;
   $('mechip').innerHTML = me ? `<span class="dot ${me}"></span>${esc(nm(me))}` : '未設定';
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
-  $('fab').style.display = (me && tab === 'today') ? '' : 'none';
+  $('fab').style.display = 'none'; renderQbar();
   const v = $('view');
   if (!me) { v.innerHTML = viewOnboard(); return; }
   v.innerHTML = { today:viewToday, week:viewWeek, review:viewReview, settings:viewSettings, zukan:viewZukan }[tab]();
@@ -4069,6 +4147,7 @@ function choreCard(c, todays){
     <div class="body" data-act="open" data-id="${c.id}"><div class="name">${esc(c.name)}</div><div class="meta">${meta}</div></div>${ck}</div>`;
 }
 
+let SLOTX = {};
 function viewToday(){
   const tk = dayKey(Date.now());
   const logs = logsOn(tk);
@@ -4084,7 +4163,9 @@ function viewToday(){
     if (!cs.length) continue;
     const withLogs = cs.map(c => [c, logs.filter(l => l.choreId === c.id)]);
     withLogs.sort((a,b) => (a[1].length>0) - (b[1].length>0));
-    html += `<h2 class="s-${slot}">${label}</h2>` + withLogs.map(([c,t]) => choreCard(c,t)).join('');
+    const allDone = withLogs.every(([c,t]) => t.length > 0), cur = currentSlot();
+    if (allDone && slot !== 'any' && !SLOTX[slot]){ html += `<button class="slotdone s-${slot}" data-act="slotx" data-v="${slot}"><b>${label}</b><span>✓ ぜんぶ終わり（${cs.length}件）</span><small>ひらく</small></button>`; continue; }
+    html += `<h2 class="s-${slot}">${label}${slot === cur ? '<span class="nowchip">いまはここ</span>' : ''}${allDone && slot !== 'any' ? `<button class="slotfold" data-act="slotx" data-v="${slot}">とじる</button>` : ''}</h2>` + withLogs.map(([c,t]) => choreCard(c,t)).join('');
   }
   if (!due.length) html += `<div class="empty">今日の家事はまだ登録されていません。<br>設定から追加できます。</div>`;
   const extra = logs.filter(l => !l.choreId || !dueIds.has(l.choreId));
@@ -4385,6 +4466,11 @@ document.addEventListener('click', e => {
     case 'zf': zFilter = el.dataset.v; render(); break;
     case 'zk': sheetZukan(el.dataset.k); break;
     case 'talk': talkIdx++; lastTyped = ''; render(); break;
+    case 'qdo': { const c = S.items[id]; if (!c) break; const recent = all('log').filter(l => l.choreId === id && Date.now() - l.at < 10 * 60e3).sort((a, b) => b.at - a.at)[0];
+      if (recent){ toast(`「${c.name}」はさっき記録したよ（取り消しは下のリストから）`); break; }
+      const qi = el.querySelector('.qi'); if (qi){ qi.classList.remove('hit'); void qi.offsetWidth; qi.classList.add('hit'); } burst(el, 'star'); doChore(c); break; }
+    case 'qfree': sheetFree(); break;
+    case 'slotx': SLOTX[el.dataset.v] = !SLOTX[el.dataset.v]; render(); break;
     case 'do': burst(el, 'star'); doChore(S.items[id]); if (el.dataset.close) closeSheet(); break;
     case 'open': sheetChore(id); break;
     case 'thanks': if (!L.thanks) burst(el, 'heart'); toggleThanks(L); break;
