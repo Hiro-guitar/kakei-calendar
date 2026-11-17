@@ -205,6 +205,12 @@ textarea.t{min-height:72px;resize:vertical}
 @keyframes xsw{0%,100%{transform:rotate(calc(var(--r) * .4))}50%{transform:rotate(calc(var(--r) * -.4))}}
 @keyframes xsw2{0%{transform:rotate(0)}25%{transform:rotate(22deg) scale(1.15)}55%{transform:rotate(-14deg)}80%{transform:rotate(6deg)}100%{transform:rotate(0)}}
 .garden.tree .xstar{animation:xst 3s ease-in-out infinite}
+.garden.tree .xtree{transform-box:fill-box;transform-origin:50% 100%;cursor:pointer}
+.garden.tree .xtree.shake{animation:xshake .7s ease-out}
+@keyframes xshake{0%{transform:rotate(0)}15%{transform:rotate(-3.5deg)}35%{transform:rotate(3deg)}55%{transform:rotate(-2deg)}75%{transform:rotate(1deg)}100%{transform:rotate(0)}}
+.garden.tree .xtree.shake .orn .sw{animation:xsw2 .9s ease-out}
+.garden.tree .xflake{animation:xbob 4s ease-in-out infinite;animation-delay:var(--s)}
+@keyframes xbob{0%,100%{translate:0 0;opacity:.9}50%{translate:0 -5px;opacity:.55}}
 @keyframes xst{0%,100%{opacity:1}50%{opacity:.8}}
 .gtitle span{font-size:12px;color:var(--sub);background:var(--paper);padding:2px 10px;border-radius:999px}
 .garden{width:100%;display:block}
@@ -3729,23 +3735,32 @@ function treeSlots(W, ground, top, tw, gap){
 function treeSVG(logs, big){
   const W = 360, H = big ? 210 : 160, ground = H - 30, top = 12, cx = W / 2, th = ground - top, tw = th * .98;
   const items = logs.slice().sort((a, b) => a.at - b.at), sc = big ? 1.75 : 1.4, slots = treeSlots(W, ground, top, tw, 11 * sc);
-  const G1 = '#5cb05e', G2 = '#469a4e', G3 = '#3a8444', SN = '#fbfdff', SH = '#dfe6f4';
+  const hr = new Date().getHours(), tod = hr >= 6 && hr < 16 ? 'day' : hr >= 16 && hr < 18 ? 'dusk' : 'night';
+  const SKY = { day:['#cfe6f4', '#eef4f6'], dusk:['#f6c8a8', '#fbe6d0'], night:['#2e3c6a', '#5a6a9a'] }[tod], dark = tod === 'night';
+  const G1 = dark ? '#3f8a58' : '#5cb05e', G2 = dark ? '#33744a' : '#469a4e', G3 = dark ? '#28603c' : '#3a8444', SN = dark ? '#dfe6f6' : '#fbfdff', SH = dark ? '#b8c4e0' : '#dfe6f4';
   let svg = `<svg class="garden tree" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><defs>
-    <linearGradient id="xsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfe6f4"/><stop offset="1" stop-color="#eef4f6"/></linearGradient>
+    <linearGradient id="xsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${SKY[0]}"/><stop offset="1" stop-color="${SKY[1]}"/></linearGradient>
     <clipPath id="xclip"><rect width="${W}" height="${H}" rx="20"/></clipPath></defs><g clip-path="url(#xclip)">
     <rect width="${W}" height="${H}" fill="url(#xsky)"/>`;
+  if (dark){ for (let i = 0; i < 22; i++) svg += `<circle cx="${(rnd('st', i) * W).toFixed(0)}" cy="${(rnd('sy2', i) * H * .45).toFixed(0)}" r="${(.6 + rnd('ss', i) * .8).toFixed(1)}" fill="#fff6d0" opacity="${(.5 + rnd('so2', i) * .5).toFixed(2)}"/>`; svg += `<circle cx="300" cy="28" r="10" fill="#fff6d0"/><circle cx="305" cy="24" r="9" fill="${SKY[0]}"/>`; }
   // まるい雲
-  [[54, 26, 1], [300, 20, .8], [210, 34, .6]].forEach(([x, y, k]) => svg += `<g transform="translate(${x},${y}) scale(${k})" fill="#fff" opacity=".85"><circle cx="-12" cy="2" r="7"/><circle cx="0" cy="-2" r="10"/><circle cx="12" cy="2" r="7"/><rect x="-19" y="2" width="38" height="7" rx="3.5"/></g>`);
+  if (!dark) [[54, 26, 1], [300, 20, .8], [210, 34, .6]].forEach(([x, y, k]) => svg += `<g transform="translate(${x},${y}) scale(${k})" fill="#fff" opacity=".85"><circle cx="-12" cy="2" r="7"/><circle cx="0" cy="-2" r="10"/><circle cx="12" cy="2" r="7"/><rect x="-19" y="2" width="38" height="7" rx="3.5"/></g>`);
   // 奥の雪の丘とまるい木
-  svg += `<path d="M0 ${ground - 18} C 50 ${ground - 40} 100 ${ground - 36} 140 ${ground - 22} C 190 ${ground - 8} 230 ${ground - 44} 290 ${ground - 34} C 330 ${ground - 28} 350 ${ground - 24} 360 ${ground - 26} V ${H} H 0Z" fill="#e6eef8"/>`;
+  svg += `<path d="M0 ${ground - 18} C 50 ${ground - 40} 100 ${ground - 36} 140 ${ground - 22} C 190 ${ground - 8} 230 ${ground - 44} 290 ${ground - 34} C 330 ${ground - 28} 350 ${ground - 24} 360 ${ground - 26} V ${H} H 0Z" fill="${dark ? '#8e9cc4' : '#e6eef8'}"/>`;
   [[38, .9], [74, .7], [292, .8], [328, 1]].forEach(([x, k]) => { const gy = ground - 10;
     svg += `<g transform="translate(${x},${gy}) scale(${k})"><rect x="-2.6" y="-6" width="5.2" height="8" rx="2" fill="#a8825e"/><path d="M0 -40 C 8 -30 15 -16 15 -10 Q 15 -4 0 -4 Q -15 -4 -15 -10 C -15 -16 -8 -30 0 -40Z" fill="${G2}"/><path d="M0 -40 C 6 -32 10 -24 11 -20 Q 6 -17 0 -18 Q -6 -17 -11 -20 C -10 -24 -6 -32 0 -40Z" fill="${SN}"/><path d="M5 -30 C 10 -22 14 -14 13 -9 Q 9 -6 5 -7Z" fill="${G3}" opacity=".5"/></g>`; });
   // 地面の雪
   svg += `<path d="M0 ${ground - 4} C 80 ${ground - 12} 140 ${ground - 2} 180 ${ground - 4} C 230 ${ground - 8} 300 ${ground - 2} 360 ${ground - 8} V ${H} H 0Z" fill="${SN}"/>`;
   for (let i = 0; i < 14; i++){ const x = (i * 29 + 11) % W, y = ground + 4 + (i * 13 % (H - ground - 8)); svg += `<ellipse cx="${x}" cy="${y}" rx="${4 + i % 3 * 2}" ry="1.4" fill="${SH}"/>`; }
   for (let i = 0; i < 26; i++) svg += `<circle class="xsnow" style="--d:${(6 + rnd('sn', i) * 5).toFixed(1)}s;--s:${(-rnd('sd', i) * 10).toFixed(1)}s" cx="${(rnd('sx', i) * W).toFixed(0)}" cy="${(rnd('sy', i) * H).toFixed(0)}" r="${(1.2 + rnd('sr', i) * 1.4).toFixed(1)}" fill="#fff"/>`;
+  [[60, ground - 40], [118, ground - 64], [252, ground - 58], [312, ground - 46]].forEach(([x, y], i) => svg += `<g class="xflake" style="--s:${(-i * 1.3).toFixed(1)}s" transform="translate(${x},${y})"><circle r="6" fill="#bfe4ff" opacity=".35"/><g stroke="#8fd0ff" stroke-width="1.6" stroke-linecap="round">${[0, 60, 120].map(a => `<path d="M0 -4.4 V 4.4 M-1.4 -3 L 0 -2 L 1.4 -3 M-1.4 3 L 0 2 L 1.4 3" transform="rotate(${a})"/>`).join('')}</g><g stroke="#fff" stroke-width=".6" stroke-linecap="round">${[0, 60, 120].map(a => `<path d="M0 -4 V 4" transform="rotate(${a})"/>`).join('')}</g></g>`);
   // 木のかげ・幹
   svg += `<ellipse cx="${cx}" cy="${ground + 1}" rx="${tw * .62}" ry="6" fill="${SH}"/><rect x="${cx - 7}" y="${ground - 14}" width="14" height="15" rx="5" fill="#a8825e"/><rect x="${cx - 7}" y="${ground - 14}" width="5" height="15" rx="2.5" fill="#bc9670"/>`;
+  // 「ありがとう」のプレゼント
+  const gifts = items.filter(l => l.thanks).slice(0, 8);
+  gifts.forEach((l, i) => { const side = i % 2 ? 1 : -1, x = cx + side * (20 + Math.floor(i / 2) * 17), w = 12 + (hash(l.id) % 3) * 2, h = 9 + (hash(l.id + 'h') % 3) * 2, c = ['#f06a6a', '#6aa8f0', '#f6c84a', '#6ac88a', '#d88ae0'][hash(l.id) % 5], rc = c === '#f6c84a' ? '#f06a6a' : '#fff6d0', gy = ground + 2;
+    svg += `<g data-act="orn" data-id="${l.id}" data-gift="1"><ellipse cx="${x}" cy="${gy}" rx="${w * .6}" ry="2" fill="${SH}"/><rect x="${(x - w / 2).toFixed(1)}" y="${(gy - h).toFixed(1)}" width="${w}" height="${h}" rx="2.6" fill="${c}"/><rect x="${(x - w / 2).toFixed(1)}" y="${(gy - h).toFixed(1)}" width="${w}" height="3" rx="1.5" fill="#fff" opacity=".25"/><rect x="${(x + w / 2 - 3).toFixed(1)}" y="${(gy - h).toFixed(1)}" width="3" height="${h}" rx="1.5" fill="#000" opacity=".08"/><rect x="${(x - 1.3).toFixed(1)}" y="${(gy - h).toFixed(1)}" width="2.6" height="${h}" fill="${rc}"/><ellipse cx="${(x - 2.6).toFixed(1)}" cy="${(gy - h - 1.4).toFixed(1)}" rx="2.8" ry="1.9" fill="${rc}"/><ellipse cx="${(x + 2.6).toFixed(1)}" cy="${(gy - h - 1.4).toFixed(1)}" rx="2.8" ry="1.9" fill="${rc}"/><circle cx="${x}" cy="${(gy - h - .8).toFixed(1)}" r="1.5" fill="${rc}"/></g>`; });
+  svg += `<g class="xtree" data-act="xshake">`;
   // ぽってりした段々のツリー
   const tiers = 4;
   for (let i = tiers - 1; i >= 0; i--){ const t1 = (i + 1) / tiers, y0 = top + 4 + (i / tiers) * (th - 20) - (i ? 6 : 0), y1 = top + 4 + t1 * (th - 20) + 2, hw = tw * (.22 + t1 * .78) / 2;
@@ -3761,15 +3776,12 @@ function treeSVG(logs, big){
     svg += `<path d="M${(cx - hw).toFixed(1)} ${y.toFixed(1)} Q ${cx} ${(y2 + 6).toFixed(1)} ${(cx + hw).toFixed(1)} ${(y2 - 2).toFixed(1)}" stroke="#2f6a38" stroke-width=".8" fill="none" opacity=".6"/>`;
     for (let j = 1; j < 7; j++){ const u = j / 7, x = (1 - u) * (1 - u) * (cx - hw) + 2 * (1 - u) * u * cx + u * u * (cx + hw), yy = (1 - u) * (1 - u) * y + 2 * (1 - u) * u * (y2 + 6) + u * u * (y2 - 2), c = ['#ffd84a', '#ff8a7a', '#8ad0ff', '#b8f08a', '#ffb0e0'][(j + g) % 5];
       svg += `<g class="xbulb" style="--s:${(-(j + g * 3) * .41).toFixed(2)}s"><circle cx="${x.toFixed(1)}" cy="${(yy + 1.6).toFixed(1)}" r="3.4" fill="${c}" opacity=".35"/><circle cx="${x.toFixed(1)}" cy="${(yy + 1.6).toFixed(1)}" r="1.9" fill="${c}"/><circle cx="${(x - .6).toFixed(1)}" cy="${(yy + 1).toFixed(1)}" r=".6" fill="#fff" opacity=".8"/></g>`; } }
-  // 「ありがとう」のプレゼント
-  const gifts = items.filter(l => l.thanks).slice(0, 8);
-  gifts.forEach((l, i) => { const side = i % 2 ? 1 : -1, x = cx + side * (20 + Math.floor(i / 2) * 17), w = 12 + (hash(l.id) % 3) * 2, h = 9 + (hash(l.id + 'h') % 3) * 2, c = ['#f06a6a', '#6aa8f0', '#f6c84a', '#6ac88a', '#d88ae0'][hash(l.id) % 5], rc = c === '#f6c84a' ? '#f06a6a' : '#fff6d0', gy = ground + 2;
-    svg += `<g data-act="orn" data-id="${l.id}" data-gift="1"><ellipse cx="${x}" cy="${gy}" rx="${w * .6}" ry="2" fill="${SH}"/><rect x="${(x - w / 2).toFixed(1)}" y="${(gy - h).toFixed(1)}" width="${w}" height="${h}" rx="2.6" fill="${c}"/><rect x="${(x - w / 2).toFixed(1)}" y="${(gy - h).toFixed(1)}" width="${w}" height="3" rx="1.5" fill="#fff" opacity=".25"/><rect x="${(x + w / 2 - 3).toFixed(1)}" y="${(gy - h).toFixed(1)}" width="3" height="${h}" rx="1.5" fill="#000" opacity=".08"/><rect x="${(x - 1.3).toFixed(1)}" y="${(gy - h).toFixed(1)}" width="2.6" height="${h}" fill="${rc}"/><ellipse cx="${(x - 2.6).toFixed(1)}" cy="${(gy - h - 1.4).toFixed(1)}" rx="2.8" ry="1.9" fill="${rc}"/><ellipse cx="${(x + 2.6).toFixed(1)}" cy="${(gy - h - 1.4).toFixed(1)}" rx="2.8" ry="1.9" fill="${rc}"/><circle cx="${x}" cy="${(gy - h - .8).toFixed(1)}" r="1.5" fill="${rc}"/></g>`; });
   // オーナメント（少し影を落として、ツリーにのっている感じに）
   items.forEach((l, i) => { const base = slots[i % slots.length], lap = Math.floor(i / slots.length), x = base[0] + lap * 5, y = base[1] + lap * 4, k = ornamentOf(l), sw = ((rnd(l.id, 5) - .5) * 14).toFixed(0), s2 = (sc * (lap ? .85 : 1)).toFixed(2);
     svg += `<g class="orn" data-act="orn" data-id="${l.id}" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><g class="sw" style="--r:${sw}deg;--s:${(-rnd(l.id, 6) * 3).toFixed(2)}s"><ellipse cx="${(1.4 * sc).toFixed(1)}" cy="${(1.8 * sc).toFixed(1)}" rx="${(4.2 * sc).toFixed(1)}" ry="${(4 * sc).toFixed(1)}" fill="#1f5a2a" opacity=".22"/><g transform="scale(${s2})">${ornArt(k)}</g></g><circle r="${(6 * sc).toFixed(1)}" fill="transparent"/></g>`; });
   // てっぺんの星（まるっこい）
   svg += `<g class="xstar" transform="translate(${cx},${top + 3})"><circle r="12" fill="#fff6c0" opacity=".5"/><path d="M0 -8 L 2.6 -2.8 L 8.2 -2.2 L 4 1.6 L 5.2 7.2 L 0 4.4 L -5.2 7.2 L -4 1.6 L -8.2 -2.2 L -2.6 -2.8Z" fill="#ffd84a" stroke="#ffd84a" stroke-width="3.4" stroke-linejoin="round"/><path d="M-2.4 -2.6 L 0 -6 L 1.2 -3.4Z" fill="#fff6c0" stroke="#fff6c0" stroke-width="1.2" stroke-linejoin="round"/><circle cx="-2" cy="1" r=".7" fill="#a87a1a"/><circle cx="2" cy="1" r=".7" fill="#a87a1a"/></g>`;
+  svg += `</g>`;
   if (!items.length) svg += `<text x="${W / 2}" y="${H - 9}" text-anchor="middle" font-size="11" font-weight="800" fill="rgba(31,82,110,.55)">家事をすると、ツリーにオーナメントが飾られるよ</text>`;
   return svg + `</g></svg>`;
 }
@@ -4225,6 +4237,7 @@ document.addEventListener('click', e => {
       toast(`${FL[k].n}｜${dayKey(l.at).slice(5).replace('-','/')} ${l.name}`); break; }
     case 'orn': { const l = S.items[id]; if (!l) break; const g = el.querySelector('.sw'); if (g){ g.classList.remove('tap'); void g.getBBox(); g.classList.add('tap'); }
       toast(el.dataset.gift ? `プレゼント｜${dayKey(l.at).slice(5).replace('-','/')} ${l.name} の「ありがとう」` : `${ORN[ornamentOf(l)].n}｜${dayKey(l.at).slice(5).replace('-','/')} ${l.name}`); break; }
+    case 'xshake': { el.classList.remove('shake'); void el.getBBox(); el.classList.add('shake'); chime('do'); break; }
     case 'zof': zoFilter = el.dataset.v; render(); break;
     case 'ornz': { const k = el.dataset.k, z = ornFound(); toast(z.f[k] ? `${ORN[k].n}｜${z.f[k]}個 ・ はじめて：${dayKey(z.first[k].at).slice(5).replace('-','/')} ${z.first[k].name}` : (ORN[k].both ? 'ふたりでやった家事で見つかるよ' : 'まだ見つけていないオーナメント')); break; }
     case 'zm': zMode = el.dataset.v; zFilter = 'month'; render(); break;
