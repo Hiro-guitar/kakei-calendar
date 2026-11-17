@@ -212,6 +212,8 @@ textarea.t{min-height:72px;resize:vertical}
 .garden.tree .xflake{animation:xbob 4s ease-in-out infinite;animation-delay:var(--s)}
 @keyframes xbob{0%,100%{translate:0 0;opacity:.9}50%{translate:0 -5px;opacity:.55}}
 @keyframes xst{0%,100%{opacity:1}50%{opacity:.8}}
+.gpanel.xhero{padding:10px 8px 8px;margin:-4px -6px 12px}
+.gpanel.xhero .gtitle{font-size:16px;margin:2px 8px 8px}
 .gtitle span{font-size:12px;color:var(--sub);background:var(--paper);padding:2px 10px;border-radius:999px}
 .garden{width:100%;display:block}
 .garden .fl{cursor:pointer}
@@ -3799,8 +3801,8 @@ function giftSVG(x, gy, w, h, dp, c, rc, pat, id){
 }
 
 function treeSVG(logs, big){
-  const W = 360, H = big ? 210 : 160, ground = H - 30, top = 12, cx = W / 2, th = ground - top, tw = th * .98;
-  const items = logs.slice().sort((a, b) => a.at - b.at), sc = big ? 1.05 : .88, slots = treeSlots(W, ground - 18, top + 16, (ground - 20 - top - 12) * .9, 10 * sc);
+  const hero = big === 'hero', W = 360, H = hero ? 430 : big ? 290 : 160, ground = H - (hero ? 46 : 30), top = 12, cx = W / 2, th = ground - top, tw = th * .98;
+  const gs = th / 150, items = logs.slice().sort((a, b) => a.at - b.at), sc = th * .0078, slots = treeSlots(W, ground - 18, top + 16, (ground - 20 - top - 12) * .9, 10 * sc);
   const hr = new Date().getHours(), tod = hr >= 6 && hr < 16 ? 'day' : hr >= 16 && hr < 18 ? 'dusk' : 'night';
   const SKY = { day:['#cfe6f4', '#eef4f6'], dusk:['#f6c8a8', '#fbe6d0'], night:['#2e3c6a', '#5a6a9a'] }[tod], dark = tod === 'night';
   const G1 = dark ? '#3f8a58' : '#5cb05e', G2 = dark ? '#33744a' : '#469a4e', G3 = dark ? '#28603c' : '#3a8444', SN = dark ? '#dfe6f6' : '#fbfdff', SH = dark ? '#b8c4e0' : '#dfe6f4';
@@ -3821,44 +3823,44 @@ function treeSVG(logs, big){
   for (let i = 0; i < 26; i++) svg += `<circle class="xsnow" style="--d:${(6 + rnd('sn', i) * 5).toFixed(1)}s;--s:${(-rnd('sd', i) * 10).toFixed(1)}s" cx="${(rnd('sx', i) * W).toFixed(0)}" cy="${(rnd('sy', i) * H).toFixed(0)}" r="${(1.2 + rnd('sr', i) * 1.4).toFixed(1)}" fill="#fff"/>`;
   [[60, ground - 40], [118, ground - 64], [252, ground - 58], [312, ground - 46]].forEach(([x, y], i) => svg += `<g class="xflake" style="--s:${(-i * 1.3).toFixed(1)}s" transform="translate(${x},${y})"><circle r="6" fill="#bfe4ff" opacity=".35"/><g stroke="#8fd0ff" stroke-width="1.6" stroke-linecap="round">${[0, 60, 120].map(a => `<path d="M0 -4.4 V 4.4 M-1.4 -3 L 0 -2 L 1.4 -3 M-1.4 3 L 0 2 L 1.4 3" transform="rotate(${a})"/>`).join('')}</g><g stroke="#fff" stroke-width=".6" stroke-linecap="round">${[0, 60, 120].map(a => `<path d="M0 -4 V 4" transform="rotate(${a})"/>`).join('')}</g></g>`);
   // 木のかげ・れんがの植木ばち（背が高めの四角い鉢）
-  { const pw = (ground - 20 - top - 12) * .3, ph = 24, px = cx - pw / 2, py = ground - ph + 1, dp2 = 7, mor = dark ? '#7a6a72' : '#a8948a';
-    svg += `<ellipse cx="${cx + 4}" cy="${ground + 2}" rx="${pw * .9}" ry="4.5" fill="${SH}"/><path d="M${px + pw} ${py} l ${dp2} ${-dp2 * .55} v ${ph} l ${-dp2} ${dp2 * .55}Z" fill="#3a1a18"/><path d="M${px} ${py} l ${dp2} ${-dp2 * .55} h ${pw} l ${-dp2} ${dp2 * .55}Z" fill="#2a1a14"/><rect x="${px}" y="${py}" width="${pw}" height="${ph}" fill="#5c2620"/>${Array.from({length:6}, (_, r) => `<path d="M${px} ${(py + r * 4).toFixed(1)} h ${pw}" stroke="${mor}" stroke-width=".8"/>${Array.from({length:4}, (_, q) => `<path d="M${(px + ((q + (r % 2) * .5 + .25) * pw / 3.5)).toFixed(1)} ${(py + r * 4).toFixed(1)} v 4" stroke="${mor}" stroke-width=".8"/>`).join('')}`).join('')}${Array.from({length:3}, (_, r) => `<path d="M${px + pw} ${(py + 2 + r * 8).toFixed(1)} l ${dp2} ${-dp2 * .55}" stroke="#5a4440" stroke-width=".6"/>`).join('')}<rect x="${px}" y="${py}" width="${pw * .3}" height="${ph}" fill="#fff" opacity=".06"/>`; }
+  { const pw = (ground - 20 * gs - top - 12 * gs) * .3, ph = 24 * gs, px = cx - pw / 2, py = ground - ph + 1, dp2 = 7 * gs, mor = dark ? '#7a6a72' : '#a8948a';
+    svg += `<ellipse cx="${cx + 4}" cy="${ground + 2}" rx="${pw * .9}" ry="4.5" fill="${SH}"/><path d="M${px + pw} ${py} l ${dp2} ${-dp2 * .55} v ${ph} l ${-dp2} ${dp2 * .55}Z" fill="#3a1a18"/><path d="M${px} ${py} l ${dp2} ${-dp2 * .55} h ${pw} l ${-dp2} ${dp2 * .55}Z" fill="#2a1a14"/><rect x="${px}" y="${py}" width="${pw}" height="${ph}" fill="#5c2620"/>${Array.from({length:6}, (_, r) => `<path d="M${px} ${(py + r * ph / 6).toFixed(1)} h ${pw}" stroke="${mor}" stroke-width=".8"/>${Array.from({length:4}, (_, q) => `<path d="M${(px + ((q + (r % 2) * .5 + .25) * pw / 3.5)).toFixed(1)} ${(py + r * ph / 6).toFixed(1)} v ${(ph / 6).toFixed(1)}" stroke="${mor}" stroke-width=".8"/>`).join('')}`).join('')}${Array.from({length:3}, (_, r) => `<path d="M${px + pw} ${(py + 2 + r * 8).toFixed(1)} l ${dp2} ${-dp2 * .55}" stroke="#5a4440" stroke-width=".6"/>`).join('')}<rect x="${px}" y="${py}" width="${pw * .3}" height="${ph}" fill="#fff" opacity=".06"/>`; }
 
   svg += `<g class="xtree" data-act="xshake">`;
   // あつ森の「おおきなクリスマスツリー」：枝の層が何段も重なった円すい。各層のすそが少し外にはね、下の層に影を落とす
-  const B = big ? 'b' : '', tTop = top + 12, bodyBot = ground - 20, TW = (bodyBot - tTop) * .98, LAY = 5;
+  const B = hero ? 'h' : big ? 'b' : '', tTop = top + 12 * gs, bodyBot = ground - 20 * gs, TW = (bodyBot - tTop) * .98, LAY = 5;
   const hwAt = y => { const t = Math.max(0, Math.min(1, (y - tTop) / (bodyBot - tTop))); return TW / 2 * (.04 + .96 * Math.pow(t, .78)); };
   const NG = dark ? ['#1c3428', '#2a4a36', '#3a6446', '#4f7e56'] : ['#2c5a3a', '#3e7a48', '#56985a', '#78b46e'];
   const edgeY = k => tTop + (k + 1) / LAY * (bodyBot - tTop);
   svg += `<defs><linearGradient id="tcyl${B}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000" stop-opacity=".05"/><stop offset=".32" stop-color="#fff" stop-opacity=".14"/><stop offset=".62" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".34"/></linearGradient>
-    <pattern id="tpt${B}" width="5" height="4.4" patternUnits="userSpaceOnUse"><path d="M.8 .6 l 1.2 2.4 M3.4 .6 l -1 2.6" stroke="#000" stroke-width=".45" stroke-linecap="round" opacity=".12"/><path d="M2.4 2.6 l .9 1.6" stroke="#fff" stroke-width=".4" stroke-linecap="round" opacity=".12"/></pattern></defs>`;
+    <pattern id="tpt${B}" width="5" height="4.4" patternUnits="userSpaceOnUse" patternTransform="scale(${gs.toFixed(2)})"><path d="M.8 .6 l 1.2 2.4 M3.4 .6 l -1 2.6" stroke="#000" stroke-width=".45" stroke-linecap="round" opacity=".12"/><path d="M2.4 2.6 l .9 1.6" stroke="#fff" stroke-width=".4" stroke-linecap="round" opacity=".12"/></pattern></defs>`;
   for (let k = LAY - 1; k >= 0; k--){
-    const y1 = edgeY(k), yPrev = k ? edgeY(k - 1) : tTop, hw1 = hwAt(y1) * (1.07 + k * .01), n = 14 + k * 5, lid = `tl${k}${B}`;
+    const y1 = edgeY(k), yPrev = k ? edgeY(k - 1) : tTop, hw1 = hwAt(y1) * (1.07 + k * .01), n = Math.round((14 + k * 5) * Math.max(1, gs * .75)), lid = `tl${k}${B}`;
     // 層の形：てっぺんから、すそが少しはねた円すい（すそは丸い葉先の波）
     let d = `M${cx} ${tTop - 3}`;
     for (let q = 1; q <= 10; q++){ const y = tTop + q / 10 * (y1 - 3 - tTop); d += ` L ${(cx + Math.min(hwAt(y), hw1) * (1 + (q === 10 ? .03 : 0))).toFixed(1)} ${y.toFixed(1)}`; }
     d += ` L ${(cx + hw1).toFixed(1)} ${(y1 - 1).toFixed(1)}`;
-    for (let q = 0; q < n; q++){ const xa = cx + hw1 - q * hw1 * 2 / n, xb = xa - hw1 * 2 / n, arc = Math.sin((q + .5) / n * Math.PI) * 2.2, dip = 2.6 + (hash('tip' + k + q) % 3) * .8; d += ` L ${((xa + xb) / 2 + (xa - cx) / hw1 * .6).toFixed(1)} ${(y1 + arc + dip).toFixed(1)} L ${xb.toFixed(1)} ${(y1 - .6 + Math.sin((q + 1) / n * Math.PI) * 2.2).toFixed(1)}`; }
+    for (let q = 0; q < n; q++){ const xa = cx + hw1 - q * hw1 * 2 / n, xb = xa - hw1 * 2 / n, arc = Math.sin((q + .5) / n * Math.PI) * 2.2 * gs, dip = (2.6 + (hash('tip' + k + q) % 3) * .8) * gs; d += ` L ${((xa + xb) / 2 + (xa - cx) / hw1 * .6).toFixed(1)} ${(y1 + arc + dip).toFixed(1)} L ${xb.toFixed(1)} ${(y1 - .6 + Math.sin((q + 1) / n * Math.PI) * 2.2 * gs).toFixed(1)}`; }
     for (let q = 10; q >= 1; q--){ const y = tTop + q / 10 * (y1 - 3 - tTop); d += ` L ${(cx - Math.min(hwAt(y), hw1) * (1 + (q === 10 ? .03 : 0))).toFixed(1)} ${y.toFixed(1)}`; }
     d += 'Z';
     svg += `<defs><linearGradient id="${lid}g" gradientUnits="userSpaceOnUse" x1="0" y1="${yPrev}" x2="0" y2="${y1 + 5}"><stop offset="0" stop-color="${NG[1]}"/><stop offset=".45" stop-color="${NG[2]}"/><stop offset=".8" stop-color="${NG[3]}"/><stop offset="1" stop-color="${NG[2]}"/></linearGradient><clipPath id="${lid}c"><path d="${d}"/></clipPath></defs>`;
     svg += `<path d="${d}" fill="url(#${lid}g)"/><g clip-path="url(#${lid}c)"><rect x="${cx - TW}" y="${tTop - 6}" width="${TW * 2}" height="${y1 - tTop + 12}" fill="url(#tpt${B})"/><rect x="${cx - TW / 2 - 8}" y="${tTop - 6}" width="${TW + 16}" height="${y1 - tTop + 12}" fill="url(#tcyl${B})"/>`;
     // すそのふち：明るい葉先の線と、葉先の小さな切れこみ
-    svg += `<path d="M${(cx - hw1).toFixed(1)} ${(y1 - 1.6).toFixed(1)} Q ${cx} ${(y1 + 3.4).toFixed(1)} ${(cx + hw1).toFixed(1)} ${(y1 - 1.6).toFixed(1)}" stroke="${NG[3]}" stroke-width="2.2" fill="none" opacity=".7"/>`;
+    svg += `<path d="M${(cx - hw1).toFixed(1)} ${(y1 - 1.6).toFixed(1)} Q ${cx} ${(y1 + 3.4).toFixed(1)} ${(cx + hw1).toFixed(1)} ${(y1 - 1.6).toFixed(1)}" stroke="${NG[3]}" stroke-width="${(2.2 * gs).toFixed(1)}" fill="none" opacity=".7"/>`;
     let nt = ''; for (let q = 0; q < n * 2; q++){ const x = cx - hw1 + (q + .5) * hw1 / n, y = y1 - 1 + Math.sin((x - cx + hw1) / (2 * hw1) * Math.PI) * 2.2; nt += `M${x.toFixed(1)} ${(y - 2.4).toFixed(1)} l ${((x - cx) / hw1 * .8).toFixed(1)} 3`; }
     svg += `<path d="${nt}" stroke="${NG[0]}" stroke-width=".55" stroke-linecap="round" opacity=".55"/></g>`;
     // この層の上にかぶさる、ひとつ上の層の影
-    if (k > 0){ const ys = yPrev, hs = hwAt(ys) * 1.07; svg += `<g clip-path="url(#${lid}c)"><path d="M${(cx - hs).toFixed(1)} ${(ys + 1).toFixed(1)} Q ${cx} ${(ys + 8).toFixed(1)} ${(cx + hs).toFixed(1)} ${(ys + 1).toFixed(1)}" stroke="#0a2010" stroke-width="5" fill="none" opacity=".22"/></g>`; }
+    if (k > 0){ const ys = yPrev, hs = hwAt(ys) * 1.07; svg += `<g clip-path="url(#${lid}c)"><path d="M${(cx - hs).toFixed(1)} ${(ys + 1).toFixed(1)} Q ${cx} ${(ys + 8).toFixed(1)} ${(cx + hs).toFixed(1)} ${(ys + 1).toFixed(1)}" stroke="#0a2010" stroke-width="${(5 * gs).toFixed(1)}" fill="none" opacity=".22"/></g>`; }
   }
   // 小さな電球
   for (let q = 0; q < 22; q++){ const y = tTop + 10 + rnd('ly', q) * (bodyBot - tTop - 14), x = cx + (rnd('lx', q) * 2 - 1) * hwAt(y) * .85, c = ['#ff8ac8', '#7ae8ff', '#fff6a0', '#b8ff9a'][q % 4];
-    svg += `<g class="xbulb" style="--s:${(-q * .31).toFixed(2)}s"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${dark ? 2.2 : 1.6}" fill="${c}" opacity="${dark ? .5 : .3}"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r=".75" fill="${c}"/></g>`; }
+    svg += `<g class="xbulb" style="--s:${(-q * .31).toFixed(2)}s"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${((dark ? 2.2 : 1.6) * gs).toFixed(1)}" fill="${c}" opacity="${dark ? .5 : .3}"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(.75 * gs).toFixed(2)}" fill="${c}"/></g>`; }
   // 金のモール：つながったらせん（手前だけ描く）。手前ほど少し下にたわむ
   { const turns = LAY - 1, steps = 300, segs = []; let cur = [];
-    for (let k = 0; k <= steps; k++){ const t = k / steps, ye = edgeY(0) + t * (edgeY(LAY - 1) - edgeY(0)), a = t * turns * Math.PI * 2 + .35, hw = hwAt(ye) * 1.04, z = Math.cos(a), x = cx + Math.sin(a) * hw, y = ye - 4 + (z - 1) * hw * .14;
+    for (let k = 0; k <= steps; k++){ const t = k / steps, ye = edgeY(0) + t * (edgeY(LAY - 1) - edgeY(0)), a = t * turns * Math.PI * 2 + .35, hw = hwAt(ye) * 1.04, z = Math.cos(a), x = cx + Math.sin(a) * hw, y = ye - 4 * gs + (z - 1) * hw * .14;
       if (z > -.12) cur.push([x, y]); else if (cur.length){ segs.push(cur); cur = []; } }
     if (cur.length) segs.push(cur);
-    const w = big ? 3 : 2.5;
+    const w = 2.4 * gs;
     segs.filter(sg => sg.length > 2).forEach(sg => { const d = 'M' + sg.map(p => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' L ');
       svg += `<path d="${d}" stroke="#000" stroke-width="${w}" fill="none" opacity=".25" stroke-linecap="round" transform="translate(.3,1.3)"/><path d="${d}" stroke="#9a7414" stroke-width="${w + .5}" fill="none" stroke-linecap="round"/><path d="${d}" stroke="#d8ac2c" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-dasharray=".4 .35"/><path d="${d}" stroke="#ffe27a" stroke-width="${w * .55}" fill="none" stroke-dasharray=".3 .7" transform="translate(0,-.5)"/>`; }); }
   // オーナメントの位置：円すいの中に、段ごとに均等に並べてから順番をばらす
@@ -3870,7 +3872,7 @@ function treeSVG(logs, big){
   items.forEach((l, i) => { const base = slots2[i % slots2.length], lap = Math.floor(i / slots2.length), x = base[0] + lap * 5, y = base[1] + lap * 4, k = ornamentOf(l), sw = ((rnd(l.id, 5) - .5) * 14).toFixed(0), s2 = (sc * (lap ? .85 : 1)).toFixed(2);
     svg += `<g class="orn" data-act="orn" data-id="${l.id}" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><g class="sw" style="--r:${sw}deg;--s:${(-rnd(l.id, 6) * 3).toFixed(2)}s"><ellipse cx="${(1.4 * sc).toFixed(1)}" cy="${(1.8 * sc).toFixed(1)}" rx="${(4.2 * sc).toFixed(1)}" ry="${(4 * sc).toFixed(1)}" fill="#1f5a2a" opacity=".22"/><g transform="scale(${s2})">${ornArt(k)}</g></g><circle r="${(6 * sc).toFixed(1)}" fill="transparent"/></g>`; });
   // てっぺんの星（8本のとがった光の金の星、短い軸つき）
-  svg += `<g class="xstar" transform="translate(${cx},${top + 6})"><circle r="9" fill="#fff3b0" opacity=".2"/><rect x="-.9" y="5" width="1.8" height="5" fill="#9a7420"/><g filter="url(#acnhF)"><path d="M0.00 -8.00 L 0.84 -2.03 L 3.96 -3.96 L 2.03 -0.84 L 8.00 0.00 L 2.03 0.84 L 3.96 3.96 L 0.84 2.03 L 0.00 8.00 L -0.84 2.03 L -3.96 3.96 L -2.03 0.84 L -8.00 0.00 L -2.03 -0.84 L -3.96 -3.96 L -0.84 -2.03Z" fill="#c8961e" stroke="#8a6410" stroke-width=".35" stroke-linejoin="round"/><path d="M0 0 L 0.00 -8.00 L 0.84 -2.03Z M0 0 L 3.96 -3.96 L 2.03 -0.84Z M0 0 L 8.00 0.00 L 2.03 0.84Z M0 0 L 3.96 3.96 L 0.84 2.03Z M0 0 L 0.00 8.00 L -0.84 2.03Z M0 0 L -3.96 3.96 L -2.03 0.84Z M0 0 L -8.00 0.00 L -2.03 -0.84Z M0 0 L -3.96 -3.96 L -0.84 -2.03Z" fill="#f0c850"/><circle r="1.2" fill="#f8dc80"/></g></g>`;
+  svg += `<g class="xstar" transform="translate(${cx},${top + 6 * gs}) scale(${(gs * .95).toFixed(2)})"><circle r="9" fill="#fff3b0" opacity=".2"/><rect x="-.9" y="5" width="1.8" height="5" fill="#9a7420"/><g filter="url(#acnhF)"><path d="M0.00 -8.00 L 0.84 -2.03 L 3.96 -3.96 L 2.03 -0.84 L 8.00 0.00 L 2.03 0.84 L 3.96 3.96 L 0.84 2.03 L 0.00 8.00 L -0.84 2.03 L -3.96 3.96 L -2.03 0.84 L -8.00 0.00 L -2.03 -0.84 L -3.96 -3.96 L -0.84 -2.03Z" fill="#c8961e" stroke="#8a6410" stroke-width=".35" stroke-linejoin="round"/><path d="M0 0 L 0.00 -8.00 L 0.84 -2.03Z M0 0 L 3.96 -3.96 L 2.03 -0.84Z M0 0 L 8.00 0.00 L 2.03 0.84Z M0 0 L 3.96 3.96 L 0.84 2.03Z M0 0 L 0.00 8.00 L -0.84 2.03Z M0 0 L -3.96 3.96 L -2.03 0.84Z M0 0 L -8.00 0.00 L -2.03 -0.84Z M0 0 L -3.96 -3.96 L -0.84 -2.03Z" fill="#f0c850"/><circle r="1.2" fill="#f8dc80"/></g></g>`;
 
   svg += `</g>`;
   // 「ありがとう」のプレゼント
@@ -3878,7 +3880,7 @@ function treeSVG(logs, big){
   const GC = [['#e85050', '#fff0c0'], ['#4a7ad8', '#f6f6f2'], ['#f2c43c', '#ec6a5a'], ['#3aa070', '#e8504a'], ['#c87ad8', '#fff0c0'], ['#f6f2ea', '#d8404a'], ['#2e3f6c', '#f0c040'], ['#f49ab8', '#fbfbf6']], GP = ['dot', '', 'stripe', 'check', 'star', 'dot', 'star', 'stripe'];
   const spots = [[-26, 0], [24, 0], [-44, 2], [44, 2], [-12, 3], [10, 3], [-60, 1], [60, 1]];
   gifts.map((l, i) => [l, i]).sort((a, b) => spots[a[1]][1] - spots[b[1]][1]).forEach(([l, i]) => { const [dx, dy] = spots[i], hh = hash(l.id), w = 13 + hh % 3 * 2.5, h = 10 + (hash(l.id + 'h') % 3) * 2.2, [c, rc] = GC[hh % GC.length], pat = GP[(hh >> 3) % GP.length];
-    svg += `<g data-act="orn" data-id="${l.id}" data-gift="1">${giftSVG(cx + dx, ground + 3 + dy, w, h, 6.4, c, rc, pat, 'gf' + i + (big ? 'b' : ''))}</g>`; });
+    svg += `<g data-act="orn" data-id="${l.id}" data-gift="1">${giftSVG(cx + dx * gs, ground + 3 + dy * gs, w * gs, h * gs, 6.4 * gs, c, rc, pat, 'gf' + i + (hero ? 'h' : big ? 'b' : ''))}</g>`; });
   if (!items.length) svg += `<text x="${W / 2}" y="${H - 9}" text-anchor="middle" font-size="11" font-weight="800" fill="rgba(31,82,110,.55)">家事をすると、ツリーにオーナメントが飾られるよ</text>`;
   return svg + `</g></svg>`;
 }
@@ -4076,7 +4078,7 @@ function viewToday(){
   html0 = `<div class="talk" data-act="talk"><span class="tag">おうち</span><div class="msg" data-full="${esc(talkMsg(due, logs))}"></div><span class="next"></span></div>`;
   const wl = weekLogs(0);
   setTimeout(checkPressed, 0);
-  let html = bouquetBanner() + html0 + roomPanel() + `<div class="panel gpanel"><div class="gtitle">${sceneTitle(0, wl.length)}</div>${sceneSVG(wl, false, 0)}</div><div class="panel" style="margin-top:12px">${timeline(logs, true)}${legend()}</div>`;
+  let html = xmasOn(0) ? `<div class="panel gpanel xhero"><div class="gtitle">${sceneTitle(0, wl.length)}</div>${treeSVG(wl, 'hero')}</div>` + bouquetBanner() + html0 + roomPanel() + `<div class="panel" style="margin-top:12px">${timeline(logs, true)}${legend()}</div>` : bouquetBanner() + html0 + roomPanel() + `<div class="panel gpanel"><div class="gtitle">${sceneTitle(0, wl.length)}</div>${sceneSVG(wl, false, 0)}</div><div class="panel" style="margin-top:12px">${timeline(logs, true)}${legend()}</div>`;
   for (const [slot,label] of SLOTS){
     const cs = due.filter(c => (c.slot||'any') === slot);
     if (!cs.length) continue;
