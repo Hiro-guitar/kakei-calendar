@@ -3800,7 +3800,7 @@ function giftSVG(x, gy, w, h, dp, c, rc, pat, id){
 
 function treeSVG(logs, big){
   const W = 360, H = big ? 210 : 160, ground = H - 30, top = 12, cx = W / 2, th = ground - top, tw = th * .98;
-  const items = logs.slice().sort((a, b) => a.at - b.at), sc = big ? 1.75 : 1.4, slots = treeSlots(W, ground, top, tw, 11 * sc);
+  const items = logs.slice().sort((a, b) => a.at - b.at), sc = big ? 1.4 : 1.15, slots = treeSlots(W, ground, top + 6, th * .8, 10.5 * sc);
   const hr = new Date().getHours(), tod = hr >= 6 && hr < 16 ? 'day' : hr >= 16 && hr < 18 ? 'dusk' : 'night';
   const SKY = { day:['#cfe6f4', '#eef4f6'], dusk:['#f6c8a8', '#fbe6d0'], night:['#2e3c6a', '#5a6a9a'] }[tod], dark = tod === 'night';
   const G1 = dark ? '#3f8a58' : '#5cb05e', G2 = dark ? '#33744a' : '#469a4e', G3 = dark ? '#28603c' : '#3a8444', SN = dark ? '#dfe6f6' : '#fbfdff', SH = dark ? '#b8c4e0' : '#dfe6f4';
@@ -3822,32 +3822,44 @@ function treeSVG(logs, big){
   [[60, ground - 40], [118, ground - 64], [252, ground - 58], [312, ground - 46]].forEach(([x, y], i) => svg += `<g class="xflake" style="--s:${(-i * 1.3).toFixed(1)}s" transform="translate(${x},${y})"><circle r="6" fill="#bfe4ff" opacity=".35"/><g stroke="#8fd0ff" stroke-width="1.6" stroke-linecap="round">${[0, 60, 120].map(a => `<path d="M0 -4.4 V 4.4 M-1.4 -3 L 0 -2 L 1.4 -3 M-1.4 3 L 0 2 L 1.4 3" transform="rotate(${a})"/>`).join('')}</g><g stroke="#fff" stroke-width=".6" stroke-linecap="round">${[0, 60, 120].map(a => `<path d="M0 -4 V 4" transform="rotate(${a})"/>`).join('')}</g></g>`);
   // 木のかげ・れんがの植木ばち
   { const pw = 34, ph = 16, px = cx - pw / 2, py = ground - ph + 2, dp2 = 6;
-    svg += `<ellipse cx="${cx + 3}" cy="${ground + 2}" rx="${tw * .5}" ry="5" fill="${SH}"/><path d="M${px + pw} ${py} l ${dp2} ${-dp2 * .55} v ${ph} l ${-dp2} ${dp2 * .55}Z" fill="#7a3a28"/><path d="M${px} ${py} l ${dp2} ${-dp2 * .55} h ${pw} l ${-dp2} ${dp2 * .55}Z" fill="#5a3a2a"/><rect x="${px}" y="${py}" width="${pw}" height="${ph}" fill="#b0503a"/>${[0, 1, 2, 3].map(r => `<path d="M${px} ${py + r * 4} h ${pw}" stroke="#e8d8c8" stroke-width=".7" opacity=".8"/>${Array.from({length:5}, (_, q) => `<path d="M${(px + (q + (r % 2) * .5) * 8).toFixed(1)} ${py + r * 4} v 4" stroke="#e8d8c8" stroke-width=".7" opacity=".8"/>`).join('')}`).join('')}<rect x="${px}" y="${py}" width="${pw}" height="${ph}" fill="url(#fsh${big ? 'b' : ''})"/><rect x="${px - 1}" y="${py - 1.6}" width="${pw + 2}" height="2.4" fill="#c86a50"/>`; }
+    svg += `<ellipse cx="${cx + 3}" cy="${ground + 2}" rx="${tw * .5}" ry="5" fill="${SH}"/><path d="M${px + pw} ${py} l ${dp2} ${-dp2 * .55} v ${ph} l ${-dp2} ${dp2 * .55}Z" fill="#7a3a28"/><path d="M${px} ${py} l ${dp2} ${-dp2 * .55} h ${pw} l ${-dp2} ${dp2 * .55}Z" fill="#5a3a2a"/><rect x="${px}" y="${py}" width="${pw}" height="${ph}" fill="#8a3a2c"/>${[0, 1, 2, 3].map(r => `<path d="M${px} ${py + r * 4} h ${pw}" stroke="#e8d8c8" stroke-width=".7" opacity=".8"/>${Array.from({length:5}, (_, q) => `<path d="M${(px + (q + (r % 2) * .5) * 8).toFixed(1)} ${py + r * 4} v 4" stroke="#e8d8c8" stroke-width=".7" opacity=".8"/>`).join('')}`).join('')}<rect x="${px}" y="${py}" width="${pw}" height="${ph}" fill="#000" opacity=".12"/><rect x="${px - 1}" y="${py - 1.6}" width="${pw + 2}" height="2.4" fill="#9a4634"/>`; }
 
   svg += `<g class="xtree" data-act="xshake">`;
-  // 本物っぽいもみの木：枝のかたまりを上から下へ何段も重ねる。左上から光、右と内側は暗く
-  const FG = dark ? ['#4f8a62', '#2f6646', '#1d4630', '#12301f'] : ['#6aae6a', '#3f8a52', '#2a6a3e', '#1a4a2a'];
-  const coneHW = y => tw * (.06 + .94 * Math.max(0, (y - top) / (th - 10))) / 2;
-  const bodyBot = ground - 16, rows = 11;
-  svg += `<defs><linearGradient id="fbr${big ? 'b' : ''}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${FG[0]}"/><stop offset=".55" stop-color="${FG[1]}"/><stop offset="1" stop-color="${FG[2]}"/></linearGradient><linearGradient id="fsh${big ? 'b' : ''}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset=".7" stop-color="#000" stop-opacity=".1"/><stop offset="1" stop-color="#000" stop-opacity=".32"/></linearGradient></defs>`;
-  // うしろの暗い芯（すきまから見える奥）
-  svg += `<path d="M${cx} ${top + 4} L ${cx + coneHW(bodyBot) * .85} ${bodyBot - 7} Q ${cx} ${bodyBot - 2} ${cx - coneHW(bodyBot) * .85} ${bodyBot - 7}Z" fill="${FG[3]}"/>`;
-  let fir = '';
-  for (let r = 0; r < rows; r++){ const yb = top + 10 + (r + 1) * (bodyBot - top - 10) / rows, hw = coneHW(yb), n = Math.max(2, Math.round(hw / 7)) + (r % 2);
-    for (let j = 0; j < n; j++){ const u = n === 1 ? .5 : j / (n - 1), x = cx - hw + u * hw * 2 + (rnd('fx' + r, j) - .5) * 4, side = (x - cx) / (hw + .01), bw = (hw * 2 / n) * 1.25 + 4, bh = 9 + r * .5, tilt = side * 22;
-      const tips = Array.from({length:7}, (_, q) => { const tx = -bw / 2 + (q + .5) * bw / 7, ty = bh * (.75 + (q % 2) * .2) - Math.abs(tx) / bw * 3; return `L ${tx.toFixed(1)} ${ty.toFixed(1)} L ${(tx + bw / 14).toFixed(1)} ${(ty - 2.2).toFixed(1)}`; }).join(' ');
-      fir += `<g transform="translate(${x.toFixed(1)},${(yb - bh * .8).toFixed(1)}) rotate(${tilt.toFixed(0)})"><path d="M${(-bw / 2).toFixed(1)} ${(bh * .5).toFixed(1)} C ${(-bw * .4).toFixed(1)} ${(-bh * .3).toFixed(1)} ${(bw * .4).toFixed(1)} ${(-bh * .3).toFixed(1)} ${(bw / 2).toFixed(1)} ${(bh * .5).toFixed(1)} ${tips.split(' L ').reverse().join(' L ').replace(/^L /, 'L ')}Z" fill="url(#fbr${big ? 'b' : ''})"/>${Array.from({length:6}, (_, q) => { const nx = (rnd('nx' + r + '_' + j, q) - .5) * bw * .8, ny = rnd('ny' + r + '_' + j, q) * bh * .5; return `<path d="M${nx.toFixed(1)} ${ny.toFixed(1)} l -1.8 2.4 M${nx.toFixed(1)} ${ny.toFixed(1)} l 0 2.8 M${nx.toFixed(1)} ${ny.toFixed(1)} l 1.8 2.4" stroke="${q % 2 ? FG[0] : FG[2]}" stroke-width=".55" stroke-linecap="round" opacity=".75"/>`; }).join('')}</g>`; } }
-  svg += `<g>${fir}</g>`;
-  // 全体の陰影（左が明るく、右が暗い）
-  svg += `<clipPath id="fcl${big ? 'b' : ''}"><path d="M${cx} ${top + 4} L ${cx + coneHW(bodyBot) * .86} ${bodyBot - 2} L ${cx - coneHW(bodyBot) * .86} ${bodyBot - 2}Z"/></clipPath><rect x="${cx - tw / 2}" y="${top}" width="${tw}" height="${bodyBot - top}" fill="url(#fsh${big ? 'b' : ''})" clip-path="url(#fcl${big ? 'b' : ''})"/>`;
-  // 金のモール：らせんの手前側だけを描いて、巻きついて見えるように
-  const turns = 3.2, spiral = (t) => { const y = top + 16 + t * (bodyBot - top - 18), a = t * turns * Math.PI * 2 + .6, hw = coneHW(y) * .96; return [cx + Math.sin(a) * hw, y + Math.cos(a) * 3.2, Math.cos(a)]; };
-  let seg = [], segs = [];
-  for (let k = 0; k <= 160; k++){ const p = spiral(k / 160); if (p[2] > -.05) seg.push(p); else if (seg.length){ segs.push(seg); seg = []; } }
-  if (seg.length) segs.push(seg);
-  segs.filter(sg => sg.length > 3).forEach(sg => { const d = 'M' + sg.map(p => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' L ');
-    svg += `<path d="${d}" stroke="#7a5a10" stroke-width="5.4" fill="none" stroke-linecap="round" opacity=".45" transform="translate(.6,1.2)"/><path d="${d}" stroke="#c8961e" stroke-width="5" fill="none" stroke-linecap="round"/><path d="${d}" stroke="#f6d36a" stroke-width="4.6" fill="none" stroke-dasharray=".5 .7" stroke-linecap="round"/><path d="${d}" stroke="#fff6cc" stroke-width="1.3" fill="none" stroke-dasharray=".3 1.6" transform="translate(-.3,-.8)"/>`;
-    sg.forEach((p, q) => { if (q % 9 === 4){ const c = ['#ffe45a', '#ff6a6a', '#6ad0ff', '#8cff6a', '#ff9ae0'][(q + Math.round(p[1])) % 5]; svg += `<g class="xbulb" style="--s:${(-(q * .29 + p[1] * .05)).toFixed(2)}s"><circle cx="${p[0].toFixed(1)}" cy="${(p[1] + 3.2).toFixed(1)}" r="${dark ? 4 : 3}" fill="${c}" opacity="${dark ? .5 : .32}"/><circle cx="${p[0].toFixed(1)}" cy="${(p[1] + 3.2).toFixed(1)}" r="1.6" fill="${c}"/><circle cx="${(p[0] - .5).toFixed(1)}" cy="${(p[1] + 2.6).toFixed(1)}" r=".5" fill="#fff" opacity=".85"/></g>`; } }); });
+  // あつ森の「おおきなクリスマスツリー」を参考に：丸くふくらんだ円すい形、細長い針葉がびっしり、すそは針葉がたれる。金のモールが外にはみ出して何周も巻く
+  const B = big ? 'b' : '', bodyBot = ground - 14, tTop = top + 8;
+  const loops = 4, ringY = k => tTop + 14 + k * (bodyBot - tTop - 14) / loops, TW = th * .84;
+  const hwBase = y => { const t = Math.max(0, Math.min(1, (y - tTop) / (bodyBot - tTop))); return TW / 2 * (.14 + .86 * Math.pow(t, .7)); };
+  const hwAt = y => { const t = (y - tTop - 14) / ((bodyBot - tTop - 14) / loops); const ph = t - Math.floor(t); return hwBase(y) * (1 + (y > tTop + 14 ? .07 * Math.sin(ph * Math.PI) : 0)); };
+  const NG = dark ? ['#1c3e2c', '#2a5a3c', '#3f7a4c', '#6a9a5a'] : ['#24502f', '#35703f', '#4f9450', '#8ab862'];
+  let sil = `M${cx} ${tTop - 3}`; for (let k = 0; k <= 24; k++){ const y = tTop + k / 24 * (bodyBot - tTop); sil += ` L ${(cx + hwAt(y)).toFixed(1)} ${y.toFixed(1)}`; }
+  for (let k = 24; k >= 0; k--){ const y = tTop + k / 24 * (bodyBot - tTop); sil += ` L ${(cx - hwAt(y)).toFixed(1)} ${y.toFixed(1)}`; } sil += 'Z';
+  svg += `<defs><clipPath id="tcl${B}"><path d="${sil}"/></clipPath><radialGradient id="tsh${B}" cx=".38" cy=".42" r=".7"><stop offset="0" stop-color="#fff" stop-opacity=".14"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset=".85" stop-color="#000" stop-opacity=".22"/><stop offset="1" stop-color="#000" stop-opacity=".38"/></radialGradient></defs>`;
+  for (let k = 0; k < loops; k++){ const yc = ringY(k), rx = hwBase(yc) + 4, ry = rx * .26, tilt = 2.6, w = big ? 5.2 : 4.4;
+    const back = `M${(cx - rx).toFixed(1)} ${(yc - tilt).toFixed(1)} A ${rx.toFixed(1)} ${ry.toFixed(1)} 0 0 1 ${(cx + rx).toFixed(1)} ${(yc + tilt).toFixed(1)}`;
+    svg += `<path d="${back}" stroke="#8a6410" stroke-width="${w}" fill="none" stroke-linecap="round"/><path d="${back}" stroke="#c8961e" stroke-width="${w * .8}" fill="none" stroke-dasharray=".5 .6"/>`; }
+  svg += `<path d="${sil}" fill="${NG[1]}"/>`;
+  // 針葉：色ごとに1本のパスにまとめて、細い線をたくさん
+  const nd = [[], [], [], []];
+  const area = TW * (bodyBot - tTop) * .55, N = Math.round(area / (big ? 5 : 6));
+  for (let q = 0; q < N; q++){ const y = tTop + rnd('ny', q) * (bodyBot - tTop + 4), hw = hwAt(Math.min(y, bodyBot)), x = cx + (rnd('nx', q) * 2 - 1) * hw * 1.02, len = 4 + rnd('nl', q) * 6, lean = (x - cx) / (hw + 1) * 2.4 + (rnd('nw', q) - .5) * 1.4;
+    const rel = (x - cx) / (hw + 1), col = rel < -.35 ? (rnd('nc', q) < .55 ? 3 : 2) : rel > .45 ? (rnd('nc', q) < .6 ? 0 : 1) : [1, 2, 2, 3, 0][Math.floor(rnd('nc', q) * 5)];
+    nd[col].push(`M${x.toFixed(1)} ${(y - len).toFixed(1)} q ${(lean * .4).toFixed(1)} ${(len * .5).toFixed(1)} ${lean.toFixed(1)} ${len.toFixed(1)}`); }
+  svg += `<g clip-path="url(#tcl${B})">${nd.map((a, i) => `<path d="${a.join(' ')}" stroke="${NG[i]}" stroke-width="${i === 3 ? .7 : .85}" fill="none" stroke-linecap="round"/>`).join('')}<rect x="${cx - TW / 2 - 4}" y="${tTop - 4}" width="${TW + 8}" height="${bodyBot - tTop + 8}" fill="url(#tsh${B})"/></g>`;
+  // すその、たれた針葉（ふちからはみ出す）
+  let fr = ['', ''];
+  for (let q = 0; q < 70; q++){ const u = q / 69, x = cx - hwAt(bodyBot) * 1.02 + u * hwAt(bodyBot) * 2.04, y0 = bodyBot - 4 - Math.sin(u * Math.PI) * 1.5, len = 5 + rnd('fl', q) * 5, lean = (u - .5) * 4;
+    fr[q % 2] += `M${x.toFixed(1)} ${y0.toFixed(1)} q ${(lean * .3).toFixed(1)} ${(len * .6).toFixed(1)} ${lean.toFixed(1)} ${len.toFixed(1)} `; }
+  for (let q = 0; q < 40; q++){ const y = tTop + 6 + rnd('sy', q) * (bodyBot - tTop - 8), sd = q % 2 ? 1 : -1, hw = hwAt(y), x = cx + sd * hw * .98;
+    fr[q % 2] += `M${x.toFixed(1)} ${y.toFixed(1)} q ${(sd * 2).toFixed(1)} 2 ${(sd * 3.2).toFixed(1)} ${(5 + rnd('sl', q) * 3).toFixed(1)} `; }
+  svg += `<path d="${fr[0]}" stroke="${NG[1]}" stroke-width=".9" fill="none" stroke-linecap="round"/><path d="${fr[1]}" stroke="${NG[2]}" stroke-width=".8" fill="none" stroke-linecap="round"/>`;
+  // 小さな電球（ツリーの中にちらちら）
+  for (let q = 0; q < 26; q++){ const y = tTop + 8 + rnd('ly', q) * (bodyBot - tTop - 12), x = cx + (rnd('lx', q) * 2 - 1) * hwAt(y) * .85, c = ['#ff7ab8', '#7ae8ff', '#fff6a0', '#a8ff8a'][q % 4];
+    svg += `<g class="xbulb" style="--s:${(-q * .31).toFixed(2)}s"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${dark ? 2.6 : 1.9}" fill="${c}" opacity="${dark ? .45 : .3}"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1" fill="${c}"/></g>`; }
+  // 金のモール：ツリーを横切る楕円の輪（手前の弧）。少しずつ下がるらせん。両はしは裏へ回りこむ
+  const tin = (d, w) => `<path d="${d}" stroke="#000" stroke-width="${w}" fill="none" opacity=".2" stroke-linecap="round" transform="translate(.5,2.2)"/><path d="${d}" stroke="#a87810" stroke-width="${w + .8}" fill="none" stroke-linecap="round"/><path d="${d}" stroke="#e0ac26" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-dasharray=".5 .5"/><path d="${d}" stroke="#ffd850" stroke-width="${w * .62}" fill="none" stroke-linecap="round" stroke-dasharray=".35 .8" transform="translate(0,-.7)"/><path d="${d}" stroke="#fff8d0" stroke-width="${w * .2}" fill="none" stroke-dasharray=".3 1.3" transform="translate(-.2,-1.5)"/>`;
+  for (let k = 0; k < loops; k++){ const yc = ringY(k), rx = hwBase(yc) + 4, ry = rx * .26, tilt = 2.6, w = big ? 5.2 : 4.4;
+    const front = `M${(cx - rx).toFixed(1)} ${(yc - tilt).toFixed(1)} A ${rx.toFixed(1)} ${ry.toFixed(1)} 0 0 0 ${(cx + rx).toFixed(1)} ${(yc + tilt).toFixed(1)}`;
+    svg += tin(front, w); }
   // オーナメント（少し影を落として、ツリーにのっている感じに）
   items.forEach((l, i) => { const base = slots[i % slots.length], lap = Math.floor(i / slots.length), x = base[0] + lap * 5, y = base[1] + lap * 4, k = ornamentOf(l), sw = ((rnd(l.id, 5) - .5) * 14).toFixed(0), s2 = (sc * (lap ? .85 : 1)).toFixed(2);
     svg += `<g class="orn" data-act="orn" data-id="${l.id}" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><g class="sw" style="--r:${sw}deg;--s:${(-rnd(l.id, 6) * 3).toFixed(2)}s"><ellipse cx="${(1.4 * sc).toFixed(1)}" cy="${(1.8 * sc).toFixed(1)}" rx="${(4.2 * sc).toFixed(1)}" ry="${(4 * sc).toFixed(1)}" fill="#1f5a2a" opacity=".22"/><g transform="scale(${s2})">${ornArt(k)}</g></g><circle r="${(6 * sc).toFixed(1)}" fill="transparent"/></g>`; });
