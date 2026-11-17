@@ -3764,6 +3764,40 @@ function cedarSVG(cx, gy, H, P, opt = {}){
   });
   out.svg = s; out.bands.reverse(); return out;
 }
+/* プレゼント：あつ森の箱を参考に、上と横の面が見える立体の箱。リボンは十字にかけて大きなちょう結び */
+function giftSVG(x, gy, w, h, dp, c, rc, pat, id){
+  const x0 = x - w / 2, y0 = gy - h, ddx = dp, ddy = -dp * .62, top = shade(c, .16), side = shade(c, -.22), rd = shade(rc, -.22), rl = shade(rc, .2);
+  const P = (px, py) => `${px.toFixed(2)} ${py.toFixed(2)}`;
+  let o = `<defs><linearGradient id="${id}f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${shade(c, .08)}"/><stop offset="1" stop-color="${shade(c, -.1)}"/></linearGradient><clipPath id="${id}c"><rect x="${x0}" y="${y0}" width="${w}" height="${h}"/></clipPath></defs>`;
+  o += `<ellipse cx="${x + dp * .4}" cy="${gy + .4}" rx="${w * .55 + dp * .4}" ry="1.8" fill="#1a2440" opacity=".14"/>`;
+  // 横の面・上の面・正面
+  o += `<path d="M${P(x0 + w, y0)} L ${P(x0 + w + ddx, y0 + ddy)} L ${P(x0 + w + ddx, gy + ddy)} L ${P(x0 + w, gy)}Z" fill="${side}"/>`;
+  o += `<path d="M${P(x0, y0)} L ${P(x0 + ddx, y0 + ddy)} L ${P(x0 + w + ddx, y0 + ddy)} L ${P(x0 + w, y0)}Z" fill="${top}"/>`;
+  o += `<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="url(#${id}f)"/>`;
+  // 柄（正面）
+  let pt = '';
+  if (pat === 'dot') for (let r = 0; r < Math.ceil(h / 3.2); r++) for (let q = 0; q < Math.ceil(w / 3.2); q++) pt += `<circle cx="${(x0 + 1.6 + q * 3.2 + (r % 2) * 1.6).toFixed(1)}" cy="${(y0 + 1.6 + r * 3.2).toFixed(1)}" r=".75" fill="#fff" opacity=".7"/>`;
+  if (pat === 'stripe') for (let q = -2; q < w / 3 + 2; q++) pt += `<path d="M${(x0 + q * 3).toFixed(1)} ${gy} l ${h * .6} ${-h}" stroke="#fff" stroke-width="1.1" opacity=".5"/>`;
+  if (pat === 'check') for (let q = 0; q < w / 3; q++) pt += `<rect x="${(x0 + q * 3).toFixed(1)}" y="${y0}" width="1.5" height="${h}" fill="#fff" opacity=".25"/>` + (q < h / 3 ? `<rect x="${x0}" y="${(y0 + q * 3).toFixed(1)}" width="${w}" height="1.5" fill="#fff" opacity=".25"/>` : '');
+  if (pat === 'star') for (let r = 0; r < Math.ceil(h / 4.5); r++) for (let q = 0; q < Math.ceil(w / 4.5); q++){ const sx = x0 + 2.2 + q * 4.5 + (r % 2) * 2.2, sy = y0 + 2.4 + r * 4.5; pt += `<path d="M${sx} ${sy - 1.1} L ${sx + .32} ${sy - .3} L ${sx + 1.1} ${sy - .25} L ${sx + .5} ${sy + .25} L ${sx + .7} ${sy + 1} L ${sx} ${sy + .55} L ${sx - .7} ${sy + 1} L ${sx - .5} ${sy + .25} L ${sx - 1.1} ${sy - .25} L ${sx - .32} ${sy - .3}Z" fill="#fff6c8" opacity=".85"/>`; }
+  o += `<g clip-path="url(#${id}c)">${pt}<rect x="${x0}" y="${y0}" width="${w}" height="${h * .25}" fill="#fff" opacity=".1"/><rect x="${x0}" y="${gy - h * .2}" width="${w}" height="${h * .2}" fill="#000" opacity=".08"/></g>`;
+  // ふちの線
+  o += `<path d="M${P(x0, y0)} L ${P(x0 + w, y0)} L ${P(x0 + w + ddx, y0 + ddy)}" stroke="#fff" stroke-width=".4" opacity=".55" fill="none"/>`;
+  // リボン：正面のたて、横の面のたて、上の面の十字
+  const rb = Math.max(2.2, w * .17), mx = x0 + w / 2, sx = x0 + w + ddx / 2, sy = ddy / 2;
+  o += `<rect x="${mx - rb / 2}" y="${y0}" width="${rb}" height="${h}" fill="${rc}"/><rect x="${mx + rb / 2 - .7}" y="${y0}" width=".7" height="${h}" fill="${rd}" opacity=".6"/>`;
+  const u = Math.min(.22, rb / 2 / (dp * 1.6)), Q = (fx, fy) => P(x0 + w * fx + ddx * fy, y0 + ddy * fy);
+  o += `<path d="M${Q(1, .5 - u)} L ${Q(1, .5 + u)} L ${P(x0 + w + ddx * (.5 + u), gy + ddy * (.5 + u))} L ${P(x0 + w + ddx * (.5 - u), gy + ddy * (.5 - u))}Z" fill="${rd}"/>`;
+  o += `<path d="M${P(mx - rb / 2, y0)} L ${P(mx - rb / 2 + ddx, y0 + ddy)} L ${P(mx + rb / 2 + ddx, y0 + ddy)} L ${P(mx + rb / 2, y0)}Z" fill="${rl}"/>`;
+  o += `<path d="M${Q(0, .5 - u)} L ${Q(1, .5 - u)} L ${Q(1, .5 + u)} L ${Q(0, .5 + u)}Z" fill="${rl}"/>`;
+  // ちょう結び（上の面の中心）
+  const bx = mx + ddx / 2, by = y0 + sy - .4, L = Math.max(4, w * .32);
+  const loop = (s) => `<path d="M${P(bx, by)} C ${P(bx + s * L * .35, by - L * .95)} ${P(bx + s * L * 1.15, by - L * .75)} ${P(bx + s * L * 1.05, by - L * .2)} C ${P(bx + s * L * .95, by + L * .2)} ${P(bx + s * L * .4, by + L * .05)} ${P(bx, by)}Z" fill="${rc}" stroke="${rd}" stroke-width=".35"/><path d="M${P(bx + s * L * .25, by - L * .2)} C ${P(bx + s * L * .45, by - L * .6)} ${P(bx + s * L * .85, by - L * .5)} ${P(bx + s * L * .82, by - L * .22)}" fill="none" stroke="${rd}" stroke-width="${(L * .16).toFixed(2)}" stroke-linecap="round" opacity=".55"/><path d="M${P(bx + s * L * .3, by - L * .62)} Q ${P(bx + s * L * .7, by - L * .85)} ${P(bx + s * L * .95, by - L * .55)}" fill="none" stroke="#fff" stroke-width=".5" opacity=".55" stroke-linecap="round"/>`;
+  const tail = (s) => `<path d="M${P(bx, by)} L ${P(bx + s * L * .55, by + L * .9)} L ${P(bx + s * L * .32, by + L * .78)} L ${P(bx + s * L * .2, by + L * 1.02)} L ${P(bx - s * .3, by + .4)}Z" fill="${rc}" stroke="${rd}" stroke-width=".3"/>`;
+  o += tail(-1) + tail(1) + loop(-1) + loop(1) + `<ellipse cx="${bx}" cy="${by}" rx="${(L * .26).toFixed(2)}" ry="${(L * .22).toFixed(2)}" fill="${rc}" stroke="${rd}" stroke-width=".35"/><ellipse cx="${bx - L * .06}" cy="${by - L * .06}" rx="${(L * .1).toFixed(2)}" ry="${(L * .07).toFixed(2)}" fill="#fff" opacity=".5"/>`;
+  return o;
+}
+
 function treeSVG(logs, big){
   const W = 360, H = big ? 210 : 160, ground = H - 30, top = 12, cx = W / 2, th = ground - top, tw = th * .98;
   const items = logs.slice().sort((a, b) => a.at - b.at), sc = big ? 1.75 : 1.4, slots = treeSlots(W, ground, top, tw, 11 * sc);
@@ -3790,9 +3824,10 @@ function treeSVG(logs, big){
   svg += `<ellipse cx="${cx}" cy="${ground + 1}" rx="${tw * .62}" ry="6" fill="${SH}"/><rect x="${cx - 7}" y="${ground - 14}" width="14" height="15" rx="5" fill="#a8825e"/><rect x="${cx - 7}" y="${ground - 14}" width="5" height="15" rx="2.5" fill="#bc9670"/>`;
   // 「ありがとう」のプレゼント
   const gifts = items.filter(l => l.thanks).slice(0, 8);
-  gifts.forEach((l, i) => { const side = i % 2 ? 1 : -1, x = cx + side * (22 + Math.floor(i / 2) * 18), w = 12 + (hash(l.id) % 3) * 2, h = 9 + (hash(l.id + 'h') % 3) * 2, dp = 4, c = ['#e85a5a', '#5a8ae8', '#f0c040', '#4ab07a', '#c87ad8'][hash(l.id) % 5], rc = c === '#f0c040' ? '#e85a5a' : '#fff0c0', gy = ground + 3, x0 = x - w / 2, y0 = gy - h;
-    const dots = (hash(l.id + 'p') % 2) ? Array.from({length:Math.floor(w / 3) * Math.floor(h / 3)}, (_, q) => `<circle cx="${(x0 + 1.5 + (q % Math.floor(w / 3)) * 3).toFixed(1)}" cy="${(y0 + 1.5 + Math.floor(q / Math.floor(w / 3)) * 3).toFixed(1)}" r=".55" fill="#fff" opacity=".55"/>`).join('') : '';
-    svg += `<g data-act="orn" data-id="${l.id}" data-gift="1" filter="url(#acnhF)"><ellipse cx="${x + 2}" cy="${gy}" rx="${w * .7}" ry="2.2" fill="#000" opacity=".12"/><path d="M${x0 + w} ${y0} l ${dp} ${-dp * .55} v ${h} l ${-dp} ${dp * .55}Z" fill="${shade(c, -.28)}"/><path d="M${x0} ${y0} l ${dp} ${-dp * .55} h ${w} l ${-dp} ${dp * .55}Z" fill="${shade(c, .18)}"/><rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="${c}"/>${dots}<rect x="${(x - 1.3).toFixed(1)}" y="${y0}" width="2.6" height="${h}" fill="${rc}"/><path d="M${x - 1.3 + dp / 2} ${y0 - dp * .275} l 2.6 0" stroke="${rc}" stroke-width="2.4"/><path d="M${x0 + dp / 2} ${y0 - dp * .275} h ${w}" stroke="${rc}" stroke-width="1.6"/><ellipse cx="${(x - 2 + dp / 2).toFixed(1)}" cy="${(y0 - dp * .3 - 1.4).toFixed(1)}" rx="2.7" ry="1.8" fill="${rc}" transform="rotate(-15 ${(x - 2 + dp / 2).toFixed(1)} ${(y0 - dp * .3 - 1.4).toFixed(1)})"/><ellipse cx="${(x + 2.4 + dp / 2).toFixed(1)}" cy="${(y0 - dp * .3 - 1.4).toFixed(1)}" rx="2.7" ry="1.8" fill="${rc}" transform="rotate(15 ${(x + 2.4 + dp / 2).toFixed(1)} ${(y0 - dp * .3 - 1.4).toFixed(1)})"/><circle cx="${(x + .2 + dp / 2).toFixed(1)}" cy="${(y0 - dp * .3 - .9).toFixed(1)}" r="1.3" fill="${shade(rc, -.08)}"/></g>`; });
+  const GC = [['#e85050', '#fff0c0'], ['#4a7ad8', '#f6f6f2'], ['#f2c43c', '#ec6a5a'], ['#3aa070', '#e8504a'], ['#c87ad8', '#fff0c0'], ['#f6f2ea', '#d8404a'], ['#2e3f6c', '#f0c040'], ['#f49ab8', '#fbfbf6']], GP = ['dot', '', 'stripe', 'check', 'star', 'dot', 'star', 'stripe'];
+  const spots = [[-26, 0], [24, 0], [-44, 2], [44, 2], [-12, 3], [10, 3], [-60, 1], [60, 1]];
+  gifts.map((l, i) => [l, i]).sort((a, b) => spots[a[1]][1] - spots[b[1]][1]).forEach(([l, i]) => { const [dx, dy] = spots[i], hh = hash(l.id), w = 13 + hh % 3 * 2.5, h = 10 + (hash(l.id + 'h') % 3) * 2.2, [c, rc] = GC[hh % GC.length], pat = GP[(hh >> 3) % GP.length];
+    svg += `<g data-act="orn" data-id="${l.id}" data-gift="1">${giftSVG(cx + dx, ground + 3 + dy, w, h, 6.4, c, rc, pat, 'gf' + i + (big ? 'b' : ''))}</g>`; });
   svg += `<g class="xtree" data-act="xshake">`;
   // ぽってりした段々のツリー（ふちに立体感）
   svg += `<g filter="url(#treeF)">`;
