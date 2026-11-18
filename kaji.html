@@ -111,6 +111,55 @@ body.xfullmode main{padding-bottom:0}
 .xfull-top{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 10px)}
 body.xfullmode header{display:none}
 .xdate{font-weight:800;color:var(--navy)}
+/* アドベントボックス（木のおうちに、柄ちがいの小さなとびら） */
+.abox{position:relative;margin:66px 4px 4px;padding:16px 12px 14px;border-radius:10px 10px 18px 18px;background:linear-gradient(#b4402f,#9a3226);box-shadow:inset 0 0 0 4px #c9583f,inset 0 0 0 7px #7e2a20,0 6px 0 #6a2219,0 10px 18px rgba(80,30,10,.25)}
+.abox::before{content:'';position:absolute;left:-14px;right:-14px;top:-52px;height:62px;background:linear-gradient(#2f6a46,#24573a);clip-path:polygon(50% 0,100% 78%,100% 100%,0 100%,0 78%);z-index:0}
+.abox::after{content:'';position:absolute;left:-10px;right:-10px;top:-56px;height:34px;background:#fbfdff;clip-path:polygon(50% 0,96% 70%,90% 64%,84% 74%,76% 62%,66% 72%,56% 60%,46% 72%,36% 60%,26% 70%,16% 62%,8% 72%,4% 70%);filter:drop-shadow(0 2px 0 rgba(0,0,0,.08));z-index:1}
+.abox .astar{position:absolute;left:50%;top:-86px;width:46px;height:46px;margin-left:-23px;z-index:2;filter:drop-shadow(0 0 8px rgba(255,214,90,.9));animation:astar 2.4s ease-in-out infinite}
+@keyframes astar{50%{transform:scale(1.08) rotate(6deg)}}
+.abox .asign{position:relative;z-index:2;margin:-4px auto 12px;width:max-content;padding:5px 16px;border-radius:999px;background:#fff7e6;color:#9a3226;font-weight:900;font-size:15px;letter-spacing:.06em;box-shadow:0 2px 0 #e2cfa8}
+.abox .asign small{display:block;text-align:center;font-size:10px;color:#a8946a;letter-spacing:0;font-weight:700}
+.agrid{position:relative;z-index:2;display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.ad{position:relative;aspect-ratio:1/1.15;border-radius:9px;perspective:420px;background:#4a1a12;box-shadow:inset 0 2px 6px rgba(0,0,0,.5)}
+.ad.big{grid-column:span 5;aspect-ratio:auto;height:92px}
+.ad .leaf{position:absolute;inset:0;border:0;padding:0;border-radius:9px;transform-origin:left center;transition:transform .7s cubic-bezier(.3,1.4,.5,1);box-shadow:inset 0 0 0 2px rgba(255,255,255,.35),0 2px 0 rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;backface-visibility:hidden;cursor:default}
+.ad .leaf::after{content:'';position:absolute;right:6px;top:50%;width:7px;height:7px;margin-top:-3px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff6c8,#d9a52a 60%,#8a6010);box-shadow:0 1px 0 rgba(0,0,0,.3)}
+.ad .num{min-width:28px;height:28px;padding:0 4px;border-radius:999px;background:#fffaf0;color:#9a3226;font-weight:900;font-size:15px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 0 rgba(0,0,0,.18)}
+.ad.big .num{font-size:20px;height:36px;min-width:52px}
+.p0{background:repeating-linear-gradient(45deg,#e0473b 0 7px,#fff4ea 7px 14px)}
+.p1{background:radial-gradient(#fff 22%,transparent 24%) 0 0/12px 12px,radial-gradient(#fff 22%,transparent 24%) 6px 6px/12px 12px,#3d8a55}
+.p2{background:radial-gradient(#e0473b 22%,transparent 24%) 0 0/11px 11px,#fbf1dc}
+.p3{background:linear-gradient(90deg,rgba(255,255,255,.18) 50%,transparent 0) 0 0/12px 12px,linear-gradient(rgba(0,0,0,.12) 50%,transparent 0) 0 0/12px 12px,#c8352e}
+.p4{background:radial-gradient(rgba(255,255,255,.9) 14%,transparent 16%) 3px 4px/14px 14px,linear-gradient(#2f4f86,#3a64a8)}
+.p5{background:repeating-linear-gradient(-45deg,#f2c14e 0 6px,#fbe3a0 6px 12px)}
+.p6{background:linear-gradient(90deg,transparent 42%,#e0473b 42% 58%,transparent 58%),linear-gradient(transparent 42%,#e0473b 42% 58%,transparent 58%),#3d8a55}
+.big .leaf{background:linear-gradient(90deg,transparent 46%,#f2c14e 46% 54%,transparent 54%),linear-gradient(transparent 40%,#f2c14e 40% 52%,transparent 52%),repeating-linear-gradient(45deg,#c8352e 0 10px,#d94a3c 10px 20px)}
+.ad.lock .leaf{filter:saturate(.55) brightness(.92)}
+.ad.lock .num{opacity:.75}
+.ad.can .leaf{cursor:pointer;animation:awig 1.8s ease-in-out infinite}
+.ad.can::before{content:'';position:absolute;inset:-4px;border-radius:12px;box-shadow:0 0 14px 3px rgba(255,220,110,.95);animation:aglow 1.4s ease-in-out infinite}
+@keyframes awig{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-4deg)}90%{transform:rotate(4deg)}95%{transform:rotate(-2deg)}}
+@keyframes aglow{50%{opacity:.35}}
+.ad.open .leaf,.ad.opening .leaf{transform:rotateY(-108deg)}
+.ad.opening .leaf{animation:none}
+.ad .in{position:absolute;inset:3px;border-radius:7px;background:radial-gradient(circle at 50% 70%,#fff3d6,#f2d9a8);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.ad .in img{width:80%;max-height:86%;object-fit:contain}.ad.two .in img{width:50%}
+.ad .in .dn{position:absolute;left:4px;top:2px;font-size:9px;font-weight:900;color:#c8862a}
+/* ひらいたとき */
+.aopen{position:relative;text-align:center;padding:4px 0 6px;overflow:hidden}
+.aopen .rays{position:absolute;left:50%;top:108px;width:420px;height:420px;margin:-210px 0 0 -210px;background:repeating-conic-gradient(rgba(255,214,110,.32) 0 10deg,transparent 10deg 20deg);border-radius:50%;-webkit-mask:radial-gradient(circle,#000 30%,transparent 68%);mask:radial-gradient(circle,#000 30%,transparent 68%);animation:arays 14s linear infinite}
+@keyframes arays{to{transform:rotate(360deg)}}
+.aopen .day{position:relative;display:inline-block;padding:3px 12px;border-radius:999px;background:#c8352e;color:#fff;font-weight:900;font-size:12px}
+.aopen .gift{position:relative;height:196px;display:flex;align-items:center;justify-content:center;gap:6px}
+.aopen .gift img{width:168px;height:168px;object-fit:contain;animation:apop .8s cubic-bezier(.3,1.6,.5,1) both;filter:drop-shadow(0 8px 10px rgba(120,70,20,.25))}
+.aopen .gift.two img{width:130px;height:130px}.aopen .gift img:nth-child(2){animation-delay:.15s}
+@keyframes apop{0%{transform:translateY(40px) scale(.2) rotate(-12deg);opacity:0}60%{transform:translateY(-10px) scale(1.12) rotate(4deg);opacity:1}100%{transform:none}}
+.aopen b{position:relative;display:block;font-size:19px;color:var(--navy);animation:apop .7s .25s both}
+.aopen p{position:relative;margin:4px 0 0;font-size:14px;color:#c8862a;font-weight:800;animation:apop .7s .35s both}
+img[data-fk]:not([src]){visibility:hidden}
+.aconf{position:fixed;top:-20px;z-index:60;pointer-events:none;font-size:14px;animation:afall linear forwards}
+@keyframes afall{to{transform:translate(var(--dx),110vh) rotate(var(--r))}}
+
 .fz{display:flex;align-items:center;justify-content:center;width:56px;height:56px}.fz img{width:56px;height:56px;object-fit:contain}.fz .lk{font-size:22px;color:#c8b898;font-weight:800}
 .wt3{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:640/720;background:#7a3a2a;margin-top:6px}.wt3 img{width:100%;height:100%;object-fit:cover;display:block}.wt3 img:not([src]){visibility:hidden}.wt3.loading::after{content:'ツリーを用意しているよ…';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff3dc;font-size:13px;font-weight:800}
 .xside{margin-left:auto;display:flex;gap:8px}
@@ -640,7 +689,7 @@ function chime(kind){
   if (S.sound === false) return;
   try {
     actx = actx || new (window.AudioContext || window.webkitAudioContext)();
-    const notes = kind === 'thanks' ? [988, 1319] : kind === 'undo' ? [587, 440] : [784, 1175];
+    const notes = kind === 'thanks' ? [988, 1319] : kind === 'undo' ? [587, 440] : kind === 'bell' ? [1047, 1319, 1568, 2093] : [784, 1175];
     notes.forEach((f, i) => { const o = actx.createOscillator(), g = actx.createGain(); o.type = 'sine'; o.frequency.value = f;
       const t = actx.currentTime + i * 0.09; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.13, t + 0.012); g.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
       o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.42); });
@@ -4272,17 +4321,25 @@ const fimg = k => `<img data-fk="${k}" alt="">`;
 function fillFurn(){ if (!ROOM) return; const els = [...document.querySelectorAll('img[data-fk]:not([src])')]; let i = 0;
   const step = () => { const t0 = performance.now(); while (i < els.length && performance.now() - t0 < 30){ const e = els[i++]; if (!e.isConnected) continue; try { e.src = ROOM.thumbFurn(e.dataset.fk); } catch (x) { console.warn(x); } } if (i < els.length) requestAnimationFrame(step); }; requestAnimationFrame(step); }
 const md = d => `${d.getMonth() + 1}/${d.getDate()}`;
+const STAR_SVG = `<svg viewBox="0 0 40 40" class="astar"><path d="M20 2 L25 14 L38 15 L28 24 L31 37 L20 30 L9 37 L12 24 L2 15 L15 14Z" fill="#f6c84a" stroke="#c8902a" stroke-width="1.6" stroke-linejoin="round"/><path d="M20 7 L23 15 L31 16" stroke="#fff4c0" stroke-width="2" fill="none" stroke-linecap="round" opacity=".8"/></svg>`;
 function advSheet(){ rmod().then(m => { const o = advOpened(), t = advToday();
-  const doors = m.ADVENT.map((keys, i) => { const d = advDay(i), last = i === ADV_N - 1;
-    if (o.has(i)) return `<div class="adoor open ${keys.length > 1 ? 'two' : ''} ${last ? 'big' : ''}"><span class="n">${d.getDate()}</span><div class="imgs">${keys.map(fimg).join('')}</div></div>`;
-    if (i <= t) return `<button class="adoor can ${last ? 'big' : ''}" data-act="advopen" data-i="${i}"><span class="n">${d.getDate()}</span><small>${md(d)}</small></button>`;
-    return `<div class="adoor lock ${last ? 'big' : ''}"><span class="n">${d.getDate()}</span><small>${md(d)}</small></div>`; }).join('');
-  openSheet(`<div class="advhd"><b>アドベントカレンダー</b><p>きょうは なにが入ってるかな？</p></div><div class="advgrid">${doors}</div>`); setTimeout(fillFurn, 30); }); }
-function advOpen(i){ if (!advCan(i)) return; rmod().then(m => { const keys = m.ADVENT[i]; const st = settings(), adv = [...new Set([...(st.adv || []), i])].sort((a, b) => a - b), room = { ...(st.room || {}) };
-  keys.forEach(k => { room[m.FURN_BY[k].slot] = k; }); chime('do');
-  put({ ...st, adv, room });
-  openSheet(`<div class="advopen"><div style="font-size:12px;color:#a8946a;font-weight:800">${md(advDay(i))} のとびら</div><div class="row">${keys.map(fimg).join('')}</div><b>${keys.map(k => m.FURN_BY[k].name).join('と')}</b><p>おへやに飾ったよ！</p><button class="btn go" style="margin-top:14px;padding:11px 22px" data-act="advent">カレンダーにもどる</button></div>`);
-  setTimeout(() => { fillFurn(); const b = document.querySelector('.advopen .row'); if (b) burst(b, 'star'); }, 30); }); }
+  const doors = m.ADVENT.map((keys, i) => { const d = advDay(i), last = i === ADV_N - 1, pat = 'p' + ((i * 5 + (i >> 2)) % 7), cls2 = `${last ? 'big' : ''} ${keys.length > 1 ? 'two' : ''}`;
+    const inner = `<div class="in"><span class="dn">${md(d)}</span>${keys.map(fimg).join('')}</div>`;
+    if (o.has(i)) return `<div class="ad open ${cls2}">${inner}<div class="leaf ${pat}"><span class="num">${d.getDate()}</span></div></div>`;
+    if (i <= t) return `<div class="ad can ${cls2}" data-i="${i}">${inner}<button class="leaf ${pat}" data-act="advopen" data-i="${i}" aria-label="${md(d)}のとびら"><span class="num">${d.getDate()}</span></button></div>`;
+    return `<div class="ad lock ${cls2}"><div class="leaf ${pat}"><span class="num">${d.getDate()}</span></div></div>`; }).join('');
+  openSheet(`<div class="abox">${STAR_SVG}<div class="asign">アドベントボックス<small>きょうは なにが入ってるかな？</small></div><div class="agrid">${doors}</div></div>`); setTimeout(fillFurn, 30); }); }
+function confetti(n = 46){ const cols = ['#e0473b', '#f2c14e', '#3d8a55', '#ffffff', '#f4a6bc', '#7cc0e4']; for (let i = 0; i < n; i++){ const e = document.createElement('span'); e.className = 'aconf';
+    const kind = i % 4; e.textContent = kind === 0 ? '❄' : kind === 1 ? '★' : ''; if (kind > 1){ e.style.width = '7px'; e.style.height = '11px'; e.style.borderRadius = '2px'; e.style.background = cols[i % cols.length]; } else e.style.color = kind === 0 ? '#ffffff' : cols[i % 3 + 1];
+    e.style.left = (Math.random() * 100) + 'vw'; e.style.setProperty('--dx', ((Math.random() - .5) * 120) + 'px'); e.style.setProperty('--r', ((Math.random() - .5) * 900) + 'deg'); e.style.animationDuration = (1.8 + Math.random() * 1.6) + 's'; e.style.animationDelay = (Math.random() * .5) + 's'; if (kind === 0) e.style.textShadow = '0 0 3px rgba(120,160,220,.9)';
+    document.body.appendChild(e); setTimeout(() => e.remove(), 4200); } }
+function advOpen(i){ if (!advCan(i) || advOpened().has(i)) return; rmod().then(m => { const keys = m.ADVENT[i];
+  const cell = document.querySelector(`.ad.can[data-i="${i}"]`); if (cell){ cell.classList.remove('can'); cell.classList.add('opening'); burst(cell, 'star'); }
+  chime('bell');
+  setTimeout(() => { const st = settings(), adv = [...new Set([...(st.adv || []), i])].sort((a, b) => a - b), room = { ...(st.room || {}) };
+    keys.forEach(k => { room[m.FURN_BY[k].slot] = k; }); put({ ...st, adv, room });
+    openSheet(`<div class="aopen"><div class="rays"></div><span class="day">${md(advDay(i))}</span><div class="gift ${keys.length > 1 ? 'two' : ''}">${keys.map(fimg).join('')}</div><b>${keys.map(k => m.FURN_BY[k].name).join('と')}</b><p>おへやに飾ったよ！</p><button class="btn go" style="position:relative;margin-top:16px;padding:11px 26px" data-act="advent">ボックスにもどる</button></div>`);
+    fillFurn(); confetti(); chime('thanks'); }, cell ? 750 : 0); }); }
 function unlockedFurn(m){ const o = advOpened(), u = new Map(); m.ADVENT.forEach((keys, i) => keys.forEach(k => u.set(k, i))); return { has:k => (m.TREE_PARTS.includes(m.FURN_BY[k].slot) && k.endsWith('_a')) || o.has(u.get(k)), day:k => advDay(u.get(k)) }; }
 function moyouSheet(){ rmod().then(m => { const U = unlockedFurn(m), room = settings().room || {};
   const secs = m.FURN_SLOTS.map(([slot, label]) => { const items = m.FURN_ITEMS.filter(it => it.slot === slot), tp = m.TREE_PARTS.includes(slot), cur = tp ? (room[slot] === undefined ? slot + '_a' : room[slot] === 'none' ? '' : room[slot]) : (room[slot] || '');
