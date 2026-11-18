@@ -199,7 +199,8 @@ body.xfullmode .qbar{background:rgba(255,250,236,.55);-webkit-backdrop-filter:bl
 .xfull-top .talk{margin:0;background:rgba(255,252,240,.9);min-height:0;padding:14px 16px 10px;font-size:14px}
 .xcount{display:inline-block;margin:0;padding:4px 12px;border-radius:999px;background:rgba(255,252,240,.88);font-size:12px;font-weight:800;color:var(--navy);box-shadow:var(--sh)}
 .xcount b{font-size:15px;color:#c8862a}
-.listhandle{display:flex;align-items:center;gap:6px;padding:5px 12px 5px 6px;font-size:13px;border-radius:999px;background:var(--cream);box-shadow:var(--sh-lift);font-weight:800;color:var(--navy);white-space:nowrap}
+.lhheart{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#e8586a;color:#fff;font-size:11px;line-height:18px;text-align:center;box-shadow:0 0 0 2px #fff8e8;animation:pop .5s}
+.listhandle{position:relative;display:flex;align-items:center;gap:6px;padding:5px 12px 5px 6px;font-size:13px;border-radius:999px;background:var(--cream);box-shadow:var(--sh-lift);font-weight:800;color:var(--navy);white-space:nowrap}
 .listhandle i{width:22px;height:22px;border-radius:50%;background:var(--amber);position:relative}
 .listhandle i::after{content:'';position:absolute;left:6px;top:8px;border:5px solid transparent;border-top:6px solid #fff;border-bottom:0}
 .listhandle small{color:var(--sub);font-weight:700;font-size:12px}
@@ -4312,7 +4313,7 @@ function viewToday(){
   LIST_HTML = html;
   const vw = Math.min(innerWidth, 660), Hpx = innerHeight, k = 360 / vw, Hs = Math.round(Hpx * k), pad = Math.round(222 * k), topUi = Math.round(196 * k);
   const cur = currentSlot(), curLeft = cur ? due.filter(c => (c.slot || 'any') === cur && !logs.some(l => l.choreId === c.id)).length : 0, curLabel = cur ? SLOTS.find(x => x[0] === cur)[1] : '';
-  return `<div class="xfull ${ROOM_FAIL ? '' : 'r3'}"><div class="xfull-svg">${ROOM_FAIL ? treeSVG(wl, 'full', { H:Hs, pad, maxTh:Hs - pad - topUi }) : ''}</div><div class="xfull-top"><div class="xchips" style="margin:0 0 20px"><span class="xcount xdate">${new Date().getMonth() + 1}/${new Date().getDate()}（${WD[new Date().getDay()]}）</span><button class="listhandle" data-act="listopen"><i></i><span>今日の記録</span><small>${logs.length}件</small></button>${advChips()}</div>${html0}</div></div>`;
+  return `<div class="xfull ${ROOM_FAIL ? '' : 'r3'}"><div class="xfull-svg">${ROOM_FAIL ? treeSVG(wl, 'full', { H:Hs, pad, maxTh:Hs - pad - topUi }) : ''}</div><div class="xfull-top"><div class="xchips" style="margin:0 0 20px"><span class="xcount xdate">${new Date().getMonth() + 1}/${new Date().getDate()}（${WD[new Date().getDay()]}）</span><button class="listhandle" data-act="listopen"><i></i><span>今日の記録</span><small>${logs.length}件</small>${logs.some(l => l.by !== S.me && !l.both && !l.thanks) ? '<span class="lhheart">♡</span>' : ''}</button>${advChips()}</div></div></div>`;
 }
 let LIST_HTML = '', LISTOPEN = false;
 /* ===== アドベント（11/19〜12/25、毎日ひとつ家具が届く。家事とは関係なし） ===== */
