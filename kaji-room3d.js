@@ -125,8 +125,8 @@ function wainscot(len, place){ const g = new THREE.Group(); const w = new THREE.
   const rail = new THREE.Mesh(new RoundedBoxGeometry(len, .07, .14, 2, .025), railMat); rail.position.set(0, 1.07, .07); g.add(rail); wainParts.push(rail);
   const base = new THREE.Mesh(new RoundedBoxGeometry(len, .14, .12, 2, .03), baseMat); base.position.set(0, .07, .06); base.receiveShadow = true; g.add(base); place(g); scene.add(g); }
 wainscot(RW, g => g.position.set(0, 0, bz));
-wainParts.forEach(m => m.visible = !!WAIN.a); baseMat.color.set(BASE.a);
 for (const s of [-1, 1]) wainscot(RD, g => { g.position.set(s * RW / 2, 0, RZ); g.rotation.y = -s * Math.PI / 2; });
+wainParts.forEach(m => m.visible = !!WAIN.a); baseMat.color.set(BASE.a);
 
 // 窓（壁にあいた穴）と、その向こうの雪の外
 const win = new THREE.Group(); win.position.set(WX, WY, bz); scene.add(win);
