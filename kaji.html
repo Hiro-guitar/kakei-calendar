@@ -14,6 +14,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
+/* 長押しでコピー・調べるのメニューや文字選択が出ないように（入力欄はそのまま） */
+html,body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}img,svg,canvas{-webkit-user-drag:none;-webkit-touch-callout:none}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+
 :root{
   --sand:#efe6d2; --cream:#fffbed; --paper:#fbf4e2; --navy:#1f526e; --sub:rgba(31,82,110,.62); --line:rgba(31,82,110,.10);
   --brown:#937c60; --amber:#e3a83b; --amber-hi:#f3c15a; --red:#d4665f;
@@ -948,7 +951,7 @@ document.addEventListener('pointermove', e => { if (drag) dragMove(e); });
 ['pointerup', 'pointercancel'].forEach(ev => document.addEventListener(ev, () => { if (drag) dragEnd(); }));
 document.addEventListener('touchmove', e => { if (drag) e.preventDefault(); }, { passive:false });
 document.addEventListener('click', e => { if (qLong && e.target.closest('[data-act=qgrp],#grppop')){ e.stopPropagation(); e.preventDefault(); } }, true);
-document.addEventListener('contextmenu', e => { if (e.target.closest('.qbar,#grppop')) e.preventDefault(); });
+document.addEventListener('contextmenu', e => { if (!e.target.closest('input,textarea')) e.preventDefault(); });
 /* グループの編集 */
 let gdraft = null;
 function sheetGroup(gid){ const g = gid ? S.items[gid] : null; gdraft = g ? { ...g } : { id:'grp_' + uid(), kind:'group', name:'', icon:'spark', order:Math.max(-1, ...all('group').map(x => x.order ?? 0)) + 1, _new:true }; renderGroup(); }
