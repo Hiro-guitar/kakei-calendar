@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
 import { RoomEnvironment } from './vendor/three/RoomEnvironment.js';
 import { makeOrnament, makeDeco } from './kaji-orn3d.js';
+import { makeMochibana } from './kaji-mochi3d.js';
 
 /* ---------- 家具の一覧（アドベントで手に入る） ---------- */
 export const FURN_SLOTS = [['wallpaper', '壁紙'], ['flooring', '床'], ['topper', 'ツリーのてっぺん'], ['treelights', 'ツリーの電球'], ['garland', 'ツリーのモール'], ['fireplace', '暖炉'], ['stockings', 'くつした'], ['mantel', '暖炉の上のかざり'], ['wall', '壁かざり'], ['curtain', 'カーテン'], ['wintop', '窓の上のかざり'], ['sill', '窓辺のかざり'], ['outside', '窓の外'],
@@ -287,7 +288,10 @@ function buildGift(id){ const T = GIFT_TYPES[giftSeed(id) % GIFT_TYPES.length], 
   if (T.s === 'round'){ const r = .19 + s1 * .04; h = .26 + s2 * .08; w = d = r * 2;
     const body = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 28), mat); body.position.y = h / 2; body.castShadow = body.receiveShadow = true; g.add(body);
     const lid = new THREE.Mesh(new THREE.CylinderGeometry(r + .02, r + .02, .06, 28), std(T.a, { roughness:.55 })); lid.position.y = h - .02; lid.castShadow = true; g.add(lid);
-    for (const rot of [0, Math.PI / 2]){ const b = new THREE.Mesh(new THREE.BoxGeometry(r * 2 + .05, h + .02, .05), rm); b.position.y = h / 2; b.rotation.y = rot; g.add(b); } }
+    // リボン：側面は筒に沿った細い帯、ふたの上は十字（面が重なってちらつかないよう、少し浮かせる）
+    const bw = .05 / (r + .03);
+    for (let q = 0; q < 4; q++){ const band = new THREE.Mesh(new THREE.CylinderGeometry(r + .028, r + .028, h + .012, 6, 1, true, q * Math.PI / 2 - bw / 2, bw), rm); band.position.y = h / 2 + .004; g.add(band); }
+    for (const rot of [0, Math.PI / 2]){ const b = new THREE.Mesh(new THREE.BoxGeometry(r * 2 + .05, .012, .05), rm); b.position.y = h + .018; b.rotation.y = rot; g.add(b); } }
   else { [w, h, d] = T.s === 'tall' ? [.3 + s1 * .06, .52 + s2 * .14, .3 + s1 * .06] : T.s === 'flat' ? [.56 + s1 * .1, .15 + s2 * .05, .44 + s2 * .06] : T.s === 'cube' ? [.36, .36, .36] : [.34 + s1 * .22, .26 + s2 * .2, .3 + s2 * .2];
     const box = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 3, .035), mat); box.position.y = h / 2; box.castShadow = box.receiveShadow = true; g.add(box);
     const r1 = new THREE.Mesh(new RoundedBoxGeometry(w + .012, h + .012, .06, 2, .01), rm); r1.position.y = h / 2; g.add(r1);
@@ -776,5 +780,6 @@ function snapshot(list, giftList, w = 640, h = 720){
   advBox.visible = abv; clearAll(); sig = ''; tree.rotation.y = rot; sync(keepL, keepG); shadowsDirty = true; return url; }
 const _proj = (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera), r = cv.getBoundingClientRect(); return [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height]; };
 const _dbg = () => Object.values(inst).map(o => { const b = instBox(o); return [o.rec.key, ...[b.min.x, b.max.x, b.min.y, b.max.y, b.min.z, b.max.z].map(v => +v.toFixed(2)), boxOK(o)]; });
-return { thumbGift, giftType:id => GIFT_TYPES[giftSeed(id) % GIFT_TYPES.length], setAdvBox, zoomTo, zoomOut, zoomed:() => zoomed, _dbg, _proj, sync, setRoom, snapshot, setEdit, editRotate, editRemove, autoPlace, layoutOf, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize(){ renderer.setSize(VW(), VH()); placeCamera(); } };
+const _mochi = (n = 14, sc = 1.5) => { const mb = makeMochibana(7); mb.group.scale.setScalar(sc); mb.branches.slice(0, n * 2).forEach((cv, i) => { if (i % 2) return; const o = mb.makers[(i / 2) % mb.makers.length](); o.scale.setScalar(1.25); mb.hang(o, cv.getPointAt(.55 + (i % 5) * .07), .05 + (i % 3) * .025); }); mb.group.traverse(m => { if (m.isMesh) m.castShadow = true; }); tree.visible = false; treeRoot.add(mb.group); shadowsDirty = true; };
+return { _mochi, thumbGift, giftType:id => GIFT_TYPES[giftSeed(id) % GIFT_TYPES.length], setAdvBox, zoomTo, zoomOut, zoomed:() => zoomed, _dbg, _proj, sync, setRoom, snapshot, setEdit, editRotate, editRemove, autoPlace, layoutOf, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize(){ renderer.setSize(VW(), VH()); placeCamera(); } };
 }
