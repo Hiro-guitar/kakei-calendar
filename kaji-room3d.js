@@ -115,11 +115,14 @@ const sideWalls = [];
 const back = new THREE.Mesh(new THREE.ShapeGeometry(backShape), std('#ffffff', { map:backTex })); back.position.set(0, 0, bz); back.receiveShadow = true; scene.add(back);
 for (const s of [-1, 1]){ const t = wallTex.clone(); t.needsUpdate = true; t.repeat.set(5 * RD / RW, 4); const side = new THREE.Mesh(new THREE.PlaneGeometry(RD, RH), std('#ead2cc', { map:t })); sideWalls.push(side); side.rotation.y = -s * Math.PI / 2; side.position.set(s * RW / 2, RH / 2, RZ); side.receiveShadow = true; scene.add(side); }
 // 腰板と巾木（奥の壁と左右の壁）
-const wainMat = std('#efe2c8', { roughness:.7 }), trimMat = std('#7a4b2a', { roughness:.6 }), panelMat = std('#e4d4b4', { roughness:.7 });
+const wainMat = std('#efe2c8', { roughness:.7 }), trimMat = std('#7a4b2a', { roughness:.6 }), panelMat = std('#e4d4b4', { roughness:.7 }), railMat = std('#7a4b2a', { roughness:.5 }), baseMat = std('#7a4b2a', { roughness:.6 });
+/* 壁紙ごとの腰板（下の板・パネル・上の縁・巾木）の色 */
+const WAIN = { a:['#2f6a46', '#3a7a54', '#d9b45a', '#5a3a22'], b:['#c23b34', '#d24a40', '#fbf3e2', '#6a3a22'], c:['#8a5a32', '#9a6a3e', '#e0b84e', '#5a3a22'] };
+function applyWain(kind){ const [w, p, r, b] = WAIN[kind] || WAIN.a; wainMat.color.set(w); panelMat.color.set(p); railMat.color.set(r); baseMat.color.set(b); railMat.metalness = kind === 'b' ? 0 : .35; railMat.needsUpdate = true; }
 function wainscot(len, place){ const g = new THREE.Group(); const w = new THREE.Mesh(new RoundedBoxGeometry(len, 1.05, .08, 2, .02), wainMat); w.position.set(0, .525, .04); w.receiveShadow = true; g.add(w);
   const n = Math.round(len / .76); for (let i = 0; i < n; i++){ const p = new THREE.Mesh(new RoundedBoxGeometry(.62, .62, .03, 2, .02), panelMat); p.position.set(-len / 2 + (i + .5) * len / n, .55, .09); g.add(p); }
-  const rail = new THREE.Mesh(new RoundedBoxGeometry(len, .07, .14, 2, .025), trimMat); rail.position.set(0, 1.07, .07); g.add(rail);
-  const base = new THREE.Mesh(new RoundedBoxGeometry(len, .14, .12, 2, .03), trimMat); base.position.set(0, .07, .06); base.receiveShadow = true; g.add(base); place(g); scene.add(g); }
+  const rail = new THREE.Mesh(new RoundedBoxGeometry(len, .07, .14, 2, .025), railMat); rail.position.set(0, 1.07, .07); g.add(rail);
+  const base = new THREE.Mesh(new RoundedBoxGeometry(len, .14, .12, 2, .03), baseMat); base.position.set(0, .07, .06); base.receiveShadow = true; g.add(base); place(g); scene.add(g); }
 wainscot(RW, g => g.position.set(0, 0, bz));
 for (const s of [-1, 1]) wainscot(RD, g => { g.position.set(s * RW / 2, 0, RZ); g.rotation.y = -s * Math.PI / 2; });
 
@@ -132,8 +135,8 @@ for (const [w, h, d, x, y] of [[WW, .02, .3, 0, WH / 2], [WW, .02, .3, 0, -WH / 
 const sill = new THREE.Mesh(new RoundedBoxGeometry(WW + .45, .09, .34, 2, .03), frameMat); sill.position.set(0, -WH / 2 - .17, .16); sill.castShadow = true; win.add(sill);
 const glassPane = new THREE.Mesh(new THREE.PlaneGeometry(WW, WH), new THREE.MeshPhysicalMaterial({ color:'#dfeeff', transparent:true, opacity:.12, roughness:.05, depthWrite:false })); glassPane.position.z = -.02; win.add(glassPane);
 // 外：空・雪の地面・木
-let wallKind = 'a', floorKind = 'a';
-function applyWall(kind){ kind = kind || 'a'; if (kind === wallKind) return; wallKind = kind; const t = wallTexOf(kind), bt = t.clone(); bt.needsUpdate = true; bt.repeat.set(5 / RW, 4 / RH); back.material.map.dispose(); back.material.map = bt; back.material.needsUpdate = true;
+let wallKind = 'a', floorKind = 'a'; applyWain('a');
+function applyWall(kind){ kind = kind || 'a'; if (kind === wallKind) return; wallKind = kind; applyWain(kind); const t = wallTexOf(kind), bt = t.clone(); bt.needsUpdate = true; bt.repeat.set(5 / RW, 4 / RH); back.material.map.dispose(); back.material.map = bt; back.material.needsUpdate = true;
   sideWalls.forEach(sw => { const st = t.clone(); st.needsUpdate = true; st.repeat.set(5 * RD / RW, 4); sw.material.map.dispose(); sw.material.map = st; sw.material.color.set('#ead8d0'); sw.material.needsUpdate = true; }); }
 function applyFloor(kind){ kind = kind || 'a'; if (kind === floorKind) return; floorKind = kind; floor.material.map.dispose(); floor.material.map = floorTexOf(kind); floor.material.needsUpdate = true; }
 const OUT_Z = bz - .02, outside = new THREE.Group(); scene.add(outside);
@@ -500,7 +503,10 @@ function sparkle(){ const g = new THREE.Group(); const n = 90, geo = new THREE.B
 
 /* 場所ごとの作り方（種類は FURN_ITEMS の順） */
 function swatch(kind, isWall){ const g = new THREE.Group(); const t = isWall ? wallTexOf(kind) : floorTexOf(kind); t.repeat.set(isWall ? 1.2 : .9, isWall ? 1.2 : .9);
-  const m = new THREE.Mesh(new RoundedBoxGeometry(1.2, isWall ? 1.2 : .05, isWall ? .05 : 1.2, 2, .02), std('#ffffff', { map:t, roughness:.7 })); m.position.y = isWall ? .6 : 0; g.add(m); g.userData.flatThumb = isWall ? 'wall' : 'floor'; return g; }
+  const m = new THREE.Mesh(new RoundedBoxGeometry(1.2, isWall ? 1.2 : .05, isWall ? .05 : 1.2, 2, .02), std('#ffffff', { map:t, roughness:.7 })); m.position.y = isWall ? .6 : 0; g.add(m); g.userData.flatThumb = isWall ? 'wall' : 'floor';
+  if (isWall){ const [w, p, r, b] = WAIN[kind] || WAIN.a; const add = (W, H, D, c, y, z) => { const x = new THREE.Mesh(new RoundedBoxGeometry(W, H, D, 2, .01), std(c, { roughness:.6 })); x.position.set(0, y, z); g.add(x); return x; };
+    add(1.2, .42, .04, w, .21, .04); for (const x of [-.4, 0, .4]){ const pn = add(.3, .26, .02, p, .22, .07); pn.position.x = x; } add(1.22, .04, .08, r, .43, .06); add(1.22, .06, .07, b, .03, .06); }
+  return g; }
 const BUILD = {
   wallpaper:k => swatch('abc'[k], true), flooring:k => swatch('abc'[k], false),
   topper:k => treeTopper('abc'[k]), treelights:k => treeLights('abc'[k]), garland:k => treeGarland('abc'[k]),
