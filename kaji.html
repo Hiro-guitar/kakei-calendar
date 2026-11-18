@@ -691,11 +691,13 @@ const other = k => k === 'h' ? 'y' : 'h';
 
 /* ========== 日付 ========== */
 const pad = n => String(n).padStart(2,'0');
-const dayKey = ts => { const d = new Date(ts); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}` };
+// 1日の区切りは朝4時（夜ふかしの家事はその日のうち）
+const DAY_SHIFT = 4 * 36e5, appDate = (ts = Date.now()) => new Date(ts - DAY_SHIFT);
+const dayKey = ts => { const d = appDate(ts); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}` };
 const hm = ts => { const d = new Date(ts); return `${d.getHours()}:${pad(d.getMinutes())}` };
-const startOfDay = ts => { const d = new Date(ts); d.setHours(0,0,0,0); return d.getTime() };
+const startOfDay = ts => { const d = appDate(ts); d.setHours(0,0,0,0); return d.getTime() + DAY_SHIFT };
 const daysBetween = (a,b) => Math.round((startOfDay(b) - startOfDay(a)) / 864e5);
-function weekStart(off){ const d = new Date(); d.setHours(0,0,0,0); const dow = (d.getDay()+6)%7; d.setDate(d.getDate()-dow+off*7); return d; }
+function weekStart(off){ const d = appDate(); d.setHours(0,0,0,0); const dow = (d.getDay()+6)%7; d.setDate(d.getDate()-dow+off*7); d.setHours(4); return d; }
 
 /* ========== 家事ロジック ========== */
 function choresSorted(){ return all('chore').sort((a,b) => (a.order??0) - (b.order??0)); }
@@ -704,7 +706,7 @@ function lastDone(cid){ let m = 0; for (const l of all('log')) if (l.choreId ===
 function isDueToday(c){
   const now = Date.now(), f = c.freq || { type:'daily' };
   if (f.type === 'daily') return true;
-  if (f.type === 'weekly') return (f.days||[]).includes(new Date().getDay());
+  if (f.type === 'weekly') return (f.days||[]).includes(appDate().getDay());
   if (f.type === 'interval'){
     const ld = lastDone(c.id);
     if (!ld) return true;
@@ -3451,7 +3453,7 @@ function normBq(b){ if (b.shape) return b; return { ...b, shape:'bouquet', paper
 /* ===== 花束：季節限定・名前・ひらく演出・部屋に飾る・押し花 ===== */
 const SEASON_PAT = { sakura:{ l:'桜', on:(m) => m === 3 || m === 4 }, tanabata:{ l:'七夕', on:(m, d) => m === 7 }, momiji:{ l:'紅葉', on:(m) => m === 10 || m === 11 }, yuki:{ l:'雪の結晶', on:(m) => m === 12 || m <= 2 }, xmas:{ l:'クリスマス', on:(m, d) => m === 12 && d <= 25 }, shogatsu:{ l:'お正月', on:(m, d) => m === 1 && d <= 15 } };
 const SEASON_RIB = { xmas:{ l:'ヒイラギ', on:(m, d) => m === 12 && d <= 25 }, mizuhiki:{ l:'水引', on:(m, d) => m === 1 && d <= 15 } };
-const nowMD = () => { const d = new Date(); return [d.getMonth() + 1, d.getDate()]; };
+const nowMD = () => { const d = appDate(); return [d.getMonth() + 1, d.getDate()]; };
 var seasonalPatternDef = function(id, pat, base){
   const W = 26, t = `<rect width="${W}" height="${W}" fill="${base}"/>`;
   const P = inner => `<pattern id="${id}p" width="${W}" height="${W}" patternUnits="userSpaceOnUse">${inner}</pattern>`;
@@ -4159,7 +4161,7 @@ function gardenSVG(logs, big){
 }
 /* ===== クリスマス：ツリーとオーナメント ===== */
 const XMAS_FROM = [11, 15], XMAS_TO = [12, 25];
-function inXmas(ts){ const d = new Date(ts), m = d.getMonth() + 1, day = d.getDate(), v = m * 100 + day; return v >= XMAS_FROM[0] * 100 + XMAS_FROM[1] && v <= XMAS_TO[0] * 100 + XMAS_TO[1]; }
+function inXmas(ts){ const d = appDate(ts), m = d.getMonth() + 1, day = d.getDate(), v = m * 100 + day; return v >= XMAS_FROM[0] * 100 + XMAS_FROM[1] && v <= XMAS_TO[0] * 100 + XMAS_TO[1]; }
 function xmasOn(off = 0){ const ws = weekStart(off); for (let i = 0; i < 7; i++){ const d = new Date(ws); d.setDate(ws.getDate() + i); if (inXmas(d.getTime())) return true; } return false; }
 const capS = (y = -4.2) => `<g transform="translate(0,${y})"><path d="M0 -3.6 a1.15 1.15 0 1 0 .01 0Z M0 -3.05 a.6 .6 0 1 1 -.01 0Z" fill-rule="evenodd" fill="url(#capG)"/><rect x="-1.3" y="-1.5" width="2.6" height="1.8" rx=".45" fill="url(#capG)"/>${[-.7, 0, .7].map(x => `<path d="M${x} -1.3 V .1" stroke="#7a5410" stroke-width=".18" opacity=".6"/>`).join('')}<rect x="-1.3" y="-1.5" width="2.6" height=".45" rx=".2" fill="#fff4c0" opacity=".55"/></g>`;
 function ballArt(c, extra = '', id = ''){ const cid = 'obc' + c.slice(1);
@@ -4492,7 +4494,7 @@ function bloomSummary(logs){
 
 /* ========== 描画 ========== */
 function render(){
-  const now = new Date();
+  const now = appDate();
   $('hdate').textContent = `${now.getMonth()+1}/${now.getDate()}（${WD[now.getDay()]}）`;
   const me = S.me;
   $('mechip').innerHTML = me ? `<span class="dot ${me}"></span>${esc(nm(me))}` : '未設定';
@@ -4589,13 +4591,13 @@ function viewToday(){
   LIST_HTML = html;
   const vw = Math.min(innerWidth, 660), Hpx = innerHeight, k = 360 / vw, Hs = Math.round(Hpx * k), pad = Math.round(222 * k), topUi = Math.round(196 * k);
   const cur = currentSlot(), curLeft = cur ? due.filter(c => (c.slot || 'any') === cur && !logs.some(l => l.choreId === c.id)).length : 0, curLabel = cur ? SLOTS.find(x => x[0] === cur)[1] : '';
-  return `<div class="xfull ${ROOM_FAIL ? '' : 'r3'}"><div class="xfull-svg">${ROOM_FAIL ? treeSVG(wl, 'full', { H:Hs, pad, maxTh:Hs - pad - topUi }) : ''}</div><div class="xfull-top"><div class="xchips" style="margin:0 0 20px"><button class="listhandle" data-act="listopen"><i></i><span>${new Date().getMonth() + 1}/${new Date().getDate()}（${WD[new Date().getDay()]}）の記録</span><small>${logs.length}件</small>${logs.some(l => l.by !== S.me && !l.both && !l.thanks) ? '<span class="lhheart">♡</span>' : ''}</button>${advChips()}</div></div></div>`;
+  return `<div class="xfull ${ROOM_FAIL ? '' : 'r3'}"><div class="xfull-svg">${ROOM_FAIL ? treeSVG(wl, 'full', { H:Hs, pad, maxTh:Hs - pad - topUi }) : ''}</div><div class="xfull-top"><div class="xchips" style="margin:0 0 20px"><button class="listhandle" data-act="listopen"><i></i><span>${appDate().getMonth() + 1}/${appDate().getDate()}（${WD[appDate().getDay()]}）の記録</span><small>${logs.length}件</small>${logs.some(l => l.by !== S.me && !l.both && !l.thanks) ? '<span class="lhheart">♡</span>' : ''}</button>${advChips()}</div></div></div>`;
 }
 let LIST_HTML = '', LISTOPEN = false;
 /* ===== アドベント（11/19〜12/25、毎日ひとつ家具が届く。家事とは関係なし） ===== */
-const ADV_N = 37, advYear = () => { const d = new Date(); return d.getMonth() === 0 ? d.getFullYear() - 1 : d.getFullYear(); };
+const ADV_N = 37, advYear = () => { const d = appDate(); return d.getMonth() === 0 ? d.getFullYear() - 1 : d.getFullYear(); };
 const advDay = i => new Date(advYear(), 10, 19 + i);
-const advToday = () => { const d0 = new Date(advYear(), 10, 19), t = new Date(); t.setHours(0, 0, 0, 0); return Math.floor((t - d0) / 864e5); };
+const advToday = () => { const d0 = new Date(advYear(), 10, 19), t = appDate(); t.setHours(0, 0, 0, 0); return Math.floor((t - d0) / 864e5); };
 const advOpened = () => new Set(settings().adv || []);
 const advCan = i => i <= advToday();
 const advLeft = () => { const t = Math.min(advToday(), ADV_N - 1), o = advOpened(); let n = 0; for (let i = 0; i <= t; i++) if (!o.has(i)) n++; return n; };
@@ -4785,7 +4787,7 @@ const PAPERS = [
   { k:'momiji', n:'もみじ', season:[[10, 1], [11, 30]], bg:`${svgUrl(60, 60, leafP(15, 15, .9, '#e8684a', 15) + leafP(44, 42, .7, '#f2a43a', -20))},#fffaf2`, line:'#f2e4d0', band:'linear-gradient(90deg,#e8684a,#f2a43a,#c8452e)' },
 ];
 const md2 = (m, d) => m * 100 + d;
-function paperInSeason(p, t = new Date()){ if (!p.season) return true; const [[m1, d1], [m2, d2]] = p.season, x = md2(t.getMonth() + 1, t.getDate()), a = md2(m1, d1), b = md2(m2, d2); return a <= b ? x >= a && x <= b : x >= a || x <= b; }
+function paperInSeason(p, t = appDate()){ if (!p.season) return true; const [[m1, d1], [m2, d2]] = p.season, x = md2(t.getMonth() + 1, t.getDate()), a = md2(m1, d1), b = md2(m2, d2); return a <= b ? x >= a && x <= b : x >= a || x <= b; }
 const paperOf = k => PAPERS.find(p => p.k === k) || PAPERS[0];
 function paperNow(){ let k = ''; try { k = localStorage.getItem('kaji_paper') || ''; } catch (e) {} const p = PAPERS.find(x => x.k === k); if (p && paperInSeason(p)) return p.k; const sea = PAPERS.find(x => x.season && paperInSeason(x)); return sea ? sea.k : 'air'; }
 { const css = PAPERS.map(p => `.letter.p-${p.k}{background:${LINES(p.line)},${p.bg};background-position:0 14px,0 0}.letter.p-${p.k}::before{background:${p.band}}${p.ink ? `.letter.p-${p.k} .txt,.letter.p-${p.k} .lto,.letter.p-${p.k} .lfrom,.letter.p-${p.k} textarea{color:${p.ink}}.letter.p-${p.k} .m{color:${p.sub || p.ink}}.letter.p-${p.k} textarea::placeholder{color:${p.sub || p.ink};opacity:.6}` : ''}.pp-${p.k}{background:${p.bg}}.pp-${p.k}::before{background:${p.band}}`).join('\n');
