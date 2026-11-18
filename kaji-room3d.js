@@ -5,9 +5,10 @@ import { RoomEnvironment } from './vendor/three/RoomEnvironment.js';
 import { makeOrnament, makeDeco } from './kaji-orn3d.js';
 
 /* ---------- 家具の一覧（アドベントで手に入る） ---------- */
-export const FURN_SLOTS = [['topper', 'ツリーのてっぺん'], ['treelights', 'ツリーの電球'], ['garland', 'ツリーのモール'], ['fireplace', '暖炉'], ['stockings', 'くつした'], ['mantel', '暖炉の上'], ['wall', '暖炉の上の壁'], ['curtain', 'カーテン'], ['wintop', '窓の上'], ['sill', '窓辺'], ['outside', '窓の外'],
+export const FURN_SLOTS = [['wallpaper', '壁紙'], ['flooring', '床'], ['topper', 'ツリーのてっぺん'], ['treelights', 'ツリーの電球'], ['garland', 'ツリーのモール'], ['fireplace', '暖炉'], ['stockings', 'くつした'], ['mantel', '暖炉の上'], ['wall', '暖炉の上の壁'], ['curtain', 'カーテン'], ['wintop', '窓の上'], ['sill', '窓辺'], ['outside', '窓の外'],
   ['shelf', '左の壁ぎわ'], ['sofa', '右の壁ぎわ'], ['lamp', 'あかり'], ['table', 'テーブル'], ['rug', 'ラグ'], ['toys', '床のおもちゃ'], ['treebase', 'ツリーの足もと'], ['special', 'クリスマスの特別']];
 const NAMES = {
+  wallpaper:['赤いダマスクの壁紙', 'ストライプの壁紙', '雪の結晶の壁紙'], flooring:['ヘリンボーンの床', '明るい板の床', '市松もようのタイル'],
   topper:['金の星', '雪の結晶', '赤いリボン'], treelights:['カラフルな電球', 'あたたかい白の電球', '雪玉ライト'], garland:['金のモール', '銀のモール', '赤と白のビーズ'],
   fireplace:['石の暖炉', 'レンガの暖炉', '白い暖炉'], stockings:['フェルトのくつした', 'ニットのくつした', 'チェックのくつした'], mantel:['ろうそくとくるみ割り人形', 'おかしの家とミニツリー', 'スノードームとランタン'],
   wall:['リース', '木の掛け時計', '雪の町の絵'], curtain:['赤いチェックのカーテン', 'みどりのベルベットのカーテン', '白いレースのカーテン'], wintop:['電飾', '星のガーランド', '雪の結晶のモビール'],
@@ -19,9 +20,9 @@ export const FURN_ITEMS = [], FURN_BY = {};
 for (const [slot] of FURN_SLOTS) NAMES[slot].forEach((name, k) => { const it = { key:slot + '_' + 'abc'[k], slot, k, name }; FURN_ITEMS.push(it); FURN_BY[it.key] = it; });
 // 11/19 から 12/25 までの37日。はじめの15日で各場所の1つめ、そのあと2つめ・3つめ、12/25は特別
 const FIRST = ['fireplace', 'rug', 'curtain', 'stockings', 'wintop', 'lamp', 'mantel', 'wall', 'sofa', 'sill', 'table', 'outside', 'shelf', 'toys', 'treebase'];
-export const TREE_PARTS = ['topper', 'treelights', 'garland']; // 1つめは最初から持っている
+export const TREE_PARTS = ['wallpaper', 'flooring', 'topper', 'treelights', 'garland']; // 1つめは最初から持っている
 export const ADVENT = Array.from({ length:37 }, () => []);
-FIRST.forEach((s, i) => ADVENT[i].push(s + '_a')); { const rest = [...FIRST.map(s => s + '_b'), 'topper_b', 'garland_b', 'treelights_b', ...FIRST.map(s => s + '_c'), 'topper_c', 'garland_c', 'treelights_c']; rest.forEach((k, i) => ADVENT[15 + Math.floor(i * 21 / rest.length)].push(k)); } ADVENT[36].push('special_a');
+FIRST.forEach((s, i) => ADVENT[i].push(s + '_a')); { const rest = [...FIRST.map(s => s + '_b'), 'wallpaper_b', 'topper_b', 'flooring_b', 'garland_b', 'treelights_b', ...FIRST.map(s => s + '_c'), 'wallpaper_c', 'topper_c', 'flooring_c', 'garland_c', 'treelights_c']; rest.forEach((k, i) => ADVENT[15 + Math.floor(i * 21 / rest.length)].push(k)); } ADVENT[36].push('special_a');
 export const advDate = (year, i) => new Date(year, 10, 19 + i);
 export function mountRoom(el, opts = {}){
 const VW = () => el.clientWidth || innerWidth, VH = () => el.clientHeight || innerHeight;
@@ -71,7 +72,16 @@ function glow(color, size, op = .9){ const s = new THREE.Sprite(new THREE.Sprite
 
 /* ---------- 部屋：床・壁・腰板・巾木・窓（奥行きのある部屋） ---------- */
 const RW = 4.6, RH = 7, FRONT = 4.2, bz = -2.7, RD = FRONT - bz, RZ = (bz + FRONT) / 2;
-const floorTex = canvasTex(512, 512, (g, w, h) => {
+/* 床（3種）：ヘリンボーン・明るい板張り・市松のタイル */
+const FLOOR_REP = { a:[3, 3 * RD / RW], b:[2, 2 * RD / RW], c:[2.2, 2.2 * RD / RW] };
+function floorTexOf(kind){ return canvasTex(512, 512, (g, w, h) => {
+  if (kind === 'b'){ g.fillStyle = '#e8c79a'; g.fillRect(0, 0, w, h); const ph = 64;
+    for (let r = 0; r < h / ph; r++){ let x = -((r * 173) % 300); while (x < w){ const L = 220 + ((x * 7 + r * 31) % 140), sh = .9 + ((r * 13 + x) % 17) / 17 * .16; g.fillStyle = `rgb(${236 * sh | 0},${203 * sh | 0},${158 * sh | 0})`; g.fillRect(x + 1, r * ph + 1, L - 2, ph - 2);
+      g.strokeStyle = 'rgba(160,110,60,.18)'; g.lineWidth = 1.2; for (let k = 0; k < 5; k++){ g.beginPath(); const yy = r * ph + 10 + k * 11; g.moveTo(x + 4, yy); g.bezierCurveTo(x + L * .3, yy + 4, x + L * .6, yy - 4, x + L - 4, yy + 1); g.stroke(); }
+      g.strokeStyle = 'rgba(120,80,40,.4)'; g.lineWidth = 2; g.strokeRect(x + 1, r * ph + 1, L - 2, ph - 2); x += L; } } return; }
+  if (kind === 'c'){ const n = 8, c = w / n; for (let i = 0; i < n; i++) for (let j = 0; j < n; j++){ const red = (i + j) % 2; g.fillStyle = red ? '#b8473c' : '#f3e6cc'; g.fillRect(i * c, j * c, c, c); g.fillStyle = red ? 'rgba(255,255,255,.06)' : 'rgba(160,120,70,.08)'; g.fillRect(i * c + 4, j * c + 4, c - 8, 6); }
+    g.strokeStyle = 'rgba(90,60,40,.35)'; g.lineWidth = 2; for (let i = 0; i <= n; i++){ g.beginPath(); g.moveTo(i * c, 0); g.lineTo(i * c, h); g.stroke(); g.beginPath(); g.moveTo(0, i * c); g.lineTo(w, i * c); g.stroke(); } return; }
+
   g.fillStyle = '#c98f5a'; g.fillRect(0, 0, w, h);
   const pw = 128, ph = 32; // ヘリンボーン
   for (let y = -ph * 4; y < h + ph * 4; y += ph) for (let x = -pw; x < w + pw; x += pw){
@@ -81,24 +91,34 @@ const floorTex = canvasTex(512, 512, (g, w, h) => {
       g.strokeStyle = 'rgba(110,64,32,.45)'; g.lineWidth = 2; g.strokeRect(0, 0, pw * .7, ph * .7);
       g.strokeStyle = 'rgba(255,230,190,.12)'; g.beginPath(); for (let k = 4; k < ph * .7; k += 5){ g.moveTo(2, k); g.lineTo(pw * .7 - 2, k + Math.sin(k + x) * 1.5); } g.stroke(); g.restore(); }
   }
-}, [3, 3 * RD / RW]);
+}, FLOOR_REP[kind] || FLOOR_REP.a); }
+const floorTex = floorTexOf('a');
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(RW, RD), std('#ffffff', { map:floorTex, roughness:.75 }));
 floor.rotation.x = -Math.PI / 2; floor.position.z = RZ; floor.receiveShadow = true; scene.add(floor);
 
-const wallTex = canvasTex(256, 256, (g, w, h) => {
+/* 壁紙（3種）：赤いダマスク・クリームとみどりのストライプ・雪の結晶の水色 */
+function wallTexOf(kind){ return canvasTex(256, 256, (g, w, h) => {
+  if (kind === 'b'){ g.fillStyle = '#f4ead2'; g.fillRect(0, 0, w, h); for (let x = 0; x < w; x += 64){ g.fillStyle = '#3f7a52'; g.fillRect(x + 18, 0, 22, h); g.fillStyle = '#c8a24a'; g.fillRect(x + 14, 0, 2, h); g.fillRect(x + 42, 0, 2, h); }
+    for (let y = 32; y < h; y += 64) for (let x = 0; x < w; x += 64){ const cx = x + 52, cy = y + (x / 64 % 2) * 32; g.fillStyle = '#3f7a52'; for (const s of [-1, 1]){ g.beginPath(); g.ellipse(cx + s * 5, cy, 6, 3, s * .5, 0, 7); g.fill(); } g.fillStyle = '#c8352e'; g.beginPath(); g.arc(cx, cy - 2, 2.6, 0, 7); g.fill(); } return; }
+  if (kind === 'c'){ const l = g.createLinearGradient(0, 0, 0, h); l.addColorStop(0, '#a9c6e4'); l.addColorStop(1, '#9dbbdc'); g.fillStyle = l; g.fillRect(0, 0, w, h);
+    const flake = (cx, cy, r) => { g.save(); g.translate(cx, cy); g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = r > 12 ? 2.6 : 2; g.lineCap = 'round'; for (let k = 0; k < 6; k++){ g.rotate(Math.PI / 3); g.beginPath(); g.moveTo(0, 0); g.lineTo(0, -r); g.moveTo(0, -r * .55); g.lineTo(-r * .28, -r * .8); g.moveTo(0, -r * .55); g.lineTo(r * .28, -r * .8); g.stroke(); } g.restore(); };
+    flake(64, 64, 18); flake(192, 192, 18); flake(192, 60, 9); flake(60, 190, 9); g.fillStyle = 'rgba(255,255,255,.7)'; for (const [x, y] of [[128, 20], [20, 128], [236, 128], [128, 236], [128, 128]]){ g.beginPath(); g.arc(x, y, 2.5, 0, 7); g.fill(); } return; }
+
   g.fillStyle = '#b5403a'; g.fillRect(0, 0, w, h);
   g.fillStyle = 'rgba(255,255,255,.05)'; for (let x = 0; x < w; x += 32) g.fillRect(x, 0, 14, h);
   const motif = (cx, cy, s) => { g.save(); g.translate(cx, cy); g.scale(s, s); g.fillStyle = '#d9a441'; g.globalAlpha = .55;
     g.beginPath(); g.moveTo(0, -26); g.bezierCurveTo(14, -14, 14, 8, 0, 26); g.bezierCurveTo(-14, 8, -14, -14, 0, -26); g.fill();
     g.globalAlpha = .45; for (const sx of [-1, 1]){ g.beginPath(); g.ellipse(sx * 14, 0, 6, 12, sx * .5, 0, Math.PI * 2); g.fill(); } g.restore(); };
   motif(64, 64, 1); motif(192, 192, 1); motif(192, 64, .55); motif(64, 192, .55);
-}, [5, 4]);
+}, [5, 4]); }
+const wallTex = wallTexOf('a');
 const WX = -.05, WY = 2.45, WW = 1.24, WH = 1.44; // 窓の開口
 const backShape = new THREE.Shape(); backShape.moveTo(-RW / 2, 0); backShape.lineTo(RW / 2, 0); backShape.lineTo(RW / 2, RH); backShape.lineTo(-RW / 2, RH); backShape.closePath();
 { const h = new THREE.Path(); h.moveTo(WX - WW / 2, WY - WH / 2); h.lineTo(WX - WW / 2, WY + WH / 2); h.lineTo(WX + WW / 2, WY + WH / 2); h.lineTo(WX + WW / 2, WY - WH / 2); h.closePath(); backShape.holes.push(h); }
 const backTex = wallTex.clone(); backTex.needsUpdate = true; backTex.repeat.set(5 / RW, 4 / RH);
+const sideWalls = [];
 const back = new THREE.Mesh(new THREE.ShapeGeometry(backShape), std('#ffffff', { map:backTex })); back.position.set(0, 0, bz); back.receiveShadow = true; scene.add(back);
-for (const s of [-1, 1]){ const t = wallTex.clone(); t.needsUpdate = true; t.repeat.set(5 * RD / RW, 4); const side = new THREE.Mesh(new THREE.PlaneGeometry(RD, RH), std('#ead2cc', { map:t })); side.rotation.y = -s * Math.PI / 2; side.position.set(s * RW / 2, RH / 2, RZ); side.receiveShadow = true; scene.add(side); }
+for (const s of [-1, 1]){ const t = wallTex.clone(); t.needsUpdate = true; t.repeat.set(5 * RD / RW, 4); const side = new THREE.Mesh(new THREE.PlaneGeometry(RD, RH), std('#ead2cc', { map:t })); sideWalls.push(side); side.rotation.y = -s * Math.PI / 2; side.position.set(s * RW / 2, RH / 2, RZ); side.receiveShadow = true; scene.add(side); }
 // 腰板と巾木（奥の壁と左右の壁）
 const wainMat = std('#efe2c8', { roughness:.7 }), trimMat = std('#7a4b2a', { roughness:.6 }), panelMat = std('#e4d4b4', { roughness:.7 });
 function wainscot(len, place){ const g = new THREE.Group(); const w = new THREE.Mesh(new RoundedBoxGeometry(len, 1.05, .08, 2, .02), wainMat); w.position.set(0, .525, .04); w.receiveShadow = true; g.add(w);
@@ -120,6 +140,10 @@ for (const [w, h, d, x, y] of [[WW, .02, .3, 0, WH / 2], [WW, .02, .3, 0, -WH / 
 const sill = new THREE.Mesh(new RoundedBoxGeometry(WW + .45, .09, .34, 2, .03), frameMat); sill.position.set(0, -WH / 2 - .17, .16); sill.castShadow = true; win.add(sill);
 const glassPane = new THREE.Mesh(new THREE.PlaneGeometry(WW, WH), new THREE.MeshPhysicalMaterial({ color:'#dfeeff', transparent:true, opacity:.12, roughness:.05, depthWrite:false })); glassPane.position.z = -.02; win.add(glassPane);
 // 外：空・雪の地面・木
+let wallKind = 'a', floorKind = 'a';
+function applyWall(kind){ kind = kind || 'a'; if (kind === wallKind) return; wallKind = kind; const t = wallTexOf(kind), bt = t.clone(); bt.needsUpdate = true; bt.repeat.set(5 / RW, 4 / RH); back.material.map.dispose(); back.material.map = bt; back.material.needsUpdate = true;
+  sideWalls.forEach(sw => { const st = t.clone(); st.needsUpdate = true; st.repeat.set(5 * RD / RW, 4); sw.material.map.dispose(); sw.material.map = st; sw.material.color.set(kind === 'a' ? '#ead2cc' : '#e6e0d8'); sw.material.needsUpdate = true; }); }
+function applyFloor(kind){ kind = kind || 'a'; if (kind === floorKind) return; floorKind = kind; floor.material.map.dispose(); floor.material.map = floorTexOf(kind); floor.material.needsUpdate = true; }
 const OUT_Z = bz - .02, outside = new THREE.Group(); scene.add(outside);
 const skyTex = canvasTex(512, 512, (g, w, h) => { const l = g.createLinearGradient(0, 0, 0, h); l.addColorStop(0, '#1b2a55'); l.addColorStop(.7, '#3b4f8a'); l.addColorStop(1, '#5a6aa0'); g.fillStyle = l; g.fillRect(0, 0, w, h);
   for (let i = 0; i < 160; i++){ g.fillStyle = `rgba(255,255,255,${.35 + Math.random() * .65})`; g.beginPath(); g.arc(Math.random() * w, Math.random() * h * .7, Math.random() * 1.8 + .4, 0, 7); g.fill(); }
@@ -479,7 +503,12 @@ function sparkle(){ const g = new THREE.Group(); const n = 90, geo = new THREE.B
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color:'#ffe08a', size:.09, map:glowTex, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending })); g.add(pts); g.userData.sparkle = pts; const st = new THREE.Shape(); for (let i = 0; i < 10; i++){ const a = Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? .18 : .42; i ? st.lineTo(Math.cos(a) * r, Math.sin(a) * r) : st.moveTo(Math.cos(a) * r, Math.sin(a) * r); } const sm = new THREE.Mesh(new THREE.ExtrudeGeometry(st, { depth:.08, bevelEnabled:true, bevelThickness:.05, bevelSize:.04, bevelSegments:3 }), M('#f2c14e', { metalness:.7, roughness:.25, emissive:'#a86a10', emissiveIntensity:.4 })); sm.visible = false; sm.userData.thumbOnly = true; g.add(sm); return g; }
 
 /* 場所ごとの作り方（種類は FURN_ITEMS の順） */
+function swatch(kind, isWall){ const g = new THREE.Group(); const t = isWall ? wallTexOf(kind) : floorTexOf(kind); t.repeat.set(isWall ? 1.2 : .8, isWall ? 1.2 : .8);
+  const f = new THREE.Mesh(new THREE.BoxGeometry(1.2, .04, 1.2), std('#ffffff', { map:isWall ? floorTexOf(floorKind) : t })); if (isWall) f.material.map.repeat.set(.6, .6); g.add(f);
+  const w = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.1, .04), std('#ffffff', { map:isWall ? t : wallTexOf(wallKind) })); w.position.set(0, .55, -.6); if (!isWall) w.material.map.repeat.set(.6, .6); g.add(w);
+  const bb = new THREE.Mesh(new THREE.BoxGeometry(1.2, .08, .06), trimMat); bb.position.set(0, .06, -.56); g.add(bb); return g; }
 const BUILD = {
+  wallpaper:k => swatch('abc'[k], true), flooring:k => swatch('abc'[k], false),
   topper:k => treeTopper('abc'[k]), treelights:k => treeLights('abc'[k]), garland:k => treeGarland('abc'[k]),
   fireplace:k => fireplace(['stone', 'brick', 'white'][k]), stockings:k => stockings(['felt', 'knit', 'plaid'][k]), mantel:k => mantelTop('abc'[k]), wall:k => wallDeco('abc'[k]),
   curtain:k => curtains('abc'[k]), wintop:k => winTop('abc'[k]), sill:k => sillDeco('abc'[k]), outside:k => outsideDeco('abc'[k]), table:k => tableSpot('abc'[k]), toys:k => toys('abc'[k]),
@@ -488,11 +517,11 @@ const BUILD = {
 function buildFurn(key){ const it = FURN_BY[key]; if (!it) return null; const g = BUILD[it.slot](it.k); g.userData.key = key; return g; }
 // 置き場所：[x, y, z, 向き]
 const ANCHOR = { fireplace:[FPX, 0, bz], stockings:[FPX, FPH, bz], mantel:[FPX, FPH + .12, bz + .2], wall:[FPX, FPH + .2, bz + .05], curtain:[WX, WY, bz], wintop:[WX, WY + WH / 2 + .2, bz + .3], sill:[WX, WY - WH / 2 - .12, bz], outside:[WX + .15, .6, bz - .02 - 2.7],
-  table:[1.05, 0, -.55], toys:[.05, 0, .95], rug:[.15, 0, .35], shelf:[-RW / 2 + .32, 0, .45, Math.PI / 2 - .6], sofa:[RW / 2 - .1, 0, .75, -Math.PI / 2 + .2], lamp:[1.98, 0, -1.55], treebase:null, special:null, topper:null, treelights:null, garland:null };
+  table:[1.05, 0, -.55], toys:[.05, 0, .95], rug:[.15, 0, .35], shelf:[-RW / 2 + .32, 0, .45, Math.PI / 2 - .6], sofa:[RW / 2 - .1, 0, .75, -Math.PI / 2 + .2], lamp:[1.98, 0, -1.55], treebase:null, special:null, wallpaper:null, flooring:null, topper:null, treelights:null, garland:null };
 const NEEDS_FP = { stockings:1, mantel:1 };
 const mounted = {};
 function disposeG(o){ o.traverse(m => { if (m.isMesh || m.isPoints){ m.geometry && m.geometry.dispose(); } }); }
-function placeItem(slot, key){ const cur = mounted[slot]; if (cur && cur.userData.key === key) return; if (cur){ (cur.parent || scene).remove(cur); disposeG(cur); delete mounted[slot]; }
+function placeItem(slot, key){ if (slot === 'wallpaper'){ applyWall(key ? key.slice(-1) : 'a'); return; } if (slot === 'flooring'){ applyFloor(key ? key.slice(-1) : 'a'); return; } const cur = mounted[slot]; if (cur && cur.userData.key === key) return; if (cur){ (cur.parent || scene).remove(cur); disposeG(cur); delete mounted[slot]; }
   if (!key || !FURN_BY[key]) return; const g = buildFurn(key);
   if (TREE_PARTS.includes(slot)){ tree.add(g); mounted[slot] = g; return; }
   if (slot === 'treebase' || slot === 'special'){ g.position.set(tree.position.x, 0, tree.position.z); if (slot === 'treebase') g.scale.setScalar(tree.scale.x); }
