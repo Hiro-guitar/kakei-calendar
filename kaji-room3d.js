@@ -9,22 +9,23 @@ import { makeMochibana } from './kaji-mochi3d.js';
 export const FURN_SLOTS = [['wallpaper', '壁紙'], ['flooring', '床'], ['topper', 'ツリーのてっぺん'], ['treelights', 'ツリーの電球'], ['garland', 'ツリーのモール'], ['fireplace', '暖炉'], ['stockings', 'くつした'], ['mantel', '暖炉の上のかざり'], ['wall', '壁かざり'], ['curtain', 'カーテン'], ['wintop', '窓の上のかざり'], ['sill', '窓辺のかざり'], ['outside', '窓の外'],
   ['shelf', '棚・時計'], ['sofa', 'ソファ・ベンチ'], ['lamp', 'あかり'], ['table', 'テーブル・いす'], ['rug', 'ラグ'], ['toys', 'おもちゃ'], ['treebase', 'ツリーの足もと'], ['special', 'クリスマスの特別']];
 const NAMES = {
-  wallpaper:['雪の結晶の赤い壁紙', 'ヒイラギのストライプ壁紙', '金の星のみどりの壁紙'], flooring:['ジンジャークッキーの床', 'タータンチェックのじゅうたん', 'キャンディの市松タイル'],
+  wallpaper:['雪の結晶の赤い壁紙', 'ヒイラギのストライプ壁紙', '金の星のみどりの壁紙', '障子の壁紙'], flooring:['ジンジャークッキーの床', 'タータンチェックのじゅうたん', 'キャンディの市松タイル', 'たたみ'],
   topper:['金の星', '雪の結晶', '赤いリボン'], treelights:['カラフルな電球', 'あたたかい白の電球', '雪玉ライト'], garland:['金のモール', '銀のモール', '赤と白のビーズ'],
   fireplace:['石の暖炉', 'レンガの暖炉', '白い暖炉'], stockings:['フェルトのくつした', 'ニットのくつした', 'チェックのくつした'], mantel:['ろうそくとくるみ割り人形', 'おかしの家とミニツリー', 'スノードームとランタン'],
-  wall:['リース', '木の掛け時計', '雪の町の絵'], curtain:['赤いチェックのカーテン', 'みどりのベルベットのカーテン', '白いレースのカーテン'], wintop:['電飾', '星のガーランド', '雪の結晶のモビール'],
-  sill:['ランタンと松ぼっくり', 'キャンドルの瓶', 'ポインセチアの鉢'], outside:['雪だるま', '雪うさぎ', 'かまくら'], shelf:['食器棚', '本棚', '柱時計'], sofa:['赤いソファ', 'ひとりがけとサイドテーブル', '木のベンチ'],
-  lamp:['フロアランプ', '燭台', 'ヒイラギの鉢'], table:['テーブルとクッキー', 'お茶のテーブル', 'ロッキングチェア'], rug:['赤とみどりのラグ', 'まるい編みラグ', 'ふわふわの白いラグ'],
-  toys:['木馬', '汽車とスノードーム', 'くまのぬいぐるみ'], treebase:['赤いツリースカート', '木のかご', '雪のじゅうたん'], special:['金色のきらきら'],
+  wall:['リース', '木の掛け時計', '雪の町の絵', 'しめ飾り', '富士の掛け軸'], curtain:['赤いチェックのカーテン', 'みどりのベルベットのカーテン', '白いレースのカーテン', '紅白幕'], wintop:['電飾', '星のガーランド', '雪の結晶のモビール'],
+  sill:['ランタンと松ぼっくり', 'キャンドルの瓶', 'ポインセチアの鉢', '小さな鏡もちと梅'], outside:['雪だるま', '雪うさぎ', 'かまくら', '初日の出'], shelf:['食器棚', '本棚', '柱時計'], sofa:['赤いソファ', 'ひとりがけとサイドテーブル', '木のベンチ', '座布団'],
+  lamp:['フロアランプ', '燭台', 'ヒイラギの鉢', '行灯', '門松'], table:['テーブルとクッキー', 'お茶のテーブル', 'ロッキングチェア', 'こたつとみかん'], rug:['赤とみどりのラグ', 'まるい編みラグ', 'ふわふわの白いラグ', '青海波のラグ'],
+  toys:['木馬', '汽車とスノードーム', 'くまのぬいぐるみ', '羽子板とこま'], treebase:['赤いツリースカート', '木のかご', '雪のじゅうたん', '赤い毛せん'], special:['金色のきらきら', '七草のかご'],
 };
 export const FURN_ITEMS = [], FURN_BY = {};
-for (const [slot] of FURN_SLOTS) NAMES[slot].forEach((name, k) => { const it = { key:slot + '_' + 'abc'[k], slot, k, name }; FURN_ITEMS.push(it); FURN_BY[it.key] = it; });
+for (const [slot] of FURN_SLOTS) NAMES[slot].forEach((name, k) => { const it = { key:slot + '_' + 'abcde'[k], slot, k, name }; FURN_ITEMS.push(it); FURN_BY[it.key] = it; });
 // 11/19 から 12/25 までの37日。はじめの15日で各場所の1つめ、そのあと2つめ・3つめ、12/25は特別
 const FIRST = ['fireplace', 'rug', 'curtain', 'stockings', 'wintop', 'lamp', 'mantel', 'wall', 'sofa', 'sill', 'table', 'outside', 'shelf', 'toys', 'treebase'];
 export const FLOOR_SLOTS = ['fireplace', 'shelf', 'sofa', 'lamp', 'table', 'toys', 'rug'], WALL_SLOTS = ['wall'];
 export const TREE_PARTS = ['wallpaper', 'flooring', 'topper', 'treelights', 'garland']; // 1つめは最初から持っている
-export const ADVENT = Array.from({ length:37 }, () => []);
+export const ADVENT = Array.from({ length:50 }, () => []); // 11/19〜12/25がクリスマス、12/26〜1/7が年末年始
 FIRST.forEach((s, i) => ADVENT[i].push(s + '_a')); { const rest = [...FIRST.map(s => s + '_b'), 'wallpaper_b', 'topper_b', 'flooring_b', 'garland_b', 'treelights_b', ...FIRST.map(s => s + '_c'), 'wallpaper_c', 'topper_c', 'flooring_c', 'garland_c', 'treelights_c']; rest.forEach((k, i) => ADVENT[15 + Math.floor(i * 21 / rest.length)].push(k)); } ADVENT[36].push('special_a');
+['wallpaper_d flooring_d', 'curtain_d', 'wall_d', 'table_d', 'sofa_d', 'lamp_d', 'lamp_e sill_d', 'wall_e', 'toys_d', 'outside_d', 'rug_d', 'treebase_d', 'special_b'].forEach((ks, i) => ADVENT[37 + i].push(...ks.split(' ')));
 export const advDate = (year, i) => new Date(year, 10, 19 + i);
 // ありがとうのプレゼントの種類
 export const GIFT_TYPES = [
@@ -90,8 +91,13 @@ function glow(color, size, op = .9){ const s = new THREE.Sprite(new THREE.Sprite
 /* ---------- 部屋：床・壁・腰板・巾木・窓（奥行きのある部屋） ---------- */
 const RW = 4.6, RH = 7, FRONT = 4.2, bz = -2.7, RD = FRONT - bz, RZ = (bz + FRONT) / 2;
 /* 床（3種）：ジンジャークッキーの板・赤とみどりのタータン・キャンディの市松 */
-const FLOOR_REP = { a:[2, 2 * RD / RW], b:[2.4, 2.4 * RD / RW], c:[2.2, 2.2 * RD / RW] };
+const FLOOR_REP = { a:[2, 2 * RD / RW], b:[2.4, 2.4 * RD / RW], c:[2.2, 2.2 * RD / RW], d:[2.3, 2.3 * RD / RW / 1.4] };
 function floorTexOf(kind){ return canvasTex(512, 512, (g, w, h) => {
+  if (kind === 'd'){ // たたみ：い草の目と黒いへり
+    g.fillStyle = '#c8c070'; g.fillRect(0, 0, w, h); const mat = (x, y, mw, mh, vert) => { const gr = g.createLinearGradient(x, y, vert ? x + mw : x, vert ? y : y + mh); gr.addColorStop(0, '#d4cc82'); gr.addColorStop(1, '#bfb666'); g.fillStyle = gr; g.fillRect(x, y, mw, mh);
+      g.strokeStyle = 'rgba(120,110,40,.35)'; g.lineWidth = 1.5; if (vert) for (let i = x + 4; i < x + mw; i += 5){ g.beginPath(); g.moveTo(i, y); g.lineTo(i, y + mh); g.stroke(); } else for (let i = y + 4; i < y + mh; i += 5){ g.beginPath(); g.moveTo(x, i); g.lineTo(x + mw, i); g.stroke(); }
+      g.fillStyle = '#2a3a3a'; if (vert){ g.fillRect(x, y, mw, 10); g.fillRect(x, y + mh - 10, mw, 10); } else { g.fillRect(x, y, 10, mh); g.fillRect(x + mw - 10, y, 10, mh); } };
+    mat(0, 0, 256, 512, false); mat(256, 0, 256, 256, true); mat(256, 256, 256, 256, true); return; }
   if (kind === 'a'){ g.fillStyle = '#f6efe2'; g.fillRect(0, 0, w, h); const ph = 64;
     for (let r = 0; r < h / ph; r++){ let x = -((r * 173) % 300); while (x < w){ const L = 200 + ((x * 7 + r * 31) % 120), sh = .93 + ((r * 13 + x) % 17) / 17 * .1;
       g.fillStyle = `rgb(${196 * sh | 0},${132 * sh | 0},${78 * sh | 0})`; g.beginPath(); g.roundRect ? g.roundRect(x + 3, r * ph + 3, L - 6, ph - 6, 10) : g.rect(x + 3, r * ph + 3, L - 6, ph - 6); g.fill();
@@ -113,6 +119,9 @@ const flakeAt = (g, cx, cy, r, col, lw = 2.2) => { g.save(); g.translate(cx, cy)
 const starAt = (g, cx, cy, r, col) => { g.fillStyle = col; g.beginPath(); for (let i = 0; i < 10; i++){ const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r; g.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } g.closePath(); g.fill(); };
 const hollyAt = (g, cx, cy, s) => { g.save(); g.translate(cx, cy); g.scale(s, s); g.fillStyle = '#3d8a55'; for (const a of [-.6, .6]){ g.save(); g.rotate(a); g.beginPath(); g.ellipse(0, -9, 5, 10, 0, 0, 7); g.fill(); g.restore(); } g.fillStyle = '#d8303a'; for (const [x, y] of [[-3, 1], [3, 1], [0, -3]]){ g.beginPath(); g.arc(x, y, 3.4, 0, 7); g.fill(); } g.restore(); };
 function wallTexOf(kind){ return canvasTex(256, 256, (g, w, h) => {
+  if (kind === 'd'){ // 障子：白い和紙に木の桟
+    g.fillStyle = '#fbf6ea'; g.fillRect(0, 0, w, h); for (let i = 0; i < 300; i++){ g.strokeStyle = `rgba(170,140,90,${Math.random() * .1})`; const a = Math.random() * w, b = Math.random() * h; g.beginPath(); g.moveTo(a, b); g.lineTo(a + (Math.random() - .5) * 18, b + (Math.random() - .5) * 18); g.stroke(); }
+    g.fillStyle = '#b8864a'; for (let x = 0; x < w; x += 64) g.fillRect(x, 0, 6, h); for (let y = 0; y < h; y += 85) g.fillRect(0, y, w, 6); g.fillStyle = 'rgba(255,255,255,.25)'; for (let x = 0; x < w; x += 64) g.fillRect(x + 1, 0, 2, h); return; }
   if (kind === 'a'){ g.fillStyle = '#c23b34'; g.fillRect(0, 0, w, h); flakeAt(g, 64, 64, 20, 'rgba(255,248,236,.92)', 3); flakeAt(g, 192, 192, 20, 'rgba(255,248,236,.92)', 3);
     for (const [x, y] of [[192, 64], [64, 192]]){ g.fillStyle = 'rgba(255,248,236,.85)'; g.beginPath(); g.moveTo(x, y + 9); g.bezierCurveTo(x - 14, y - 2, x - 6, y - 14, x, y - 5); g.bezierCurveTo(x + 6, y - 14, x + 14, y - 2, x, y + 9); g.fill(); }
     g.fillStyle = 'rgba(255,248,236,.6)'; for (const [x, y] of [[128, 20], [20, 128], [236, 128], [128, 236], [128, 128], [20, 20], [236, 236], [236, 20], [20, 236]]){ g.beginPath(); g.arc(x, y, 2.6, 0, 7); g.fill(); } return; }
@@ -134,7 +143,7 @@ for (const s of [-1, 1]){ const t = wallTex.clone(); t.needsUpdate = true; t.rep
 const wainMat = std('#efe2c8', { roughness:.7 }), trimMat = std('#7a4b2a', { roughness:.6 }), panelMat = std('#e4d4b4', { roughness:.7 }), railMat = std('#7a4b2a', { roughness:.5 }), baseMat = std('#7a4b2a', { roughness:.6 });
 /* 壁紙ごとの腰板（下の板・パネル・上の縁・巾木）の色 */
 // 腰板があるのは一部の壁紙だけ（null は巾木だけ）
-const WAIN = { a:null, b:null, c:['#8a5a32', '#9a6a3e', '#e0b84e', '#5a3a22'] }, BASE = { a:'#6a3a22', b:'#7a4b2a', c:'#5a3a22' }; const wainParts = [];
+const WAIN = { a:null, b:null, c:['#8a5a32', '#9a6a3e', '#e0b84e', '#5a3a22'], d:['#a8763e', '#b8864a', '#6a3a1e', '#5a3420'] }, BASE = { a:'#6a3a22', b:'#7a4b2a', c:'#5a3a22', d:'#5a3420' }; const wainParts = [];
 function applyWain(kind){ const W = WAIN[kind]; wainParts.forEach(m => m.visible = !!W); baseMat.color.set(W ? W[3] : (BASE[kind] || BASE.a)); if (W){ wainMat.color.set(W[0]); panelMat.color.set(W[1]); railMat.color.set(W[2]); railMat.metalness = .35; railMat.needsUpdate = true; } shadowsDirty = true; }
 function wainscot(len, place){ const g = new THREE.Group(); const w = new THREE.Mesh(new RoundedBoxGeometry(len, 1.05, .08, 2, .02), wainMat); w.position.set(0, .525, .04); w.receiveShadow = true; g.add(w); wainParts.push(w);
   const n = Math.round(len / .76); for (let i = 0; i < n; i++){ const p = new THREE.Mesh(new RoundedBoxGeometry(.62, .62, .03, 2, .02), panelMat); p.position.set(-len / 2 + (i + .5) * len / n, .55, .09); g.add(p); wainParts.push(p); }
@@ -433,7 +442,7 @@ function winTop(kind){ const g = new THREE.Group(); const X0 = -(WW / 2 + .5), X
 
 /* カーテン（3種）：窓グループの中に置く */
 function curtains(kind){ const g = new THREE.Group(); const lace = kind === 'c';
-  const tex = kind === 'a' ? canvasTex(128, 128, (c, w, h) => { c.fillStyle = '#c8352e'; c.fillRect(0, 0, w, h); c.fillStyle = 'rgba(255,255,255,.28)'; for (let i = 0; i < 4; i++){ c.fillRect(i * 32 + 10, 0, 12, h); c.fillRect(0, i * 32 + 10, w, 12); } c.fillStyle = 'rgba(80,10,10,.18)'; for (let i = 0; i < 4; i++) c.fillRect(i * 32, 0, 3, h); }, [2, 4])
+  const tex = kind === 'd' ? canvasTex(128, 64, (c, w, h) => { for (let i = 0; i < 4; i++){ c.fillStyle = i % 2 ? '#fbf6ea' : '#d8303a'; c.fillRect(i * 32, 0, 32, h); } }, [2, 1]) : kind === 'a' ? canvasTex(128, 128, (c, w, h) => { c.fillStyle = '#c8352e'; c.fillRect(0, 0, w, h); c.fillStyle = 'rgba(255,255,255,.28)'; for (let i = 0; i < 4; i++){ c.fillRect(i * 32 + 10, 0, 12, h); c.fillRect(0, i * 32 + 10, w, 12); } c.fillStyle = 'rgba(80,10,10,.18)'; for (let i = 0; i < 4; i++) c.fillRect(i * 32, 0, 3, h); }, [2, 4])
     : kind === 'b' ? canvasTex(64, 64, (c, w, h) => { c.fillStyle = '#2a5a3e'; c.fillRect(0, 0, w, h); for (let i = 0; i < 300; i++){ c.fillStyle = `rgba(255,255,255,${Math.random() * .05})`; c.fillRect(Math.random() * w, Math.random() * h, 2, 2); } }, [1, 1])
     : canvasTex(128, 128, (c, w, h) => { c.fillStyle = 'rgba(255,255,255,.55)'; c.fillRect(0, 0, w, h); c.strokeStyle = 'rgba(255,255,255,1)'; c.lineWidth = 3; for (let x = 16; x < w; x += 32) for (let y = 16; y < h; y += 32){ c.beginPath(); c.arc(x, y, 10, 0, 7); c.stroke(); for (let k = 0; k < 6; k++){ const a = k / 6 * 7; c.beginPath(); c.arc(x + Math.cos(a) * 14, y + Math.sin(a) * 14, 3, 0, 7); c.stroke(); } } }, [2, 5]);
   for (const s of [-1, 1]){ const geo = new THREE.PlaneGeometry(.5, WH + .75, 28, 1), p = geo.attributes.position; for (let i = 0; i < p.count; i++) p.setZ(i, Math.sin(p.getX(i) * (kind === 'b' ? 20 : 26)) * (kind === 'b' ? .06 : .045)); geo.computeVertexNormals();
@@ -567,12 +576,51 @@ function swatch(kind, isWall){ const g = new THREE.Group(); const t = isWall ? w
   if (isWall && WAIN[kind]){ const [w, p, r, b] = WAIN[kind]; const add = (W, H, D, c, y, z) => { const x = new THREE.Mesh(new RoundedBoxGeometry(W, H, D, 2, .01), std(c, { roughness:.6 })); x.position.set(0, y, z); g.add(x); return x; };
     add(1.2, .42, .04, w, .21, .04); for (const x of [-.4, 0, .4]){ const pn = add(.3, .26, .02, p, .22, .07); pn.position.x = x; } add(1.22, .04, .08, r, .43, .06); add(1.22, .06, .07, b, .03, .06); }
   return g; }
+
+/* ===== 年末年始の家具（12/26〜1/7に毎日とどく） ===== */
+const washi = (c = '#fbf6ea') => canvasTex(128, 128, (x, w, h) => { x.fillStyle = c; x.fillRect(0, 0, w, h); for (let i = 0; i < 260; i++){ x.strokeStyle = `rgba(150,120,80,${Math.random() * .12})`; x.lineWidth = 1; const a = Math.random() * w, b = Math.random() * h; x.beginPath(); x.moveTo(a, b); x.lineTo(a + (Math.random() - .5) * 20, b + (Math.random() - .5) * 20); x.stroke(); } }, [1, 1]);
+function nyShimekazari(){ const g = new THREE.Group(); const straw = M('#d8b468', { roughness:.95 });
+  const ring = new THREE.TorusGeometry(.26, .06, 10, 40); addM(g, ring, straw, 0, .5, .03); for (let i = 0; i < 12; i++){ const a = i / 12 * Math.PI * 2; addM(g, new THREE.TorusGeometry(.06, .02, 6, 12), M('#c8a050', { roughness:.95 }), Math.cos(a) * .26, .5 + Math.sin(a) * .26, .05, 0, 0, a); }
+  for (const s of [-1, 1]) for (let k = 0; k < 4; k++) addM(g, RB(.06, .07, .01, .005), M('#ffffff', { roughness:.7 }), s * (.08 + (k % 2) * .03), .2 - k * .07, .08, 0, 0, s * .2);
+  for (let i = 0; i < 9; i++) addM(g, new THREE.CylinderGeometry(.008, .004, .3, 4), straw, -.12 + i * .03, .08, .04);
+  const o = makeDeco('e_mikan', .15); o.position.set(0, .36, .1); g.add(o); const f = makeDeco('e_sensu0', .22); f.position.set(0, .62, .07); g.add(f); const mz = makeDeco('e_mizuhiki', .16); mz.position.set(0, .26, .1); g.add(mz); return g; }
+function nyKakejiku(){ const g = new THREE.Group(); const art = canvasTex(192, 448, (x, w, h) => { x.fillStyle = '#f6ecd6'; x.fillRect(0, 0, w, h); const sky = x.createLinearGradient(0, 40, 0, 300); sky.addColorStop(0, '#f8c8a0'); sky.addColorStop(1, '#fbecd6'); x.fillStyle = sky; x.fillRect(20, 40, w - 40, 260);
+    x.fillStyle = '#e8402e'; x.beginPath(); x.arc(w / 2, 120, 34, 0, 7); x.fill(); x.fillStyle = '#3a5a9a'; x.beginPath(); x.moveTo(20, 300); x.lineTo(w / 2, 170); x.lineTo(w - 20, 300); x.fill(); x.fillStyle = '#ffffff'; x.beginPath(); x.moveTo(w / 2 - 34, 210); x.lineTo(w / 2, 170); x.lineTo(w / 2 + 34, 210); for (let i = 0; i < 5; i++) x.lineTo(w / 2 + 34 - i * 17, 210 + (i % 2 ? 10 : 0)); x.fill();
+    x.fillStyle = '#231c1c'; x.font = 'bold 54px serif'; x.textAlign = 'center'; x.fillText('福', w / 2, 370); x.fillStyle = '#d8303a'; x.fillRect(w / 2 + 30, 392, 18, 18); });
+  addM(g, RB(.46, 1.2, .015, .005), M('#3a4a6a', { roughness:.7 }), 0, .7, 0); addM(g, new THREE.PlaneGeometry(.38, .9), M('#ffffff', { map:art, roughness:.8 }), 0, .72, .01);
+  for (const y of [1.31, .1]) addM(g, new THREE.CylinderGeometry(.022, .022, .54, 12), M('#6a3a1e', { roughness:.4 }), 0, y, .01, 0, 0, Math.PI / 2); for (const s of [-1, 1]) addM(g, new THREE.SphereGeometry(.03, 10, 8), M('#e7b84a', { metalness:.6, roughness:.3 }), s * .28, .1, .01);
+  addM(g, new THREE.CylinderGeometry(.004, .004, .25, 4), M('#6a3a1e'), -.1, 1.42, .005, 0, 0, -.7); addM(g, new THREE.CylinderGeometry(.004, .004, .25, 4), M('#6a3a1e'), .1, 1.42, .005, 0, 0, .7); return g; }
+function nyKotatsu(){ const g = new THREE.Group(); const quilt = canvasTex(256, 256, (x, w, h) => { x.fillStyle = '#c8352e'; x.fillRect(0, 0, w, h); x.fillStyle = '#e8a040'; for (let i = 0; i < 6; i++) for (let j = 0; j < 6; j++){ const cx = 22 + i * 44, cy = 22 + j * 44; for (let k = 0; k < 5; k++){ const a = k / 5 * 7; x.beginPath(); x.arc(cx + Math.cos(a) * 8, cy + Math.sin(a) * 8, 6, 0, 7); x.fill(); } } x.fillStyle = 'rgba(255,255,255,.12)'; for (let i = 0; i < w; i += 32) x.fillRect(i, 0, 3, h); }, [2, 2]);
+  const geo = new THREE.BoxGeometry(1.5, .4, 1.2, 12, 4, 10), p = geo.attributes.position; for (let i = 0; i < p.count; i++){ const y = p.getY(i); if (y < .1){ const k = 1 + (.1 - y) * .35; p.setX(i, p.getX(i) * k); p.setZ(i, p.getZ(i) * k); } p.setY(i, y + Math.sin(p.getX(i) * 9) * .01); } geo.computeVertexNormals();
+  addM(g, geo, M('#ffffff', { map:quilt, roughness:.95 }), 0, .2, 0); addM(g, RB(1.25, .06, .95, .03), M('#9a6438', { roughness:.4 }), 0, .43, 0);
+  const basket = new THREE.Group(); basket.position.set(.15, .46, .05); g.add(basket); addM(basket, new THREE.CylinderGeometry(.2, .15, .08, 24, 1, true), M('#b8864a', { roughness:.8, side:THREE.DoubleSide }), 0, .04); addM(basket, new THREE.CylinderGeometry(.15, .15, .01, 24), M('#a8763a'), 0, .005);
+  for (const [x, z, y] of [[-.07, -.04, .07], [.07, -.02, .07], [0, .07, .07], [0, 0, .15]]){ const m = makeDeco('e_mikan', .11); m.position.set(x, y - .05, z); basket.add(m); }
+  const tea = new THREE.Group(); tea.position.set(-.35, .46, -.1); g.add(tea); addM(tea, new THREE.CylinderGeometry(.05, .045, .09, 16), M('#3f6a4a', { roughness:.4 }), 0, .045); return g; }
+function nyZabuton(){ const g = new THREE.Group(); const t = (bg, fg) => canvasTex(128, 128, (x, w, h) => { x.fillStyle = bg; x.fillRect(0, 0, w, h); x.strokeStyle = fg; x.lineWidth = 3; for (let i = 0; i < 6; i++){ x.beginPath(); x.arc(64, 64, 10 + i * 10, 0, 7); x.stroke(); } }, [1, 1]);
+  for (const [x, z, ry, bg] of [[-.45, 0, .1, '#3a4a8a'], [.45, .05, -.15, '#c8352e']]){ const c = addM(g, RB(.62, .1, .62, .05), M('#ffffff', { map:t(bg, 'rgba(255,255,255,.35)'), roughness:.9 }), x, .05, z, 0, ry); for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) addM(g, new THREE.SphereGeometry(.03, 8, 6), M('#e7b84a', { roughness:.5 }), x + sx * .3 * Math.cos(ry) + sz * .3 * Math.sin(ry), .07, z - sx * .3 * Math.sin(ry) + sz * .3 * Math.cos(ry)); addM(g, new THREE.SphereGeometry(.035, 8, 6), M('#e7b84a'), x, .105, z); }
+  blobIn(g, 0, 0, 1.8, .9, .3); return g; }
+function nyAndon(){ const g = new THREE.Group(); const wd = M('#4a2a1a', { roughness:.5 }); const pm = new THREE.MeshStandardMaterial({ color:'#fff4dc', map:washi('#fff4dc'), emissive:'#ffc070', emissiveIntensity:.85, roughness:.9 });
+  addM(g, RB(.36, .04, .36, .01), wd, 0, .02); for (const [x, z] of [[-.16, -.16], [.16, -.16], [-.16, .16], [.16, .16]]) addM(g, RB(.03, .9, .03, .01), wd, x, .47, z); addM(g, RB(.3, .66, .3, .005), pm, 0, .52); for (const y of [.18, .86]) addM(g, RB(.36, .03, .36, .01), wd, 0, y);
+  addM(g, RB(.03, .03, .3, .005), wd, 0, .52, .155); glowIn(g, '#ffb860', 1.1, .55, 0, .52, .2); g.userData.lamp = { y:.55, c:'#ffc070' }; return g; }
+function nyKadomatsu(){ const g = new THREE.Group(); for (const s of [-1, 1]){ const k = makeDeco('e_kado', 1.15); k.position.set(s * .42, 0, 0); g.add(k); } blobIn(g, 0, 0, 1.6, .7, .3); return g; }
+function nySillKagami(){ const g = new THREE.Group(); const k = makeDeco('e_kagami', .34); k.position.set(-.38, 0, .22); g.add(k); const u = makeDeco('e_ume0', .14); u.position.set(.32, .04, .22); g.add(u); const u2 = makeDeco('e_ume1', .11); u2.position.set(.45, 0, .26); g.add(u2); return g; }
+function nyToys(){ const g = new THREE.Group(); const h = makeDeco('e_hg0', .62); h.position.set(-.2, 0, -.05); h.rotation.set(-.25, .2, .1); g.add(h); const h2 = makeDeco('e_hg1', .55); h2.position.set(.05, 0, -.1); h2.rotation.set(-.25, -.15, -.12); g.add(h2);
+  for (const [x, z] of [[.3, .15], [.45, -.05]]){ const k = makeDeco('e_koma', .18); k.position.set(x, 0, z); g.add(k); } const tk = makeDeco('e_tako', .4); tk.position.set(-.45, 0, .2); tk.rotation.set(-1.45, 0, .3); g.add(tk); blobIn(g, 0, 0, 1.4, .9, .35); return g; }
+function nySunrise(){ const g = new THREE.Group(); const f = makeDeco('e_fuji', .9); f.position.set(0, 0, -.2); g.add(f); addM(g, new THREE.SphereGeometry(.22, 32, 20), new THREE.MeshStandardMaterial({ color:'#ff6a3a', emissive:'#ff5a2a', emissiveIntensity:1.4 }), .35, .9, -.5); glowIn(g, '#ff9a5a', 1.4, .7, .35, .9, -.45); return g; }
+function nyRug(){ const g = new THREE.Group(); const tex = canvasTex(512, 384, (x, w, h) => { x.fillStyle = '#2f4a7a'; x.fillRect(0, 0, w, h); x.strokeStyle = '#f3ead9'; x.lineWidth = 3; for (let r = 0; r < 10; r++) for (let q = -1; q < 12; q++){ const cx = q * 48 + (r % 2) * 24, cy = r * 40; for (let k = 1; k <= 3; k++){ x.beginPath(); x.arc(cx, cy, k * 8, Math.PI, 0); x.stroke(); } }
+    x.strokeStyle = '#c8352e'; x.lineWidth = 18; x.strokeRect(9, 9, w - 18, h - 18); x.strokeStyle = '#e7b84a'; x.lineWidth = 4; x.strokeRect(22, 22, w - 44, h - 44); });
+  const geo = new THREE.BoxGeometry(2.2, .03, 1.6); const m = addM(g, geo, [M('#c8352e'), M('#c8352e'), M('#ffffff', { map:tex, roughness:.9 }), M('#c8352e'), M('#c8352e'), M('#c8352e')], 0, .015, 0); m.castShadow = false; return g; }
+function nyMousen(){ const g = new THREE.Group(); addM(g, new THREE.CylinderGeometry(1.1, 1.12, .03, 64), M('#c8302c', { roughness:.95 }), 0, .015); addM(g, new THREE.TorusGeometry(1.11, .025, 8, 72), M('#e7b84a', { roughness:.4, metalness:.4 }), 0, .03, 0, Math.PI / 2); return g; }
+function nyNanakusa(){ const g = new THREE.Group(); addM(g, new THREE.CylinderGeometry(.42, .32, .18, 28, 1, true), M('#b8864a', { roughness:.85, side:THREE.DoubleSide }), 0, .09); addM(g, new THREE.CylinderGeometry(.32, .32, .02, 28), M('#a8763a'), 0, .01);
+  const greens = ['#5aac4a', '#7cc05a', '#3f8a3a', '#9ad06a']; for (let i = 0; i < 26; i++){ const a = i * 2.4, r = Math.sqrt(i / 26) * .3; addM(g, new THREE.SphereGeometry(.07, 10, 8), M(greens[i % 4], { roughness:.7 }), Math.cos(a) * r, .17 + (i % 3) * .02, Math.sin(a) * r, 0, a, 0, 1.4, .5, .8); }
+  for (const [x, z] of [[.12, .05], [-.1, -.08]]) addM(g, new THREE.SphereGeometry(.06, 12, 10), M('#fbf6ea', { roughness:.5 }), x, .2, z); blobIn(g, 0, 0, 1.1, 1.1, .3); return g; }
+
 const BUILD = {
-  wallpaper:k => swatch('abc'[k], true), flooring:k => swatch('abc'[k], false),
+  wallpaper:k => swatch('abcd'[k], true), flooring:k => swatch('abcd'[k], false),
   topper:k => treeTopper('abc'[k]), treelights:k => treeLights('abc'[k]), garland:k => treeGarland('abc'[k]),
-  fireplace:k => fireplace(['stone', 'brick', 'white'][k]), stockings:k => stockings(['felt', 'knit', 'plaid'][k]), mantel:k => mantelTop('abc'[k]), wall:k => wallDeco('abc'[k]),
-  curtain:k => curtains('abc'[k]), wintop:k => winTop('abc'[k]), sill:k => sillDeco('abc'[k]), outside:k => outsideDeco('abc'[k]), table:k => tableSpot('abc'[k]), toys:k => toys('abc'[k]),
-  rug:k => rugItem('abc'[k]), treebase:k => treeBase('abc'[k]), shelf:k => shelfSpot('abc'[k]), sofa:k => sofaSpot('abc'[k]), lamp:k => lampSpot('abc'[k]), special:() => sparkle(),
+  fireplace:k => fireplace(['stone', 'brick', 'white'][k]), stockings:k => stockings(['felt', 'knit', 'plaid'][k]), mantel:k => mantelTop('abc'[k]), wall:k => k === 3 ? nyShimekazari() : k === 4 ? nyKakejiku() : wallDeco('abc'[k]),
+  curtain:k => curtains('abcd'[k]), wintop:k => winTop('abc'[k]), sill:k => k === 3 ? nySillKagami() : sillDeco('abc'[k]), outside:k => k === 3 ? nySunrise() : outsideDeco('abc'[k]), table:k => k === 3 ? nyKotatsu() : tableSpot('abc'[k]), toys:k => k === 3 ? nyToys() : toys('abc'[k]),
+  rug:k => k === 3 ? nyRug() : rugItem('abc'[k]), treebase:k => k === 3 ? nyMousen() : treeBase('abc'[k]), shelf:k => shelfSpot('abc'[k]), sofa:k => k === 3 ? nyZabuton() : sofaSpot('abc'[k]), lamp:k => k === 3 ? nyAndon() : k === 4 ? nyKadomatsu() : lampSpot('abc'[k]), special:k => k === 1 ? nyNanakusa() : sparkle(),
 };
 function buildFurn(key){ const it = FURN_BY[key]; if (!it) return null; const g = BUILD[it.slot](it.k); g.userData.key = key; return g; }
 // 置き場所：[x, y, z, 向き]
