@@ -116,6 +116,13 @@ body.xfullmode main{padding-bottom:0}
 .xfull-top{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 10px)}
 body.xfullmode header{display:none}
 .xdate{font-weight:800;color:var(--navy)}
+.odesc{margin:6px 8px 8px;font-size:14px;line-height:1.7;color:#5a4a3a;text-align:center}
+body.roomedit .qbar,body.roomedit .xfull-top,body.roomedit #appbar{display:none!important}
+#editbar{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:20;padding:12px;border-radius:24px;background:var(--cream);box-shadow:var(--sh-lift)}
+#editbar .ebmsg{text-align:center;font-weight:800;font-size:13px;color:var(--navy);margin-bottom:10px}
+#editbar .ebbtn{display:flex;gap:8px}#editbar button{flex:1;padding:12px 0;border-radius:16px;background:#f6eedc;font-weight:900;color:var(--navy);box-shadow:0 2px 0 #e2d2ae}#editbar button:disabled{opacity:.4}#editbar button.go{background:var(--amber);color:#fff;box-shadow:0 2px 0 #c8862a}
+.myt .myc{position:absolute;top:4px;right:6px;min-width:18px;height:18px;border-radius:9px;background:#e8a83a;color:#fff;font-size:11px;line-height:18px;font-weight:900}
+.myt .myadd{font-size:10px;color:#c8862a;font-weight:900}.myt{position:relative}
 #grppop{position:fixed;z-index:30;padding:12px 12px 10px;border-radius:22px;background:var(--cream);box-shadow:0 10px 30px rgba(60,40,10,.25);opacity:0;transform:translateY(10px) scale(.94);transform-origin:var(--tail,50%) 100%;pointer-events:none;transition:opacity .16s,transform .22s cubic-bezier(.3,1.5,.5,1)}
 #grppop.open{opacity:1;transform:none;pointer-events:auto}
 #grppop::after{content:'';position:absolute;left:var(--tail,50%);bottom:-8px;width:18px;height:18px;background:var(--cream);transform:rotate(45deg);border-radius:3px}
@@ -150,6 +157,7 @@ body.dragmode{user-select:none;-webkit-user-select:none}
 .qbar,.qbar *, #grppop, #grppop *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .qbar,.qbar *,#grppop,#grppop *,#menupop *,#appbar *{-webkit-tap-highlight-color:transparent}
 .qb.dragging{box-shadow:none!important;opacity:1}.qb.dragging .qi{box-shadow:0 12px 22px rgba(80,50,10,.3)}
+#grppop .gwho{display:flex;gap:6px;padding:0 2px 8px}#grppop .gwho button{flex:1;padding:6px 0;border-radius:999px;background:#f6eedc;font-size:12px;font-weight:800;color:#8a7a5a}#grppop .gwho button.on{background:var(--navy);color:#fff}#grppop .gwho button.on.w-y{background:var(--y)}#grppop .gwho button.on.w-h{background:var(--h)}#grppop .gwho button.on.w-both{background:#e8a83a}
 #grppop .gempty{padding:10px;text-align:center;font-size:12px;color:#a8946a}
 #grppop .gadd{width:100%;margin-top:8px;padding:9px;border-radius:14px;border:2px dashed #e2d2ae;color:#a8864a;font-weight:800;font-size:13px}
 .ipick{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.ipick button{aspect-ratio:1;border-radius:14px;background:#fff;box-shadow:inset 0 0 0 1.5px #ece2cc;display:flex;align-items:center;justify-content:center}.ipick button svg{width:80%;height:80%}.ipick button.on{box-shadow:inset 0 0 0 3px #e8a83a;background:#fff4dc}
@@ -859,8 +867,8 @@ function qbarHTML(){
     + `<button class="qb qadd" data-act="gedit" data-g=""><span class="qi">${QI.plus}</span><span class="ql">グループ</span></button></div>`;
 }
 /* グループの吹き出し */
-let grpEdit = false;
-function grpOpen(gid, btn, edit){ const g = S.items[gid]; if (!g) return; grpEdit = !!edit; let m = $('grppop'); if (!m){ m = document.createElement('div'); m.id = 'grppop'; document.body.appendChild(m); }
+let grpEdit = false, grpWho = null;
+function grpOpen(gid, btn, edit, keepWho){ const g = S.items[gid]; if (!g) return; grpEdit = !!edit; if (!keepWho) grpWho = S.me; let m = $('grppop'); if (!m){ m = document.createElement('div'); m.id = 'grppop'; document.body.appendChild(m); }
   btn = btn || document.querySelector(`[data-act=qgrp][data-g="${gid}"]`); if (!btn) return;
   const logs = logsOn(dayKey(Date.now())), cs = choresIn(gid), E = grpEdit;
   const cnt = c => logs.filter(l => l.choreId === c.id).length, rowsM = new Map();
@@ -874,7 +882,7 @@ function grpOpen(gid, btn, edit){ const g = S.items[gid]; if (!g) return; grpEdi
   m.classList.toggle('editing', E);
   m.innerHTML = E
     ? `<div class="gh"><span>${esc(g.name)}<small>　へんしゅう中</small></span><button class="gdone" data-act="gedmode" data-g="${gid}" data-v="0">おわる</button></div><div class="ghint">✎を押すと直せるよ。長押しして動かすと並べかえ</div><div class="gl">${rows}</div><button class="gadd" data-act="rownew" data-g="${gid}">＋ 新しい行を足す</button><button class="gadd sub" data-act="gedit" data-g="${gid}">グループの名前・アイコンを変える</button>`
-    : `<div class="gh"><span>${esc(g.name)}</span><button class="ged" data-act="gedmode" data-g="${gid}" data-v="1">✎ へんしゅう</button></div><div class="gl">${rows}${free}${!rows && !free ? '<div class="gempty">まだ家事がないよ</div>' : ''}</div>${!rows ? `<button class="gadd" data-act="rownew" data-g="${gid}">＋ 家事を足す</button>` : ''}`;
+    : `<div class="gh"><span>${esc(g.name)}</span><button class="ged" data-act="gedmode" data-g="${gid}" data-v="1">✎ へんしゅう</button></div><div class="gwho">${[[S.me, nm(S.me)], [other(S.me), nm(other(S.me))], ['both', 'ふたりで']].map(([v, l]) => `<button class="${grpWho === v ? 'on' : ''} w-${v}" data-act="gwho" data-v="${v}">${esc(l)}</button>`).join('')}</div><div class="gl">${rows}${free}${!rows && !free ? '<div class="gempty">まだ家事がないよ</div>' : ''}</div>${!rows ? `<button class="gadd" data-act="rownew" data-g="${gid}">＋ 家事を足す</button>` : ''}`;
   const r = btn.getBoundingClientRect(), W = Math.min(320, innerWidth - 20), cx = r.left + r.width / 2, L = Math.min(Math.max(10, cx - W / 2), innerWidth - W - 10);
   m.style.width = W + 'px'; m.style.left = L + 'px'; m.style.bottom = (innerHeight - r.top + 12) + 'px'; m.style.setProperty('--tail', (cx - L - 9) + 'px'); m.dataset.g = gid; requestAnimationFrame(() => m.classList.add('open')); }
 /* かんたん追加：行にボタンを足す／新しい行を足す */
@@ -971,12 +979,12 @@ const cls = l => l.both ? 'both' : l.by;
 const bg = l => l.both ? 'linear-gradient(90deg,var(--h) 50%,var(--y) 50%)' : `var(--${l.by})`;
 const whoText = l => l.both ? 'ふたりで' : nm(l.by);
 const involves = (l,k) => l.by === k || !!l.both;
-function doChore(c, both){
+function doChore(c, both, who){
   if (!S.me) return;
-  const lg = { id:uid(), kind:'log', choreId:c.id, name:c.name, by:S.me, both:!!both, at:Date.now(), thanks:false, ...ornSlot() };
+  const lg = { id:uid(), kind:'log', choreId:c.id, name:c.name, by:who || S.me, rec:S.me, both:!!both, at:Date.now(), thanks:false, ...ornSlot() };
   const isNew = isNewFind(lg);
   popId = lg.id; chime('do'); put(lg); setTimeout(() => { popId = null; }, 600);
-  if (isNew) newFlower(lg); else toast(both ? `「${c.name}」ふたりでやった！` : `「${c.name}」やった！`);
+  if (isNew) newFlower(lg); else toast(both ? `「${c.name}」ふたりでやった！` : who && who !== S.me ? `「${c.name}」${nm(who)}の分を記録したよ` : `「${c.name}」やった！`);
 }
 let freeBoth = false;
 function doFree(name){
@@ -4475,10 +4483,10 @@ function render(){
   $('mechip').innerHTML = me ? `<span class="dot ${me}"></span>${esc(nm(me))}` : '未設定';
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
   $('fab').style.display = 'none'; renderQbar(); document.body.classList.toggle('onebar', !!me); renderAppbar(); document.body.classList.toggle('xfullmode', !!(me && tab === 'today' && xmasOn(0))); syncRoom(); setTimeout(fillThumbs, 0); if (tab === 'week') setTimeout(fillWeekTree, 0); if (tab === 'zukan' && zMode === 'furn') setTimeout(() => ensureRoom().then(fillFurn), 0);
-  if (LISTOPEN && tab === 'today') $('sheet').innerHTML = `<button class="x" data-act="close" aria-label="閉じる">✕</button><div class="listsheet">${LIST_HTML}</div>`;
   const v = $('view');
   if (!me) { v.innerHTML = viewOnboard(); return; }
   v.innerHTML = { today:viewToday, week:viewWeek, review:viewReview, settings:viewSettings, zukan:viewZukan }[tab]();
+  if (LISTOPEN && tab === 'today'){ const sh = $('sheet'), st = sh.scrollTop; sh.innerHTML = `<button class="x" data-act="close" aria-label="閉じる">✕</button><div class="listsheet">${LIST_HTML}</div>`; sh.scrollTop = st; }
   const rb = document.querySelector('#tabs button[data-t=review]'); rb.querySelector('.badge-n')?.remove();
   const on = all('note').filter(n => n.status !== 'done').length;
   if (on) rb.insertAdjacentHTML('beforeend', `<span class="badge-n">${on}</span>`);
@@ -4527,10 +4535,11 @@ function choreCard(c, todays){
 let SLOTX = {}; const TODO_MODE = false;
 function recordList(logs){
   const L = logs.slice().sort((a, b) => b.at - a.at);
-  if (!L.length) return `<div class="empty">まだ記録はないよ。<br>やった家事は、下のマークをタップするだけで残せるよ。</div>`;
+  if (!L.length) return `<div class="empty">まだ記録はないよ</div>`;
   return `<h2>今日の記録</h2><div class="panel reclist">` + L.map(l => { const c = l.choreId && S.items[l.choreId], ic = QI[c ? choreIcon(c) : choreIcon({ name:l.name })];
     let act = '';
-    if (l.by !== S.me){ act = `<button class="thanks ${l.thanks ? 'on' : ''}" data-act="thanks" data-id="${l.id}">${l.thanks ? '♥' : '♡'}</button>`; if (!l.both) act = `<button class="join" data-act="join" data-id="${l.id}">＋一緒に</button>` + act; }
+    if (l.by !== S.me && l.rec === S.me) act = `<button class="btn small ghost" data-act="undo" data-id="${l.id}">取消</button>`;
+    else if (l.by !== S.me){ act = `<button class="thanks ${l.thanks ? 'on' : ''}" data-act="thanks" data-id="${l.id}">${l.thanks ? '♥' : '♡'}</button>`; if (!l.both) act = `<button class="join" data-act="join" data-id="${l.id}">＋一緒に</button>` + act; }
     else act = l.thanks ? '<span class="thanks on">♥</span>' : `<button class="btn small ghost" data-act="undo" data-id="${l.id}">取消</button>`;
     return `<div class="recrow"><span class="t">${hm(l.at)}</span><span class="ric">${ic}</span><span class="n">${esc(l.name)}<small><span class="dot ${cls(l)}"></span>${esc(whoText(l))}</small></span>${act}</div>`; }).join('') + `</div>`;
 }
@@ -4558,7 +4567,7 @@ function viewToday(){
   const extra = TODO_MODE ? logs.filter(l => !l.choreId || !dueIds.has(l.choreId)) : [];
   if (extra.length){
     html += `<h2>ほかにやったこと</h2><div class="panel">` + extra.map(l => `<div class="minirow"><span class="t">${hm(l.at)}</span><span class="dot ${cls(l)}"></span><span class="n">${esc(l.name)}</span>
-      ${l.by!==S.me?`<button class="thanks ${l.thanks?'on':''}" data-act="thanks" data-id="${l.id}">${l.thanks?'♥':'♡'}</button>`:(l.thanks?'<span class="thanks on">♥</span>':`<button class="btn small ghost" data-act="undo" data-id="${l.id}">取消</button>`)}</div>`).join('') + `</div>`;
+      ${l.by!==S.me?`<button class="thanks ${l.thanks?'on':''}" data-act="thanks" data-id="${l.id}">${l.thanks?'♥':'♡'}</button>`:''}${(l.by===S.me||l.rec===S.me)&&!l.thanks?`<button class="btn small ghost" data-act="undo" data-id="${l.id}">取消</button>`:(l.by===S.me&&l.thanks?'<span class="thanks on">♥</span>':'')}</div>`).join('') + `</div>`;
   }
   if (!XM) return html;
   // ツリーを画面いっぱいに。リストは下から引き出すシートへ
@@ -4600,20 +4609,33 @@ function advOpen(i){ if (!advCan(i) || advOpened().has(i)) return; rmod().then(m
   const cell = document.querySelector(`.ad.can[data-i="${i}"]`); if (cell){ cell.classList.remove('can'); cell.classList.add('opening'); }
   chime('bell');
   setTimeout(() => { const st = settings(), adv = [...new Set([...(st.adv || []), i])].sort((a, b) => a - b), room = { ...(st.room || {}) };
-    keys.forEach(k => { room[m.FURN_BY[k].slot] = k; }); put({ ...st, adv, room });
+    let layout = st.layout ? st.layout.slice() : (ROOM ? ROOM.layoutOf() : null);
+    keys.forEach(k => { const slot = m.FURN_BY[k].slot; if (layout && (m.FLOOR_SLOTS.includes(slot) || m.WALL_SLOTS.includes(slot))){ const j = layout.findIndex(r => r.key && r.key.startsWith(slot + '_')); if (j >= 0) layout[j] = { ...layout[j], key:k }; else { const r = ROOM.autoPlace(k); if (r) layout.push(r); } } else room[slot] = k; });
+    put({ ...st, adv, room, ...(layout ? { layout } : {}) });
     const HOLLY = `<svg viewBox="0 0 46 46" class="holly HL"><path d="M6 20 C 10 12 16 14 18 6 C 20 12 26 12 24 20 C 30 18 32 24 26 28 C 18 30 12 28 6 20Z" fill="#3d8a55"/><path d="M14 30 C 16 36 22 34 24 40 C 26 34 32 34 30 28 C 36 26 34 20 28 22" fill="#2f7346"/><circle cx="22" cy="24" r="3.6" fill="#d8303a"/><circle cx="27" cy="26" r="3.2" fill="#e0473b"/><circle cx="24" cy="29" r="3" fill="#c8252e"/></svg>`;
     const snow = Array.from({ length:16 }, (_, k) => `<span class="sn" style="left:${(k * 37) % 100}%;--dx:${(k % 5 - 2) * 12}px;animation-duration:${5 + (k % 4)}s;animation-delay:-${(k * 0.7) % 5}s;font-size:${8 + (k % 3) * 3}px">❄</span>`).join('');
     openSheet(`<div class="aopen">${snow}${HOLLY.replace('HL', 'l')}${HOLLY.replace('HL', 'r')}<span class="tag">${md(advDay(i))} のプレゼント</span><div class="stage"><div class="item ${keys.length > 1 ? 'two' : ''}">${keys.map(fimg).join('')}</div><div class="gbox"><i></i><b></b></div></div><div class="nm">${keys.map(k => m.FURN_BY[k].name).join('と')}</div><div class="msg">おへやに飾ったよ</div><button class="btn go" style="margin-top:14px;padding:10px 24px" data-act="advent">ボックスにもどる</button></div>`);
     fillFurn(); setTimeout(() => chime('thanks'), 800); }, cell ? 750 : 0); }); }
 function unlockedFurn(m){ const o = advOpened(), u = new Map(); m.ADVENT.forEach((keys, i) => keys.forEach(k => u.set(k, i))); return { has:k => (m.TREE_PARTS.includes(m.FURN_BY[k].slot) && k.endsWith('_a')) || o.has(u.get(k)), day:k => advDay(u.get(k)) }; }
 function moyouSheet(){ rmod().then(m => { const U = unlockedFurn(m), room = settings().room || {};
-  const secs = m.FURN_SLOTS.map(([slot, label]) => { const items = m.FURN_ITEMS.filter(it => it.slot === slot), tp = m.TREE_PARTS.includes(slot), cur = tp ? (room[slot] === undefined ? slot + '_a' : room[slot] === 'none' ? '' : room[slot]) : (room[slot] || '');
+  const layout = settings().layout || (ROOM ? ROOM.layoutOf() : []), cntK = k => layout.filter(r => r.key === k).length;
+  const secs = m.FURN_SLOTS.map(([slot, label]) => { const items = m.FURN_ITEMS.filter(it => it.slot === slot);
+    if (m.FLOOR_SLOTS.includes(slot) || m.WALL_SLOTS.includes(slot)){
+      const tiles = items.map(it => U.has(it.key) ? `<button class="myt ${cntK(it.key) ? 'on' : ''}" data-act="furnadd" data-key="${it.key}">${fimg(it.key)}${esc(it.name)}${cntK(it.key) ? `<span class="myc">${cntK(it.key)}</span>` : ''}<span class="myadd">＋ おく</span></button>` : `<div class="myt lock"><span class="lk">🔒</span>${md(U.day(it.key))}</div>`);
+      return `<div class="mysec"><h3>${label}</h3><div class="myrow">${tiles.join('')}</div></div>`; }
+    const tp = m.TREE_PARTS.includes(slot), cur = tp ? (room[slot] === undefined ? slot + '_a' : room[slot] === 'none' ? '' : room[slot]) : (room[slot] || '');
     const needFp = (slot === 'stockings' || slot === 'mantel') && !room.fireplace;
     const tiles = (slot === 'wallpaper' || slot === 'flooring' ? [] : [`<button class="myt ${!cur ? 'on' : ''}" data-act="furn" data-slot="${slot}" data-key=""><span class="lk">—</span>なし</button>`]).concat(items.map(it => U.has(it.key)
       ? `<button class="myt ${cur === it.key ? 'on' : ''}" data-act="furn" data-slot="${slot}" data-key="${it.key}">${fimg(it.key)}${esc(it.name)}</button>`
       : `<div class="myt lock"><span class="lk">🔒</span>${md(U.day(it.key))}</div>`));
     return `<div class="mysec"><h3>${label}${needFp ? '<small style="font-weight:400;color:#a8946a">　暖炉があると飾れるよ</small>' : ''}</h3><div class="myrow">${tiles.join('')}</div></div>`; }).join('');
-  openSheet(`<div class="advhd"><b>もようがえ</b></div>${secs}`); setTimeout(fillFurn, 30); }); }
+  openSheet(`<div class="advhd"><b>もようがえ</b></div><button class="btn go wide" style="margin:0 0 14px;padding:13px" data-act="roomedit">家具を動かす・しまう</button>${secs}`); setTimeout(fillFurn, 30); }); }
+/* 家具を動かすモード */
+let roomEditing = false, roomSel = null;
+function roomEdit(on, selId){ if (!ROOM) return; roomEditing = !!on; document.body.classList.toggle('roomedit', roomEditing); ROOM.setEdit(roomEditing); roomSel = null; renderEditbar(); if (!roomEditing) render(); }
+function renderEditbar(){ let b = $('editbar'); if (!b){ b = document.createElement('div'); b.id = 'editbar'; document.body.appendChild(b); } if (!roomEditing){ b.style.display = 'none'; return; } b.style.display = '';
+  const s2 = roomSel, canRot = s2 && !s2.wall && s2.key !== 'tree', canRm = s2 && s2.key !== 'tree';
+  b.innerHTML = `<div class="ebmsg">${s2 ? (s2.key === 'tree' ? 'ツリーをなぞって動かしてね' : s2.wall ? 'なぞって壁の上を動かしてね' : 'なぞって動かしてね') : '動かしたい家具をなぞってね'}</div><div class="ebbtn"><button data-act="erot" ${canRot ? '' : 'disabled'}>↻ まわす</button><button data-act="erm" ${canRm ? '' : 'disabled'}>しまう</button><button class="go" data-act="eend">おわる</button></div>`; }
 function setFurn(slot, key){ const st = settings(), room = { ...(st.room || {}) }; if (key) room[slot] = key; else if (['topper', 'treelights', 'garland'].includes(slot)) room[slot] = 'none'; else delete room[slot]; put({ ...st, room }); }
 
 /* ===== 3Dの部屋 ===== */
@@ -4644,22 +4666,34 @@ const WT3 = {};
 function fillWeekTree(){ const box = document.querySelector('.wt3[data-day]'); if (!box) return; const day = box.dataset.day, img = box.querySelector('img');
   const dl = logsOn(day).slice().sort((a, b) => a.at - b.at), sigk = day + '|' + dl.map(l => l.id + (l.thanks ? '+' : '')).join(',') + '|' + JSON.stringify(settings().room || {});
   if (WT3[sigk]){ img.src = WT3[sigk]; return; } box.classList.add('loading');
-  ensureRoom().then(r => { if (!r || !box.isConnected) return; r.setRoom(settings().room || {}); setTimeout(() => { try { const u = r.snapshot(dl.map(orn3d), dl.filter(l => l.thanks).map(l => ({ id:l.id })), 640, 720); WT3[sigk] = u; if (box.isConnected){ img.src = u; box.classList.remove('loading'); } } catch (e) { console.warn(e); } }, 60); }); }
+  ensureRoom().then(r => { if (!r || !box.isConnected) return; r.setRoom(settings().room || {}, settings().layout); setTimeout(() => { try { const u = r.snapshot(dl.map(orn3d), dl.filter(l => l.thanks).map(l => ({ id:l.id })), 640, 720); WT3[sigk] = u; if (box.isConnected){ img.src = u; box.classList.remove('loading'); } } catch (e) { console.warn(e); } }, 60); }); }
 function syncRoom(){
   const el = $('room3d'), on = document.body.classList.contains('xfullmode') && !ROOM_FAIL;
   el.style.display = on ? '' : 'none'; if (ROOM) ROOM.pause(!on); if (!on) return;
   const logs = logsOn(dayKey(Date.now())).slice().sort((a, b) => a.at - b.at), hr = new Date().getHours();
-  const doSync = () => { ROOM.setNight(hr >= 17 || hr < 6); ROOM.setRoom(settings().room || {}); ROOM.sync(logs.map(orn3d), logs.filter(l => l.thanks).map(l => ({ id:l.id }))); };
+  const doSync = () => { ROOM.setNight(hr >= 17 || hr < 6); if (!roomEditing) ROOM.setRoom(settings().room || {}, settings().layout); ROOM.sync(logs.map(orn3d), logs.filter(l => l.thanks).map(l => ({ id:l.id }))); };
   if (ROOM){ ROOM.resize(); doSync(); return; }
   ensureRoom().then(r => { if (r) doSync(); });
 }
 let ROOM_P = null;
 function ensureRoom(){ if (ROOM) return Promise.resolve(ROOM); if (ROOM_FAIL) return Promise.resolve(null); if (ROOM_P) return ROOM_P; const el = $('room3d'); ROOM_LOADING = true;
-  return ROOM_P = import('./kaji-room3d.js').then(m => { RMOD = m; ROOM = m.mountRoom(el, { shiftY:.01, rot:treeMem().rot, onRot:r => { const t = treeMem(); t.rot = r; treeSave(t); }, onTap:(id, gift) => { chime('do'); setTimeout(() => ornSheet(id, gift), gift ? 250 : 650); }, onTree:() => chime('do'), onSpin:() => { try { localStorage.setItem('kaji_spun', '1'); } catch (e) {} } }); try { if (!localStorage.getItem('kaji_spun')) setTimeout(() => toast('ツリーは指でくるっと回せるよ'), 1500); else if (advBadge() && !localStorage.getItem('kaji_advhint')){ localStorage.setItem('kaji_advhint', '1'); setTimeout(() => toast('🎁 アドベントのとびらがあいてるよ'), 1500); } } catch (e) {} ROOM_LOADING = false; return ROOM; })
+  return ROOM_P = import('./kaji-room3d.js').then(m => { RMOD = m; ROOM = m.mountRoom(el, { shiftY:.01, onLayout:L => { const st = settings(); put({ ...st, layout:L }); }, onSelect:info => { roomSel = info; renderEditbar(); }, rot:treeMem().rot, onRot:r => { const t = treeMem(); t.rot = r; treeSave(t); }, onTap:(id, gift) => { chime('do'); ROOM.zoomTo(id); setTimeout(() => ornSheet(id, gift), 620); }, onZoomTap:() => closeSheet(), onTree:() => chime('do'), onSpin:() => { try { localStorage.setItem('kaji_spun', '1'); } catch (e) {} } }); try { if (!localStorage.getItem('kaji_spun')) setTimeout(() => toast('ツリーは指でくるっと回せるよ'), 1500); else if (advBadge() && !localStorage.getItem('kaji_advhint')){ localStorage.setItem('kaji_advhint', '1'); setTimeout(() => toast('🎁 アドベントのとびらがあいてるよ'), 1500); } } catch (e) {} ROOM_LOADING = false; return ROOM; })
     .catch(e => { console.warn(e); ROOM_FAIL = true; ROOM_LOADING = false; render(); return null; });
 }
+/* オーナメントの説明 */
+const ORN_DESC = {
+  'ボール':['つやつやに光る{n}。のぞきこむと、部屋がまるくうつって見えるよ。', '{n}は、いちばん定番のオーナメント。いくつあっても、うれしいね。', '手のひらにのるくらいの{n}。電球の光をうけて、きらっと光る。', 'ツリーにひとつあるだけで、ぐっとはなやかになる{n}。'],
+  'ガラス':['うすいガラスでできた{n}。光がすけて、まわりがほんのり色づく。', 'そっと持たないと割れちゃいそうな{n}。ひとつずつ吹いて作られたもの。', 'ゆれるたびに、光がちらちらおどる{n}。'],
+  'フェルト':['ふわふわのフェルトで作った{n}。ひと針ずつ、手でぬってあるよ。', 'さわるとやわらかい{n}。落としても、割れないから安心。', 'どこかなつかしい手ざわりの{n}。'],
+  'おかし':['あまいにおいがしそうな{n}。でも、食べられないよ。', '見ているだけでおなかがすいてくる{n}。', 'クリスマスのおやつみたいな{n}。ひとくちかじりたくなる。'],
+  'クラシック':['むかしからツリーに飾られてきた{n}。クリスマスらしさが、ぎゅっとつまってる。', 'おじいちゃんの家のツリーにもありそうな{n}。', '毎年かならず飾りたくなる{n}。'],
+  'ふゆ':['ひんやりした冬の{n}。窓の外の雪と、おそろいだね。', '寒い日にほっとする{n}。', '冬の朝みたいに、しんとした{n}。'],
+  'そら':['夜空からやってきた{n}。ねがいごとをすると、かなうかも。', 'めったに見つからない{n}。見つけた日は、ちょっといい日。'],
+  'ふたりで':['ふたりでいっしょに家事をした日にだけ届く{n}。', 'ふたりの手がそろったときに見つかる、とくべつな{n}。'],
+};
+function ornDesc(k){ const o = ORN[k]; if (!o) return ''; const list = ORN_DESC[o.c] || ORN_DESC['ボール']; let h = 0; for (const ch of k) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return list[h % list.length].replace('{n}', o.n); }
 function ornSheet(id, gift){ const l = S.items[id]; if (!l) return; const k = ornamentOf(l), mine = l.by === S.me && !l.both, when = `${dayKey(l.at).slice(5).replace('-','/')} ${hm(l.at)}`;
-  openSheet(`<div class="ornsheet">${gift ? `<svg viewBox="-12 -16 34 30" width="120" height="106">${giftSVG(0, 10, 16, 12, 6, '#e85050', '#fff0c0', 'dot', 'og1')}</svg>` : ornIcon(k, 120)}<b>${gift ? 'ありがとうのプレゼント' : ORN[k].n}</b><div class="muted">${when}　${esc(whoText(l))}が「${esc(l.name)}」</div>
+  openSheet(`<div class="ornsheet">${gift ? `<svg viewBox="-12 -16 34 30" width="120" height="106">${giftSVG(0, 10, 16, 12, 6, '#e85050', '#fff0c0', 'dot', 'og1')}</svg>` : ornIcon(k, 120)}<b>${gift ? 'ありがとうのプレゼント' : ORN[k].n}</b>${gift ? '' : `<p class="odesc">${esc(ornDesc(k))}</p>`}<div class="muted">${when}　${esc(whoText(l))}が「${esc(l.name)}」</div>
     ${mine ? (l.thanks ? '<div class="thanks on" style="margin-top:12px">♥ ありがとうが届いてる</div>' : '') : `<button class="btn ${l.thanks ? 'ghost' : 'go'}" style="margin-top:14px;padding:12px 22px" data-act="othanks" data-id="${l.id}">${l.thanks ? '♥ ありがとう、とどいてるよ' : '♡ ありがとう'}</button>`}</div>`); }
 
 function viewWeek(){
@@ -4857,7 +4891,7 @@ function sheetZukan(k){
 
 /* ========== シート ========== */
 function openSheet(html){ $('sheet').innerHTML = `<button class="x" data-act="close" aria-label="閉じる">✕</button>` + html; $('sheet').classList.add('open'); $('scrim').classList.add('open'); setTimeout(fillThumbs, 0); }
-function closeSheet(){ LISTOPEN = false; $('sheet').classList.remove('open'); $('scrim').classList.remove('open'); }
+function closeSheet(){ if (ROOM && ROOM.zoomed && ROOM.zoomed()) ROOM.zoomOut(); LISTOPEN = false; $('sheet').classList.remove('open'); $('scrim').classList.remove('open'); }
 
 function sheetChore(id){
   const c = S.items[id]; if (!c) return;
@@ -4942,10 +4976,15 @@ document.addEventListener('click', e => {
       toast(`${FL[k].n}｜${dayKey(l.at).slice(5).replace('-','/')} ${l.name}`); break; }
     case 'orn': { const l = S.items[id]; if (!l) break; const g = el.querySelector('.sw'); if (g){ g.classList.remove('tap'); void g.getBBox(); g.classList.add('tap'); }
       const k = ornamentOf(l), mine = l.by === S.me && !l.both, gift = !!el.dataset.gift, when = `${dayKey(l.at).slice(5).replace('-','/')} ${hm(l.at)}`;
-      setTimeout(() => openSheet(`<div class="ornsheet">${gift ? `<svg viewBox="-12 -16 34 30" width="120" height="106">${giftSVG(0, 10, 16, 12, 6, '#e85050', '#fff0c0', 'dot', 'og1')}</svg>` : ornIcon(k, 120)}<b>${gift ? 'ありがとうのプレゼント' : ORN[k].n}</b><div class="muted">${when}　${esc(whoText(l))}が「${esc(l.name)}」</div>
+      setTimeout(() => openSheet(`<div class="ornsheet">${gift ? `<svg viewBox="-12 -16 34 30" width="120" height="106">${giftSVG(0, 10, 16, 12, 6, '#e85050', '#fff0c0', 'dot', 'og1')}</svg>` : ornIcon(k, 120)}<b>${gift ? 'ありがとうのプレゼント' : ORN[k].n}</b>${gift ? '' : `<p class="odesc">${esc(ornDesc(k))}</p>`}<div class="muted">${when}　${esc(whoText(l))}が「${esc(l.name)}」</div>
         ${mine ? (l.thanks ? '<div class="thanks on" style="margin-top:12px">♥ ありがとうが届いてる</div>' : '') : `<button class="btn ${l.thanks ? 'ghost' : 'go'}" style="margin-top:14px;padding:12px 22px" data-act="othanks" data-id="${l.id}">${l.thanks ? '♥ ありがとう、とどいてるよ' : '♡ ありがとう'}</button>`}</div>`), 220); break; }
     case 'othanks': { if (!L) break; if (!L.thanks) burst(el, 'heart'); toggleThanks(L); closeSheet(); break; }
     case 'advent': advSheet(); break;
+    case 'roomedit': closeSheet(); roomEdit(true); break;
+    case 'erot': if (ROOM && ROOM.editRotate() === false) toast('ここでは回せないよ'); break;
+    case 'erm': if (ROOM) ROOM.editRemove(); break;
+    case 'eend': roomEdit(false); break;
+    case 'furnadd': { if (!ROOM) break; const k = el.dataset.key, r = ROOM.autoPlace(k); if (!r){ toast('置ける場所がないみたい'); break; } const st = settings(), L = (st.layout || ROOM.layoutOf().filter(x => x.id !== r.id)).concat([r]); put({ ...st, layout:L }); closeSheet(); roomEdit(true); toast('なぞって好きな場所に動かしてね'); break; }
     case 'iconcopy': { const u = setupURL(), done = () => { toast('コピーしたよ'); el.textContent = 'コピーしたよ ✓'; };
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(u).then(done).catch(() => prompt('このURLをコピーしてね', u)); else prompt('このURLをコピーしてね', u); if (S.url) sync(); break; }
     case 'iconlater': try { localStorage.setItem('kaji_iconsnooze', String(Date.now() + 864e5)); } catch (e) {} closeSheet(); break;
@@ -4959,7 +4998,8 @@ document.addEventListener('click', e => {
     case 'listopen': LISTOPEN = true; openSheet(`<div class="listsheet">${LIST_HTML}</div>`); LISTOPEN = true; break;
     case 'xshake': { el.classList.remove('shake'); void el.getBBox(); el.classList.add('shake'); chime('do'); break; }
     case 'zof': zoFilter = el.dataset.v; render(); break;
-    case 'ornz': { const k = el.dataset.k, z = ornFound(); toast(z.f[k] ? `${ORN[k].n}｜${z.f[k]}個 ・ はじめて：${dayKey(z.first[k].at).slice(5).replace('-','/')} ${z.first[k].name}` : (ORN[k].both ? 'ふたりでやった家事で見つかるよ' : 'まだ見つけていないオーナメント')); break; }
+    case 'ornz': { const k = el.dataset.k, z = ornFound(); if (!z.f[k]){ toast(ORN[k].both ? 'ふたりでやった家事で見つかるよ' : 'まだ見つけていないオーナメント'); break; }
+      openSheet(`<div class="ornsheet">${ornIcon(k, 150)}<b>${ORN[k].n}</b><p class="odesc">${esc(ornDesc(k))}</p><div class="muted">これまでに${z.f[k]}こ・はじめては ${dayKey(z.first[k].at).slice(5).replace('-','/')} の「${esc(z.first[k].name)}」</div></div>`); setTimeout(fillThumbs, 30); break; }
     case 'zm': zMode = el.dataset.v; zFilter = 'month'; render(); break;
     case 'zc': sheetCreature(el.dataset.k); break;
     case 'creature': { const g = el.querySelector('.tap'); if (g) { g.classList.remove('go'); void g.getBBox(); g.classList.add('go'); } chime('thanks'); toast(`${el.dataset.k}｜${CR[el.dataset.k].desc.split('。')[0]}`); break; }
@@ -4996,7 +5036,7 @@ document.addEventListener('click', e => {
     case 'talk': talkIdx++; lastTyped = ''; render(); break;
     case 'qdo': { const c = S.items[id]; if (!c) break; const recent = all('log').filter(l => l.choreId === id && Date.now() - l.at < 10 * 60e3).sort((a, b) => b.at - a.at)[0];
       if (recent){ toast(`「${c.name}」はさっきやったよ`); break; }
-      const qi = el.querySelector('.qi'); if (qi){ qi.classList.remove('hit'); void qi.offsetWidth; qi.classList.add('hit'); } burst(el, 'star'); doChore(c); setTimeout(grpClose, 180); break; }
+      const qi = el.querySelector('.qi'); if (qi){ qi.classList.remove('hit'); void qi.offsetWidth; qi.classList.add('hit'); } burst(el, 'star'); doChore(c, grpWho === 'both', grpWho === 'both' ? S.me : grpWho); setTimeout(grpClose, 180); break; }
     case 'qfree': grpClose(); sheetFree(); break;
     case 'qgrp': { const g = el.dataset.g, cs = choresIn(g), m = $('grppop');
       if (m && m.classList.contains('open') && m.dataset.g === g){ grpClose(); break; }
@@ -5009,6 +5049,7 @@ document.addEventListener('click', e => {
       redit.ids.forEach(id => { const c = S.items[id]; if (!c) return; const [r0, a] = rowAct(c); const name = (c.name.startsWith(r0) ? row + c.name.slice(r0.length) : c.name).slice(0, 12); put({ ...c, row, act:a, icon:redit.icon, name }); });
       closeSheet(); redit = null; toast('ほぞんしたよ'); setTimeout(() => grpOpen(g, null, true), 250); break; }
     case 'redel': { if (!el.dataset.sure){ el.dataset.sure = '1'; el.textContent = 'もう一度押すと削除するよ'; return; } const g = redit.gid; redit.ids.forEach(id => S.items[id] && remove(S.items[id])); closeSheet(); redit = null; toast('削除したよ'); setTimeout(() => grpOpen(g, null, true), 250); break; }
+    case 'gwho': grpWho = el.dataset.v; grpOpen($('grppop').dataset.g, null, false, true); break;
     case 'gedmode': grpOpen(el.dataset.g, null, el.dataset.v === '1'); break;
     case 'rowadd': grpClose(); sheetRowAdd(el.dataset.id); break;
     case 'rownew': grpClose(); sheetRowNew(el.dataset.g); break;

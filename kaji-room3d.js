@@ -20,6 +20,7 @@ export const FURN_ITEMS = [], FURN_BY = {};
 for (const [slot] of FURN_SLOTS) NAMES[slot].forEach((name, k) => { const it = { key:slot + '_' + 'abc'[k], slot, k, name }; FURN_ITEMS.push(it); FURN_BY[it.key] = it; });
 // 11/19 から 12/25 までの37日。はじめの15日で各場所の1つめ、そのあと2つめ・3つめ、12/25は特別
 const FIRST = ['fireplace', 'rug', 'curtain', 'stockings', 'wintop', 'lamp', 'mantel', 'wall', 'sofa', 'sill', 'table', 'outside', 'shelf', 'toys', 'treebase'];
+export const FLOOR_SLOTS = ['fireplace', 'shelf', 'sofa', 'lamp', 'table', 'toys', 'rug'], WALL_SLOTS = ['wall'];
 export const TREE_PARTS = ['wallpaper', 'flooring', 'topper', 'treelights', 'garland']; // 1つめは最初から持っている
 export const ADVENT = Array.from({ length:37 }, () => []);
 FIRST.forEach((s, i) => ADVENT[i].push(s + '_a')); { const rest = [...FIRST.map(s => s + '_b'), 'wallpaper_b', 'topper_b', 'flooring_b', 'garland_b', 'treelights_b', ...FIRST.map(s => s + '_c'), 'wallpaper_c', 'topper_c', 'flooring_c', 'garland_c', 'treelights_c']; rest.forEach((k, i) => ADVENT[15 + Math.floor(i * 21 / rest.length)].push(k)); } ADVENT[36].push('special_a');
@@ -156,7 +157,8 @@ const winLight = new THREE.PointLight('#9fc4ff', 1.5, 4); winLight.position.set(
 const outLight = new THREE.DirectionalLight('#bcd4ff', 1.2); outLight.position.set(WX - 2, 6, OUT_Z + 2); outLight.target.position.set(WX, .6, OUT_Z - 2.5); scene.add(outLight, outLight.target);
 
 /* ---------- ツリー ---------- */
-const tree = new THREE.Group(); tree.position.set(-1.15, 0, -1.65); tree.scale.setScalar(.86); tree.rotation.y = opts.rot || 0; scene.add(tree);
+const treeRoot = new THREE.Group(); treeRoot.position.set(-1.15, 0, -1.65); scene.add(treeRoot); treeRoot.userData.inst = 'tree';
+const tree = new THREE.Group(); tree.scale.setScalar(.86); tree.rotation.y = opts.rot || 0; treeRoot.add(tree);
 const potH = .62;
 // 段（下から）：[下端y, 半径, 高さ]
 const TIERS = [[.86, 1.24, 1.22], [1.5, 1.0, 1.08], [2.06, .78, .94], [2.55, .55, .8], [2.96, .33, .64]];
@@ -251,7 +253,7 @@ function wrapTex(a, b, kind){ return canvasTex(128, 128, (g, w, h) => { g.fillSt
   if (kind === 'dot') for (let y = 10; y < h; y += 20) for (let x = (y / 20 % 2) * 10 + 6; x < w; x += 20){ g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill(); }
   if (kind === 'check'){ g.globalAlpha = .45; for (let i = 0; i < 4; i++){ g.fillRect(i * 32 + 8, 0, 14, h); g.fillRect(0, i * 32 + 8, w, 14); } } }); }
 const gifts = [];
-const GIFT_SPOTS = [[-1.7, -.7], [-.6, -.65], [-1.15, -.3], [-.25, -1.0], [-1.95, -1.2], [-.45, -.15], [-.0, -.5], [-1.65, -.05]];
+const GIFT_SPOTS = [[-1.7, -.7], [-.6, -.65], [-1.15, -.3], [-.25, -1.0], [-1.95, -1.2], [-.45, -.15], [-.0, -.5], [-1.65, -.05]].map(([x, z]) => [x + 1.15, z + 1.65]); // ツリーからの位置
 function addGift(animate = true, id = null){ const i = gifts.length; if (i >= GIFT_SPOTS.length) return; const [x, z] = GIFT_SPOTS[i], [a, b, kind] = WRAPS[i % WRAPS.length];
   const w = .34 + rnd() * .22, h = .26 + rnd() * .2, d = .3 + rnd() * .2, g = new THREE.Group();
   const box = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 3, .035), std('#ffffff', { map:wrapTex(a, b, kind), roughness:.6 })); box.position.y = h / 2; box.castShadow = box.receiveShadow = true; g.add(box);
@@ -260,7 +262,7 @@ function addGift(animate = true, id = null){ const i = gifts.length; if (i >= GI
   const r2 = new THREE.Mesh(new RoundedBoxGeometry(.06, h + .012, d + .012, 2, .01), rm); r2.position.y = h / 2; g.add(r2);
   for (const s of [-1, 1]){ const t = new THREE.Mesh(new THREE.TorusGeometry(.06, .022, 8, 16), rm); t.position.set(s * .055, h + .045, 0); t.rotation.set(0, Math.PI / 2, s * .5); t.scale.set(1, 1.25, .8); t.castShadow = true; g.add(t); }
   const knot = new THREE.Mesh(new THREE.SphereGeometry(.03, 10, 8), rm); knot.position.y = h + .03; g.add(knot);
-  g.position.set(x, 0, z); g.rotation.y = (rnd() - .5) * .6; g.userData.id = id; g.userData.gift = true; scene.add(g); gifts.push(g); g.userData.blob = blob(x, z, w * 2.1, d * 2.1, .9);
+  g.position.set(x, 0, z); g.rotation.y = (rnd() - .5) * .6; g.userData.id = id; g.userData.gift = true; treeRoot.add(g); gifts.push(g); g.userData.blob = blob(x, z, w * 2.1, d * 2.1, .9); treeRoot.add(g.userData.blob);
   if (animate){ g.scale.setScalar(.001); appear.push({ o:g, t0:performance.now() }); } shadowsDirty = true; }
 
 /* ---------- 家具（アドベントで手に入る。場所ごとに3種類から選べる） ---------- */
@@ -518,14 +520,81 @@ function disposeG(o){ o.traverse(m => { if (m.isMesh || m.isPoints){ m.geometry 
 function placeItem(slot, key){ if (slot === 'wallpaper'){ applyWall(key ? key.slice(-1) : 'a'); return; } if (slot === 'flooring'){ applyFloor(key ? key.slice(-1) : 'a'); return; } const cur = mounted[slot]; if (cur && cur.userData.key === key) return; if (cur){ (cur.parent || scene).remove(cur); disposeG(cur); delete mounted[slot]; }
   if (!key || !FURN_BY[key]) return; const g = buildFurn(key);
   if (TREE_PARTS.includes(slot)){ tree.add(g); mounted[slot] = g; return; }
-  if (slot === 'treebase' || slot === 'special'){ g.position.set(tree.position.x, 0, tree.position.z); if (slot === 'treebase') g.scale.setScalar(tree.scale.x); }
-  else { const a = ANCHOR[slot]; g.position.set(a[0], a[1], a[2]); g.rotation.y = a[3] || 0; }
+  if (slot === 'treebase' || slot === 'special'){ if (slot === 'treebase') g.scale.setScalar(tree.scale.x); treeRoot.add(g); mounted[slot] = g; return; }
+  if (slot === 'stockings' || slot === 'mantel'){ const fp = Object.values(inst).find(x => x.rec.key.startsWith('fireplace_')); if (!fp) return; const a = ANCHOR[slot]; g.position.set(0, a[1], a[2] - bz); fp.g.add(g); mounted[slot] = g; return; }
+  const a = ANCHOR[slot]; g.position.set(a[0], a[1], a[2]); g.rotation.y = a[3] || 0;
   scene.add(g); mounted[slot] = g; }
-function setRoom(sel){ sel = sel || {}; const fp = sel.fireplace; for (const [slot] of FURN_SLOTS){ let k = sel[slot]; if (TREE_PARTS.includes(slot) && k === undefined) k = slot + '_a'; if (k === 'none') k = null; if (NEEDS_FP[slot] && !fp) k = null; placeItem(slot, k); }
-  const f = mounted.fireplace; flames = f ? f.userData.fire.fl : []; fireGlow = f ? f.userData.fire.gw : null;
-  const lp = mounted.lamp, ll = lp && lp.userData.lamp; if (ll){ lampLight.position.copy(lp.localToWorld(new THREE.Vector3(...ll))); } lampOn = !!ll;
+/* ===== 置き場所（床と壁の家具は自由に動かせる。同じ家具を2つ以上も） ===== */
+const GRID = .25, ZMAX = 2.6;
+const inst = {}; // id → { g, rec }
+function partBox(g, opt = {}){ g.updateMatrixWorld(true); const box = new THREE.Box3(); g.traverse(m => { if (!m.isMesh || !m.visible) return; if (m.material && (m.material.map === blobTex || m.material.blending === THREE.AdditiveBlending)) return; if (m.userData.thumbTree || m.userData.selMark) return; if (opt.noGift && m.parent && m.parent.userData.gift) return; box.expandByObject(m); }); return box; }
+function instBox(o){ if (o.rec.key === 'tree'){ const b = partBox(tree); return b; } return partBox(o.g); }
+function recDefault(key){ const it = FURN_BY[key]; if (!it) return null; const a = ANCHOR[it.slot]; if (WALL_SLOTS.includes(it.slot)) return { key, wall:'back', u:a[0], y:a[1] }; return { key, x:a[0], z:a[2], r:a[3] || 0 }; }
+function placeInst(o){ const r = o.rec;
+  if (r.key === 'tree'){ treeRoot.position.set(r.x, 0, r.z); return; }
+  if (r.wall){ const W = r.wall; if (W === 'back'){ o.g.position.set(r.u, r.y, bz + .05); o.g.rotation.y = 0; } else { const s2 = W === 'left' ? -1 : 1; o.g.position.set(s2 * (RW / 2 - .05), r.y, r.u); o.g.rotation.y = -s2 * Math.PI / 2; } return; }
+  o.g.position.set(r.x, 0, r.z); o.g.rotation.y = r.r || 0; }
+function syncLayout(layout){ const want = new Map(); (layout || []).forEach(r => { if (r && r.id) want.set(r.id, r); });
+  for (const [id, o] of Object.entries(inst)) if (id !== 'tree' && (!want.has(id) || want.get(id).key !== o.rec.key)){ scene.remove(o.g); disposeG(o.g); delete inst[id]; }
+  for (const [id, r] of want){ if (r.key === 'tree'){ inst.tree = inst.tree || { g:treeRoot, rec:{ id:'tree', key:'tree', x:-1.15, z:-1.65 } }; inst.tree.rec = { ...r }; placeInst(inst.tree); continue; }
+    if (!FURN_BY[r.key]) continue; let o = inst[id]; if (!o){ const g = buildFurn(r.key); g.userData.inst = id; scene.add(g); o = inst[id] = { g, rec:{ ...r } }; } o.rec = { ...r }; placeInst(o); }
+  if (!inst.tree) inst.tree = { g:treeRoot, rec:{ id:'tree', key:'tree', x:treeRoot.position.x, z:treeRoot.position.z } }; }
+function layoutOf(){ return Object.values(inst).map(o => ({ ...o.rec })); }
+function legacyLayout(sel){ const L = [{ id:'tree', key:'tree', x:-1.15, z:-1.65 }]; for (const slot of [...FLOOR_SLOTS, ...WALL_SLOTS]){ const k = sel[slot]; if (k && k !== 'none' && FURN_BY[k]) L.push({ id:slot + '_1', ...recDefault(k) }); } return L; }
+function setRoom(sel, layout){ sel = sel || {}; lastSel = sel; syncLayout(layout || legacyLayout(sel));
+  for (const [slot] of FURN_SLOTS){ if (FLOOR_SLOTS.includes(slot) || WALL_SLOTS.includes(slot)) continue; let k = sel[slot]; if (TREE_PARTS.includes(slot) && k === undefined) k = slot + '_a'; if (k === 'none') k = null; placeItem(slot, k); }
+  // 暖炉にくっつくもの（くつした・暖炉の上）は、暖炉が変わったら付けなおす
+  for (const slot of ['stockings', 'mantel']){ const cur = mounted[slot]; if (cur && !cur.parent){ delete mounted[slot]; } if (cur && cur.parent && !Object.values(inst).some(o => o.g === cur.parent)){ cur.parent.remove(cur); delete mounted[slot]; } let k = sel[slot]; if (k === 'none') k = null; if (mounted[slot] && mounted[slot].userData.key !== k){ mounted[slot].parent && mounted[slot].parent.remove(mounted[slot]); delete mounted[slot]; } if (!mounted[slot] && k) placeItem(slot, k); }
+  const fpI = Object.values(inst).find(o => o.rec.key.startsWith('fireplace_')); const f = fpI && fpI.g; flames = f ? f.userData.fire.fl : []; fireGlow = f ? f.userData.fire.gw : null; if (f) fireLight.position.copy(f.localToWorld(new THREE.Vector3(0, .55, .8)));
+  const lpI = Object.values(inst).find(o => o.rec.key.startsWith('lamp_')), lp = lpI && lpI.g, ll = lp && lp.userData.lamp; if (ll){ lampLight.position.copy(lp.localToWorld(new THREE.Vector3(...ll))); } lampOn = !!ll;
   const ou = mounted.outside, kl = ou && ou.userData.kama; if (kl) kamaLight.position.copy(ou.localToWorld(new THREE.Vector3(...kl))); kamaOn = !!kl;
   applyTime(); shadowsDirty = true; }
+/* 重なりチェック（床の家具とツリー。ラグはラグ同士だけ） */
+const isRug = o => o.rec.key.startsWith('rug_');
+function boxOK(o){ const b = instBox(o); if (o.rec.wall){ const W = o.rec.wall; if (b.max.y > RH - .1 || b.min.y < 1.12) return false;
+    if (W === 'back'){ if (b.min.x < -RW / 2 + .05 || b.max.x > RW / 2 - .05) return false; if (b.max.x > WX - WW / 2 - .12 && b.min.x < WX + WW / 2 + .12 && b.max.y > WY - WH / 2 - .25) return false; }
+    else if (b.min.z < bz + .05 || b.max.z > ZMAX) return false;
+    for (const p of Object.values(inst)) if (p !== o && p.rec.wall === W && b.intersectsBox(instBox(p).expandByScalar(-.02))) return false; return true; }
+  if (b.min.x < -RW / 2 - .08 || b.max.x > RW / 2 + .08 || b.min.z < bz - .16 || b.max.z > ZMAX) return false;
+  const shrink = x => x.expandByScalar(-.06);
+  for (const p of Object.values(inst)){ if (p === o || p.rec.wall) continue; if (isRug(o) !== isRug(p)) continue; const pb = instBox(p); if (shrink(b.clone()).intersectsBox(shrink(pb))) return false; } return true; }
+function autoPlace(key){ const id = key.split('_')[0] + '_' + Math.random().toString(36).slice(2, 7), it = FURN_BY[key]; if (!it) return null; const g = buildFurn(key); g.userData.inst = id; scene.add(g);
+  const o = inst[id] = { g, rec:{ id, ...recDefault(key) } }; placeInst(o); if (boxOK(o)) return { ...o.rec };
+  if (o.rec.wall){ for (const W of ['back', 'left', 'right']) for (let y = 1.6; y < 3.4; y += .2) for (let u = -2; u <= 2; u += .2){ o.rec = { id, key, wall:W, u:+u.toFixed(2), y:+y.toFixed(2) }; placeInst(o); if (boxOK(o)) return { ...o.rec }; } }
+  else { const cand = []; for (let x = -2; x <= 2; x += GRID) for (let z = bz + .5; z <= ZMAX - .3; z += GRID) cand.push([x, z]); cand.sort((a, b) => Math.hypot(a[0] - .3, a[1] + .2) - Math.hypot(b[0] - .3, b[1] + .2));
+    for (const rr of [o.rec.r || 0, 0, Math.PI / 2, Math.PI, -Math.PI / 2]) for (const [x, z] of cand){ o.rec = { id, key, x:+x.toFixed(3), z:+z.toFixed(3), r:rr }; placeInst(o); if (boxOK(o)) return { ...o.rec }; } }
+  scene.remove(g); delete inst[id]; return null; }
+/* ===== もようがえモード：指でなぞって動かす ===== */
+let editOn = false, sel = null, mv = null; const selMark = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color:'#ffd25a', transparent:true, opacity:.35, depthWrite:false })); selMark.rotation.x = -Math.PI / 2; selMark.visible = false; selMark.userData.selMark = 1; scene.add(selMark);
+function markSel(bad){ if (!sel){ selMark.visible = false; return; } const b = instBox(sel); selMark.visible = true; selMark.material.color.set(bad ? '#ff5a4a' : '#ffd25a');
+  if (sel.rec.wall){ const W = sel.rec.wall, c = b.getCenter(new THREE.Vector3()), sz = b.getSize(new THREE.Vector3()); selMark.rotation.set(0, W === 'back' ? 0 : W === 'left' ? Math.PI / 2 : -Math.PI / 2, 0); selMark.position.copy(c); if (W === 'back') selMark.position.z = bz + .03; else selMark.position.x = (W === 'left' ? -1 : 1) * (RW / 2 - .03); selMark.scale.set((W === 'back' ? sz.x : sz.z) + .2, sz.y + .2, 1); }
+  else { selMark.rotation.set(-Math.PI / 2, 0, 0); selMark.position.set((b.min.x + b.max.x) / 2, .012, (b.min.z + b.max.z) / 2); selMark.scale.set(b.max.x - b.min.x + .16, b.max.z - b.min.z + .16, 1); } shadowsDirty = true; }
+function pickInst(e){ const r = cv.getBoundingClientRect(); v2.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); ray.setFromCamera(v2, camera);
+  const objs = Object.values(inst).map(o => o.g); const hits = ray.intersectObjects(objs, true).filter(h => !(h.object.material && (h.object.material.map === blobTex || h.object.material.blending === THREE.AdditiveBlending)));
+  // ラグは他の家具より後回し
+  hits.sort((a, b) => { const ra = rootInst(a.object), rb = rootInst(b.object); return (ra && isRug(ra) ? 1 : 0) - (rb && isRug(rb) ? 1 : 0) || a.distance - b.distance; }); const h = hits[0]; return h ? rootInst(h.object) : null; }
+function rootInst(m){ let o = m; while (o && !o.userData.inst) o = o.parent; return o ? inst[o.userData.inst] : null; }
+const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+function hitPlane(e, plane){ const r = cv.getBoundingClientRect(); v2.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); ray.setFromCamera(v2, camera); const p = new THREE.Vector3(); return ray.ray.intersectPlane(plane, p) ? p : null; }
+function wallHit(e){ const cands = [['back', new THREE.Plane(new THREE.Vector3(0, 0, 1), -bz)], ['left', new THREE.Plane(new THREE.Vector3(1, 0, 0), RW / 2)], ['right', new THREE.Plane(new THREE.Vector3(-1, 0, 0), RW / 2)]]; let best = null;
+  for (const [W, pl] of cands){ const p = hitPlane(e, pl); if (!p) continue; const ok = W === 'back' ? Math.abs(p.x) <= RW / 2 : p.z >= bz && p.z <= ZMAX; if (!ok) continue; const d = p.distanceTo(camera.position); if (!best || d < best.d) best = { W, p, d }; } return best; }
+function editDown(e){ const o = pickInst(e); sel = o; mv = o ? { o, start:{ ...o.rec }, moved:false, x0:e.clientX, y0:e.clientY } : null;
+  if (o && !o.rec.wall){ const p = hitPlane(e, floorPlane); mv.off = p ? [p.x - o.rec.x, p.z - o.rec.z] : [0, 0]; }
+  if (o && o.rec.wall){ const w = wallHit(e); mv.off = w ? (w.W === 'back' ? [w.p.x - o.rec.u, w.p.y - o.rec.y] : [w.p.z - o.rec.u, w.p.y - o.rec.y]) : [0, 0]; }
+  markSel(false); opts.onSelect && opts.onSelect(o ? { id:o.rec.id, key:o.rec.key, wall:!!o.rec.wall } : null); }
+function editMove(e){ if (!mv) return; if (!mv.moved && Math.hypot(e.clientX - mv.x0, e.clientY - mv.y0) < 6) return; mv.moved = true; const o = mv.o;
+  if (o.rec.wall){ const w = wallHit(e); if (!w) return; const u = (w.W === 'back' ? w.p.x : w.p.z) - (w.W === o.rec.wall ? mv.off[0] : 0), y = w.p.y - mv.off[1]; o.rec = { ...o.rec, wall:w.W, u:+(Math.round(u / .1) * .1).toFixed(2), y:+(Math.round(y / .1) * .1).toFixed(2) }; }
+  else { const p = hitPlane(e, floorPlane); if (!p) return; o.rec = { ...o.rec, x:+(Math.round((p.x - mv.off[0]) / GRID) * GRID).toFixed(3), z:+(bz + Math.round((p.z - mv.off[1] - bz) / GRID) * GRID).toFixed(3) }; }
+  placeInst(o); if (o.rec.key === 'tree') treeRoot.updateMatrixWorld(true); mv.bad = !boxOK(o); markSel(mv.bad); shadowsDirty = true; }
+function editUp(){ if (!mv) return; const o = mv.o; if (mv.moved){ if (mv.bad){ o.rec = { ...mv.start }; placeInst(o); } else commit(); setRoomLights(); } markSel(false); mv = null; }
+function setRoomLights(){ const fpI = Object.values(inst).find(o => o.rec.key.startsWith('fireplace_')); if (fpI) fireLight.position.copy(fpI.g.localToWorld(new THREE.Vector3(0, .55, .8))); const lpI = Object.values(inst).find(o => o.rec.key.startsWith('lamp_')); if (lpI && lpI.g.userData.lamp) lampLight.position.copy(lpI.g.localToWorld(new THREE.Vector3(...lpI.g.userData.lamp))); shadowsDirty = true; }
+function commit(){ opts.onLayout && opts.onLayout(layoutOf()); }
+function editRotate(){ if (!sel || sel.rec.wall || sel.rec.key === 'tree') return; const b0 = instBox(sel), c0 = b0.getCenter(new THREE.Vector3()), prev = { ...sel.rec };
+  sel.rec = { ...sel.rec, r:((sel.rec.r || 0) + Math.PI / 2) }; placeInst(sel); const c1 = instBox(sel).getCenter(new THREE.Vector3()); sel.rec.x = +(Math.round((sel.rec.x + c0.x - c1.x) / GRID) * GRID).toFixed(3); sel.rec.z = +(bz + Math.round((sel.rec.z + c0.z - c1.z - bz) / GRID) * GRID).toFixed(3); placeInst(sel);
+  if (!boxOK(sel)){ sel.rec = prev; placeInst(sel); markSel(false); return false; } markSel(false); commit(); setRoomLights(); return true; }
+function editRemove(){ if (!sel || sel.rec.key === 'tree') return; const id = sel.rec.id; scene.remove(sel.g); disposeG(sel.g); delete inst[id]; sel = null; markSel(false); commit(); setRoom(lastSel, layoutOf()); opts.onSelect && opts.onSelect(null); }
+function setEdit(on){ editOn = !!on; sel = null; mv = null; markSel(false); }
+let lastSel = {};
 let lampOn = false, kamaOn = false;
 
 
@@ -546,7 +615,7 @@ function thumbFurn(key){ if (thCache[key]) return thCache[key];
 const hemi = new THREE.HemisphereLight('#fff1dc', '#b98a6a', 1.1); scene.add(hemi);
 const key = new THREE.DirectionalLight('#ffe2bd', 2.2); key.position.set(-3, 8, 5); key.castShadow = true; key.shadow.mapSize.set(1024, 1024); key.shadow.radius = 4; key.shadow.bias = -.0005; key.shadow.normalBias = .02;
 Object.assign(key.shadow.camera, { left:-3.5, right:3.5, top:4.5, bottom:-2, near:1, far:20 }); scene.add(key);
-const treeLight = new THREE.PointLight('#ffd890', 1.2, 3.2); treeLight.position.set(tree.position.x + .4, 1.8, tree.position.z + 1); scene.add(treeLight);
+const treeLight = new THREE.PointLight('#ffd890', 1.2, 3.2); treeLight.position.set(.4, 1.8, 1); treeRoot.add(treeLight);
 let isNight = new Date().getHours() >= 18 || new Date().getHours() < 6;
 function applyTime(){ hemi.intensity = isNight ? .75 : 1.1; key.intensity = isNight ? 1.2 : 2.2; key.color.set(isNight ? '#ffd2a0' : '#ffe2bd'); treeLight.intensity = isNight ? 2.4 : 1.2; winLight.intensity = isNight ? 1.8 : 1.0;
   sky.material.color.set(isNight ? '#ffffff' : '#a8c8ff'); outLight.intensity = isNight ? .25 : 1.4; snowMat.color.set(isNight ? '#8e9cd0' : '#f4f8ff'); pineM.color.set(isNight ? '#1e3a3a' : '#2e5a48'); snowPts.material.opacity = isNight ? 1 : .8; fireLight.intensity = flames.length ? (isNight ? 5.5 : 3.5) : 0; lampLight.intensity = lampOn ? (isNight ? 3.2 : 1.6) : 0; kamaLight.intensity = kamaOn ? 1.4 : 0; shadowsDirty = true; }
@@ -559,6 +628,14 @@ applyTime();
 /* ---------- 描画（必要なときだけ。電球と星のゆらぎは30fps） ---------- */
 renderer.shadowMap.autoUpdate = false;
 let last = 0, stopped = false;
+/* オーナメントにズーム */
+let zoom = null, zoomed = false; const zLook = new THREE.Vector3();
+function camLook(){ const d = new THREE.Vector3(); camera.getWorldDirection(d); return camera.position.clone().addScaledVector(d, camera.position.distanceTo(target)); }
+function zoomTo(id){ const o = placed.find(x => x.userData.id === id) || gifts.find(x => x.userData.id === id); if (!o) return; const p = new THREE.Vector3(); (o.children[0] || o).getWorldPosition(p);
+  const dir = camera.position.clone().sub(p).normalize(), far = o.userData.gift ? 2.6 : 2.0; zoom = { t0:performance.now(), fromP:camera.position.clone(), fromL:camLook(), toP:p.clone().addScaledVector(dir, far), toL:p.clone().add(new THREE.Vector3(0, -far * .17, 0)), dur:650 }; zoomed = true; }
+function zoomOut(){ if (!zoomed) return; zoomed = false; const keepP = camera.position.clone(), keepL = camLook(); placeCamera(); const toP = camera.position.clone(); camera.position.copy(keepP); camera.lookAt(keepL); zoom = { t0:performance.now(), fromP:keepP, fromL:keepL, toP, toL:target.clone(), dur:550, end:true }; }
+function stepZoom(now){ if (!zoom) return; const t = Math.min(1, (now - zoom.t0) / zoom.dur), k = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  camera.position.lerpVectors(zoom.fromP, zoom.toP, k); zLook.lerpVectors(zoom.fromL, zoom.toL, k); camera.lookAt(zLook); if (t >= 1){ if (zoom.end) placeCamera(); zoom = null; } }
 function frame(now){
   requestAnimationFrame(frame);
   if (document.hidden || stopped || now - last < 33) return; last = now;
@@ -572,10 +649,10 @@ function frame(now){
       const sw = u.swing, dt = sw ? now - sw : 1e9, tap = dt < 2200 ? .55 * Math.exp(-dt / 520) * Math.sin(dt / 85) : 0;
       o.rotation.z = u.rz + .035 * Math.sin(now / 1150 + u.ph) + tap + u.th; o.rotation.x = tap * .35 - u.tilt; }); }
   flames.forEach(o => { const k = 1 + .14 * Math.sin(now / 110 + o.ph) + .08 * Math.sin(now / 47 + o.ph * 2); o.f.scale.set(1 - (k - 1) * .5, k, 1 - (k - 1) * .5); o.f.position.y = .2 + o.h * k / 2; }); if (flames.length){ fireLight.intensity = (isNight ? 5.5 : 3.5) * (1 + .12 * Math.sin(now / 90) + .06 * Math.sin(now / 37)); fireGlow.material.opacity = .6 + .1 * Math.sin(now / 70); }
-  for (const g of Object.values(mounted)){ const u = g.userData; if (u.glow) u.glow.material.opacity = .55 + .15 * Math.sin(now / 900); if (u.bulbs) u.bulbs.forEach(b => b.gl.material.opacity = .35 + .3 * (Math.sin(now / 600 + b.ph) * .5 + .5)); if (u.pend) u.pend.rotation.z = .22 * Math.sin(now / 1000 * Math.PI); if (u.sparkle){ u.sparkle.rotation.y = now / 9000; u.sparkle.material.opacity = .6 + .4 * Math.sin(now / 400); } }
+  for (const g of [...Object.values(mounted), ...Object.values(inst).map(o => o.g)]){ const u = g.userData; if (u.glow) u.glow.material.opacity = .55 + .15 * Math.sin(now / 900); if (u.bulbs) u.bulbs.forEach(b => b.gl.material.opacity = .35 + .3 * (Math.sin(now / 600 + b.ph) * .5 + .5)); if (u.pend) u.pend.rotation.z = .22 * Math.sin(now / 1000 * Math.PI); if (u.sparkle){ u.sparkle.rotation.y = now / 9000; u.sparkle.material.opacity = .6 + .4 * Math.sin(now / 400); } }
   { const a = snowGeo.attributes.position; for (let i = 0; i < snowN; i++){ let y = a.getY(i) - .012; if (y < .6) y = 4.6; a.setY(i, y); a.setX(i, a.getX(i) + Math.sin(now / 900 + i) * .0015); } a.needsUpdate = true; }
   if (shadowsDirty){ renderer.shadowMap.needsUpdate = true; shadowsDirty = false; }
-  renderer.render(scene, camera);
+  stepZoom(now); renderer.render(scene, camera);
   if (!el.classList.contains('ready')) setTimeout(() => el.classList.add('ready'), 60);
 }
 requestAnimationFrame(frame);
@@ -585,7 +662,7 @@ renderer.domElement.addEventListener('webglcontextlost', e => e.preventDefault()
 const TYPE = { ball:(c, map) => () => ball(c, map ? .35 : .25, map ? .3 : .6, map), bell:() => bell, candy:() => candy, star:() => miniStar };
 function typeFor(o){ if (o.ball) return () => ball(o.color, o.pat ? .35 : .25, o.pat ? .3 : .6, o.pat ? stripeTex(o.color, o.pat === 'dot' ? '#ffffff' : '#f3ead9', o.pat === 'dot') : null);
   if (o.shape === 'bell') return bell; if (o.shape === 'candy') return candy; if (o.shape === 'star') return miniStar; return () => ball(o.color || '#c8352e'); }
-function clearAll(){ usedSlots.clear(); placed.splice(0).forEach(o => tree.remove(o)); gifts.splice(0).forEach(g => { scene.remove(g); scene.remove(g.userData.blob); }); }
+function clearAll(){ usedSlots.clear(); placed.splice(0).forEach(o => tree.remove(o)); gifts.splice(0).forEach(g => { treeRoot.remove(g); treeRoot.remove(g.userData.blob); }); }
 let sig = '', lastList = [], lastGifts = [];
 function sync(list, giftList){ lastList = list; lastGifts = giftList;
   const s2 = list.map(o => o.id).join(',') + '|' + giftList.map(g => g.id).join(',');
@@ -601,13 +678,17 @@ function sync(list, giftList){ lastList = list; lastGifts = giftList;
 const ray = new THREE.Raycaster(), v2 = new THREE.Vector2();
 // ツリーを指で回す（タップとドラッグを区別）
 let drag = null, spin = 0; const cv = renderer.domElement; cv.style.touchAction = 'none';
-cv.addEventListener('pointerdown', e => { drag = { x:e.clientX, y:e.clientY, last:e.clientX, t:performance.now(), moved:false, onTree:false }; spin = 0; cv.setPointerCapture(e.pointerId); });
-cv.addEventListener('pointermove', e => { if (!drag) return; const dx = e.clientX - drag.last; if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 7) drag.moved = true;
+cv.addEventListener('pointerdown', e => { if (zoomed){ opts.onZoomTap && opts.onZoomTap(); return; } if (editOn){ cv.setPointerCapture(e.pointerId); editDown(e); return; } drag = { x:e.clientX, y:e.clientY, last:e.clientX, t:performance.now(), moved:false, onTree:false }; spin = 0; cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointermove', e => { if (editOn){ editMove(e); return; } if (!drag) return; const dx = e.clientX - drag.last; if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 7) drag.moved = true;
   if (drag.moved){ const now = performance.now(), k = 2 * Math.PI / Math.max(260, cv.clientWidth * .9); tree.rotation.y += dx * k; spin = dx * k / Math.max(8, now - drag.t) * 16; drag.t = now; shadowsDirty = true; } drag.last = e.clientX; });
-cv.addEventListener('pointerup', e => { const d = drag; drag = null; if (d && d.moved){ opts.onSpin && opts.onSpin(); opts.onRot && opts.onRot(tree.rotation.y); return; } if (d) tapAt(e); });
-cv.addEventListener('pointercancel', () => { drag = null; });
+cv.addEventListener('pointerup', e => { if (editOn){ editUp(); return; } const d = drag; drag = null; if (d && d.moved){ opts.onSpin && opts.onSpin(); opts.onRot && opts.onRot(tree.rotation.y); return; } if (d) tapAt(e); });
+cv.addEventListener('pointercancel', () => { drag = null; if (editOn) editUp(); });
 function tapAt(e){ const r = renderer.domElement.getBoundingClientRect(); v2.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); ray.setFromCamera(v2, camera);
   const hit = ray.intersectObjects([...placed, ...gifts], true)[0]; if (hit){ let o = hit.object; while (o && !o.userData.id) o = o.parent; if (o){ if (o.userData.orn) o.userData.swing = performance.now(); else { o.scale.setScalar(.85 * (o.userData.base || 1)); appear.push({ o, t0:performance.now() - 120 }); } opts.onTap && opts.onTap(o.userData.id, !!o.userData.gift); return; } }
+  { const r2 = renderer.domElement.getBoundingClientRect(), tc = new THREE.Vector3(); treeRoot.getWorldPosition(tc); let best = null, bd = 30;
+    for (const o of placed){ const w = new THREE.Vector3(); o.children[0].getWorldPosition(w); const toCam = camera.position.clone().sub(tc), toO = w.clone().sub(tc); toCam.y = 0; toO.y = 0; if (toCam.dot(toO) < 0) continue;
+      const v = w.clone().project(camera), sx = r2.left + (v.x + 1) / 2 * r2.width, sy = r2.top + (1 - v.y) / 2 * r2.height, d = Math.hypot(sx - e.clientX, sy - e.clientY); if (d < bd){ bd = d; best = o; } }
+    if (best){ best.userData.swing = performance.now(); opts.onTap && opts.onTap(best.userData.id, false); return; } }
   const th = ray.intersectObjects(tree.children, true)[0]; if (th){ tree.rotation.z = .02; setTimeout(() => tree.rotation.z = -.015, 120); setTimeout(() => tree.rotation.z = 0, 260); opts.onTree && opts.onTree(); } }
 function ornScreen(i){ const o = placed[i]; if (!o) return null; const v = new THREE.Vector3(); o.children[0].getWorldPosition(v); v.y -= .1; v.project(camera); const r = renderer.domElement.getBoundingClientRect(); return [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height]; }
 const ornRot = i => placed[i] && [+placed[i].userData.th.toFixed(3), +(placed[i].userData.tilt || 0).toFixed(3)];
@@ -617,9 +698,11 @@ function snapshot(list, giftList, w = 640, h = 720){
   const keepL = lastList, keepG = lastGifts, rot = tree.rotation.y;
   clearAll(); sig = ''; tree.rotation.y = 0; list.forEach(o => addOrnament(false, o.id, o.key, o.slot)); giftList.forEach(g => addGift(false, g.id)); placed.forEach(o => { o.rotation.z = o.userData.rz; o.rotation.x = 0; });
   if (!snR){ snR = new THREE.WebGLRenderer({ antialias:true, preserveDrawingBuffer:true }); snR.setPixelRatio(1); snR.outputColorSpace = THREE.SRGBColorSpace; snR.toneMapping = THREE.NeutralToneMapping; snR.shadowMap.enabled = true; snR.shadowMap.type = THREE.PCFSoftShadowMap; }
-  snR.setSize(w, h); snCam.aspect = w / h; const c = new THREE.Vector3(tree.position.x + .25, 1.45, tree.position.z + .3), dir = new THREE.Vector3(.18, .42, 1).normalize();
+  snR.setSize(w, h); snCam.aspect = w / h; const c = new THREE.Vector3(treeRoot.position.x + .25, 1.45, treeRoot.position.z + .3), dir = new THREE.Vector3(.18, .42, 1).normalize();
   snCam.position.copy(c).addScaledVector(dir, 8.2); snCam.lookAt(c); snCam.updateProjectionMatrix(); scene.updateMatrixWorld(true); snR.render(scene, snCam);
   const url = snR.domElement.toDataURL('image/jpeg', .88);
   clearAll(); sig = ''; tree.rotation.y = rot; sync(keepL, keepG); shadowsDirty = true; return url; }
-return { sync, setRoom, snapshot, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize(){ renderer.setSize(VW(), VH()); placeCamera(); } };
+const _proj = (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera), r = cv.getBoundingClientRect(); return [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height]; };
+const _dbg = () => Object.values(inst).map(o => { const b = instBox(o); return [o.rec.key, ...[b.min.x, b.max.x, b.min.y, b.max.y, b.min.z, b.max.z].map(v => +v.toFixed(2)), boxOK(o)]; });
+return { zoomTo, zoomOut, zoomed:() => zoomed, _dbg, _proj, sync, setRoom, snapshot, setEdit, editRotate, editRemove, autoPlace, layoutOf, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize(){ renderer.setSize(VW(), VH()); placeCamera(); } };
 }
