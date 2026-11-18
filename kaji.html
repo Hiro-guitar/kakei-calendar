@@ -4250,7 +4250,7 @@ function syncRoom(){
   const doSync = () => { ROOM.setNight(hr >= 17 || hr < 6); ROOM.sync(logs.map(orn3d), logs.filter(l => l.thanks).map(l => ({ id:l.id }))); };
   if (ROOM){ ROOM.resize(); doSync(); return; }
   if (ROOM_LOADING) return; ROOM_LOADING = true;
-  import('./kaji-room3d.js').then(m => { ROOM = m.mountRoom(el, { shiftY:.06, onTap:(id, gift) => { chime('do'); setTimeout(() => ornSheet(id, gift), gift ? 250 : 650); }, onTree:() => chime('do') }); ROOM_LOADING = false; doSync(); })
+  import('./kaji-room3d.js').then(m => { ROOM = m.mountRoom(el, { shiftY:.06, onTap:(id, gift) => { chime('do'); setTimeout(() => ornSheet(id, gift), gift ? 250 : 650); }, onTree:() => chime('do'), onSpin:() => { try { localStorage.setItem('kaji_spun', '1'); } catch (e) {} } }); try { if (!localStorage.getItem('kaji_spun')) setTimeout(() => toast('ツリーは指で横になぞると回せるよ'), 1500); } catch (e) {} ROOM_LOADING = false; doSync(); })
     .catch(e => { console.warn(e); ROOM_FAIL = true; ROOM_LOADING = false; render(); });
 }
 function ornSheet(id, gift){ const l = S.items[id]; if (!l) return; const k = ornamentOf(l), mine = l.by === S.me && !l.both, when = `${dayKey(l.at).slice(5).replace('-','/')} ${hm(l.at)}`;
