@@ -31,7 +31,7 @@ for (let i = 0; i < NB; i++){
 // おもち：白・ピンク・うす黄・うすみどり。やわらかくて、ちょっとつやのある丸
 const mochiG = new THREE.SphereGeometry(.045, 18, 14);
 const MOCHI = ['#fffaf2', '#fffaf2', '#f49aac', '#f49aac', '#ffe9a8', '#cfe9b8'].map(c => new THREE.MeshPhysicalMaterial({ color:c, roughness:.55, sheen:.6, sheenColor:new THREE.Color('#ffffff'), clearcoat:.25, clearcoatRoughness:.5 }));
-branches.forEach((cv, bi) => { const L = cv.getLength(), n = Math.max(3, Math.floor(L / .15)); for (let k = 0; k < n; k++){ const t = .22 + (k + rnd() * .4) / n * .76; if (t > 1) continue; const p = cv.getPointAt(Math.min(1, t)); const m = new THREE.Mesh(mochiG, MOCHI[Math.floor(rnd() * MOCHI.length)]); const q = .8 + rnd() * .4; m.position.copy(p).add(new THREE.Vector3((rnd() - .5) * .02, (rnd() - .5) * .02, (rnd() - .5) * .02)); m.scale.set(q, q * .86, q); m.rotation.set(rnd(), rnd(), rnd()); m.castShadow = true; M.add(m); } });
+branches.forEach((cv, bi) => { const L = cv.getLength(), n = Math.max(3, Math.floor(L / .19)); for (let k = 0; k < n; k++){ const t = .22 + (k + rnd() * .4) / n * .76; if (t > 1) continue; const p = cv.getPointAt(Math.min(1, t)); const m = new THREE.Mesh(mochiG, MOCHI[Math.floor(rnd() * MOCHI.length)]); const q = .8 + rnd() * .4; m.position.copy(p).add(new THREE.Vector3((rnd() - .5) * .02, (rnd() - .5) * .02, (rnd() - .5) * .02)); m.scale.set(q, q * .86, q); m.rotation.set(rnd(), rnd(), rnd()); m.castShadow = true; M.add(m); } });
 
 /* 縁起物 */
 const gold = new THREE.MeshPhysicalMaterial({ color:'#e7b84a', roughness:.22, metalness:.85, clearcoat:.6 }), redG = gl('#d8303a'), whG = gl('#fffaf0'), blk = gl('#231c1c', { roughness:.15 });

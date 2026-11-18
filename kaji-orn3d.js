@@ -262,6 +262,139 @@ for (let j = 0; j < 5; j++) BC.forEach(([, c], i) => BUILD[`b${j}${i}`] = () => 
 for (let j = 0; j < 5; j++) GC.forEach((c, i) => BUILD[`g${j}${i}`] = () => glassShapes[j](c));
 ANIMALS.forEach(([, f], i) => BUILD['f' + i] = f);
 [...SWEETS, ...CLASSIC, ...WINTER, ...SKY, ...PAIR].forEach(([k, f]) => BUILD[k] = f);
+/* ===== 年末年始の縁起物（餅花につるす） =====
+   ボールと同じく、高さ2くらいで作って最後にそろえる。紐は紅白 */
+function himo(g, y = 1, s = 1){ if (NOHANG){ g.userData.hangY = y; return; } add(g, cyl(.035 * s, .035 * s, .5 * s, 8), matte('#d8303a', { roughness:.6 }), 0, y + .25 * s); add(g, tor(.11 * s, .035 * s, 8, 18), matte('#fbf6ec', { roughness:.6 }), 0, y + .55 * s, 0, 0, Math.PI / 2); g.userData.hangY = y + .66 * s; }
+const RED = () => gloss('#d8303a'), WHT = () => gloss('#fbf7ee');
+const faceT = (key, bg, draw) => tex('fc' + key, 512, 256, (g, w, h) => { g.fillStyle = bg; g.fillRect(0, 0, w, h); g.save(); g.translate(w * .25, 0); draw(g, w, h); g.restore(); });
+// だるま
+function daruma(c, fc = '#fff6ea', gold = '#e7b84a'){ const g = new THREE.Group();
+  const t = faceT('dr' + c, c, (x) => { x.fillStyle = fc; x.beginPath(); x.ellipse(0, 108, 62, 54, 0, 0, TAU); x.fill(); x.fillStyle = '#231c1c'; for (const s of [-1, 1]){ x.beginPath(); x.arc(s * 22, 104, 12, 0, TAU); x.fill(); x.fillStyle = '#fff'; x.beginPath(); x.arc(s * 22 - 4, 100, 4, 0, TAU); x.fill(); x.fillStyle = '#231c1c'; x.lineWidth = 6; x.strokeStyle = '#231c1c'; x.beginPath(); x.arc(s * 24, 92, 20, Math.PI * 1.15, Math.PI * 1.85); x.stroke(); }
+    x.fillStyle = 'rgba(255,150,160,.75)'; for (const s of [-1, 1]){ x.beginPath(); x.arc(s * 42, 122, 10, 0, TAU); x.fill(); } x.strokeStyle = c; x.lineWidth = 5; x.beginPath(); x.arc(0, 122, 11, .25, Math.PI - .25); x.stroke();
+    x.fillStyle = gold; x.font = 'bold 46px serif'; x.textAlign = 'center'; x.fillText('福', 0, 210); });
+  add(g, sph(1, 48, 32), gloss(null, t), 0, 0, 0, 0, 0, 0, 1, 1.1, .95); himo(g, 1.08); return g; }
+// 招き猫
+function maneki(c, ear = '#f49aac'){ const g = new THREE.Group(); const dark = c === '#2a2424';
+  const t = faceT('mn' + c, c, (x) => { x.lineWidth = 7; x.strokeStyle = dark ? '#f2c14e' : '#231c1c'; for (const s of [-1, 1]){ x.beginPath(); x.arc(s * 26, 112, 13, Math.PI * 1.1, Math.PI * 1.9); x.stroke(); } x.fillStyle = '#f49aac'; x.beginPath(); x.arc(0, 128, 7, 0, TAU); x.fill();
+    x.lineWidth = 3; for (const s of [-1, 1]) for (const d of [-6, 6]){ x.beginPath(); x.moveTo(s * 20, 132 + d); x.lineTo(s * 58, 130 + d * 1.6); x.stroke(); } x.fillStyle = 'rgba(255,150,160,.7)'; for (const s of [-1, 1]){ x.beginPath(); x.arc(s * 44, 132, 10, 0, TAU); x.fill(); } });
+  const body = gloss(c); add(g, sph(.78, 32, 24), body, 0, -.55, 0, 0, 0, 0, 1, 1.05, .9); add(g, sph(.7, 40, 28), gloss(null, t), 0, .55, 0);
+  for (const s of [-1, 1]){ add(g, cone(.24, .42, 16), body, s * .42, 1.1, 0, 0, 0, -s * .3); add(g, cone(.13, .26, 12), matte(ear), s * .42, 1.08, .09, 0, 0, -s * .3); }
+  add(g, tor(.55, .1, 10, 32), RED(), 0, -.05, 0, Math.PI / 2); add(g, sph(.15, 16, 12), GOLD(), 0, -.18, .55);
+  add(g, new THREE.CapsuleGeometry(.17, .5, 6, 14), body, .66, .45, .15, 0, 0, -.35);
+  const kb = koban(true); kb.scale.setScalar(.5); kb.position.set(0, -.62, .66); g.add(kb); himo(g, 1.25); return g; }
+// 小判
+function koban(inner){ const g = new THREE.Group(); const t = tex('koban', 192, 288, (x, w, h) => { x.fillStyle = '#e7b84a'; x.fillRect(0, 0, w, h); x.strokeStyle = '#b8862a'; x.lineWidth = 7; for (let y = 40; y < h - 30; y += 22){ x.beginPath(); x.moveTo(26, y); x.lineTo(w - 26, y); x.stroke(); } x.fillStyle = '#8a5a14'; x.font = 'bold 54px serif'; x.textAlign = 'center'; x.fillText('福', w / 2, h / 2 + 18); });
+  const m = new THREE.Mesh(cyl(.7, .7, .14, 48), [metalC('#e7b84a'), new THREE.MeshStandardMaterial({ map:t, roughness:.3, metalness:.55, envMapIntensity:1.8 }), GOLD()]); m.rotation.x = Math.PI / 2; m.scale.set(1, 1, 1.45); m.castShadow = true; g.add(m); if (!inner) himo(g, 1.02); return g; }
+// 鯛
+function tai(){ const g = new THREE.Group(); const sk = tex('taisk', 512, 256, (x, w, h) => { const gr = x.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#d23038'); gr.addColorStop(.62, '#f07062'); gr.addColorStop(1, '#fde0d0'); x.fillStyle = gr; x.fillRect(0, 0, w, h); x.strokeStyle = 'rgba(150,20,30,.4)'; x.lineWidth = 3; for (let y = 14; y < h * .62; y += 20) for (let q = (y / 20 % 2) * 12; q < w; q += 24){ x.beginPath(); x.arc(q, y, 11, 0, Math.PI); x.stroke(); } });
+  add(g, sph(1, 48, 32), gloss(null, sk), 0, 0, 0, 0, 0, 0, 1.45, .95, .5); const fin = gloss('#e2453b');
+  add(g, cyl(.75, .08, 1.0, 3), fin, -1.75, 0, 0, 0, 0, Math.PI / 2, 1, 1, .25); add(g, cone(.6, .7, 4), fin, -.1, .95, 0, 0, 0, 0, 1.6, 1, .2);
+  for (const s of [-1, 1]){ add(g, sph(.2, 16, 12), WHT(), 1.0, .22, s * .38); add(g, sph(.11, 12, 10), BLACK(), 1.1, .24, s * .47); }
+  add(g, tor(.12, .04, 8, 16, Math.PI), matte('#a8202a'), 1.38, -.18, 0, 0, Math.PI / 2, Math.PI); himo(g, .95); g.rotation.y = -.2; return g; }
+// 打ち出の小槌
+function kozuchi(){ const g = new THREE.Group(); add(g, cyl(.62, .62, 1.5, 40), GOLD(), 0, .45, 0, 0, 0, Math.PI / 2); for (const x of [-.45, .45]) add(g, cyl(.65, .65, .18, 40), RED(), x, .45, 0, 0, 0, Math.PI / 2);
+  for (const x of [-.76, .76]) add(g, sph(.2, 16, 12), GOLD(), x, .45, 0); add(g, cyl(.16, .2, 1.6, 16), wood('#9a6a3a'), 0, -.8, 0); add(g, sph(.2, 16, 12), RED(), 0, -1.65, 0, 0, 0, 0, 1, 1.5, 1);
+  add(g, tor(.18, .05, 8, 16), GOLD(), 0, -1.35, 0, Math.PI / 2); himo(g, 1.08); return g; }
+// 鈴
+function suzu(c){ const g = new THREE.Group(); const m = c === 'gold' ? GOLD() : c === 'silver' ? SILVER() : metalC(c); add(g, sph(1, 48, 32), m); add(g, tor(1.0, .06, 8, 48, Math.PI), BLACK(), 0, -.15, 0, 0, 0, 0);
+  add(g, sph(.2, 16, 12), BLACK(), 0, -.55, .82); add(g, rbox(.12, .5, .12, .05), BLACK(), 0, -.85, .5, -.5); add(g, tor(.3, .1, 10, 20), m, 0, 1.15, 0, 0, Math.PI / 2);
+  for (const s of [-1, 1]) add(g, cyl(.06, .14, 1.0, 10), RED(), s * .2, -1.45, .2, 0, 0, s * .2); himo(g, 1.35); return g; }
+// 羽子板
+function hagoita(bg, flower){ const g = new THREE.Group(); const t = tex('hg' + bg + flower, 256, 448, (x, w, h) => { x.fillStyle = '#f6e7c8'; x.fillRect(0, 0, w, h); x.fillStyle = bg; x.fillRect(18, 18, w - 36, h - 36);
+    x.fillStyle = flower; for (let i = 0; i < 5; i++){ const a = i / 5 * TAU - Math.PI / 2; x.beginPath(); x.arc(w / 2 + Math.cos(a) * 38, 150 + Math.sin(a) * 38, 30, 0, TAU); x.fill(); } x.fillStyle = '#fff3c0'; x.beginPath(); x.arc(w / 2, 150, 18, 0, TAU); x.fill();
+    x.strokeStyle = '#3f9a4f'; x.lineWidth = 12; x.beginPath(); x.moveTo(50, 360); x.quadraticCurveTo(128, 280, 206, 340); x.stroke(); x.fillStyle = '#f2c14e'; for (let i = 0; i < 6; i++){ x.beginPath(); x.arc(40 + i * 36, 410, 6, 0, TAU); x.fill(); } });
+  const sh = new THREE.Shape(); sh.moveTo(-.55, -1); sh.lineTo(.55, -1); sh.lineTo(.62, .9); sh.quadraticCurveTo(0, 1.35, -.62, .9); sh.closePath(); const geo = ext(sh, .12, .03, 2); planarUV(geo);
+  const m = new THREE.Mesh(geo, [gloss(null, t), wood('#c89a5a')]); m.castShadow = true; g.add(m); add(g, rbox(.3, .9, .14, .05), wood('#a8743e'), 0, -1.42, 0); himo(g, 1.22); return g; }
+// こま
+function koma(){ const g = new THREE.Group(); const t = tex('koma', 256, 64, (x, w, h) => { const c = ['#d8303a', '#f2c14e', '#3f9a4f', '#3a6ab8', '#f2f0ea']; for (let i = 0; i < 10; i++){ x.fillStyle = c[i % c.length]; x.fillRect(0, i * h / 10, w, h / 10 + 1); } });
+  add(g, lathe([[0, -1], [.25, -.75], [.95, -.05], [1, .05], [.8, .25], [.2, .32], [0, .32]], 48), new THREE.MeshPhysicalMaterial({ map:t, roughness:.3, clearcoat:.8 })); add(g, cyl(.14, .14, .7, 16), wood('#8a5a32'), 0, .6, 0); himo(g, .95); return g; }
+// 米俵
+function tawara(){ const g = new THREE.Group(); const straw = tex('straw', 256, 128, (x, w, h) => { x.fillStyle = '#e2c27a'; x.fillRect(0, 0, w, h); for (let i = 0; i < 400; i++){ x.strokeStyle = `rgba(${150 + Math.random() * 60 | 0},${110 + Math.random() * 50 | 0},40,.5)`; x.lineWidth = 1.5; const y = Math.random() * h; x.beginPath(); x.moveTo(Math.random() * w, y); x.lineTo(Math.random() * w, y + (Math.random() - .5) * 4); x.stroke(); } });
+  add(g, cyl(.75, .75, 1.6, 32), new THREE.MeshStandardMaterial({ map:straw, roughness:.95 }), 0, 0, 0, 0, 0, Math.PI / 2, 1, 1, 1); for (const s of [-1, 1]) add(g, sph(.75, 24, 16, 0, TAU, 0, Math.PI / 2), matte('#d8b468', { roughness:.95 }), s * .8, 0, 0, 0, 0, -s * Math.PI / 2, 1, .35, 1);
+  for (const x of [-.5, 0, .5]) add(g, tor(.77, .07, 8, 32), matte('#8a5a2a', { roughness:.9 }), x, 0, 0, 0, Math.PI / 2); add(g, rbox(.5, .6, .05, .04), matte('#fbf6ec'), 0, .1, .78); himo(g, .82); return g; }
+// 宝袋
+function fukuro(){ const g = new THREE.Group(); const t = tex('fuku', 256, 256, (x, w, h) => { x.fillStyle = '#d8303a'; x.fillRect(0, 0, w, h); x.strokeStyle = '#f2c14e'; x.lineWidth = 4; for (let i = 0; i < 5; i++) for (let j = 0; j < 5; j++){ x.beginPath(); x.arc(26 + i * 52, 26 + j * 52, 18, 0, TAU); x.stroke(); } x.fillStyle = '#f2c14e'; x.font = 'bold 70px serif'; x.textAlign = 'center'; x.fillText('宝', w * .75, h * .62); });
+  add(g, sph(1, 40, 28), gloss(null, t), 0, -.2, 0, 0, 0, 0, 1, .9, .85); add(g, cone(.5, .6, 24), gloss('#d8303a'), 0, .75, 0, Math.PI); add(g, tor(.3, .08, 8, 20), GOLD(), 0, .55, 0, Math.PI / 2); for (let i = 0; i < 6; i++){ const a = i / 6 * TAU; add(g, sph(.13, 10, 8), gloss('#d8303a'), Math.sin(a) * .3, 1.08, Math.cos(a) * .3); } himo(g, 1.15); return g; }
+// 扇
+function sensu(bg){ const g = new THREE.Group(); const t = tex('sen' + bg, 512, 256, (x, w, h) => { x.fillStyle = bg; x.fillRect(0, 0, w, h); x.fillStyle = '#f2c14e'; for (let i = 0; i < 18; i++){ x.beginPath(); x.arc(Math.random() * w, Math.random() * h, 6 + Math.random() * 10, 0, TAU); x.fill(); } x.fillStyle = '#d8303a'; x.beginPath(); x.arc(w / 2, h * .55, 40, 0, TAU); x.fill(); });
+  const geo = new THREE.RingGeometry(.45, 1.8, 40, 1, Math.PI * .18, Math.PI * .64); const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map:t, side:THREE.DoubleSide, roughness:.6 })); m.position.y = -.9; g.add(m);
+  for (let i = 0; i <= 8; i++){ const a = Math.PI * .18 + i / 8 * Math.PI * .64; add(g, rbox(.06, 1.85, .05, .02), wood('#7a4a2a'), Math.cos(a) * .9, -.9 + Math.sin(a) * .9, .02, 0, 0, a - Math.PI / 2); } add(g, sph(.1, 10, 8), GOLD(), 0, -.9, .05); himo(g, .9); return g; }
+// 折り鶴
+function tsuru(c){ const g = new THREE.Group(); const p = matte(c, { roughness:.55, side:THREE.DoubleSide }); const tri = (pts) => { const geo = new THREE.BufferGeometry().setFromPoints(pts.map(q => V(...q))); geo.setIndex([0, 1, 2]); geo.computeVertexNormals(); const m = new THREE.Mesh(geo, p); m.castShadow = true; g.add(m); };
+  tri([[-.2, 0, 0], [.2, 0, 0], [0, .1, .9]]); tri([[-.2, 0, 0], [.2, 0, 0], [0, .1, -.9]]); tri([[0, 0, 0], [-1.2, .5, .1], [0, .05, .45]]); tri([[0, 0, 0], [1.2, .5, .1], [0, .05, .45]]); tri([[0, 0, 0], [-1.2, .5, .1], [0, .05, -.45]]); tri([[0, 0, 0], [1.2, .5, .1], [0, .05, -.45]]);
+  tri([[0, 0, .4], [0, 1.0, .95], [0, .05, .6]]); tri([[0, 1.0, .95], [0, .85, 1.15], [0, .95, .9]]); tri([[0, 0, -.4], [0, .9, -1.0], [0, .05, -.6]]); g.rotation.set(.55, Math.PI / 2 + .5, 0); const o = new THREE.Group(); o.add(g); himo(o, .9); return o; }
+// 亀
+function kame(){ const g = new THREE.Group(); const t = tex('kame', 256, 128, (x, w, h) => { x.fillStyle = '#4f8a4a'; x.fillRect(0, 0, w, h); x.strokeStyle = '#2f5a2a'; x.lineWidth = 4; for (let i = 0; i < 8; i++) for (let j = 0; j < 4; j++){ x.beginPath(); for (let k = 0; k < 6; k++){ const a = k / 6 * TAU; x.lineTo(16 + i * 32 + Math.cos(a) * 14, 16 + j * 32 + Math.sin(a) * 14); } x.closePath(); x.stroke(); } });
+  add(g, sph(1, 40, 24, 0, TAU, 0, Math.PI / 2), new THREE.MeshPhysicalMaterial({ map:t, roughness:.35, clearcoat:.7 }), 0, 0, 0, 0, 0, 0, 1, .7, 1); add(g, cyl(1, 1, .12, 40), gloss('#c8a060'), 0, 0, 0);
+  const skin = gloss('#8ac07a'); add(g, sph(.35, 20, 16), skin, 0, .1, 1.1); for (const s of [-1, 1]){ add(g, sph(.07, 10, 8), BLACK(), s * .15, .22, 1.38); add(g, sph(.25, 14, 10), skin, s * .8, -.05, .7, 0, 0, 0, 1, .5, 1); add(g, sph(.25, 14, 10), skin, s * .8, -.05, -.7, 0, 0, 0, 1, .5, 1); }
+  g.rotation.x = .9; const o = new THREE.Group(); o.add(g); himo(o, .9); return o; }
+// 松・竹・梅
+function matsu(){ const g = new THREE.Group(); const n = matte('#2f7a4a', { roughness:.7 }); for (let k = 0; k < 3; k++){ const y = .6 - k * .55, w = .6 + k * .3; for (let i = 0; i < 22; i++){ const a = (i / 22 - .5) * Math.PI * .9; add(g, cyl(.035, .02, w, 5), n, Math.sin(a) * w * .5, y + Math.cos(a) * w * .2, 0, 0, 0, -a); } }
+  add(g, cyl(.09, .12, 1.8, 8), wood('#6a4a2a'), 0, -.3, -.05); himo(g, .9); return g; }
+function take(){ const g = new THREE.Group(); const m = gloss('#5aa84a'); for (const [x, h] of [[-.35, 1.9], [0, 2.3], [.35, 1.6]]){ add(g, cyl(.17, .17, h, 20), m, x, 0, 0); for (let y = -h / 2 + .4; y < h / 2; y += .55) add(g, cyl(.19, .19, .06, 20), gloss('#3f8a3a'), x, y, 0); add(g, cyl(.15, .15, .02, 20), matte('#e8e0b0'), x, h / 2 + .005, 0); }
+  add(g, tor(.5, .06, 8, 24), RED(), 0, -.3, 0, Math.PI / 2, 0, 0, 1, .7, 1); himo(g, 1.15); return g; }
+function ume(c){ const g = new THREE.Group(); const pm = gloss(c); for (let i = 0; i < 5; i++){ const a = i / 5 * TAU + Math.PI / 2; add(g, sph(.55, 24, 16), pm, Math.cos(a) * .6, Math.sin(a) * .6, 0, 0, 0, 0, 1, 1, .35); }
+  add(g, sph(.35, 20, 14), gloss('#fff3c0'), 0, 0, .12, 0, 0, 0, 1, 1, .4); for (let i = 0; i < 10; i++){ const a = i / 10 * TAU; add(g, cyl(.02, .02, .3, 4), matte('#c8902a'), Math.cos(a) * .2, Math.sin(a) * .2, .3, Math.PI / 2, 0, 0); add(g, sph(.05, 6, 6), GOLD(), Math.cos(a) * .28, Math.sin(a) * .28, .45); } himo(g, 1.15); return g; }
+// 鏡もち
+function kagami(){ const g = new THREE.Group(); add(g, rbox(1.4, .35, 1.4, .05), wood('#e8d0a0'), 0, -.9, 0); add(g, sph(.75, 32, 20), matte('#fffaf2', { roughness:.5 }), 0, -.45, 0, 0, 0, 0, 1, .55, 1); add(g, sph(.6, 32, 20), matte('#fffaf2', { roughness:.5 }), 0, .1, 0, 0, 0, 0, 1, .55, 1);
+  add(g, sph(.38, 24, 18), gloss('#f29a2a'), 0, .62, 0); add(g, cone(.25, .25, 8), matte('#3f8a3a'), 0, .95, 0, 0, 0, 0, 1, .5, .3); add(g, rbox(1.2, .05, .4, .02), matte('#ffffff'), 0, -.7, .5, 0, 0, .1); himo(g, 1.1); return g; }
+// 門松
+function kadomatsu(){ const g = new THREE.Group(); const m = gloss('#5aa84a'); for (const [x, z, h] of [[0, .1, 2.0], [-.3, -.1, 1.6], [.3, -.1, 1.3]]){ const c = new THREE.CylinderGeometry(.15, .15, h, 16); const mm = add(g, c, m, x, -.2 + h / 2 - 1, z); add(g, cyl(.15, .15, .02, 16), matte('#e8e0b0'), x, -.2 + h - 1 + .01, z, -.5); }
+  add(g, cyl(.6, .55, .8, 24), matte('#c8a060', { roughness:.9 }), 0, -.9, 0); for (const y of [-.7, -1.05]) add(g, tor(.6, .04, 8, 24), matte('#7a4a2a'), 0, y, 0, Math.PI / 2); const n = matte('#2f7a4a'); for (let i = 0; i < 14; i++){ const a = i / 14 * TAU; add(g, cyl(.03, .02, .5, 5), n, Math.sin(a) * .5, -.35, Math.cos(a) * .5, Math.cos(a) * .6, 0, -Math.sin(a) * .6); } himo(g, .85); return g; }
+// ひつじ（2027年は未年）
+function hitsuji(c, scarf){ const g = new THREE.Group(); const wool = matte(c, { roughness:.95 }); for (let i = 0; i < 14; i++){ const a = i / 14 * TAU, b = (i % 3) * .3 - .3; add(g, sph(.42, 16, 12), wool, Math.cos(a) * .55, b + .05, Math.sin(a) * .45); } add(g, sph(.7, 20, 16), wool, 0, 0, 0);
+  const sk = gloss('#3a302c'); add(g, sph(.42, 24, 18), sk, 0, .25, .7, 0, 0, 0, 1, .95, .85); for (const s of [-1, 1]){ add(g, sph(.13, 12, 8), sk, s * .45, .32, .55, 0, 0, s * .6, 1.6, .7, .7); add(g, tor(.17, .07, 8, 16, Math.PI * 1.4), matte('#e8d8b0'), s * .35, .5, .55, 0, s * .5, s * 1.2); add(g, sph(.06, 10, 8), WHT(), s * .15, .32, 1.05); add(g, sph(.035, 8, 6), BLACK(), s * .15, .32, 1.09); }
+  for (let i = 0; i < 6; i++) add(g, sph(.15, 10, 8), wool, (i - 2.5) * .1, .62, .6); add(g, tor(.55, .1, 10, 28), gloss(scarf), 0, -.12, .25, Math.PI / 2 - .3); himo(g, .85); return g; }
+// 富士山
+function fuji(){ const g = new THREE.Group(); add(g, cone(1.2, 1.5, 40), gloss('#3a6ab8'), 0, -.2, 0, 0, 0, 0, 1, 1, .35); add(g, cone(.5, .62, 40), gloss('#ffffff'), 0, .25, 0, 0, 0, 0, 1, 1, .36); for (let i = 0; i < 5; i++) add(g, cone(.12, .3, 8), gloss('#ffffff'), -.35 + i * .17, -.05, .12, Math.PI, 0, 0, 1, 1, .4);
+  add(g, sph(.35, 20, 16), gloss('#e8402e'), .85, .7, -.1, 0, 0, 0, 1, 1, .3); himo(g, .6); return g; }
+// なす
+function nasu(){ const g = new THREE.Group(); add(g, lathe([[0, -1.1], [.4, -.95], [.6, -.5], [.55, .1], [.38, .55], [.2, .75], [0, .8]], 40), gloss('#5a2a7a')); add(g, cone(.42, .35, 6), matte('#3f7a3a'), 0, .82, 0, Math.PI); add(g, cyl(.06, .08, .35, 8), matte('#3f7a3a'), 0, 1.05, 0); g.rotation.z = .25; const o = new THREE.Group(); o.add(g); himo(o, 1.2); return o; }
+// えび
+function ebi(){ const g = new THREE.Group(); const m = gloss('#e8503a'); for (let i = 0; i < 7; i++){ const a = i / 6 * Math.PI * 1.1, r = .7; add(g, sph(.32 - i * .025, 18, 12), m, Math.cos(a) * r, Math.sin(a) * r * .9, 0, 0, 0, a, 1.1, .9, .8); }
+  add(g, cone(.3, .5, 6), m, -.6, -.4, 0, 0, 0, -1.8, 1, 1, .3); for (const s of [-1, 1]) add(g, cyl(.015, .01, 1.4, 4), m, .9, .3, s * .1, 0, 0, .8); add(g, sph(.06, 8, 6), BLACK(), .95, .1, .25); himo(g, .9); return g; }
+// おみくじ
+function omikuji(){ const g = new THREE.Group(); const t = tex('kuji', 128, 384, (x, w, h) => { x.fillStyle = '#fffaf0'; x.fillRect(0, 0, w, h); x.strokeStyle = '#d8303a'; x.lineWidth = 6; x.strokeRect(10, 10, w - 20, h - 20); x.fillStyle = '#d8303a'; x.font = 'bold 54px serif'; x.textAlign = 'center'; x.fillText('大', w / 2, 150); x.fillText('吉', w / 2, 220); });
+  add(g, rbox(.6, 1.8, .06, .02), matte('#ffffff', { map:t, roughness:.7 }), 0, 0, 0); add(g, rbox(.66, .18, .1, .03), RED(), 0, .35, 0); himo(g, .9); return g; }
+// 破魔矢
+function hamaya(){ const g = new THREE.Group(); add(g, cyl(.06, .06, 2.4, 10), wood('#e8d0a0'), 0, 0, 0); add(g, cone(.12, .3, 8), metalC('#c8ccd6'), 0, -1.35, 0, Math.PI); for (let i = 0; i < 3; i++){ const a = i / 3 * TAU; add(g, rbox(.03, .5, .3, .01), matte('#fbf6ec'), Math.sin(a) * .1, 1.0, Math.cos(a) * .1, 0, a, 0); }
+  add(g, rbox(.32, .55, .03, .02), RED(), .22, .2, 0); add(g, sph(.12, 12, 8), GOLD(), .22, -.15, 0); g.rotation.z = .5; const o = new THREE.Group(); o.add(g); himo(o, 1.0); return o; }
+// 凧
+function tako(){ const g = new THREE.Group(); const t = tex('tako', 256, 320, (x, w, h) => { x.fillStyle = '#fbf3e2'; x.fillRect(0, 0, w, h); x.fillStyle = '#d8303a'; x.font = 'bold 180px serif'; x.textAlign = 'center'; x.fillText('寿', w / 2, h * .66); x.strokeStyle = '#231c1c'; x.lineWidth = 8; x.strokeRect(6, 6, w - 12, h - 12); });
+  add(g, rbox(1.4, 1.75, .05, .02), new THREE.MeshStandardMaterial({ map:t, roughness:.7 }), 0, 0, 0); for (const s of [-1, 1]) add(g, cyl(.04, .04, 1.2, 6), RED(), s * .45, -1.4, 0, 0, 0, s * .2); himo(g, .88); return g; }
+// 獅子舞
+function shishi(){ const g = new THREE.Group(); const R2 = gloss('#d8303a'); add(g, sph(.85, 32, 24), R2, 0, .1, 0, 0, 0, 0, 1.1, .9, 1); add(g, rbox(1.5, .4, .9, .15), R2, 0, -.55, .15); add(g, rbox(1.2, .15, .6, .05), gloss('#ffffff'), 0, -.33, .5);
+  for (const s of [-1, 1]){ add(g, sph(.25, 16, 12), gloss('#f2c14e'), s * .35, .4, .62); add(g, sph(.13, 12, 8), BLACK(), s * .35, .4, .82); add(g, sph(.12, 10, 8), BLACK(), s * .5, .75, .35, 0, 0, 0, 1.6, .6, .6); }
+  add(g, sph(.2, 14, 10), BLACK(), 0, .05, .85); const cloth = tex('karakusa', 256, 128, (x, w, h) => { x.fillStyle = '#3f8a5a'; x.fillRect(0, 0, w, h); x.strokeStyle = '#fbf6ec'; x.lineWidth = 5; for (let i = 0; i < 6; i++){ x.beginPath(); for (let tt = 0; tt < 6.3; tt += .1){ const r = 4 + tt * 3; x.lineTo(20 + i * 44 + Math.cos(tt) * r, 64 + Math.sin(tt) * r); } x.stroke(); } });
+  add(g, sph(.9, 24, 16, 0, TAU, Math.PI / 2, Math.PI / 2), new THREE.MeshStandardMaterial({ map:cloth, roughness:.8, side:THREE.DoubleSide }), 0, .1, -.5, 0, 0, 0, 1.1, 1.1, 1); himo(g, 1.0); return g; }
+// 千両箱
+function senryo(){ const g = new THREE.Group(); add(g, rbox(1.6, .9, 1.0, .06), wood('#6a3a1e'), 0, -.2, 0); for (const x of [-.6, 0, .6]) add(g, rbox(.08, .94, 1.04, .02), GOLD(), x, -.2, 0); add(g, rbox(.3, .25, .06, .03), GOLD(), 0, -.05, .52);
+  for (let i = 0; i < 9; i++) add(g, cyl(.22, .22, .05, 20), GOLD(), (i % 3 - 1) * .45, .3 + Math.floor(i / 3) * .05, (Math.floor(i / 3) - 1) * .25, Math.PI / 2, 0, 0, 1, 1, 1.45); himo(g, .45); return g; }
+// みかん
+function mikan(){ const g = new THREE.Group(); const t = tex('mkn', 256, 128, (x, w, h) => { x.fillStyle = '#f29a2a'; x.fillRect(0, 0, w, h); for (let i = 0; i < 900; i++){ x.fillStyle = 'rgba(200,110,20,.35)'; x.beginPath(); x.arc(Math.random() * w, Math.random() * h, 1.2, 0, TAU); x.fill(); } });
+  add(g, sph(1, 40, 28), new THREE.MeshPhysicalMaterial({ map:t, roughness:.5, clearcoat:.4 }), 0, 0, 0, 0, 0, 0, 1, .85, 1); add(g, cyl(.08, .1, .2, 8), matte('#3f7a3a'), 0, .9, 0); add(g, cone(.35, .9, 4), gloss('#3f8a3a'), .35, 1.0, 0, 0, 0, -1.2, 1, 1, .2); himo(g, 1.0); return g; }
+// 紅白の水引（あわじ結び）
+function mizuhiki(){ const g = new THREE.Group(); const pts = []; for (let t = 0; t <= 1; t += .01){ const a = t * TAU * 2; pts.push([Math.sin(a) * (.8 + .3 * Math.cos(a * .5)), Math.cos(a * 1.5) * .6, Math.sin(a * 3) * .1]); }
+  for (const [c, o] of [['#d8303a', 0], ['#fbf6ec', .08], ['#d8303a', .16]]) add(g, tube(pts.map(p => [p[0], p[1] - o, p[2] + o * .3]), .045, 160, false, 8), gloss(c), 0, 0, 0); for (const s of [-1, 1]) add(g, cyl(.05, .05, 1.2, 8), gloss('#d8303a'), s * .35, -1.0, 0, 0, 0, s * .25); himo(g, .75); return g; }
+// 宝船
+function takarabune(){ const g = new THREE.Group(); const hull = new THREE.Shape(); hull.moveTo(-1.3, .3); hull.quadraticCurveTo(-1.1, -.6, 0, -.6); hull.quadraticCurveTo(1.1, -.6, 1.4, .5); hull.lineTo(-1.3, .3); add(g, ext(hull, .9, .06, 2), gloss('#a8402a'), 0, 0, 0);
+  add(g, cyl(.05, .05, 1.8, 8), wood('#6a4a2a'), 0, 1.1, 0); const t = tex('ho', 256, 256, (x, w, h) => { x.fillStyle = '#fbf3e2'; x.fillRect(0, 0, w, h); x.fillStyle = '#d8303a'; x.font = 'bold 170px serif'; x.textAlign = 'center'; x.fillText('宝', w / 2, h * .72); });
+  add(g, rbox(1.1, 1.1, .04, .02), new THREE.MeshStandardMaterial({ map:t, roughness:.7 }), 0, 1.2, .08); { const sv = NOHANG; NOHANG = true; const tw = tawara(); NOHANG = sv; tw.scale.setScalar(.3); tw.position.set(-.5, .55, 0); g.add(tw); }
+  const k = koban(true); k.scale.setScalar(.3); k.position.set(.55, .55, .3); g.add(k); himo(g, 2.05); return g; }
+const ENGI = [
+  ['e_dr0', () => daruma('#d8303a')], ['e_dr1', () => daruma('#f6f1e6', '#fff6ea', '#d8303a')], ['e_dr2', () => daruma('#e7b84a', '#fff6ea', '#d8303a')], ['e_dr3', () => daruma('#f49aac')], ['e_dr4', () => daruma('#3f9a5a')], ['e_dr5', () => daruma('#3a6ab8')],
+  ['e_mn0', () => maneki('#fbf7ee')], ['e_mn1', () => maneki('#2a2424')], ['e_mn2', () => maneki('#e7b84a')],
+  ['e_koban', () => koban()], ['e_tai', tai], ['e_kozuchi', kozuchi], ['e_suzu0', () => suzu('gold')], ['e_suzu1', () => suzu('silver')], ['e_suzu2', () => suzu('#d8303a')],
+  ['e_hg0', () => hagoita('#d8303a', '#f2c14e')], ['e_hg1', () => hagoita('#3a6ab8', '#f49aac')], ['e_hg2', () => hagoita('#2a2a3a', '#e8503a')],
+  ['e_koma', koma], ['e_tawara', tawara], ['e_fukuro', fukuro], ['e_sensu0', () => sensu('#d8303a')], ['e_sensu1', () => sensu('#2a3a6a')],
+  ['e_tsuru0', () => tsuru('#d8303a')], ['e_tsuru1', () => tsuru('#e7b84a')], ['e_tsuru2', () => tsuru('#f49aac')], ['e_kame', kame],
+  ['e_matsu', matsu], ['e_take', take], ['e_ume0', () => ume('#f49aac')], ['e_ume1', () => ume('#fbf7ee')], ['e_ume2', () => ume('#d8303a')],
+  ['e_kagami', kagami], ['e_kado', kadomatsu], ['e_hitsuji0', () => hitsuji('#fbf7ee', '#d8303a')], ['e_hitsuji1', () => hitsuji('#f6e3c8', '#3a6ab8')],
+  ['e_fuji', fuji], ['e_nasu', nasu], ['e_ebi', ebi], ['e_omikuji', omikuji], ['e_hamaya', hamaya], ['e_tako', tako], ['e_shishi', shishi], ['e_senryo', senryo], ['e_mikan', mikan], ['e_mizuhiki', mizuhiki], ['e_takara', takarabune],
+];
+ENGI.forEach(([k, f]) => BUILD[k] = f);
+export const ENGI_KEYS = ENGI.map(([k]) => k);
+
 export const KEYS = Object.keys(BUILD);
 
 /* 大きさをそろえる：高さ 0.27 / 幅 0.25 に収め、吊り下げ点が y=+0.13 */

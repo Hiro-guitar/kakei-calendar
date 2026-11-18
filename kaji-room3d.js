@@ -176,6 +176,7 @@ const outLight = new THREE.DirectionalLight('#bcd4ff', 1.2); outLight.position.s
 
 /* ---------- ツリー ---------- */
 const treeRoot = new THREE.Group(); treeRoot.position.set(-1.15, 0, -1.65); scene.add(treeRoot); treeRoot.userData.inst = 'tree';
+let nyMode = false, mochi = null, MOCHI_SLOTS = null; // 年末年始は餅花
 const tree = new THREE.Group(); tree.scale.setScalar(.86); tree.rotation.y = opts.rot || 0; treeRoot.add(tree);
 const potH = .62;
 // 段（下から）：[下端y, 半径, 高さ]
@@ -256,6 +257,7 @@ function miniStar(){ const m = new THREE.Mesh(new THREE.ExtrudeGeometry(starShap
 // スロット：円錐の表面に黄金角スパイラル、カメラ側だけ
 const slots = []; { const N = 120, yTop = treeTopY - .4, yBot = TIERS[0][0] + .12; for (let i = 0; i < N; i++){ const u = Math.sqrt((i + .5) / N), y = yTop - u * (yTop - yBot), a = i * 2.39996; const ang = ((a % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2); const d = ang > Math.PI ? ang - Math.PI * 2 : ang; const r = radiusAt(y) * .98 + .16; slots.push(new THREE.Vector3(Math.sin(a) * r, y - .05, Math.cos(a) * r)); } }
 { const w = slots.map(p => [p, Math.abs(Math.atan2(p.x, p.z)) + rnd() * 2.2]); w.sort((a, b) => a[1] - b[1]); slots.length = 0; w.forEach(a => slots.push(a[0])); } // 前から順に、ばらして飾る
+const TREE_SLOTS = slots.slice(); // ツリーのときの場所（年末年始は餅花の場所に入れかえる）
 const placed = [], appear = [];
 const usedSlots = new Set();
 // ツリー全体で、まわりの飾りからいちばん離れたあいている場所を選ぶ
@@ -268,7 +270,7 @@ function pickSlot(){ const rot = tree.rotation.y, used = [...usedSlots].map(i =>
 // 決まった場所があればそこ。ふたりがたまたま同じ場所を選んでいたら、いちばん近いあいている場所。なければ前から順に（どの端末でも同じ結果）
 function slotFor(want){ if (Number.isInteger(want) && want >= 0 && want < slots.length){ if (!usedSlots.has(want)) return want; let best = -1, bd = 1e9; for (let i = 0; i < slots.length; i++){ if (usedSlots.has(i)) continue; const d = slots[i].distanceToSquared(slots[want]); if (d < bd){ bd = d; best = i; } } return best; }
   for (let i = 0; i < slots.length; i++) if (!usedSlots.has(i)) return i; return -1; }
-function addOrnament(animate = true, id = null, type = null, want = null){ const idx = placed.length; let si = slotFor(want), p; if (si >= 0){ usedSlots.add(si); p = slots[si].clone(); } else { p = slots[idx % slots.length].clone().multiplyScalar(1.02).add(new THREE.Vector3(0, -.04 * Math.floor(idx / slots.length), 0)); } const o = makeOrnament(type || 'red'); o.userData.id = id; o.userData.base = 1.45; o.scale.setScalar(1.45); o.children[0].position.y -= .13; o.position.copy(p).add(new THREE.Vector3(0, .13 * 1.45, 0)); o.userData.orn = true; o.userData.ph = rnd() * 6; o.rotation.order = 'YXZ'; o.rotation.y = Math.atan2(p.x, p.z) + (rnd() - .5) * .6; o.rotation.z = (rnd() - .5) * .25; o.userData.rz = o.rotation.z; o.traverse(m => { if (m.isMesh) m.castShadow = true; }); tree.add(o); placed.push(o);
+function addOrnament(animate = true, id = null, type = null, want = null){ const idx = placed.length; let si = slotFor(want), p; if (si >= 0){ usedSlots.add(si); p = slots[si].clone(); } else { p = slots[idx % slots.length].clone().multiplyScalar(1.02).add(new THREE.Vector3(0, -.04 * Math.floor(idx / slots.length), 0)); } const o = makeOrnament(type || 'red'), OS = nyMode ? 3.3 : 1.45; o.userData.id = id; o.userData.base = OS; o.scale.setScalar(OS); o.children[0].position.y -= .13; if (nyMode) o.position.copy(p); else o.position.copy(p).add(new THREE.Vector3(0, .13 * 1.45, 0)); o.userData.orn = true; o.userData.ph = rnd() * 6; o.rotation.order = 'YXZ'; o.rotation.y = Math.atan2(p.x, p.z) + (rnd() - .5) * .6; o.rotation.z = (rnd() - .5) * .25; o.userData.rz = o.rotation.z; o.traverse(m => { if (m.isMesh) m.castShadow = true; }); tree.add(o); placed.push(o);
   if (animate){ o.scale.setScalar(.001); appear.push({ o, t0:performance.now() }); } shadowsDirty = true; }
 
 /* ---------- プレゼント ---------- */
@@ -581,7 +583,7 @@ const mounted = {};
 function disposeG(o){ o.traverse(m => { if (m.isMesh || m.isPoints){ m.geometry && m.geometry.dispose(); } }); }
 function placeItem(slot, key){ if (slot === 'wallpaper'){ applyWall(key ? key.slice(-1) : 'a'); return; } if (slot === 'flooring'){ applyFloor(key ? key.slice(-1) : 'a'); return; } const cur = mounted[slot]; if (cur && cur.userData.key === key) return; if (cur){ (cur.parent || scene).remove(cur); disposeG(cur); delete mounted[slot]; }
   if (!key || !FURN_BY[key]) return; const g = buildFurn(key);
-  if (TREE_PARTS.includes(slot)){ tree.add(g); mounted[slot] = g; return; }
+  if (TREE_PARTS.includes(slot)){ g.visible = !nyMode; tree.add(g); mounted[slot] = g; return; }
   if (slot === 'treebase' || slot === 'special'){ if (slot === 'treebase') g.scale.setScalar(tree.scale.x); treeRoot.add(g); mounted[slot] = g; return; }
   if (slot === 'stockings' || slot === 'mantel'){ const fp = Object.values(inst).find(x => x.rec.key.startsWith('fireplace_')); if (!fp) return; const a = ANCHOR[slot]; g.position.set(0, a[1], a[2] - bz); fp.g.add(g); mounted[slot] = g; return; }
   const a = ANCHOR[slot]; g.position.set(a[0], a[1], a[2]); g.rotation.y = a[3] || 0;
@@ -768,8 +770,8 @@ function ornScreen(i){ const o = placed[i]; if (!o) return null; const v = new T
 const ornRot = i => placed[i] && [+placed[i].userData.th.toFixed(3), +(placed[i].userData.tilt || 0).toFixed(3)];
 /* ある日のツリーを写真にする（週の画面用）。いまのツリーはあとで元にもどす */
 let snR = null; const snCam = new THREE.PerspectiveCamera(30, 1, .1, 100);
-function snapshot(list, giftList, w = 640, h = 720){
-  const keepL = lastList, keepG = lastGifts, rot = tree.rotation.y;
+function snapshot(list, giftList, w = 640, h = 720, ny = nyMode){
+  const keepL = lastList, keepG = lastGifts, rot = tree.rotation.y, wasNY = nyMode; setSeason(ny);
   const abv = advBox.visible; advBox.visible = false; clearAll(); sig = ''; tree.rotation.y = 0; list.forEach(o => addOrnament(false, o.id, o.key, o.slot)); giftList.forEach(g => addGift(false, g.id)); placed.forEach(o => { o.rotation.z = o.userData.rz; o.rotation.x = 0; });
   if (!snR){ snR = new THREE.WebGLRenderer({ antialias:true, preserveDrawingBuffer:true }); snR.setPixelRatio(1); snR.outputColorSpace = THREE.SRGBColorSpace; snR.toneMapping = THREE.NeutralToneMapping; snR.shadowMap.enabled = true; snR.shadowMap.type = THREE.PCFSoftShadowMap; }
   // 部屋ぜんたいを、ふだんと同じ向きから
@@ -777,9 +779,17 @@ function snapshot(list, giftList, w = 640, h = 720){
   const halfW = RW / 2 + .25, dist = halfW / (Math.tan(THREE.MathUtils.degToRad(snCam.fov / 2)) * snCam.aspect);
   snCam.position.copy(look).addScaledVector(dir, dist); snCam.lookAt(look); snCam.updateProjectionMatrix(); scene.updateMatrixWorld(true); snR.render(scene, snCam);
   const url = snR.domElement.toDataURL('image/jpeg', .88);
-  advBox.visible = abv; clearAll(); sig = ''; tree.rotation.y = rot; sync(keepL, keepG); shadowsDirty = true; return url; }
+  advBox.visible = abv; clearAll(); sig = ''; tree.rotation.y = rot; if (wasNY !== nyMode){ lastList = keepL; lastGifts = keepG; setSeason(wasNY); } else sync(keepL, keepG); shadowsDirty = true; return url; }
 const _proj = (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera), r = cv.getBoundingClientRect(); return [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height]; };
 const _dbg = () => Object.values(inst).map(o => { const b = instBox(o); return [o.rec.key, ...[b.min.x, b.max.x, b.min.y, b.max.y, b.min.z, b.max.z].map(v => +v.toFixed(2)), boxOK(o)]; });
+/* ---------- 年末年始：ツリーのかわりに餅花 ---------- */
+function buildMochi(){ if (mochi) return; mochi = makeMochibana(7); const S = 1.6 / tree.scale.x; mochi.group.scale.setScalar(S); mochi.group.visible = false; tree.add(mochi.group);
+  // 縁起物をつるす場所：大きな枝は外側の垂れたところ、小枝は先のほう
+  MOCHI_SLOTS = []; mochi.branches.forEach((cv, i) => (i % 3 === 0 ? [.45, .6, .74, .88] : [.5, .92]).forEach(t => { const q = cv.getPointAt(t).multiplyScalar(S), rr = Math.hypot(q.x, q.z) || 1; MOCHI_SLOTS.push(q.add(new THREE.Vector3(q.x / rr * .08, -.04, q.z / rr * .08))); }));
+  const w = MOCHI_SLOTS.map((p, i) => [p, Math.abs(Math.atan2(p.x, p.z)) + ((i * 7919) % 100) / 45]); w.sort((a, b) => a[1] - b[1]); MOCHI_SLOTS = w.map(a => a[0]); }
+function setSeason(ny){ ny = !!ny; if (ny === nyMode) return; nyMode = ny; if (ny) buildMochi();
+  firBase.forEach(m => m.visible = !ny); for (const k of TREE_PARTS) if (mounted[k]) mounted[k].visible = !ny; if (mochi) mochi.group.visible = ny;
+  slots.length = 0; (ny ? MOCHI_SLOTS : TREE_SLOTS).forEach(p => slots.push(p)); const L = lastList, G = lastGifts; clearAll(); sig = ''; if (L) sync(L, G || []); shadowsDirty = true; }
 const _mochi = (n = 14, sc = 1.6) => { const mb = makeMochibana(7); mb.group.scale.setScalar(sc); mb.branches.slice(0, n * 2).forEach((cv, i) => { if (i % 2) return; const o = mb.makers[(i / 2) % mb.makers.length](); o.scale.setScalar(1.25); mb.hang(o, cv.getPointAt(.55 + (i % 5) * .07), .05 + (i % 3) * .025); }); mb.group.traverse(m => { if (m.isMesh) m.castShadow = true; }); tree.visible = false; treeRoot.add(mb.group); shadowsDirty = true; };
-return { _mochi, thumbGift, giftType:id => GIFT_TYPES[giftSeed(id) % GIFT_TYPES.length], setAdvBox, zoomTo, zoomOut, zoomed:() => zoomed, _dbg, _proj, sync, setRoom, snapshot, setEdit, editRotate, editRemove, autoPlace, layoutOf, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize(){ renderer.setSize(VW(), VH()); placeCamera(); } };
+return { setSeason, _mochi, thumbGift, giftType:id => GIFT_TYPES[giftSeed(id) % GIFT_TYPES.length], setAdvBox, zoomTo, zoomOut, zoomed:() => zoomed, _dbg, _proj, sync, setRoom, snapshot, setEdit, editRotate, editRemove, autoPlace, layoutOf, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize(){ renderer.setSize(VW(), VH()); placeCamera(); } };
 }
