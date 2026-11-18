@@ -183,6 +183,7 @@ body.xfullmode .qbar{background:rgba(255,250,236,.55);-webkit-backdrop-filter:bl
 .wday .dots i.h{background:var(--h)}.wday .dots i.y{background:var(--y)}
 
 /* 振り返り */
+.didlist{display:flex;flex-wrap:wrap;gap:8px}.didlist span{background:#fff8ea;border-radius:999px;padding:6px 12px;font-weight:700;font-size:13px;box-shadow:inset 0 0 0 2px #eadcbc}.didlist small{margin-left:4px;color:#c8862a;font-weight:800}.didthx{margin-top:10px;color:#d0546b;font-weight:800;font-size:13px}
 .reveal{width:100%;padding:16px;border-radius:24px;border:3px dashed #d9ccb1;color:var(--sub);background:var(--paper);font-weight:700}
 .split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .who{border-radius:22px;padding:14px}
@@ -475,7 +476,7 @@ nav.tabs .tile{width:38px;height:38px}
 <nav class="tabs" id="tabs">
   <button data-t="today"><span class="tile"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg></span>今日</button>
   <button data-t="week"><span class="tile"><svg viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="3.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/><circle cx="9" cy="15" r=".6"/><circle cx="15" cy="15" r=".6"/></svg></span>週</button>
-  <button data-t="review"><span class="tile"><svg viewBox="0 0 24 24"><path d="M5 6.5c0-1.4 1.1-2.5 2.5-2.5h9c1.4 0 2.5 1.1 2.5 2.5v7c0 1.4-1.1 2.5-2.5 2.5H11l-4 3.5V16h0c-1.1 0-2-.9-2-2z"/><path d="M9 9h6M9 12h4"/></svg></span>振り返り</button>
+  <button data-t="review"><span class="tile"><svg viewBox="0 0 24 24"><path d="M5 6.5c0-1.4 1.1-2.5 2.5-2.5h9c1.4 0 2.5 1.1 2.5 2.5v7c0 1.4-1.1 2.5-2.5 2.5H11l-4 3.5V16h0c-1.1 0-2-.9-2-2z"/><path d="M9 9h6M9 12h4"/></svg></span>ふたり</button>
   <button data-t="zukan"><span class="tile"><svg viewBox="0 0 24 24"><path d="M5 5.5C5 4.7 5.7 4 6.5 4H18v14H6.5C5.7 18 5 18.7 5 19.5z"/><path d="M5 19.5C5 20.3 5.7 21 6.5 21H18v-3"/><circle cx="11.5" cy="10" r="2.2"/><path d="M11.5 12.2v3"/></svg></span>図鑑</button>
   <button data-t="settings"><span class="tile"><svg viewBox="0 0 24 24"><path d="M14.5 5.5a3.5 3.5 0 0 0-4.6 4.4L4.5 15.3a1.8 1.8 0 0 0 2.5 2.6l5.4-5.4a3.5 3.5 0 0 0 4.5-4.6l-2.1 2.1-2-.5-.5-2z"/></svg></span>設定</button>
 </nav>
@@ -549,23 +550,23 @@ function freqText(c){
 let popId = null, talkIdx = 0, lastTyped = '', typeT = null, html0 = '';
 function talkMsg(due, logs){
   const me = S.me, h = new Date().getHours();
-  const greet = h < 5 ? '夜ふかしだね。' : h < 10 ? 'おはよう！' : h < 17 ? 'こんにちは！' : 'おつかれさま！';
+  const greet = h < 5 ? 'まだ起きてたの？' : h < 10 ? 'おはよう！' : h < 17 ? 'こんにちは！' : 'こんばんは！';
   const doneIds = new Set(logs.map(l => l.choreId));
   const left = due.filter(c => !doneIds.has(c.id));
   const mine = left.filter(c => c.owner === me).length;
   const fromOther = logs.filter(l => l.by !== me && !l.thanks);
   const openNotes = all('note').filter(n => n.status !== 'done').length;
   const msgs = [];
-  if (!logs.length) msgs.push(`${greet} 家事をしたら、下のマークをタップして残してね。`);
-  else msgs.push(`${greet} 今日はふたりで${logs.length}回、家事を記録したよ。`);
-  if (fromOther.length) msgs.push(`${nm(other(me))}が今日${fromOther.length}つやってくれたみたい。♡ありがとう、送ってみる？`);
+  if (!logs.length) msgs.push(`${greet} 今日もいい日になりそう。`);
+  else msgs.push(`${greet} 今日はふたりで${logs.length}こ、おうちのことをしたね。`);
+  if (fromOther.length) msgs.push(`${nm(other(me))}が今日${fromOther.length}こ、がんばってくれたみたい。ありがとう、とどけてみる？`);
   const wk = weekLogs(0);
-  if (wk.length && xmasOn(0)){ const top = ornSummary(wk)[0]; msgs.push(`今週はツリーに${wk.length}個のオーナメントが飾られたよ。`); }
+  if (wk.length && xmasOn(0)){ const top = ornSummary(wk)[0]; msgs.push(`今週は${wk.length}このオーナメントが、ツリーにやってきたよ。`); }
   else if (wk.length && bloomSummary(wk).length){ const top = bloomSummary(wk)[0]; msgs.push(`今週は庭に${wk.length}輪咲いたよ。いちばん多いのは${FL[top[0]].n}。`); }
   const crw = creaturesFor(weekLogs(0)); if (crw.length) msgs.push(`今週は庭に${crw.slice(0, 2).join('と')}${crw.length > 2 ? 'たち' : ''}が遊びに来てるよ。タップしてみて。`);
   const inb = all('bouquet').filter(b => b.to === me && !b.opened); if (inb.length) msgs.unshift(`${nm(other(me))}から花束が届いてるよ。上の花束をタップしてみて。`);
-  if (openNotes) msgs.push(`改善ボックスに${openNotes}つ入ってるよ。週に1回、ふたりで見てみよう。`);
-  msgs.push(['気になったことは、その場で言わずに改善ボックスへ入れておこう。','小さな家事も「名もなき家事」から残せるよ。','一緒にやった家事は「ふたりで」を押してね。','「完了の定義」はふたりで決めて、ときどき見直そう。'][new Date().getDate() % 4]);
+  if (openNotes) msgs.push(`ポストに${openNotes}通、手紙が入ってるよ。`);
+  msgs.push(xmasOn(0) ? ['窓の外、雪がふってるね。', 'ツリーの電球、きれいだね。', 'あったかいココアがのみたいなあ。', 'もうすぐクリスマスだね。'][new Date().getDate() % 4] : ['今日はいい天気だといいね。', 'お花、元気に咲いてるかな。', 'ひと休みも、だいじなおしごとだよ。', 'ゆっくりいこうね。'][new Date().getDate() % 4]);
   return msgs[talkIdx % msgs.length];
 }
 function typeTalk(){
@@ -674,16 +675,16 @@ function doFree(name){
   name = name.trim(); if (!name || !S.me) return;
   const lg = { id:uid(), kind:'log', choreId:null, name, by:S.me, both:freeBoth, at:Date.now(), thanks:false, ...ornSlot() };
   const isNew = isNewFind(lg);
-  put(lg); if (isNew) newFlower(lg); else toast(`「${name}」を記録しました`);
+  put(lg); if (isNew) newFlower(lg); else toast(`「${name}」おつかれさま！`);
 }
 function foundSet(){ return new Set(all('log').filter(l => !inXmas(l.at)).map(flowerOf)); }
 function isNewFind(lg){ return inXmas(lg.at) ? !ornFound().f[ornamentOf(lg)] : !foundSet().has(flowerOf(lg)); }
 function newFlower(lg){
-  if (inXmas(lg.at)){ const k = ornamentOf(lg); setTimeout(() => { chime('thanks'); toast(`新しいオーナメント！ ${ORN[k].n}`); }, 350); return; }
+  if (inXmas(lg.at)){ const k = ornamentOf(lg); setTimeout(() => { chime('thanks'); toast(`はじめてのオーナメント！ ${ORN[k].n}`); }, 350); return; }
   const k = flowerOf(lg);
   setTimeout(() => { chime('thanks'); toast(`新しい花を見つけた！ ${FL[k].n}`); }, 350);
 }
-function toggleThanks(log){ if (!log.thanks) chime('thanks'); put({ ...log, thanks: !log.thanks }); if (!log.thanks) toast('ありがとうを送りました'); }
+function toggleThanks(log){ if (!log.thanks) chime('thanks'); put({ ...log, thanks: !log.thanks }); if (!log.thanks) toast('ありがとう、とどけたよ'); }
 
 /* ========== 初期データ（仮） ========== */
 function seedIfEmpty(){
@@ -4130,7 +4131,7 @@ function ornFound(){ const f = {}, first = {}; all('log').filter(l => inXmas(l.a
 let zoFilter = 'all';
 function viewZukanOrn(){
   const { f } = ornFound(), nf = Object.keys(f).length, RL = { 0:'ふたりで', 1:'', 2:'ちょっとレア', 3:'レア' };
-  let html = zSeg() + `<div class="panel zhead"><div class="ztitle">クリスマスのオーナメント</div><div class="zcount"><b>${nf}</b> / ${ORN_KEYS.length}種</div><div class="zbar"><i style="width:${(nf / ORN_KEYS.length * 100).toFixed(1)}%"></i></div><div class="muted" style="margin-top:6px">12/25までの家事で集まるよ。集めたものは来年も残る。ふたりでやった家事でしか出ないものも</div></div>`;
+  let html = zSeg() + `<div class="panel zhead"><div class="ztitle">クリスマスのオーナメント</div><div class="zcount"><b>${nf}</b> / ${ORN_KEYS.length}種</div><div class="zbar"><i style="width:${(nf / ORN_KEYS.length * 100).toFixed(1)}%"></i></div></div>`;
   html += `<div class="seg" style="margin:14px 0 4px">${[['all', 'すべて'], ['found', '見つけた'], ['yet', 'まだ']].map(([v, l]) => `<button class="${zoFilter === v ? 'on' : ''}" data-act="zof" data-v="${v}">${l}</button>`).join('')}</div>`;
   for (const c of ORN_CATS){ const ks = ORN_KEYS.filter(k => ORN[k].c === c && (zoFilter === 'all' || (zoFilter === 'found') === !!f[k])); if (!ks.length) continue;
     const got = ORN_KEYS.filter(k => ORN[k].c === c && f[k]).length, tot = ORN_KEYS.filter(k => ORN[k].c === c).length;
@@ -4140,7 +4141,7 @@ function viewZukanOrn(){
 }
 function viewZukanFurn(){ const m = RMOD; if (!m){ ensureRoom().then(() => render()); return zSeg() + `<div class="empty">読みこみ中…</div>`; }
   const U = unlockedFurn(m), tot = m.FURN_ITEMS.length, got = m.FURN_ITEMS.filter(it => U.has(it.key)).length;
-  let html = zSeg() + `<div class="panel zhead"><div class="ztitle">アドベントの家具</div><div class="zcount"><b>${got}</b> / ${tot}こ</div><div class="zbar"><i style="width:${(got / tot * 100).toFixed(1)}%"></i></div><div class="muted" style="margin-top:6px">11/19から12/25まで、毎日アドベントのとびらから届くよ。置き場所は右上の家のマークで入れかえられる</div></div>`;
+  let html = zSeg() + `<div class="panel zhead"><div class="ztitle">アドベントの家具</div><div class="zcount"><b>${got}</b> / ${tot}こ</div><div class="zbar"><i style="width:${(got / tot * 100).toFixed(1)}%"></i></div></div>`;
   for (const [slot, label] of m.FURN_SLOTS){ const its = m.FURN_ITEMS.filter(it => it.slot === slot); html += `<h2>${label}</h2><div class="zgrid">` + its.map(it => U.has(it.key)
       ? `<div class="zcell"><span class="zno">&nbsp;</span><span class="fz">${fimg(it.key)}</span><span class="zn">${esc(it.name)}</span></div>`
       : `<div class="zcell un"><span class="zno">${md(U.day(it.key))}</span><span class="fz"><span class="lk">？</span></span><span class="zn">？？？</span></div>`).join('') + `</div>`; }
@@ -4276,11 +4277,11 @@ function advSheet(){ rmod().then(m => { const o = advOpened(), t = advToday();
     if (o.has(i)) return `<div class="adoor open ${keys.length > 1 ? 'two' : ''} ${last ? 'big' : ''}"><span class="n">${d.getDate()}</span><div class="imgs">${keys.map(fimg).join('')}</div></div>`;
     if (i <= t) return `<button class="adoor can ${last ? 'big' : ''}" data-act="advopen" data-i="${i}"><span class="n">${d.getDate()}</span><small>${md(d)}</small></button>`;
     return `<div class="adoor lock ${last ? 'big' : ''}"><span class="n">${d.getDate()}</span><small>${md(d)}</small></div>`; }).join('');
-  openSheet(`<div class="advhd"><b>アドベントカレンダー</b><p>11/19から毎日ひとつ、部屋に家具が届くよ。開けわすれた日もあとから開けられる</p></div><div class="advgrid">${doors}</div>`); setTimeout(fillFurn, 30); }); }
+  openSheet(`<div class="advhd"><b>アドベントカレンダー</b><p>きょうは なにが入ってるかな？</p></div><div class="advgrid">${doors}</div>`); setTimeout(fillFurn, 30); }); }
 function advOpen(i){ if (!advCan(i)) return; rmod().then(m => { const keys = m.ADVENT[i]; const st = settings(), adv = [...new Set([...(st.adv || []), i])].sort((a, b) => a - b), room = { ...(st.room || {}) };
   keys.forEach(k => { room[m.FURN_BY[k].slot] = k; }); chime('do');
   put({ ...st, adv, room });
-  openSheet(`<div class="advopen"><div style="font-size:12px;color:#a8946a;font-weight:800">${md(advDay(i))} のとびら</div><div class="row">${keys.map(fimg).join('')}</div><b>${keys.map(k => m.FURN_BY[k].name).join('と')}</b><p>部屋に置いたよ。もようがえで入れかえられる</p><button class="btn go" style="margin-top:14px;padding:11px 22px" data-act="advent">カレンダーにもどる</button></div>`);
+  openSheet(`<div class="advopen"><div style="font-size:12px;color:#a8946a;font-weight:800">${md(advDay(i))} のとびら</div><div class="row">${keys.map(fimg).join('')}</div><b>${keys.map(k => m.FURN_BY[k].name).join('と')}</b><p>おへやに飾ったよ！</p><button class="btn go" style="margin-top:14px;padding:11px 22px" data-act="advent">カレンダーにもどる</button></div>`);
   setTimeout(() => { fillFurn(); const b = document.querySelector('.advopen .row'); if (b) burst(b, 'star'); }, 30); }); }
 function unlockedFurn(m){ const o = advOpened(), u = new Map(); m.ADVENT.forEach((keys, i) => keys.forEach(k => u.set(k, i))); return { has:k => (m.TREE_PARTS.includes(m.FURN_BY[k].slot) && k.endsWith('_a')) || o.has(u.get(k)), day:k => advDay(u.get(k)) }; }
 function moyouSheet(){ rmod().then(m => { const U = unlockedFurn(m), room = settings().room || {};
@@ -4289,8 +4290,8 @@ function moyouSheet(){ rmod().then(m => { const U = unlockedFurn(m), room = sett
     const tiles = [`<button class="myt ${!cur ? 'on' : ''}" data-act="furn" data-slot="${slot}" data-key=""><span class="lk">—</span>なし</button>`].concat(items.map(it => U.has(it.key)
       ? `<button class="myt ${cur === it.key ? 'on' : ''}" data-act="furn" data-slot="${slot}" data-key="${it.key}">${fimg(it.key)}${esc(it.name)}</button>`
       : `<div class="myt lock"><span class="lk">🔒</span>${md(U.day(it.key))}</div>`));
-    return `<div class="mysec"><h3>${label}${needFp ? '<small style="font-weight:400;color:#a8946a">（暖炉を置くと飾れる）</small>' : ''}</h3><div class="myrow">${tiles.join('')}</div></div>`; }).join('');
-  openSheet(`<div class="advhd"><b>もようがえ</b><p>手に入れた家具を、場所ごとに入れかえられるよ</p></div>${secs}`); setTimeout(fillFurn, 30); }); }
+    return `<div class="mysec"><h3>${label}${needFp ? '<small style="font-weight:400;color:#a8946a">　暖炉があると飾れるよ</small>' : ''}</h3><div class="myrow">${tiles.join('')}</div></div>`; }).join('');
+  openSheet(`<div class="advhd"><b>もようがえ</b></div>${secs}`); setTimeout(fillFurn, 30); }); }
 function setFurn(slot, key){ const st = settings(), room = { ...(st.room || {}) }; if (key) room[slot] = key; else if (['topper', 'treelights', 'garland'].includes(slot)) room[slot] = 'none'; else delete room[slot]; put({ ...st, room }); }
 
 /* ===== 3Dの部屋 ===== */
@@ -4332,12 +4333,12 @@ function syncRoom(){
 }
 let ROOM_P = null;
 function ensureRoom(){ if (ROOM) return Promise.resolve(ROOM); if (ROOM_FAIL) return Promise.resolve(null); if (ROOM_P) return ROOM_P; const el = $('room3d'); ROOM_LOADING = true;
-  return ROOM_P = import('./kaji-room3d.js').then(m => { RMOD = m; ROOM = m.mountRoom(el, { shiftY:.06, rot:treeMem().rot, onRot:r => { const t = treeMem(); t.rot = r; treeSave(t); }, onTap:(id, gift) => { chime('do'); setTimeout(() => ornSheet(id, gift), gift ? 250 : 650); }, onTree:() => chime('do'), onSpin:() => { try { localStorage.setItem('kaji_spun', '1'); } catch (e) {} } }); try { if (!localStorage.getItem('kaji_spun')) setTimeout(() => toast('ツリーは指で横になぞると回せるよ'), 1500); else if (advBadge() && !localStorage.getItem('kaji_advhint')){ localStorage.setItem('kaji_advhint', '1'); setTimeout(() => toast('右上の🎁からアドベントのとびらを開けられるよ'), 1500); } } catch (e) {} ROOM_LOADING = false; return ROOM; })
+  return ROOM_P = import('./kaji-room3d.js').then(m => { RMOD = m; ROOM = m.mountRoom(el, { shiftY:.06, rot:treeMem().rot, onRot:r => { const t = treeMem(); t.rot = r; treeSave(t); }, onTap:(id, gift) => { chime('do'); setTimeout(() => ornSheet(id, gift), gift ? 250 : 650); }, onTree:() => chime('do'), onSpin:() => { try { localStorage.setItem('kaji_spun', '1'); } catch (e) {} } }); try { if (!localStorage.getItem('kaji_spun')) setTimeout(() => toast('ツリーは指でくるっと回せるよ'), 1500); else if (advBadge() && !localStorage.getItem('kaji_advhint')){ localStorage.setItem('kaji_advhint', '1'); setTimeout(() => toast('🎁 アドベントのとびらがあいてるよ'), 1500); } } catch (e) {} ROOM_LOADING = false; return ROOM; })
     .catch(e => { console.warn(e); ROOM_FAIL = true; ROOM_LOADING = false; render(); return null; });
 }
 function ornSheet(id, gift){ const l = S.items[id]; if (!l) return; const k = ornamentOf(l), mine = l.by === S.me && !l.both, when = `${dayKey(l.at).slice(5).replace('-','/')} ${hm(l.at)}`;
   openSheet(`<div class="ornsheet">${gift ? `<svg viewBox="-12 -16 34 30" width="120" height="106">${giftSVG(0, 10, 16, 12, 6, '#e85050', '#fff0c0', 'dot', 'og1')}</svg>` : ornIcon(k, 120)}<b>${gift ? 'ありがとうのプレゼント' : ORN[k].n}</b><div class="muted">${when}　${esc(whoText(l))}が「${esc(l.name)}」</div>
-    ${mine ? (l.thanks ? '<div class="thanks on" style="margin-top:12px">♥ ありがとうが届いてる</div>' : '') : `<button class="btn ${l.thanks ? 'ghost' : 'go'}" style="margin-top:14px;padding:12px 22px" data-act="othanks" data-id="${l.id}">${l.thanks ? '♥ ありがとう済み' : '♡ ありがとうを送る'}</button>`}</div>`); }
+    ${mine ? (l.thanks ? '<div class="thanks on" style="margin-top:12px">♥ ありがとうが届いてる</div>' : '') : `<button class="btn ${l.thanks ? 'ghost' : 'go'}" style="margin-top:14px;padding:12px 22px" data-act="othanks" data-id="${l.id}">${l.thanks ? '♥ ありがとう、とどいてるよ' : '♡ ありがとう'}</button>`}</div>`); }
 
 function viewWeek(){
   const ws = weekStart(weekOff);
@@ -4349,8 +4350,8 @@ function viewWeek(){
   const tday = (selDay && days.some(d => dayKey(d.getTime()) === selDay)) ? selDay : (weekOff === 0 ? tk : dayKey(days[6].getTime()));
   if (xmasOn(weekOff) && !ROOM_FAIL && inXmas(new Date(tday + 'T12:00').getTime())){ const dl = logsOn(tday).slice().sort((a, b) => a.at - b.at), d0 = new Date(tday + 'T12:00');
     html += `<div class="panel gpanel" style="margin-bottom:12px"><div class="gtitle" style="display:flex;justify-content:space-between"><span>${d0.getMonth() + 1}/${d0.getDate()}（${WD[d0.getDay()]}）のツリー</span><span class="muted" style="font-size:12px">${dl.length}個</span></div>
-      <div class="wt3" data-day="${tday}"><img alt=""></div>${dl.length ? `<div class="bloomlist">${ornSummary(dl).slice(0, 10).map(([k, n]) => `<span>${ornIcon(k, 24)}${ORN[k].n}${n > 1 ? ` ×${n}` : ''}</span>`).join('')}</div>` : `<div class="muted" style="text-align:center;margin-top:6px">この日はまだオーナメントがないよ</div>`}
-      <div class="muted" style="font-size:11px;text-align:center;margin-top:4px">下の日付をタップすると、その日のツリーに切りかわるよ</div></div>`;
+      <div class="wt3" data-day="${tday}"><img alt=""></div>${dl.length ? `<div class="bloomlist">${ornSummary(dl).slice(0, 10).map(([k, n]) => `<span>${ornIcon(k, 24)}${ORN[k].n}${n > 1 ? ` ×${n}` : ''}</span>`).join('')}</div>` : `<div class="muted" style="text-align:center;margin-top:6px">まだ なにも飾られてないね</div>`}
+</div>`;
   } else
   html += `<div class="panel gpanel" style="margin-bottom:12px"><div class="gtitle">${sceneTitle(weekOff, wlg.length)}</div>${sceneSVG(wlg, true, weekOff)}
     ${xmasOn(weekOff) ? (wlg.length ? `<div class="bloomlist">${ornSummary(wlg).slice(0,8).map(([k,n]) => `<span>${ornIcon(k, 24)}${ORN[k].n}${n>1?` ×${n}`:''}</span>`).join('')}</div>` : '') : bs.length?`<div class="bloomlist">${bs.slice(0,8).map(([k,n]) => `<span><svg viewBox="-14 -16 28 28">${flowerSVG(k,k)}</svg>${FL[k].n}${n>1?` ×${n}`:''}</span>`).join('')}${bs.length>8?`<span>ほか${bs.length-8}種</span>`:''}</div>`:''}</div>`;
@@ -4367,7 +4368,7 @@ function viewWeek(){
     html += logs.length ? logs.map(l => `<div class="minirow"><span class="t">${hm(l.at)}</span><span class="dot ${cls(l)}"></span><span class="n">${esc(l.name)}${l.thanks?' <span style="color:#d0546b">♥</span>':''}</span></div>`).join('') : `<div class="empty">記録なし</div>`;
     html += `</div>`;
   } else {
-    html += `<p class="hint">日付をタップすると、その日の流れが見られます。</p>`;
+    html += ``;
   }
   return html;
 }
@@ -4377,27 +4378,15 @@ function viewReview(){
   const logs = all('log').filter(l => l.at >= ws.getTime() && l.at < we.getTime());
   const notes = all('note').sort((a,b) => b.at - a.at);
   const open = notes.filter(n => n.status !== 'done'), closed = notes.filter(n => n.status === 'done');
-  let html = `<div class="weeknav"><button data-act="wk" data-d="-1">‹ 前</button><b>${weekOff===0?'今週の振り返り':`${ws.getMonth()+1}/${ws.getDate()}の週`}</b><button data-act="wk" data-d="1" ${weekOff>=0?'disabled style="opacity:.3"':''}>次 ›</button></div>`;
-
-  html += `<h2>改善ボックス（${open.length}）</h2><div class="panel">`;
-  html += open.length ? open.map(n => noteRow(n)).join('') : `<div class="empty">まだありません</div>`;
-  html += `<div style="margin-top:10px"><textarea class="t" id="newnote" placeholder="気になったこと・こうしたいこと（その場で言わずにここへ）"></textarea>
-    <div class="row" style="margin-top:8px;justify-content:flex-end"><button class="btn small" data-act="addnote">入れる</button></div></div></div>`;
-
+  let html = `<div class="weeknav"><button data-act="wk" data-d="-1">‹ 前</button><b>${weekOff===0?'今週':`${ws.getMonth()+1}/${ws.getDate()}の週`}</b><button data-act="wk" data-d="1" ${weekOff>=0?'disabled style="opacity:.3"':''}>次 ›</button></div>`;
+  // 今週ふたりでしたこと（だれが何回、は出さない）
+  const cnt = {}; logs.forEach(l => { cnt[l.name] = (cnt[l.name] || 0) + 1; }); const rows = Object.entries(cnt).sort((a, b) => b[1] - a[1]), thx = logs.filter(l => l.thanks).length;
+  html += `<h2>今週ふたりでしたこと</h2><div class="panel">` + (rows.length ? `<div class="didlist">${rows.map(([n, c]) => `<span>${esc(n)}${c > 1 ? `<small>×${c}</small>` : ''}</span>`).join('')}</div>${thx ? `<div class="didthx">♥ ありがとう ${thx}</div>` : ''}` : `<div class="empty">まだ なにもないね</div>`) + `</div>`;
   if (weekOff === 0 && !xmasOn(0)) html += bouquetSection();
-  html += `<h2>ふたりの1週間</h2>`;
-  if (!reviewOpen){
-    html += `<button class="reveal" data-act="reveal">ふたりで見るときにタップ<br><small>件数は振り返りの材料。比べるためではなく、担当を組み替えるために使う</small></button>`;
-  } else {
-    const per = k => { const m = {}; logs.filter(l => involves(l,k)).forEach(l => m[l.name] = (m[l.name]||0)+1); return Object.entries(m).sort((a,b) => b[1]-a[1]); };
-    const thx = k => logs.filter(l => l.by === k && l.thanks).length;
-    html += `<div class="split">` + ['h','y'].map(k => `<div class="who ${k}"><div class="nm">${esc(nm(k))}</div>
-      <ul>${per(k).map(([n,c]) => `<li>${esc(n)}${c>1?` ×${c}`:''}</li>`).join('') || '<li style="list-style:none;margin-left:-16px" class="muted">記録なし</li>'}</ul>
-      <div class="muted" style="margin-top:6px">♥ もらったありがとう ${thx(k)}</div></div>`).join('') + `</div>`;
-    const nameless = logs.filter(l => !l.choreId);
-    if (nameless.length) html += `<p class="hint">名もなき家事 ${nameless.length}件：${nameless.map(l => esc(l.name)).join('、')}</p>`;
-    html += `<p class="hint">偏りを感じたら、設定で担当を組み替えましょう。完了の定義もこのタイミングで見直せます。</p>`;
-  }
+  html += `<h2>ふたりのポスト${open.length ? `（${open.length}）` : ''}</h2><div class="panel">`;
+  html += open.length ? open.map(n => noteRow(n)).join('') : `<div class="empty">からっぽ</div>`;
+  html += `<div style="margin-top:10px"><textarea class="t" id="newnote" placeholder="あとで話したいこと"></textarea>
+    <div class="row" style="margin-top:8px;justify-content:flex-end"><button class="btn small" data-act="addnote">入れる</button></div></div></div>`;
   if (closed.length){
     html += `<h2>話したこと</h2><div class="panel">` + closed.slice(0,20).map(n => noteRow(n)).join('') + `</div>`;
   }
@@ -4408,8 +4397,8 @@ function noteRow(n){
   return `<div class="note"><div class="txt">${esc(n.text)}</div>
     <div class="m"><span class="dot ${n.by}"></span>${esc(nm(n.by))}・${dayKey(n.at).slice(5).replace('-','/')}${c?`・${esc(c.name)}`:''}
     <span style="flex:1"></span>
-    ${n.status==='done' ? `<button class="btn small ghost" data-act="reopen" data-id="${n.id}">戻す</button>` : `<button class="btn small ghost" data-act="closenote" data-id="${n.id}">話した ✓</button>`}
-    ${n.by===S.me?`<button class="btn small ghost" data-act="delnote" data-id="${n.id}">削除</button>`:''}</div></div>`;
+    ${n.status==='done' ? `<button class="btn small ghost" data-act="reopen" data-id="${n.id}">もどす</button>` : `<button class="btn small ghost" data-act="closenote" data-id="${n.id}">話した ✓</button>`}
+    ${n.by===S.me?`<button class="btn small ghost" data-act="delnote" data-id="${n.id}">すてる</button>`:''}</div></div>`;
 }
 
 function viewSettings(){
@@ -4518,13 +4507,13 @@ function sheetChore(id){
   const tl = logsOn(dayKey(Date.now())).filter(l => l.choreId === id);
   const ld = lastDone(id);
   let h = `<h3>${esc(c.name)}</h3><div class="meta muted" style="display:flex;gap:8px;align-items:center"><span class="badge ${c.owner}">担当：${esc(nm(c.owner))}</span>${freqText(c)}${ld&&!tl.length?`・前回 ${dayKey(ld).slice(5).replace('-','/')}`:''}</div>`;
-  h += `<label class="f">完了の定義</label>`;
-  h += (c.def||[]).length ? `<ul class="defs">${c.def.map((d,i) => `<li data-act="tick"><span class="bx">✓</span><span>${esc(d)}</span></li>`).join('')}</ul>` : `<p class="muted">まだ決まっていません（編集から追加）</p>`;
+  h += `<label class="f">ここまでやったら おしまい</label>`;
+  h += (c.def||[]).length ? `<ul class="defs">${c.def.map((d,i) => `<li data-act="tick"><span class="bx">✓</span><span>${esc(d)}</span></li>`).join('')}</ul>` : `<p class="muted">まだ決めてないよ</p>`;
   h += `<div class="row" style="margin-top:16px"><button class="btn go" style="flex:2;padding:13px" data-act="do" data-id="${c.id}" data-close="1">やった！</button><button class="btn ghost" style="flex:1;padding:13px" data-act="doboth" data-id="${c.id}" data-close="1">ふたりで</button></div>`;
   if (tl.length){
     h += `<label class="f">今日の記録</label><div class="panel">` + tl.map(l => `<div class="minirow"><span class="t">${hm(l.at)}</span><span class="dot ${cls(l)}"></span><span class="n">${esc(whoText(l))}</span>${l.by===S.me?`<button class="btn small ghost" data-act="undo" data-id="${l.id}" data-close="1">取り消す</button>`:''}</div>`).join('') + `</div>`;
   }
-  h += `<label class="f">改善ボックスに入れる（その場で言わずに、週1で話す）</label><textarea class="t" id="cnote" placeholder="例：排水口のゴミも捨ててほしい"></textarea>
+  h += `<label class="f">ふたりのポストに入れる</label><textarea class="t" id="cnote" placeholder="あとで話したいこと"></textarea>
     <div class="row" style="margin-top:8px"><button class="btn ghost" style="flex:1" data-act="edit" data-id="${c.id}">家事を編集</button><button class="btn" style="flex:1" data-act="addcnote" data-id="${c.id}">入れる</button></div>`;
   openSheet(h);
 }
@@ -4546,7 +4535,7 @@ function renderEdit(){
     <label class="f">頻度</label>${seg('ftype',[['daily','毎日'],['weekly','曜日'],['interval','◯日ごと']],f.type)}`;
   if (f.type === 'weekly') h += `<div class="days">${[1,2,3,4,5,6,0].map(i => `<button class="${(f.days||[]).includes(i)?'on':''}" data-act="dday" data-v="${i}">${WD[i]}</button>`).join('')}</div>`;
   if (f.type === 'interval') h += `<div class="row" style="margin-top:8px"><input class="t" id="e_n" type="number" min="1" max="60" value="${f.n||3}" style="width:90px"><span>日ごと</span></div>`;
-  h += `<label class="f">完了の定義（ここまでやったら完了、を短く）</label>` +
+  h += `<label class="f">ここまでやったら おしまい</label>` +
     d.def.map((x,i) => `<input class="t e_def" style="margin-bottom:6px" value="${esc(x)}" placeholder="${['例：シンクに何も残っていない','例：台を拭く','（任意）'][i]||'（任意）'}">`).join('') +
     `<button class="btn small ghost" data-act="addline">＋ 行を追加</button>`;
   h += `<div class="row" style="margin-top:18px"><button class="btn ghost" style="flex:1" data-act="close">キャンセル</button><button class="btn go" style="flex:2" data-act="saveedit">保存</button></div>`;
@@ -4566,10 +4555,10 @@ function sheetFree(){
   const recent = [...new Set(all('log').filter(l => !l.choreId).sort((a,b) => b.at-a.at).map(l => l.name))].slice(0,8);
   const base = ['洗剤・ティッシュの補充','保育園・幼稚園の連絡','ゴミ袋をセット','郵便物の整理','水筒を洗う','植物の水やり'];
   const chips = [...new Set([...recent, ...base])].slice(0,12);
-  openSheet(`<h3>名もなき家事</h3><p class="muted">小さいけど誰かがやってること、ワンタップで残そう</p>
+  openSheet(`<h3>ほかの家事</h3>
     <div class="chips">${chips.map(c => `<button data-act="free" data-v="${esc(c)}">${esc(c)}</button>`).join('')}</div>
     <label class="togglerow"><input type="checkbox" id="freeboth" ${freeBoth?'checked':''}>ふたりでやった</label>
-    <label class="f">自由に入力</label><div class="row"><input class="t" id="freein" placeholder="例：網戸の掃除"><button class="btn" data-act="freein">記録</button></div>`);
+    <label class="f">じぶんで書く</label><div class="row"><input class="t" id="freein" placeholder="例：網戸の掃除"><button class="btn" data-act="freein">記録</button></div>`);
 }
 
 /* ========== イベント ========== */
@@ -4600,7 +4589,7 @@ document.addEventListener('click', e => {
     case 'orn': { const l = S.items[id]; if (!l) break; const g = el.querySelector('.sw'); if (g){ g.classList.remove('tap'); void g.getBBox(); g.classList.add('tap'); }
       const k = ornamentOf(l), mine = l.by === S.me && !l.both, gift = !!el.dataset.gift, when = `${dayKey(l.at).slice(5).replace('-','/')} ${hm(l.at)}`;
       setTimeout(() => openSheet(`<div class="ornsheet">${gift ? `<svg viewBox="-12 -16 34 30" width="120" height="106">${giftSVG(0, 10, 16, 12, 6, '#e85050', '#fff0c0', 'dot', 'og1')}</svg>` : ornIcon(k, 120)}<b>${gift ? 'ありがとうのプレゼント' : ORN[k].n}</b><div class="muted">${when}　${esc(whoText(l))}が「${esc(l.name)}」</div>
-        ${mine ? (l.thanks ? '<div class="thanks on" style="margin-top:12px">♥ ありがとうが届いてる</div>' : '') : `<button class="btn ${l.thanks ? 'ghost' : 'go'}" style="margin-top:14px;padding:12px 22px" data-act="othanks" data-id="${l.id}">${l.thanks ? '♥ ありがとう済み' : '♡ ありがとうを送る'}</button>`}</div>`), 220); break; }
+        ${mine ? (l.thanks ? '<div class="thanks on" style="margin-top:12px">♥ ありがとうが届いてる</div>' : '') : `<button class="btn ${l.thanks ? 'ghost' : 'go'}" style="margin-top:14px;padding:12px 22px" data-act="othanks" data-id="${l.id}">${l.thanks ? '♥ ありがとう、とどいてるよ' : '♡ ありがとう'}</button>`}</div>`), 220); break; }
     case 'othanks': { if (!L) break; if (!L.thanks) burst(el, 'heart'); toggleThanks(L); closeSheet(); break; }
     case 'advent': advSheet(); break;
     case 'advopen': advOpen(+el.dataset.i); break;
@@ -4638,24 +4627,24 @@ document.addEventListener('click', e => {
     case 'bqsend': if (!BQ || !BQ.flowers.length) break; { const nb = { id:uid(), kind:'bouquet', from:S.me, to:other(S.me), ...JSON.parse(JSON.stringify(BQ)), at:Date.now(), opened:false }; nb.name = bqNameOf(nb); put(nb); } BQ = null; closeSheet(); chime('thanks'); toast(`花束を${nm(other(S.me))}に贈りました`); break;
     case 'bqview': sheetBouquetView(el.dataset.id); break;
     case 'bqopen': openUnwrap(el.dataset.id); break;
-    case 'uwshow': { const b = S.items[id]; if (b) put({ ...b, opened:true, displayedAt:Date.now() }); closeUnwrap(); tab = 'today'; render(); setTimeout(() => { const r = document.querySelector('.rmpanel'); if (r) { r.classList.add('arrive'); r.scrollIntoView({ behavior:'smooth', block:'center' }); } }, 120); toast('お部屋に飾ったよ'); break; }
+    case 'uwshow': { const b = S.items[id]; if (b) put({ ...b, opened:true, displayedAt:Date.now() }); closeUnwrap(); tab = 'today'; render(); setTimeout(() => { const r = document.querySelector('.rmpanel'); if (r) { r.classList.add('arrive'); r.scrollIntoView({ behavior:'smooth', block:'center' }); } }, 120); toast('おへやに飾ったよ'); break; }
     case 'album': sheetAlbum(); break;
     case 'pageview': openSheet(`<div class="pressin">${pressedSVG(S.items[id])}</div>`); break;
     case 'zf': zFilter = el.dataset.v; render(); break;
     case 'zk': sheetZukan(el.dataset.k); break;
     case 'talk': talkIdx++; lastTyped = ''; render(); break;
     case 'qdo': { const c = S.items[id]; if (!c) break; const recent = all('log').filter(l => l.choreId === id && Date.now() - l.at < 10 * 60e3).sort((a, b) => b.at - a.at)[0];
-      if (recent){ toast(`「${c.name}」はさっき記録したよ（取り消しは下のリストから）`); break; }
+      if (recent){ toast(`「${c.name}」はさっきやったよ`); break; }
       const qi = el.querySelector('.qi'); if (qi){ qi.classList.remove('hit'); void qi.offsetWidth; qi.classList.add('hit'); } burst(el, 'star'); doChore(c); break; }
     case 'qfree': sheetFree(); break;
     case 'slotx': SLOTX[el.dataset.v] = !SLOTX[el.dataset.v]; render(); break;
     case 'do': burst(el, 'star'); doChore(S.items[id]); if (el.dataset.close) closeSheet(); break;
     case 'open': sheetChore(id); break;
     case 'thanks': if (!L.thanks) burst(el, 'heart'); toggleThanks(L); break;
-    case 'undo': remove(L); toast('取り消しました'); if (el.dataset.close) closeSheet(); break;
+    case 'undo': remove(L); toast('とりけしたよ'); if (el.dataset.close) closeSheet(); break;
     case 'doboth': burst(el, 'star'); doChore(S.items[id], true); if (el.dataset.close) closeSheet(); break;
-    case 'join': put({ ...L, both:true }); toast('一緒にやったにしました'); break;
-    case 'leave': put({ ...L, both:false }); toast('一緒から外れました'); break;
+    case 'join': put({ ...L, both:true }); toast('いっしょにやったことにしたよ'); break;
+    case 'leave': put({ ...L, both:false }); toast('ひとりでやったことにしたよ'); break;
     case 'uncheck': chime('undo'); remove(L); toast('チェックを外しました'); break;
     case 'notmine': toast('相手がつけたチェックは外せません'); break;
     case 'sound': S.sound = el.dataset.v === '1'; save(); render(); if (S.sound) chime('do'); break;
@@ -4665,8 +4654,8 @@ document.addEventListener('click', e => {
     case 'wk': weekOff = Math.min(0, weekOff + Number(el.dataset.d)); selDay = null; reviewOpen = false; render(); break;
     case 'selday': selDay = selDay === el.dataset.k ? null : el.dataset.k; render(); break;
     case 'reveal': reviewOpen = true; render(); break;
-    case 'addnote': { const t = $('newnote').value.trim(); if (!t) return; put({ id:uid(), kind:'note', by:S.me, text:t, choreId:null, at:Date.now(), status:'open' }); toast('改善ボックスに入れました'); break; }
-    case 'addcnote': { const t = $('cnote').value.trim(); if (!t) return; put({ id:uid(), kind:'note', by:S.me, text:t, choreId:id, at:Date.now(), status:'open' }); closeSheet(); toast('改善ボックスに入れました'); break; }
+    case 'addnote': { const t = $('newnote').value.trim(); if (!t) return; put({ id:uid(), kind:'note', by:S.me, text:t, choreId:null, at:Date.now(), status:'open' }); toast('ポストに入れたよ'); break; }
+    case 'addcnote': { const t = $('cnote').value.trim(); if (!t) return; put({ id:uid(), kind:'note', by:S.me, text:t, choreId:id, at:Date.now(), status:'open' }); closeSheet(); toast('ポストに入れたよ'); break; }
     case 'closenote': put({ ...L, status:'done' }); break;
     case 'reopen': put({ ...L, status:'open' }); break;
     case 'delnote': remove(L); break;
@@ -4680,7 +4669,7 @@ document.addEventListener('click', e => {
       if (!d.name) { toast('名前を入れてください'); return; }
       if (d.freq.type === 'weekly' && !(d.freq.days||[]).length) { toast('曜日を選んでください'); return; }
       d.def = d.def.map(x => x.trim()).filter(Boolean); delete d._new;
-      put(d); draft = null; closeSheet(); toast('保存しました'); break; }
+      put(d); draft = null; closeSheet(); toast('ほぞんしたよ'); break; }
     case 'delchore':
       if (!el.dataset.sure) { el.dataset.sure = '1'; el.textContent = 'もう一度押すと削除します'; return; }
       remove(S.items[draft.id]); draft = null; closeSheet(); toast('削除しました'); break;
@@ -4689,7 +4678,7 @@ document.addEventListener('click', e => {
       if (j < 0 || j >= cs.length) return; [cs[i], cs[j]] = [cs[j], cs[i]];
       cs.forEach((c,k) => { if (c.order !== k) { c.order = k; c.updatedAt = Date.now(); S.items[c.id] = c; S.queue = S.queue.filter(q => q.id !== c.id); S.queue.push(c); } });
       save(); render(); push(); break; }
-    case 'savenames': { const s = { ...settings(), names:{ h:$('name_h').value.trim()||'パパ', y:$('name_y').value.trim()||'ママ' } }; put(s); toast('保存しました'); break; }
+    case 'savenames': { const s = { ...settings(), names:{ h:$('name_h').value.trim()||'パパ', y:$('name_y').value.trim()||'ママ' } }; put(s); toast('ほぞんしたよ'); break; }
     case 'savesync': S.url = $('s_url').value.trim(); S.key = $('s_key').value.trim(); S.lastSync = 0; save(); toast('同期しています…'); sync().then(() => toast(syncState==='ok'?'同期しました':'同期できませんでした')); break;
     case 'export': { const b = new Blob([JSON.stringify(S.items,null,1)], {type:'application/json'}); const u = URL.createObjectURL(b);
       const x = document.createElement('a'); x.href = u; x.download = `uchikaji-${dayKey(Date.now())}.json`; x.click(); setTimeout(() => URL.revokeObjectURL(u), 2000); break; }
