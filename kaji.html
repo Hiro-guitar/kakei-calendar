@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-title" content="うちの家事">
 <meta name="theme-color" content="#faf6ef">
 <title>うちの家事</title>
-<link rel="apple-touch-icon" href="kaji-icon.png">
-<link rel="icon" href="kaji-icon.png">
+<link rel="apple-touch-icon" href="kaji-icon-xmas.png">
+<link rel="icon" href="kaji-icon-xmas.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
@@ -705,7 +705,7 @@ function choreIcon(c){
   if (/洗い物|皿|食器/.test(n)) return 'dish';
   if (/取り込|たたむ|畳む/.test(n)) return 'shirt';
   if (/洗濯/.test(n)) return 'washer';
-  if (/子ども.*お風呂|子供.*お風呂|沐浴/.test(n)) return 'duck';
+  if (/(子ども|子供|こども).*お風呂|沐浴/.test(n)) return 'duck';
   if (/風呂/.test(n)) return 'tub';
   if (/支度|準備|保育|幼稚園|送り/.test(n)) return 'bag';
   if (/ゴミ|ごみ/.test(n)) return 'trash';
@@ -799,13 +799,13 @@ function seedIfEmpty(){
   const list = [
     C('breakfast','朝ごはんの準備','y','morning',{type:'daily'},['食卓に並べる','使った調理器具はシンクへ']),
     C('dish_am','朝の洗い物','h','morning',{type:'daily'},['シンクに何も残っていない','水切りカゴは空にしておく']),
-    C('kid_am','子どもの支度','y','morning',{type:'daily'},['着替え・持ち物をそろえる','連絡帳を確認']),
+    C('kid_am','こどもの支度','y','morning',{type:'daily'},['着替え・持ち物をそろえる','連絡帳を確認']),
     C('laundry','洗濯（回す・干す）','h','morning',{type:'daily'},['洗濯機を回して干すまで','洗濯機のフタは開けておく']),
     C('laundry_in','洗濯物の取り込み・たたむ','h','day',{type:'daily'},['たたんで各自の場所にしまう']),
     C('dinner','夕飯づくり','y','night',{type:'daily'},['食卓に並べる','コンロ周りをさっと拭く']),
     C('dish_pm','夜の洗い物','h','night',{type:'daily'},['シンクに何も残っていない','排水口のゴミを捨てる','台を拭く']),
     C('bath_clean','お風呂掃除','h','night',{type:'daily'},['浴槽を洗ってお湯はりまで','床の髪の毛を取る']),
-    C('kid_bath','子どものお風呂','y','night',{type:'daily'},['体を洗って保湿まで']),
+    C('kid_bath','こどものお風呂','y','night',{type:'daily'},['体を洗って保湿まで']),
     C('trash','ゴミ出し','h','morning',{type:'weekly',days:[1,4]},['家中のゴミ箱を集める','新しい袋をセット']),
     C('vacuum','掃除機','any','any',{type:'interval',n:3},['リビングと寝室','コードを片付ける']),
     C('toilet','トイレ掃除','h','any',{type:'weekly',days:[6]},['便器の中と便座','床を拭く','ペーパーの補充']),
@@ -848,9 +848,12 @@ async function pull(){
     return true;
   } catch(e) { syncState = 'err'; setSync(); return false; }
 }
+/* 「子ども」→「こども」（家事の名前と記録。何度呼んでも同じ） */
+function renameKid(){ let n = 0; for (const it of Object.values(S.items)){ if ((it.kind === 'chore' || it.kind === 'log') && !it.deleted && typeof it.name === 'string' && /子ども|子供/.test(it.name)){ it.name = it.name.replace(/子ども|子供/g, 'こども'); it.updatedAt = Date.now(); S.queue = S.queue.filter(q => q.id !== it.id); S.queue.push(it); n++; } } if (n) save(); return n; }
 async function sync(){
   const ok = await pull();
   if (ok && !S.seeded) seedIfEmpty();
+  if (ok) renameKid();
   await push();
   render();
 }
@@ -4821,6 +4824,7 @@ setInterval(() => { if (tab === 'today' && !$('sheet').classList.contains('open'
 
 /* ========== 起動 ========== */
 if (!S.url) seedIfEmpty();
+renameKid();
 render();
 if (S.url) sync();
 </script>
