@@ -538,7 +538,7 @@ nav.tabs .tile{width:38px;height:38px}
   <button data-t="week"><span class="tile"><svg viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="3.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/><circle cx="9" cy="15" r=".6"/><circle cx="15" cy="15" r=".6"/></svg></span>週</button>
   <button data-t="review"><span class="tile"><svg viewBox="0 0 24 24"><path d="M5 6.5c0-1.4 1.1-2.5 2.5-2.5h9c1.4 0 2.5 1.1 2.5 2.5v7c0 1.4-1.1 2.5-2.5 2.5H11l-4 3.5V16h0c-1.1 0-2-.9-2-2z"/><path d="M9 9h6M9 12h4"/></svg></span>ふたり</button>
   <button data-t="zukan"><span class="tile"><svg viewBox="0 0 24 24"><path d="M5 5.5C5 4.7 5.7 4 6.5 4H18v14H6.5C5.7 18 5 18.7 5 19.5z"/><path d="M5 19.5C5 20.3 5.7 21 6.5 21H18v-3"/><circle cx="11.5" cy="10" r="2.2"/><path d="M11.5 12.2v3"/></svg></span>図鑑</button>
-  <button data-t="settings"><span class="tile"><svg viewBox="0 0 24 24"><path d="M14.5 5.5a3.5 3.5 0 0 0-4.6 4.4L4.5 15.3a1.8 1.8 0 0 0 2.5 2.6l5.4-5.4a3.5 3.5 0 0 0 4.5-4.6l-2.1 2.1-2-.5-.5-2z"/></svg></span>設定</button>
+  <button data-t="settings"><span class="tile"><svg viewBox="0 0 24 24"><path d="M10.3 3.2h3.4l.5 2.4 1.6.7 2-1.4 2.4 2.4-1.4 2 .7 1.6 2.4.5v3.4l-2.4.5-.7 1.6 1.4 2-2.4 2.4-2-1.4-1.6.7-.5 2.4h-3.4l-.5-2.4-1.6-.7-2 1.4-2.4-2.4 1.4-2-.7-1.6-2.4-.5v-3.4l2.4-.5.7-1.6-1.4-2 2.4-2.4 2 1.4 1.6-.7z" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.1"/></svg></span>設定</button>
 </nav>
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet"></div>
@@ -4196,7 +4196,7 @@ function viewZukanOrn(){
   for (const c of ORN_CATS){ const ks = ORN_KEYS.filter(k => ORN[k].c === c && (zoFilter === 'all' || (zoFilter === 'found') === !!f[k])); if (!ks.length) continue;
     const got = ORN_KEYS.filter(k => ORN[k].c === c && f[k]).length, tot = ORN_KEYS.filter(k => ORN[k].c === c).length;
     html += `<h2 style="display:flex;justify-content:space-between">${c}<span class="muted" style="font-size:12px">${got} / ${tot}</span></h2><div class="zgrid">` + ks.map(k => { const ok = !!f[k], o = ORN[k];
-      return `<button class="zcell ${ok ? '' : 'un'}" data-act="ornz" data-k="${k}"><span class="zno">${RL[o.r] || '&nbsp;'}</span>${ornIcon(k)}<span class="zn">${ok ? o.n : '？？？'}</span></button>`; }).join('') + `</div>`; }
+      return `<button class="zcell ${ok ? '' : 'un'}" data-act="ornz" data-k="${k}">${ornIcon(k)}<span class="zn">${ok ? o.n : '？？？'}</span></button>`; }).join('') + `</div>`; }
   return html;
 }
 function viewZukanFurn(){ const m = RMOD; if (!m){ ensureRoom().then(() => render()); return zSeg() + `<div class="empty">読みこみ中…</div>`; }
@@ -4206,7 +4206,7 @@ function viewZukanFurn(){ const m = RMOD; if (!m){ ensureRoom().then(() => rende
       ? `<div class="zcell"><span class="zno">&nbsp;</span><span class="fz">${fimg(it.key)}</span><span class="zn">${esc(it.name)}</span></div>`
       : `<div class="zcell un"><span class="zno">${md(U.day(it.key))}</span><span class="fz"><span class="lk">？</span></span><span class="zn">？？？</span></div>`).join('') + `</div>`; }
   return html; }
-function zSeg(){ const opts = [['flower', '花']]; if (CREATURES_ON) opts.push(['creature', '生き物']); if (xmasOn(0) || Object.keys(ornFound().f).length) opts.push(['orn', 'オーナメント']); if (!ROOM_FAIL && (advToday() >= 0 || (settings().adv || []).length)) opts.push(['furn', '家具']);
+function zSeg(){ const opts = [['flower', '花']]; if (CREATURES_ON) opts.push(['creature', '生き物']); if (xmasOn(0) || Object.keys(ornFound().f).length) opts.push(['orn', 'オーナメント']); if (!ROOM_FAIL && (xmasOn(0) || (settings().adv || []).length)) opts.push(['furn', '家具']);
   return opts.length > 1 ? `<div class="seg" style="margin:6px 0 12px">${opts.map(([v, l]) => `<button class="${zMode === v ? 'on' : ''}" data-act="zm" data-v="${v}">${l}</button>`).join('')}</div>` : ''; }
 
 function weekLogs(off){ const ws = weekStart(off), we = new Date(ws); we.setDate(ws.getDate()+7); return all('log').filter(l => l.at >= ws.getTime() && l.at < we.getTime()); }
