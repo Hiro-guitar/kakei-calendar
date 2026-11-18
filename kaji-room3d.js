@@ -138,7 +138,7 @@ const winLight = new THREE.PointLight('#9fc4ff', 1.5, 4); winLight.position.set(
 const outLight = new THREE.DirectionalLight('#bcd4ff', 1.2); outLight.position.set(WX - 2, 6, OUT_Z + 2); outLight.target.position.set(WX, .6, OUT_Z - 2.5); scene.add(outLight, outLight.target);
 
 /* ---------- ツリー ---------- */
-const tree = new THREE.Group(); tree.position.set(-1.15, 0, -1.65); tree.scale.setScalar(.86); scene.add(tree);
+const tree = new THREE.Group(); tree.position.set(-1.15, 0, -1.65); tree.scale.setScalar(.86); tree.rotation.y = opts.rot || 0; scene.add(tree);
 const potH = .62;
 // 段（下から）：[下端y, 半径, 高さ]
 const TIERS = [[.86, 1.24, 1.22], [1.5, 1.0, 1.08], [2.06, .78, .94], [2.55, .55, .8], [2.96, .33, .64]];
@@ -220,7 +220,7 @@ const placed = [], appear = [];
 const usedSlots = new Set();
 // いま手前を向いている面の、あいている場所を選ぶ（回したあとでも、見えている側に付く）
 function pickSlot(){ const rot = tree.rotation.y; let best = -1, bs = 1e9; for (let i = 0; i < slots.length; i++){ if (usedSlots.has(i)) continue; const p = slots[i]; let d = Math.atan2(p.x, p.z) + rot; d = Math.atan2(Math.sin(d), Math.cos(d)); const sc = Math.abs(d) + rnd() * 1.1; if (sc < bs){ bs = sc; best = i; } } return best; }
-function addOrnament(animate = true, id = null, type = null){ const idx = placed.length; let si = pickSlot(), p; if (si >= 0){ usedSlots.add(si); p = slots[si].clone(); } else { p = slots[idx % slots.length].clone().multiplyScalar(1.02).add(new THREE.Vector3(0, -.04 * Math.floor(idx / slots.length), 0)); } const o = makeOrnament(type || 'red'); o.userData.id = id; o.userData.base = 1.45; o.scale.setScalar(1.45); o.children[0].position.y -= .13; o.position.copy(p).add(new THREE.Vector3(0, .13 * 1.45, 0)); o.userData.orn = true; o.userData.ph = rnd() * 6; o.rotation.order = 'YXZ'; o.rotation.y = Math.atan2(p.x, p.z) + (rnd() - .5) * .6; o.rotation.z = (rnd() - .5) * .25; o.userData.rz = o.rotation.z; o.traverse(m => { if (m.isMesh) m.castShadow = true; }); tree.add(o); placed.push(o);
+function addOrnament(animate = true, id = null, type = null){ const idx = placed.length; let si = id && opts.slotOf ? opts.slotOf(id) : null, p; if (!(si >= 0 && si < slots.length) || usedSlots.has(si)){ si = pickSlot(); if (si >= 0 && id && opts.onPlace) opts.onPlace(id, si); } if (si >= 0){ usedSlots.add(si); p = slots[si].clone(); } else { p = slots[idx % slots.length].clone().multiplyScalar(1.02).add(new THREE.Vector3(0, -.04 * Math.floor(idx / slots.length), 0)); } const o = makeOrnament(type || 'red'); o.userData.id = id; o.userData.base = 1.45; o.scale.setScalar(1.45); o.children[0].position.y -= .13; o.position.copy(p).add(new THREE.Vector3(0, .13 * 1.45, 0)); o.userData.orn = true; o.userData.ph = rnd() * 6; o.rotation.order = 'YXZ'; o.rotation.y = Math.atan2(p.x, p.z) + (rnd() - .5) * .6; o.rotation.z = (rnd() - .5) * .25; o.userData.rz = o.rotation.z; o.traverse(m => { if (m.isMesh) m.castShadow = true; }); tree.add(o); placed.push(o);
   if (animate){ o.scale.setScalar(.001); appear.push({ o, t0:performance.now() }); } shadowsDirty = true; }
 
 /* ---------- プレゼント ---------- */
@@ -535,7 +535,7 @@ function frame(now){
   requestAnimationFrame(frame);
   if (document.hidden || stopped || now - last < 33) return; last = now;
   for (let k = appear.length - 1; k >= 0; k--){ const a = appear[k], t = Math.min(1, (now - a.t0) / 420), s = t < 1 ? 1 + 1.7 * Math.pow(t - 1, 3) + .7 * Math.pow(t - 1, 2) : 1; const bs = a.o.userData.base || 1; a.o.scale.setScalar(Math.max(.001, s * bs)); if (t >= 1){ a.o.scale.setScalar(bs); appear.splice(k, 1); shadowsDirty = true; } }
-  if (!drag && Math.abs(spin) > .0004){ tree.rotation.y += spin; spin *= .93; shadowsDirty = true; }
+  if (!drag && Math.abs(spin) > .0004){ tree.rotation.y += spin; spin *= .93; shadowsDirty = true; if (Math.abs(spin) <= .0004 && opts.onRot) opts.onRot(tree.rotation.y); }
   // 回したときの振り子：回転の加速で横にふれ、速さで外へ広がる
   { const fdt = Math.min(.1, (now - (frame.prevT || now)) / 1000) || .033; frame.prevT = now; const rot = tree.rotation.y, w = (rot - (frame.prevRot ?? rot)) / fdt, acc = (w - (frame.prevW ?? w)) / fdt; frame.prevRot = rot; frame.prevW = w;
     placed.forEach(o => { const u = o.userData, r = Math.hypot(o.position.x, o.position.z) || .5, L = .22; u.th = u.th || 0; u.om = u.om || 0;
@@ -575,7 +575,7 @@ let drag = null, spin = 0; const cv = renderer.domElement; cv.style.touchAction 
 cv.addEventListener('pointerdown', e => { drag = { x:e.clientX, y:e.clientY, last:e.clientX, t:performance.now(), moved:false, onTree:false }; spin = 0; cv.setPointerCapture(e.pointerId); });
 cv.addEventListener('pointermove', e => { if (!drag) return; const dx = e.clientX - drag.last; if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 7) drag.moved = true;
   if (drag.moved){ const now = performance.now(), k = 2 * Math.PI / Math.max(260, cv.clientWidth * .9); tree.rotation.y += dx * k; spin = dx * k / Math.max(8, now - drag.t) * 16; drag.t = now; shadowsDirty = true; } drag.last = e.clientX; });
-cv.addEventListener('pointerup', e => { const d = drag; drag = null; if (d && d.moved){ opts.onSpin && opts.onSpin(); return; } if (d) tapAt(e); });
+cv.addEventListener('pointerup', e => { const d = drag; drag = null; if (d && d.moved){ opts.onSpin && opts.onSpin(); opts.onRot && opts.onRot(tree.rotation.y); return; } if (d) tapAt(e); });
 cv.addEventListener('pointercancel', () => { drag = null; });
 function tapAt(e){ const r = renderer.domElement.getBoundingClientRect(); v2.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); ray.setFromCamera(v2, camera);
   const hit = ray.intersectObjects([...placed, ...gifts], true)[0]; if (hit){ let o = hit.object; while (o && !o.userData.id) o = o.parent; if (o){ if (o.userData.orn) o.userData.swing = performance.now(); else { o.scale.setScalar(.85 * (o.userData.base || 1)); appear.push({ o, t0:performance.now() - 120 }); } opts.onTap && opts.onTap(o.userData.id, !!o.userData.gift); return; } }

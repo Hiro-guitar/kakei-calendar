@@ -4302,6 +4302,9 @@ function orn3dOld(l){ const k = ornamentOf(l), o = ORN[k], h = hash(l.id);
   if (o.c === 'ふゆ' || o.c === 'そら') return { id:l.id, shape:'star' };
   if (o.c === 'ふたりで') return { id:l.id, ball:1, color:'#e8586a', pat:'dot' };
   return { id:l.id, ball:1, color:['#e04a5a', '#e8b84a', '#8ec8ec', '#5aac7a', '#a682d8', '#f4a0c0'][h % 6] }; }
+/* 今日のツリーの向きとオーナメントの場所はこの端末に覚えておく（日がかわると新しいツリー） */
+function treeMem(){ const day = dayKey(Date.now()); try { const t = JSON.parse(localStorage.getItem('kaji_tree') || 'null'); if (t && t.day === day) return t; } catch (e) {} return { day, rot:0, slots:{} }; }
+function treeSave(t){ try { localStorage.setItem('kaji_tree', JSON.stringify(t)); } catch (e) {} }
 function syncRoom(){
   const el = $('room3d'), on = document.body.classList.contains('xfullmode') && !ROOM_FAIL;
   el.style.display = on ? '' : 'none'; if (ROOM) ROOM.pause(!on); if (!on) return;
@@ -4309,7 +4312,7 @@ function syncRoom(){
   const doSync = () => { ROOM.setNight(hr >= 17 || hr < 6); ROOM.setRoom(settings().room || {}); ROOM.sync(logs.map(orn3d), logs.filter(l => l.thanks).map(l => ({ id:l.id }))); };
   if (ROOM){ ROOM.resize(); doSync(); return; }
   if (ROOM_LOADING) return; ROOM_LOADING = true;
-  import('./kaji-room3d.js').then(m => { ROOM = m.mountRoom(el, { shiftY:.06, onTap:(id, gift) => { chime('do'); setTimeout(() => ornSheet(id, gift), gift ? 250 : 650); }, onTree:() => chime('do'), onSpin:() => { try { localStorage.setItem('kaji_spun', '1'); } catch (e) {} } }); try { if (!localStorage.getItem('kaji_spun')) setTimeout(() => toast('ツリーは指で横になぞると回せるよ'), 1500); else if (advBadge() && !localStorage.getItem('kaji_advhint')){ localStorage.setItem('kaji_advhint', '1'); setTimeout(() => toast('右上の🎁からアドベントのとびらを開けられるよ'), 1500); } } catch (e) {} ROOM_LOADING = false; doSync(); })
+  import('./kaji-room3d.js').then(m => { ROOM = m.mountRoom(el, { shiftY:.06, rot:treeMem().rot, slotOf:id => treeMem().slots[id], onPlace:(id, si) => { const t = treeMem(); t.slots[id] = si; treeSave(t); }, onRot:r => { const t = treeMem(); t.rot = r; treeSave(t); }, onTap:(id, gift) => { chime('do'); setTimeout(() => ornSheet(id, gift), gift ? 250 : 650); }, onTree:() => chime('do'), onSpin:() => { try { localStorage.setItem('kaji_spun', '1'); } catch (e) {} } }); try { if (!localStorage.getItem('kaji_spun')) setTimeout(() => toast('ツリーは指で横になぞると回せるよ'), 1500); else if (advBadge() && !localStorage.getItem('kaji_advhint')){ localStorage.setItem('kaji_advhint', '1'); setTimeout(() => toast('右上の🎁からアドベントのとびらを開けられるよ'), 1500); } } catch (e) {} ROOM_LOADING = false; doSync(); })
     .catch(e => { console.warn(e); ROOM_FAIL = true; ROOM_LOADING = false; render(); });
 }
 function ornSheet(id, gift){ const l = S.items[id]; if (!l) return; const k = ornamentOf(l), mine = l.by === S.me && !l.both, when = `${dayKey(l.at).slice(5).replace('-','/')} ${hm(l.at)}`;
