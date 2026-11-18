@@ -116,6 +116,7 @@ body.xfullmode main{padding-bottom:0}
 .xfull-top{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 10px)}
 body.xfullmode header{display:none}
 .xdate{font-weight:800;color:var(--navy)}
+.iconnew{display:flex;flex-direction:column;align-items:center;text-align:center;padding:6px 4px}.iconnew img{width:96px;height:96px;border-radius:22px;box-shadow:0 6px 16px rgba(40,60,40,.25);margin-bottom:10px}.iconnew b{font-size:18px;color:var(--navy)}.iconnew ol{text-align:left;margin:12px 0 6px;padding-left:22px;font-size:14px;line-height:1.7;color:var(--navy)}.iconnew .sh{display:inline-block;padding:0 6px;border-radius:6px;background:#efe6d2;font-size:12px}.iconnew p{margin:4px 0 14px;font-size:12px}
 /* アドベントボックス（木のおうちに、柄ちがいの小さなとびら） */
 .abox{position:relative;margin:66px 4px 4px;padding:16px 12px 14px;border-radius:10px 10px 18px 18px;background:linear-gradient(#b4402f,#9a3226);box-shadow:inset 0 0 0 4px #c9583f,inset 0 0 0 7px #7e2a20,0 6px 0 #6a2219,0 10px 18px rgba(80,30,10,.25)}
 .abox::before{content:'';position:absolute;left:-14px;right:-14px;top:-52px;height:62px;background:linear-gradient(#2f6a46,#24573a);clip-path:polygon(50% 0,100% 78%,100% 100%,0 100%,0 78%);z-index:0}
@@ -586,6 +587,9 @@ const SLOTS = [['morning','朝'],['day','昼'],['night','夜'],['any','いつで
 const WD = ['日','月','火','水','木','金','土'];
 let S = (() => { try { return JSON.parse(localStorage.getItem(LS)) } catch(e) { return null } })()
   || { items:{}, me:null, url:'', key:'', lastSync:0, queue:[], seeded:false };
+/* アイコンを追加し直したとき用：コピーしたURLの #setup= から同期の設定とだれの端末かを引きつぐ（まだ設定がない端末だけ） */
+const ICON_VER = 'xmas2026';
+{ const m = /#setup=([^&]+)/.exec(location.hash); if (m){ try { const c = JSON.parse(decodeURIComponent(escape(atob(m[1])))); if (!S.url && c.u){ S.url = c.u; S.key = c.k || ''; S.lastSync = 0; } if (!S.me && c.m) S.me = c.m; localStorage.setItem(LS, JSON.stringify(S)); localStorage.setItem('kaji_iconver', ICON_VER); } catch (e) {} } }
 let tab = 'today', weekOff = 0, selDay = null, reviewOpen = false, syncState = 'local';
 
 const save = () => { try { localStorage.setItem(LS, JSON.stringify(S)) } catch(e) {} };
@@ -4712,6 +4716,10 @@ document.addEventListener('click', e => {
         ${mine ? (l.thanks ? '<div class="thanks on" style="margin-top:12px">♥ ありがとうが届いてる</div>' : '') : `<button class="btn ${l.thanks ? 'ghost' : 'go'}" style="margin-top:14px;padding:12px 22px" data-act="othanks" data-id="${l.id}">${l.thanks ? '♥ ありがとう、とどいてるよ' : '♡ ありがとう'}</button>`}</div>`), 220); break; }
     case 'othanks': { if (!L) break; if (!L.thanks) burst(el, 'heart'); toggleThanks(L); closeSheet(); break; }
     case 'advent': advSheet(); break;
+    case 'iconcopy': { const u = setupURL(), done = () => { toast('コピーしたよ'); el.textContent = 'コピーしたよ ✓'; };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(u).then(done).catch(() => prompt('このURLをコピーしてね', u)); else prompt('このURLをコピーしてね', u); if (S.url) sync(); break; }
+    case 'iconlater': try { localStorage.setItem('kaji_iconsnooze', String(Date.now() + 864e5)); } catch (e) {} closeSheet(); break;
+    case 'icondone': try { localStorage.setItem('kaji_iconver', ICON_VER); } catch (e) {} closeSheet(); break;
     case 'menu': { const m = $('menupop'); if (m && m.classList.contains('open')) menuClose(); else menuOpen(); break; }
     case 'gohome': menuClose(); tab = 'today'; weekOff = 0; selDay = null; closeSheet(); render(); window.scrollTo(0, 0); break;
     case 'goto': menuClose(); tab = el.dataset.t; weekOff = 0; selDay = null; reviewOpen = false; closeSheet(); render(); window.scrollTo(0, 0); break;
@@ -4822,11 +4830,22 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) sync
 setInterval(() => { if (!document.hidden && S.url) sync(); }, 30000);
 setInterval(() => { if (tab === 'today' && !$('sheet').classList.contains('open')) render(); }, 60000);
 
+/* 新しいアイコンのお知らせ（ホーム画面から開いたときだけ） */
+const isStandalone = () => navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+function setupURL(){ const c = { u:S.url, k:S.key, m:S.me }; return location.origin + location.pathname + '#setup=' + btoa(unescape(encodeURIComponent(JSON.stringify(c)))); }
+function iconNotice(force){ let v = ''; try { v = localStorage.getItem('kaji_iconver') || ''; } catch (e) {}
+  if (!force){ if (v === ICON_VER || !S.me) { try { if (!S.me) localStorage.setItem('kaji_iconver', ICON_VER); } catch (e) {} return; } if (!isStandalone()) return; try { if (+localStorage.getItem('kaji_iconsnooze') > Date.now()) return; } catch (e) {} }
+  openSheet(`<div class="iconnew"><img src="kaji-icon-xmas.png" alt=""><b>アイコンが新しくなったよ</b>
+    <ol><li>下のボタンでURLをコピー</li><li>ホーム画面の今のアイコンを長押しして削除</li><li>Safariにはりつけて開き、<span class="sh">共有</span>から「ホーム画面に追加」</li></ol>
+    <p class="muted">記録や同期の設定は、そのまま引きつがれるよ</p>
+    <button class="btn go" style="width:100%;padding:13px" data-act="iconcopy">URLをコピー</button>
+    <div style="display:flex;gap:8px;width:100%;margin-top:8px"><button class="btn ghost" style="flex:1;white-space:nowrap;padding:11px 0" data-act="iconlater">あとで</button><button class="btn ghost" style="flex:1;white-space:nowrap;padding:11px 0" data-act="icondone">もう追加した</button></div></div>`); }
 /* ========== 起動 ========== */
 if (!S.url) seedIfEmpty();
 renameKid();
 render();
 if (S.url) sync();
+setTimeout(() => iconNotice(false), 1800);
 </script>
 </body>
 </html>
