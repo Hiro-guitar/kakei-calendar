@@ -253,9 +253,10 @@ function wrapTex(a, b, kind){ return canvasTex(128, 128, (g, w, h) => { g.fillSt
   if (kind === 'dot') for (let y = 10; y < h; y += 20) for (let x = (y / 20 % 2) * 10 + 6; x < w; x += 20){ g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill(); }
   if (kind === 'check'){ g.globalAlpha = .45; for (let i = 0; i < 4; i++){ g.fillRect(i * 32 + 8, 0, 14, h); g.fillRect(0, i * 32 + 8, w, 14); } } }); }
 const gifts = [];
-const GIFT_SPOTS = [[-1.7, -.7], [-.6, -.65], [-1.15, -.3], [-.25, -1.0], [-1.95, -1.2], [-.45, -.15], [-.0, -.5], [-1.65, -.05]].map(([x, z]) => [x + 1.15, z + 1.65]); // ツリーからの位置
+const GIFT_SPOTS = Array.from({ length:9 }, (_, i) => { const t = i / 9 * Math.PI * 2 + .35; return [Math.sin(t) * .86, Math.cos(t) * .86]; }); // ツリーの枝の下に、ぐるっと
+const giftRing = new THREE.Group(); treeRoot.add(giftRing);
 // 8か所に置ききったら、その上に重ねていく（上ほど少し小さく）
-function addGift(animate = true, id = null){ const i = gifts.length, N = GIFT_SPOTS.length, lv = Math.floor(i / N); if (lv >= 5) return; const [x, z] = GIFT_SPOTS[i % N], [a, b, kind] = WRAPS[i % WRAPS.length], under = lv ? gifts[i - N] : null, sc = Math.pow(.82, lv);
+function addGift(animate = true, id = null){ const i = gifts.length, N = GIFT_SPOTS.length, lv = Math.floor(i / N); if (lv >= 4) return; const [x, z] = GIFT_SPOTS[i % N], [a, b, kind] = WRAPS[i % WRAPS.length], under = lv ? gifts[i - N] : null, sc = Math.pow(.82, lv);
   const w = .34 + rnd() * .22, h = .26 + rnd() * .2, d = .3 + rnd() * .2, g = new THREE.Group();
   const box = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 3, .035), std('#ffffff', { map:wrapTex(a, b, kind), roughness:.6 })); box.position.y = h / 2; box.castShadow = box.receiveShadow = true; g.add(box);
   const rc = a === '#f2c14e' || a === '#f3ead9' ? '#c8352e' : '#f2c14e', rm = std(rc, { roughness:.45, metalness:.15 });
@@ -264,7 +265,7 @@ function addGift(animate = true, id = null){ const i = gifts.length, N = GIFT_SP
   for (const s of [-1, 1]){ const t = new THREE.Mesh(new THREE.TorusGeometry(.06, .022, 8, 16), rm); t.position.set(s * .055, h + .045, 0); t.rotation.set(0, Math.PI / 2, s * .5); t.scale.set(1, 1.25, .8); t.castShadow = true; g.add(t); }
   const knot = new THREE.Mesh(new THREE.SphereGeometry(.03, 10, 8), rm); knot.position.y = h + .03; g.add(knot);
   const y0 = under ? under.position.y + under.userData.h * under.userData.base : 0; g.userData.h = h; g.userData.base = sc; g.scale.setScalar(sc);
-  g.position.set(x + (lv ? (rnd() - .5) * .05 : 0), y0, z + (lv ? (rnd() - .5) * .05 : 0)); g.rotation.y = (rnd() - .5) * (lv ? 1.2 : .6); g.userData.id = id; g.userData.gift = true; treeRoot.add(g); gifts.push(g); if (!lv){ g.userData.blob = blob(x, z, w * 2.1, d * 2.1, .9); treeRoot.add(g.userData.blob); }
+  g.position.set(x + (lv ? (rnd() - .5) * .05 : 0), y0, z + (lv ? (rnd() - .5) * .05 : 0)); g.rotation.y = Math.atan2(x, z) + (rnd() - .5) * (lv ? 1.2 : .6); g.userData.id = id; g.userData.gift = true; giftRing.add(g); gifts.push(g); if (!lv){ g.userData.blob = blob(x, z, w * 2.1, d * 2.1, .9); giftRing.add(g.userData.blob); }
   if (animate){ g.scale.setScalar(.001); appear.push({ o:g, t0:performance.now() }); } shadowsDirty = true; }
 
 /* ---------- 家具（アドベントで手に入る。場所ごとに3種類から選べる） ---------- */
@@ -531,7 +532,7 @@ const GRID = .25, ZMAX = 2.6;
 const inst = {}; // id → { g, rec }
 function partBox(g, opt = {}){ g.updateMatrixWorld(true); const box = new THREE.Box3(); g.traverse(m => { if (!m.isMesh || !m.visible) return; if (m.material && (m.material.map === blobTex || m.material.blending === THREE.AdditiveBlending)) return; if (m.userData.thumbTree || m.userData.selMark) return; if (opt.noGift && m.parent && m.parent.userData.gift) return; box.expandByObject(m); }); return box; }
 // ツリーは、まわりのプレゼント置き場（いくつ置いてあっても）まで含めて場所をとる
-function instBox(o){ if (o.rec.key === 'tree'){ const b = partBox(tree); treeRoot.updateMatrixWorld(true); for (const [x, z] of GIFT_SPOTS){ const p = treeRoot.localToWorld(new THREE.Vector3(x, 0, z)); b.expandByPoint(new THREE.Vector3(p.x - .26, 0, p.z - .24)); b.expandByPoint(new THREE.Vector3(p.x + .26, .9, p.z + .24)); } return b; } return partBox(o.g); }
+function instBox(o){ if (o.rec.key === 'tree'){ const b = partBox(tree); const c = treeRoot.position, R0 = 1.02; b.expandByPoint(new THREE.Vector3(c.x - R0, 0, c.z - R0)); b.expandByPoint(new THREE.Vector3(c.x + R0, .9, c.z + R0)); return b; } return partBox(o.g); }
 function recDefault(key){ const it = FURN_BY[key]; if (!it) return null; const a = ANCHOR[it.slot]; if (WALL_SLOTS.includes(it.slot)) return { key, wall:'back', u:a[0], y:a[1] }; return { key, x:a[0], z:a[2], r:a[3] || 0 }; }
 function placeInst(o){ const r = o.rec;
   if (r.key === 'tree'){ treeRoot.position.set(r.x, 0, r.z); return; }
@@ -643,6 +644,7 @@ function frame(now){
   requestAnimationFrame(frame);
   if (document.hidden || stopped || now - last < 33) return; last = now;
   for (let k = appear.length - 1; k >= 0; k--){ const a = appear[k], t = Math.min(1, (now - a.t0) / 420), s = t < 1 ? 1 + 1.7 * Math.pow(t - 1, 3) + .7 * Math.pow(t - 1, 2) : 1; const bs = a.o.userData.base || 1; a.o.scale.setScalar(Math.max(.001, s * bs)); if (t >= 1){ a.o.scale.setScalar(bs); appear.splice(k, 1); shadowsDirty = true; } }
+  giftRing.rotation.y = tree.rotation.y;
   if (!drag && Math.abs(spin) > .0004){ tree.rotation.y += spin; spin *= .93; shadowsDirty = true; if (Math.abs(spin) <= .0004 && opts.onRot) opts.onRot(tree.rotation.y); }
   // 回したときの振り子：回転の加速で横にふれ、速さで外へ広がる
   { const fdt = Math.min(.1, (now - (frame.prevT || now)) / 1000) || .033; frame.prevT = now; const rot = tree.rotation.y, w = (rot - (frame.prevRot ?? rot)) / fdt, acc = (w - (frame.prevW ?? w)) / fdt; frame.prevRot = rot; frame.prevW = w;
@@ -665,7 +667,7 @@ renderer.domElement.addEventListener('webglcontextlost', e => e.preventDefault()
 const TYPE = { ball:(c, map) => () => ball(c, map ? .35 : .25, map ? .3 : .6, map), bell:() => bell, candy:() => candy, star:() => miniStar };
 function typeFor(o){ if (o.ball) return () => ball(o.color, o.pat ? .35 : .25, o.pat ? .3 : .6, o.pat ? stripeTex(o.color, o.pat === 'dot' ? '#ffffff' : '#f3ead9', o.pat === 'dot') : null);
   if (o.shape === 'bell') return bell; if (o.shape === 'candy') return candy; if (o.shape === 'star') return miniStar; return () => ball(o.color || '#c8352e'); }
-function clearAll(){ usedSlots.clear(); placed.splice(0).forEach(o => tree.remove(o)); gifts.splice(0).forEach(g => { treeRoot.remove(g); if (g.userData.blob) treeRoot.remove(g.userData.blob); }); }
+function clearAll(){ usedSlots.clear(); placed.splice(0).forEach(o => tree.remove(o)); gifts.splice(0).forEach(g => { giftRing.remove(g); if (g.userData.blob) giftRing.remove(g.userData.blob); }); }
 let sig = '', lastList = [], lastGifts = [];
 function sync(list, giftList){ lastList = list; lastGifts = giftList;
   const s2 = list.map(o => o.id).join(',') + '|' + giftList.map(g => g.id).join(',');
