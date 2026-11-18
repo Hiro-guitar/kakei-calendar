@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+<meta name="robots" content="noindex,nofollow">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -676,8 +677,11 @@ function put(item){
 }
 const remove = item => put({ ...item, deleted:true });
 
+// 名前はコードに書かず、設定（同期データ）にだけ持つ
+const DEF_NAMES = { h:'パパ', y:'ママ' };
+const kidName = () => (settings().names || {}).k || 'こども';
 function settings(){
-  return S.items.settings || { id:'settings', kind:'settings', names:{ h:'パパ', y:'ママ' } };
+  const st = S.items.settings; return st ? (st.names ? st : { ...st, names:{ ...DEF_NAMES } }) : { id:'settings', kind:'settings', names:{ ...DEF_NAMES } };
 }
 const nm = k => k === 'any' ? 'どちらでも' : (settings().names[k] || k);
 const other = k => k === 'h' ? 'y' : 'h';
@@ -794,7 +798,7 @@ function choreIcon(c){
   if (/洗い物|皿|食器/.test(n)) return 'dish';
   if (/取り込|たたむ|畳む/.test(n)) return 'shirt';
   if (/洗濯/.test(n)) return 'washer';
-  if (/(子ども|子供|こども).*お風呂|沐浴/.test(n)) return 'duck';
+  if (/(子ども|子供|こども).*お風呂|沐浴/.test(n) || (n.includes(kidName()) && /お風呂/.test(n))) return 'duck';
   if (/風呂/.test(n)) return 'tub';
   if (/支度|準備|保育|幼稚園|送り/.test(n)) return 'bag';
   if (/ゴミ|ごみ/.test(n)) return 'trash';
@@ -824,7 +828,7 @@ document.addEventListener('pointerdown', e => { const m = $('menupop'); if (m &&
 /* ===== グループ（ゴミ・洗濯…）。帯にはグループだけ、押すと中の家事が開く ===== */
 const GROUP_SEED = [['gohan', 'ごはん', 'pan'], ['arai', '洗い物', 'dish'], ['sentaku', '洗濯', 'washer'], ['souji', 'そうじ', 'vacuum'], ['gomi', 'ゴミ', 'trash'], ['yusa', 'こども', 'bag'], ['kaimono', '買い物', 'basket'], ['hoka', 'そのほか', 'spark']];
 const groupsSorted = () => all('group').sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-function guessGroup(n){ if (/こども|子ども|子供|幼稚園|保育|お迎え|送り/.test(n)) return 'grp_yusa'; if (/ゴミ|ごみ|オムツ|おむつ/.test(n)) return 'grp_gomi'; if (/洗い物|皿|食器|水筒/.test(n)) return 'grp_gohan';
+function guessGroup(n){ if (/子ども|子供|こども|幼稚園|保育|お迎え|送り/.test(n) || n.includes(kidName())) return 'grp_yusa'; if (/ゴミ|ごみ|オムツ|おむつ/.test(n)) return 'grp_gomi'; if (/洗い物|皿|食器|水筒/.test(n)) return 'grp_gohan';
   if (/洗濯|取り込|たたむ|畳む|シーツ|枕カバー/.test(n)) return 'grp_sentaku'; if (/ごはん|ご飯|夕飯|夕食|朝食|昼食|料理|お弁当/.test(n)) return 'grp_gohan'; if (/補充|つめかえ/.test(n)) return 'grp_hojuu'; if (/買い|買出|注文/.test(n)) return S.items.grp_kaimono && !S.items.grp_kaimono.deleted ? 'grp_kaimono' : 'grp_hojuu'; if (/掃除|そうじ|風呂|トイレ|片付/.test(n)) return 'grp_souji'; return 'grp_hoka'; }
 function groupOf(c){ const g = c.group && S.items[c.group]; return g && !g.deleted ? c.group : (S.items[guessGroup(c.name)] && !S.items[guessGroup(c.name)].deleted ? guessGroup(c.name) : (groupsSorted()[0] || {}).id); }
 /* 行とボタン：「可燃ゴミを出す」→ 行「可燃ゴミ」・ボタン「出す」。分けられない名前は1行まるごとボタン */
@@ -1061,8 +1065,8 @@ async function pull(){
     return true;
   } catch(e) { syncState = 'err'; setSync(); return false; }
 }
-/* 「子ども」→「こども」（家事の名前と記録。何度呼んでも同じ） */
-function renameKid(){ let n = 0; for (const it of Object.values(S.items)){ if ((it.kind === 'chore' || it.kind === 'log') && !it.deleted && typeof it.name === 'string' && /子ども|子供/.test(it.name)){ it.name = it.name.replace(/子ども|子供/g, 'こども'); it.updatedAt = Date.now(); S.queue = S.queue.filter(q => q.id !== it.id); S.queue.push(it); n++; } } if (n) save(); return n; }
+/* 「子ども」→ 設定の子どもの名前（家事の名前と記録。何度呼んでも同じ） */
+function renameKid(){ const K = (settings().names || {}).k; if (!K) return 0; let n = 0; for (const it of Object.values(S.items)){ if ((it.kind === 'chore' || it.kind === 'log') && !it.deleted && typeof it.name === 'string' && /子ども|子供|こども/.test(it.name)){ it.name = it.name.replace(/子ども|子供|こども/g, K); it.updatedAt = Date.now(); S.queue = S.queue.filter(q => q.id !== it.id); S.queue.push(it); n++; } } if (n) save(); return n; }
 async function sync(){
   const ok = await pull();
   if (ok && !S.seeded) seedIfEmpty();
@@ -4808,9 +4812,10 @@ function viewSettings(){
       + `<button class="btn small ghost" style="margin-top:8px" data-act="edit" data-id="" data-g="${g.id}">＋ ${esc(g.name)}に家事を追加</button></div>`; }).join('');
   html += `<button class="btn go wide" style="margin:4px 0 8px" data-act="gedit" data-g="">＋ グループを作る</button>`;
 
-  html += `<h2>ふたりの名前</h2><div class="panel">
+  html += `<h2>家族の名前</h2><div class="panel">
     <div class="row"><span class="dot h"></span><input class="t" id="name_h" value="${esc(n.h)}"></div>
     <div class="row" style="margin-top:8px"><span class="dot y"></span><input class="t" id="name_y" value="${esc(n.y)}"></div>
+    <div class="row" style="margin-top:8px"><span class="muted" style="width:12px;text-align:center">♡</span><input class="t" id="name_k" value="${esc(n.k || '')}" placeholder="こどもの名前"></div>
     <div class="row" style="margin-top:10px;justify-content:flex-end"><button class="btn small" data-act="savenames">保存</button></div></div>`;
 
   html += `<h2>この端末を使う人</h2><div class="panel"><div class="seg">
@@ -5120,7 +5125,7 @@ document.addEventListener('click', e => {
       if (j < 0 || j >= cs.length) return; const a = all2.findIndex(c => c.id === cs[i].id), b2 = all2.findIndex(c => c.id === cs[j].id); [all2[a], all2[b2]] = [all2[b2], all2[a]];
       all2.forEach((c,k) => { if (c.order !== k) { c.order = k; c.updatedAt = Date.now(); S.items[c.id] = c; S.queue = S.queue.filter(q => q.id !== c.id); S.queue.push(c); } });
       save(); render(); push(); break; }
-    case 'savenames': { const s = { ...settings(), names:{ h:$('name_h').value.trim()||'パパ', y:$('name_y').value.trim()||'ママ' } }; put(s); toast('ほぞんしたよ'); break; }
+    case 'savenames': { const s = { ...settings(), names:{ h:$('name_h').value.trim()||DEF_NAMES.h, y:$('name_y').value.trim()||DEF_NAMES.y, k:$('name_k').value.trim() } }; put(s); renameKid(); toast('ほぞんしたよ'); break; }
     case 'savesync': S.url = $('s_url').value.trim(); S.key = $('s_key').value.trim(); S.lastSync = 0; save(); toast('同期しています…'); sync().then(() => toast(syncState==='ok'?'同期しました':'同期できませんでした')); break;
     case 'export': { const b = new Blob([JSON.stringify(S.items,null,1)], {type:'application/json'}); const u = URL.createObjectURL(b);
       const x = document.createElement('a'); x.href = u; x.download = `uchikaji-${dayKey(Date.now())}.json`; x.click(); setTimeout(() => URL.revokeObjectURL(u), 2000); break; }
