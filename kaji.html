@@ -116,7 +116,7 @@ body.xfullmode main{padding-bottom:0}
 .xfull-top{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 10px)}
 body.xfullmode header{display:none}
 .xdate{font-weight:800;color:var(--navy)}
-.odesc{margin:6px 8px 8px;font-size:14px;line-height:1.7;color:#5a4a3a;text-align:center}
+.odesc{margin:6px 8px 8px;font-size:14px;line-height:1.7;color:#5a4a3a;text-align:left;align-self:stretch;background:#fbf4e6;border-radius:12px;padding:10px 14px}
 body.roomedit .qbar,body.roomedit .xfull-top,body.roomedit #appbar{display:none!important}
 #editbar{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:20;padding:12px;border-radius:24px;background:var(--cream);box-shadow:var(--sh-lift)}
 #editbar .ebmsg{text-align:center;font-weight:800;font-size:13px;color:var(--navy);margin-bottom:10px}
@@ -216,7 +216,7 @@ body.dragmode{user-select:none;-webkit-user-select:none}
 @keyframes alid{30%{transform:translateY(-14px) rotate(-6deg)}100%{transform:translate(-70px,-60px) rotate(-38deg);opacity:0}}
 @keyframes agone{to{opacity:0;transform:translateY(10px) scale(.9)}}
 .aopen .item{position:absolute;left:0;right:0;bottom:16px;display:flex;justify-content:center;gap:4px;opacity:0;animation:arise 1.3s .75s cubic-bezier(.3,1.2,.5,1) forwards}
-.aopen .item img{width:150px;height:150px;object-fit:contain;filter:drop-shadow(0 6px 8px rgba(0,0,0,.35))}.aopen .item.two img{width:118px;height:118px}
+.aopen .item img{width:150px;height:150px;object-fit:contain;filter:drop-shadow(0 6px 8px rgba(0,0,0,.35))}.aopen .item.two img{width:118px;height:118px}.aopen .item.many{flex-wrap:wrap;align-content:flex-end;gap:2px 0;padding:0 18px}.aopen .item.many img{width:64px;height:64px}.aopen .item.many::after{display:none}.abtn-all{display:block;margin:-4px auto 12px;position:relative;z-index:2;padding:8px 18px;border:0;border-radius:999px;background:#d8453a;color:#fff;font-weight:900;font-size:13px;box-shadow:0 3px 0 #9a2a22}
 @keyframes arise{0%{opacity:0;transform:translateY(30px) scale(.5)}100%{opacity:1;transform:translateY(-12px) scale(1)}}
 .aopen .item::after{content:'';position:absolute;left:50%;bottom:-8px;width:130px;height:14px;margin-left:-65px;border-radius:50%;background:rgba(0,0,0,.18)}
 .aopen .nm{position:relative;margin-top:4px;color:#fff6e0;font-size:18px;font-weight:900;opacity:0;animation:afade .6s 1.6s forwards;text-shadow:0 2px 0 rgba(0,0,0,.25)}
@@ -4468,7 +4468,7 @@ function viewZukanFurn(){ const m = RMOD; if (!m){ ensureRoom().then(() => rende
   html += `<h2>ツリー</h2><div class="zgrid"><div class="zcell" data-act="furnz" data-k="tree"><span class="zno">はじめから</span><span class="fz">${fimg('tree')}</span><span class="zn">もみの木</span></div></div>`;
   for (const [slot, label] of m.FURN_SLOTS){ const its = m.FURN_ITEMS.filter(it => it.slot === slot); html += `<h2>${label}</h2><div class="zgrid">` + its.map(it => U.has(it.key)
       ? `<div class="zcell" data-act="furnz" data-k="${it.key}"><span class="zno">${m.TREE_PARTS.includes(it.slot) && it.k === 0 ? 'はじめから' : '&nbsp;'}</span><span class="fz">${fimg(it.key)}</span><span class="zn">${esc(it.name)}</span></div>`
-      : `<div class="zcell un"><span class="zno">${md(U.day(it.key))}</span><span class="fz"><span class="lk">？</span></span><span class="zn">？？？</span></div>`).join('') + `</div>`; }
+      : `<div class="zcell un"><span class="zno">&nbsp;</span><span class="fz"><span class="lk">？</span></span><span class="zn">？？？</span></div>`).join('') + `</div>`; }
   return html; }
 function zSeg(){ const opts = [['flower', '花']]; if (CREATURES_ON) opts.push(['creature', '生き物']); if (xmasOn(0) || Object.keys(ornFound().f).length) opts.push(['orn', 'オーナメント']); if (!ROOM_FAIL && (xmasOn(0) || (settings().adv || []).length)) opts.push(['furn', '家具']);
   return opts.length > 1 ? `<div class="seg" style="margin:6px 0 12px">${opts.map(([v, l]) => `<button class="${zMode === v ? 'on' : ''}" data-act="zm" data-v="${v}">${l}</button>`).join('')}</div>` : ''; }
@@ -4587,6 +4587,7 @@ const advDay = i => new Date(advYear(), 10, 19 + i);
 const advToday = () => { const d0 = new Date(advYear(), 10, 19), t = new Date(); t.setHours(0, 0, 0, 0); return Math.floor((t - d0) / 864e5); };
 const advOpened = () => new Set(settings().adv || []);
 const advCan = i => i <= advToday();
+const advLeft = () => { const t = Math.min(advToday(), ADV_N - 1), o = advOpened(); let n = 0; for (let i = 0; i <= t; i++) if (!o.has(i)) n++; return n; };
 function advBadge(){ const t = advToday(); if (t < 0) return 0; const o = advOpened(); let n = 0; for (let i = 0; i <= Math.min(t, ADV_N - 1); i++) if (!o.has(i)) n++; return n; }
 const ICON_ADV = `<svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="12" rx="2" fill="#d8403a"/><rect x="2" y="6" width="20" height="5" rx="1.5" fill="#e8584a"/><rect x="10.6" y="6" width="2.8" height="15" fill="#f2c14e"/><path d="M12 6 C 9 1 5 3 8 6 M12 6 C 15 1 19 3 16 6" stroke="#f2c14e" stroke-width="1.8" fill="none"/></svg>`;
 const ICON_MY = `<svg viewBox="0 0 24 24"><path d="M3 12 L12 4 L21 12" stroke="#a8703e" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="5.5" y="11" width="13" height="10" rx="1.5" fill="#f2c14e"/><rect x="10" y="15" width="4" height="6" fill="#c8862a"/><circle cx="18" cy="6.5" r="1.6" fill="#d8403a"/></svg>`;
@@ -4604,22 +4605,22 @@ function advSheet(){ rmod().then(m => { const o = advOpened(), t = advToday();
     if (o.has(i)) return `<div class="ad open ${cls2}">${inner}<div class="leaf ${pat}"><span class="num">${d.getDate()}</span></div></div>`;
     if (i <= t) return `<div class="ad can ${cls2}" data-i="${i}">${inner}<button class="leaf ${pat}" data-act="advopen" data-i="${i}" aria-label="${md(d)}のとびら"><span class="num">${d.getDate()}</span></button></div>`;
     return `<div class="ad lock ${cls2}"><div class="leaf ${pat}"><span class="num">${d.getDate()}</span></div></div>`; }).join('');
-  openSheet(`<div class="abox">${STAR_SVG}<div class="asign">アドベントボックス<small>きょうは なにが入ってるかな？</small></div><div class="agrid">${doors}</div></div>`); setTimeout(fillFurn, 30); }); }
+  openSheet(`<div class="abox">${STAR_SVG}<div class="asign">アドベントボックス<small>きょうは なにが入ってるかな？</small></div>${(() => { const n = m.ADVENT.filter((_, i) => i <= t && !o.has(i)).length; return n > 1 ? `<button class="abtn-all" data-act="advall">まとめてあける（${n}こ）</button>` : ''; })()}<div class="agrid">${doors}</div></div>`); setTimeout(fillFurn, 30); }); }
 function confetti(n = 46){ const cols = ['#e0473b', '#f2c14e', '#3d8a55', '#ffffff', '#f4a6bc', '#7cc0e4']; for (let i = 0; i < n; i++){ const e = document.createElement('span'); e.className = 'aconf';
     const kind = i % 4; e.textContent = kind === 0 ? '❄' : kind === 1 ? '★' : ''; if (kind > 1){ e.style.width = '7px'; e.style.height = '11px'; e.style.borderRadius = '2px'; e.style.background = cols[i % cols.length]; } else e.style.color = kind === 0 ? '#ffffff' : cols[i % 3 + 1];
     e.style.left = (Math.random() * 100) + 'vw'; e.style.setProperty('--dx', ((Math.random() - .5) * 120) + 'px'); e.style.setProperty('--r', ((Math.random() - .5) * 900) + 'deg'); e.style.animationDuration = (1.8 + Math.random() * 1.6) + 's'; e.style.animationDelay = (Math.random() * .5) + 's'; if (kind === 0) e.style.textShadow = '0 0 3px rgba(120,160,220,.9)';
     document.body.appendChild(e); setTimeout(() => e.remove(), 4200); } }
-function advOpen(i){ if (!advCan(i) || advOpened().has(i)) return; rmod().then(m => { const keys = m.ADVENT[i];
-  const cell = document.querySelector(`.ad.can[data-i="${i}"]`); if (cell){ cell.classList.remove('can'); cell.classList.add('opening'); }
+function advOpen(i){ const O = advOpened(), L = (Array.isArray(i) ? i : [i]).filter(j => advCan(j) && !O.has(j)); if (!L.length) return; rmod().then(m => { const keys = L.flatMap(j => m.ADVENT[j]);
+  const cell = L.length === 1 ? document.querySelector(`.ad.can[data-i="${L[0]}"]`) : null; if (L.length > 1) document.querySelectorAll('.ad.can').forEach(c => { c.classList.remove('can'); c.classList.add('opening'); }); if (cell){ cell.classList.remove('can'); cell.classList.add('opening'); }
   chime('bell');
-  setTimeout(() => { const st = settings(), adv = [...new Set([...(st.adv || []), i])].sort((a, b) => a - b), room = { ...(st.room || {}) };
+  setTimeout(() => { const st = settings(), adv = [...new Set([...(st.adv || []), ...L])].sort((a, b) => a - b), room = { ...(st.room || {}) };
     let layout = st.layout ? st.layout.slice() : (ROOM ? ROOM.layoutOf() : null);
     keys.forEach(k => { const slot = m.FURN_BY[k].slot; if (layout && (m.FLOOR_SLOTS.includes(slot) || m.WALL_SLOTS.includes(slot))){ const j = layout.findIndex(r => r.key && r.key.startsWith(slot + '_')); if (j >= 0) layout[j] = { ...layout[j], key:k }; else { const r = ROOM.autoPlace(k); if (r) layout.push(r); } } else room[slot] = k; });
     put({ ...st, adv, room, ...(layout ? { layout } : {}) });
     const HOLLY = `<svg viewBox="0 0 46 46" class="holly HL"><path d="M6 20 C 10 12 16 14 18 6 C 20 12 26 12 24 20 C 30 18 32 24 26 28 C 18 30 12 28 6 20Z" fill="#3d8a55"/><path d="M14 30 C 16 36 22 34 24 40 C 26 34 32 34 30 28 C 36 26 34 20 28 22" fill="#2f7346"/><circle cx="22" cy="24" r="3.6" fill="#d8303a"/><circle cx="27" cy="26" r="3.2" fill="#e0473b"/><circle cx="24" cy="29" r="3" fill="#c8252e"/></svg>`;
     const snow = Array.from({ length:16 }, (_, k) => `<span class="sn" style="left:${(k * 37) % 100}%;--dx:${(k % 5 - 2) * 12}px;animation-duration:${5 + (k % 4)}s;animation-delay:-${(k * 0.7) % 5}s;font-size:${8 + (k % 3) * 3}px">❄</span>`).join('');
-    openSheet(`<div class="aopen">${snow}${HOLLY.replace('HL', 'l')}${HOLLY.replace('HL', 'r')}<span class="tag">${md(advDay(i))} のプレゼント</span><div class="stage"><div class="item ${keys.length > 1 ? 'two' : ''}">${keys.map(fimg).join('')}</div><div class="gbox"><i></i><b></b></div></div><div class="nm">${keys.map(k => m.FURN_BY[k].name).join('と')}</div><div class="msg">おへやに飾ったよ</div><button class="btn go" style="margin-top:14px;padding:10px 24px" data-act="advent">ボックスにもどる</button></div>`);
-    fillFurn(); setTimeout(() => chime('thanks'), 800); }, cell ? 750 : 0); }); }
+    openSheet(`<div class="aopen">${snow}${HOLLY.replace('HL', 'l')}${HOLLY.replace('HL', 'r')}<span class="tag">${L.length > 1 ? `${L.length}日分のプレゼント` : `${md(advDay(L[0]))} のプレゼント`}</span><div class="stage"><div class="item ${keys.length > 2 ? 'many' : keys.length > 1 ? 'two' : ''}">${keys.map(fimg).join('')}</div><div class="gbox"><i></i><b></b></div></div><div class="nm">${keys.length > 3 ? `${esc(m.FURN_BY[keys[0]].name)} ほか ${keys.length - 1}こ` : keys.map(k => m.FURN_BY[k].name).join('と')}</div><div class="msg">おへやに飾ったよ</div><button class="btn go" style="margin-top:14px;padding:10px 24px" data-act="advent">ボックスにもどる</button></div>`);
+    fillFurn(); setTimeout(() => chime('thanks'), 800); }, cell || L.length > 1 ? 750 : 0); }); }
 function unlockedFurn(m){ const o = advOpened(), u = new Map(); m.ADVENT.forEach((keys, i) => keys.forEach(k => u.set(k, i))); return { has:k => (m.TREE_PARTS.includes(m.FURN_BY[k].slot) && k.endsWith('_a')) || o.has(u.get(k)), day:k => advDay(u.get(k)) }; }
 function moyouSheet(){ rmod().then(m => { const U = unlockedFurn(m), room = settings().room || {};
   const layout = settings().layout || (ROOM ? ROOM.layoutOf() : []), cntK = k => layout.filter(r => r.key === k).length;
@@ -4636,7 +4637,7 @@ function moyouSheet(){ rmod().then(m => { const U = unlockedFurn(m), room = sett
   openSheet(`<div class="advhd"><b>もようがえ</b></div><button class="btn go wide" style="margin:0 0 14px;padding:13px" data-act="roomedit">家具を動かす・しまう</button>${secs}`); setTimeout(fillFurn, 30); }); }
 /* 家具を動かすモード */
 let roomEditing = false, roomSel = null;
-function roomEdit(on, selId){ if (!ROOM) return; roomEditing = !!on; document.body.classList.toggle('roomedit', roomEditing); ROOM.setEdit(roomEditing); roomSel = null; renderEditbar(); if (!roomEditing) render(); }
+function roomEdit(on, selId){ if (!ROOM) return; roomEditing = !!on; document.body.classList.toggle('roomedit', roomEditing); ROOM.setEdit(roomEditing); ROOM.setAdvBox(!roomEditing && advLeft() > 0); roomSel = null; renderEditbar(); if (!roomEditing) render(); }
 function renderEditbar(){ let b = $('editbar'); if (!b){ b = document.createElement('div'); b.id = 'editbar'; document.body.appendChild(b); } if (!roomEditing){ b.style.display = 'none'; return; } b.style.display = '';
   const s2 = roomSel, canRot = s2 && !s2.wall && s2.key !== 'tree', canRm = s2 && s2.key !== 'tree';
   b.innerHTML = `<div class="ebmsg">${s2 ? (s2.key === 'tree' ? 'ツリーをなぞって動かしてね' : s2.wall ? 'なぞって壁の上を動かしてね' : 'なぞって動かしてね') : '動かしたい家具をなぞってね'}</div><div class="ebbtn"><button data-act="erot" ${canRot ? '' : 'disabled'}>↻ まわす</button><button data-act="erm" ${canRm ? '' : 'disabled'}>しまう</button><button class="go" data-act="eend">おわる</button></div>`; }
@@ -4675,13 +4676,13 @@ function syncRoom(){
   const el = $('room3d'), on = document.body.classList.contains('xfullmode') && !ROOM_FAIL;
   el.style.display = on ? '' : 'none'; if (ROOM) ROOM.pause(!on); if (!on) return;
   const logs = logsOn(dayKey(Date.now())).slice().sort((a, b) => a.at - b.at), hr = new Date().getHours();
-  const doSync = () => { ROOM.setNight(hr >= 17 || hr < 6); if (!roomEditing) ROOM.setRoom(settings().room || {}, settings().layout); ROOM.sync(logs.map(orn3d), logs.filter(l => l.thanks).map(l => ({ id:l.id }))); };
+  const doSync = () => { ROOM.setNight(hr >= 17 || hr < 6); if (!roomEditing) ROOM.setRoom(settings().room || {}, settings().layout); ROOM.sync(logs.map(orn3d), logs.filter(l => l.thanks).map(l => ({ id:l.id }))); if (ROOM.setAdvBox) ROOM.setAdvBox(!roomEditing && advLeft() > 0); };
   if (ROOM){ ROOM.resize(); doSync(); return; }
   ensureRoom().then(r => { if (r) doSync(); });
 }
 let ROOM_P = null;
 function ensureRoom(){ if (ROOM) return Promise.resolve(ROOM); if (ROOM_FAIL) return Promise.resolve(null); if (ROOM_P) return ROOM_P; const el = $('room3d'); ROOM_LOADING = true;
-  return ROOM_P = import('./kaji-room3d.js').then(m => { RMOD = m; ROOM = m.mountRoom(el, { shiftY:.01, onLayout:L => { const st = settings(); put({ ...st, layout:L }); }, onSelect:info => { roomSel = info; renderEditbar(); }, rot:treeMem().rot, onRot:r => { const t = treeMem(); t.rot = r; treeSave(t); }, onTap:(id, gift) => { if (!gift) return; chime('do'); setTimeout(() => ornSheet(id, gift), 250); }, onZoomTap:() => closeSheet(), onTree:() => chime('do'), onSpin:() => { try { localStorage.setItem('kaji_spun', '1'); } catch (e) {} } }); try { if (!localStorage.getItem('kaji_spun')) setTimeout(() => toast('ツリーは指でくるっと回せるよ'), 1500); else if (advBadge() && !localStorage.getItem('kaji_advhint')){ localStorage.setItem('kaji_advhint', '1'); setTimeout(() => toast('🎁 アドベントのとびらがあいてるよ'), 1500); } } catch (e) {} ROOM_LOADING = false; return ROOM; })
+  return ROOM_P = import('./kaji-room3d.js').then(m => { RMOD = m; ROOM = m.mountRoom(el, { shiftY:.01, onLayout:L => { const st = settings(); put({ ...st, layout:L }); }, onSelect:info => { roomSel = info; renderEditbar(); }, rot:treeMem().rot, onRot:r => { const t = treeMem(); t.rot = r; treeSave(t); }, onTap:(id, gift) => { if (id === 'advbox'){ chime('bell'); setTimeout(advSheet, 250); return; } if (!gift) return; chime('do'); setTimeout(() => ornSheet(id, gift), 250); }, onZoomTap:() => closeSheet(), onTree:() => chime('do'), onSpin:() => { try { localStorage.setItem('kaji_spun', '1'); } catch (e) {} } }); try { if (!localStorage.getItem('kaji_spun')) setTimeout(() => toast('ツリーは指でくるっと回せるよ'), 1500); else if (advBadge() && !localStorage.getItem('kaji_advhint')){ localStorage.setItem('kaji_advhint', '1'); setTimeout(() => toast('🎁 アドベントのとびらがあいてるよ'), 1500); } } catch (e) {} ROOM_LOADING = false; return ROOM; })
     .catch(e => { console.warn(e); ROOM_FAIL = true; ROOM_LOADING = false; render(); return null; });
 }
 /* オーナメントの説明 */
@@ -5000,6 +5001,7 @@ document.addEventListener('click', e => {
     case 'gohome': menuClose(); tab = 'today'; weekOff = 0; selDay = null; closeSheet(); render(); window.scrollTo(0, 0); break;
     case 'goto': menuClose(); tab = el.dataset.t; weekOff = 0; selDay = null; reviewOpen = false; closeSheet(); render(); window.scrollTo(0, 0); break;
     case 'advopen': advOpen(+el.dataset.i); break;
+    case 'advall': advOpen([...Array(ADV_N).keys()]); break;
     case 'moyou': moyouSheet(); break;
     case 'furn': { setFurn(el.dataset.slot, el.dataset.key); const sc = $('sheet').scrollTop; moyouSheet(); setTimeout(() => { $('sheet').scrollTop = sc; }, 60); break; }
     case 'listopen': LISTOPEN = true; openSheet(`<div class="listsheet">${LIST_HTML}</div>`); LISTOPEN = true; break;

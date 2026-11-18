@@ -271,6 +271,18 @@ function addGift(animate = true, id = null){ const i = gifts.length, N = GIFT_SP
   g.position.set(x + (lv ? (rnd() - .5) * .05 : 0), y0, z + (lv ? (rnd() - .5) * .05 : 0)); g.rotation.y = Math.atan2(x, z) + (rnd() - .5) * (lv ? 1.2 : .6); g.userData.id = id; g.userData.gift = true; giftRing.add(g); gifts.push(g); if (!lv){ g.userData.blob = blob(x, z, w * 2.1, d * 2.1, .9); giftRing.add(g.userData.blob); }
   if (animate){ g.scale.setScalar(.001); appear.push({ o:g, t0:performance.now() }); } shadowsDirty = true; }
 
+// アドベントの開けていない箱：ツリーの足もと、正面でぴょこぴょこ
+const advBox = (() => { const g = new THREE.Group(), w = .44, h = .38, d = .4;
+  const box = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 3, .04), std('#ffffff', { map:wrapTex('#2f7a4a', '#f6d36a', 'dot'), roughness:.55 })); box.position.y = h / 2; box.castShadow = true; g.add(box);
+  const rm = std('#d8303a', { roughness:.4, metalness:.1 });
+  const r1 = new THREE.Mesh(new RoundedBoxGeometry(w + .014, h + .014, .07, 2, .012), rm); r1.position.y = h / 2; g.add(r1);
+  const r2 = new THREE.Mesh(new RoundedBoxGeometry(.07, h + .014, d + .014, 2, .012), rm); r2.position.y = h / 2; g.add(r2);
+  for (const s of [-1, 1]){ const t = new THREE.Mesh(new THREE.TorusGeometry(.075, .026, 8, 16), rm); t.position.set(s * .07, h + .055, 0); t.rotation.set(0, Math.PI / 2, s * .5); t.scale.set(1, 1.25, .8); g.add(t); }
+  const star = new THREE.Mesh(new THREE.ExtrudeGeometry((() => { const sh = new THREE.Shape(); for (let i = 0; i < 10; i++){ const a = Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? .035 : .08; i ? sh.lineTo(Math.cos(a) * r, Math.sin(a) * r) : sh.moveTo(Math.cos(a) * r, Math.sin(a) * r); } return sh; })(), { depth:.02, bevelEnabled:false }), std('#f2c14e', { roughness:.3, metalness:.5, emissive:'#7a5a10', emissiveIntensity:.4 }));
+  star.position.set(0, h / 2, d / 2 + .02); g.add(star);
+  g.position.set(.05, 0, 1.08); g.rotation.y = -.15; g.userData.id = 'advbox'; g.userData.gift = true; g.visible = false; treeRoot.add(g); return g; })();
+function setAdvBox(on){ advBox.visible = !!on; shadowsDirty = true; }
+
 /* ---------- 家具（アドベントで手に入る。場所ごとに3種類から選べる） ---------- */
 const FPX = 1.28, FPW = 1.3, FPH = 1.32, OW = .7, OH = .72;
 const fireLight = new THREE.PointLight('#ff9a4a', 4, 4.5); fireLight.position.set(FPX, .55, bz + .8); fireLight.intensity = 0; scene.add(fireLight);
@@ -658,6 +670,7 @@ function frame(now){
   if (document.hidden || stopped || now - last < 33) return; last = now;
   for (let k = appear.length - 1; k >= 0; k--){ const a = appear[k], t = Math.min(1, (now - a.t0) / 420), s = t < 1 ? 1 + 1.7 * Math.pow(t - 1, 3) + .7 * Math.pow(t - 1, 2) : 1; const bs = a.o.userData.base || 1; a.o.scale.setScalar(Math.max(.001, s * bs)); if (t >= 1){ a.o.scale.setScalar(bs); appear.splice(k, 1); shadowsDirty = true; } }
   giftRing.rotation.y = tree.rotation.y;
+  if (advBox.visible){ const p = (now % 2600) / 2600, j = p < .22 ? Math.sin(p / .22 * Math.PI) : 0; advBox.position.y = .1 * j; advBox.scale.set(1 + .06 * j, 1 - .06 * j * (p < .05 ? -1 : 1), 1 + .06 * j); }
   if (!drag && Math.abs(spin) > .0004){ tree.rotation.y += spin; spin *= .93; shadowsDirty = true; if (Math.abs(spin) <= .0004 && opts.onRot) opts.onRot(tree.rotation.y); }
   // 回したときの振り子：回転の加速で横にふれ、速さで外へ広がる
   { const fdt = Math.min(.1, (now - (frame.prevT || now)) / 1000) || .033; frame.prevT = now; const rot = tree.rotation.y, w = (rot - (frame.prevRot ?? rot)) / fdt, acc = (w - (frame.prevW ?? w)) / fdt; frame.prevRot = rot; frame.prevW = w;
@@ -702,7 +715,7 @@ cv.addEventListener('pointermove', e => { if (editOn){ editMove(e); return; } if
 cv.addEventListener('pointerup', e => { if (editOn){ editUp(); return; } const d = drag; drag = null; if (d && d.moved){ opts.onSpin && opts.onSpin(); opts.onRot && opts.onRot(tree.rotation.y); return; } if (d) tapAt(e); });
 cv.addEventListener('pointercancel', () => { drag = null; if (editOn) editUp(); });
 function tapAt(e){ const r = renderer.domElement.getBoundingClientRect(); v2.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); ray.setFromCamera(v2, camera);
-  const hit = ray.intersectObjects([...placed, ...gifts], true)[0]; if (hit){ let o = hit.object; while (o && !o.userData.id) o = o.parent; if (o){ if (o.userData.orn) o.userData.swing = performance.now(); else { o.scale.setScalar(.85 * (o.userData.base || 1)); appear.push({ o, t0:performance.now() - 120 }); } opts.onTap && opts.onTap(o.userData.id, !!o.userData.gift); return; } }
+  const hit = ray.intersectObjects([...placed, ...gifts, ...(advBox.visible ? [advBox] : [])], true)[0]; if (hit){ let o = hit.object; while (o && !o.userData.id) o = o.parent; if (o){ if (o.userData.orn) o.userData.swing = performance.now(); else { o.scale.setScalar(.85 * (o.userData.base || 1)); appear.push({ o, t0:performance.now() - 120 }); } opts.onTap && opts.onTap(o.userData.id, !!o.userData.gift); return; } }
   { const r2 = renderer.domElement.getBoundingClientRect(), tc = new THREE.Vector3(); treeRoot.getWorldPosition(tc); let best = null, bd = 30;
     for (const o of placed){ const w = new THREE.Vector3(); o.children[0].getWorldPosition(w); const toCam = camera.position.clone().sub(tc), toO = w.clone().sub(tc); toCam.y = 0; toO.y = 0; if (toCam.dot(toO) < 0) continue;
       const v = w.clone().project(camera), sx = r2.left + (v.x + 1) / 2 * r2.width, sy = r2.top + (1 - v.y) / 2 * r2.height, d = Math.hypot(sx - e.clientX, sy - e.clientY); if (d < bd){ bd = d; best = o; } }
@@ -714,15 +727,15 @@ const ornRot = i => placed[i] && [+placed[i].userData.th.toFixed(3), +(placed[i]
 let snR = null; const snCam = new THREE.PerspectiveCamera(30, 1, .1, 100);
 function snapshot(list, giftList, w = 640, h = 720){
   const keepL = lastList, keepG = lastGifts, rot = tree.rotation.y;
-  clearAll(); sig = ''; tree.rotation.y = 0; list.forEach(o => addOrnament(false, o.id, o.key, o.slot)); giftList.forEach(g => addGift(false, g.id)); placed.forEach(o => { o.rotation.z = o.userData.rz; o.rotation.x = 0; });
+  const abv = advBox.visible; advBox.visible = false; clearAll(); sig = ''; tree.rotation.y = 0; list.forEach(o => addOrnament(false, o.id, o.key, o.slot)); giftList.forEach(g => addGift(false, g.id)); placed.forEach(o => { o.rotation.z = o.userData.rz; o.rotation.x = 0; });
   if (!snR){ snR = new THREE.WebGLRenderer({ antialias:true, preserveDrawingBuffer:true }); snR.setPixelRatio(1); snR.outputColorSpace = THREE.SRGBColorSpace; snR.toneMapping = THREE.NeutralToneMapping; snR.shadowMap.enabled = true; snR.shadowMap.type = THREE.PCFSoftShadowMap; }
   // 部屋ぜんたいを、ふだんと同じ向きから
-  snR.setSize(w, h); snCam.fov = camera.fov; snCam.aspect = w / h; const look = new THREE.Vector3(0, 1.25, -.45), dir = camera.position.clone().sub(target).normalize();
+  snR.setSize(w, h); snCam.fov = camera.fov; snCam.aspect = w / h; const look = new THREE.Vector3(0, 1.35, -.7), dir = new THREE.Vector3(0, .36, 1).normalize();
   const halfW = RW / 2 + .25, dist = halfW / (Math.tan(THREE.MathUtils.degToRad(snCam.fov / 2)) * snCam.aspect);
   snCam.position.copy(look).addScaledVector(dir, dist); snCam.lookAt(look); snCam.updateProjectionMatrix(); scene.updateMatrixWorld(true); snR.render(scene, snCam);
   const url = snR.domElement.toDataURL('image/jpeg', .88);
-  clearAll(); sig = ''; tree.rotation.y = rot; sync(keepL, keepG); shadowsDirty = true; return url; }
+  advBox.visible = abv; clearAll(); sig = ''; tree.rotation.y = rot; sync(keepL, keepG); shadowsDirty = true; return url; }
 const _proj = (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera), r = cv.getBoundingClientRect(); return [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height]; };
 const _dbg = () => Object.values(inst).map(o => { const b = instBox(o); return [o.rec.key, ...[b.min.x, b.max.x, b.min.y, b.max.y, b.min.z, b.max.z].map(v => +v.toFixed(2)), boxOK(o)]; });
-return { zoomTo, zoomOut, zoomed:() => zoomed, _dbg, _proj, sync, setRoom, snapshot, setEdit, editRotate, editRemove, autoPlace, layoutOf, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize(){ renderer.setSize(VW(), VH()); placeCamera(); } };
+return { setAdvBox, zoomTo, zoomOut, zoomed:() => zoomed, _dbg, _proj, sync, setRoom, snapshot, setEdit, editRotate, editRemove, autoPlace, layoutOf, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize(){ renderer.setSize(VW(), VH()); placeCamera(); } };
 }
