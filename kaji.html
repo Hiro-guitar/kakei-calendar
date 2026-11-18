@@ -5050,8 +5050,8 @@ document.addEventListener('click', e => {
     case 'zf': zFilter = el.dataset.v; render(); break;
     case 'zk': sheetZukan(el.dataset.k); break;
     case 'talk': talkIdx++; lastTyped = ''; render(); break;
-    case 'qdo': { const c = S.items[id]; if (!c) break; const recent = all('log').filter(l => l.choreId === id && Date.now() - l.at < 10 * 60e3).sort((a, b) => b.at - a.at)[0];
-      if (recent){ toast(`「${c.name}」はさっきやったよ`); break; }
+    case 'qdo': { const c = S.items[id]; if (!c) break; // 何度でも記録できる。うっかり2回押しただけ（2秒以内）は1回にする
+      const recent = all('log').some(l => l.choreId === id && l.rec === S.me && Date.now() - l.at < 2000); if (recent) break;
       const qi = el.querySelector('.qi'); if (qi){ qi.classList.remove('hit'); void qi.offsetWidth; qi.classList.add('hit'); } burst(el, 'star'); doChore(c, grpWho === 'both', grpWho === 'both' ? S.me : grpWho); setTimeout(grpClose, 180); break; }
     case 'qfree': grpClose(); sheetFree(); break;
     case 'qgrp': { const g = el.dataset.g, cs = choresIn(g), m = $('grppop');

@@ -163,7 +163,8 @@ const treeRoot = new THREE.Group(); treeRoot.position.set(-1.15, 0, -1.65); scen
 const tree = new THREE.Group(); tree.scale.setScalar(.86); tree.rotation.y = opts.rot || 0; treeRoot.add(tree);
 const potH = .62;
 // 段（下から）：[下端y, 半径, 高さ]
-const TIERS = [[.86, 1.24, 1.22], [1.5, 1.0, 1.08], [2.06, .78, .94], [2.55, .55, .8], [2.96, .33, .64]];
+// 高さは1.5倍（幅はそのまま）。飾りが広く散らばるように
+const TREE_TALL = 1.5, TIERS = [[.86, 1.24, 1.22], [1.5, 1.0, 1.08], [2.06, .78, .94], [2.55, .55, .8], [2.96, .33, .64]].map(([yb, R, h]) => [.86 + (yb - .86) * TREE_TALL, R, h * TREE_TALL]);
 const treeTopY = TIERS[4][0] + TIERS[4][2];
 // 鉢（れんがの箱）
 const brickTex = canvasTex(256, 128, (g, w, h) => { g.fillStyle = '#e8d8c4'; g.fillRect(0, 0, w, h); for (let r = 0; r < 4; r++) for (let q = -1; q < 5; q++){ const x = q * 64 + (r % 2) * 32, y = r * 32; g.fillStyle = ['#8a3a2c', '#9a4634', '#7e3226'][(r + q + 3) % 3]; g.fillRect(x + 3, y + 3, 58, 26); g.fillStyle = 'rgba(255,255,255,.08)'; g.fillRect(x + 3, y + 3, 58, 6); } }, [1, 1]);
