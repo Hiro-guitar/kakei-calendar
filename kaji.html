@@ -336,6 +336,13 @@ body.onebar .qbar{bottom:calc(8px + env(safe-area-inset-bottom));left:10px;right
 .letter .m{display:flex;align-items:center;font-size:12px;color:#8a7a5a;margin-top:8px}.letter .lfrom{font-weight:900;color:var(--navy);font-size:13px}
 .letter .lbtn{display:flex;gap:6px;justify-content:flex-end;margin-top:8px}
 .letters.done .letter{opacity:.7}
+.ptitle{font-size:12px;font-weight:800;color:#8a7a5a;margin:4px 2px 6px}
+.ppick{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 6px;scrollbar-width:none}.ppick::-webkit-scrollbar{display:none}
+.pp{position:relative;flex:none;width:46px;height:56px;border-radius:8px;overflow:hidden;box-shadow:0 2px 6px rgba(90,60,20,.18);border:0}
+.pp::before{content:'';position:absolute;left:0;right:0;top:0;height:6px}
+.pp.on{box-shadow:0 0 0 3px #e8a83a,0 2px 6px rgba(90,60,20,.18)}
+.pp em{position:absolute;left:2px;right:2px;bottom:3px;font-style:normal;font-size:8.5px;font-weight:900;color:#fff;background:#c8352e;border-radius:6px;padding:1px 0}
+.ppname{font-size:12px;font-weight:800;color:var(--navy);margin:0 2px 8px}
 .letter.compose{margin-bottom:8px}.letter.compose::after{display:none}.letter.compose textarea{background:transparent;border:0;box-shadow:none;min-height:78px;line-height:26px;padding:0}
 .note{padding:12px 2px;border-bottom:2px dotted var(--line)}
 .note:last-child{border-bottom:0}
@@ -807,7 +814,7 @@ document.addEventListener('pointerdown', e => { const m = $('menupop'); if (m &&
 const GROUP_SEED = [['gohan', 'ごはん', 'pan'], ['arai', '洗い物', 'dish'], ['sentaku', '洗濯', 'washer'], ['souji', 'そうじ', 'vacuum'], ['gomi', 'ゴミ', 'trash'], ['yusa', 'こども', 'bag'], ['kaimono', '買い物', 'basket'], ['hoka', 'そのほか', 'spark']];
 const groupsSorted = () => all('group').sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 function guessGroup(n){ if (/こども|子ども|子供|幼稚園|保育|お迎え|送り/.test(n)) return 'grp_yusa'; if (/ゴミ|ごみ|オムツ|おむつ/.test(n)) return 'grp_gomi'; if (/洗い物|皿|食器|水筒/.test(n)) return 'grp_gohan';
-  if (/洗濯|取り込|たたむ|畳む|シーツ|枕カバー/.test(n)) return 'grp_sentaku'; if (/ごはん|ご飯|夕飯|夕食|朝食|昼食|料理|お弁当/.test(n)) return 'grp_gohan'; if (/買い|買出|補充|つめかえ/.test(n)) return 'grp_hojuu'; if (/掃除|そうじ|風呂|トイレ|片付/.test(n)) return 'grp_souji'; return 'grp_hoka'; }
+  if (/洗濯|取り込|たたむ|畳む|シーツ|枕カバー/.test(n)) return 'grp_sentaku'; if (/ごはん|ご飯|夕飯|夕食|朝食|昼食|料理|お弁当/.test(n)) return 'grp_gohan'; if (/補充|つめかえ/.test(n)) return 'grp_hojuu'; if (/買い|買出|注文/.test(n)) return S.items.grp_kaimono && !S.items.grp_kaimono.deleted ? 'grp_kaimono' : 'grp_hojuu'; if (/掃除|そうじ|風呂|トイレ|片付/.test(n)) return 'grp_souji'; return 'grp_hoka'; }
 function groupOf(c){ const g = c.group && S.items[c.group]; return g && !g.deleted ? c.group : (S.items[guessGroup(c.name)] && !S.items[guessGroup(c.name)].deleted ? guessGroup(c.name) : (groupsSorted()[0] || {}).id); }
 /* 行とボタン：「可燃ゴミを出す」→ 行「可燃ゴミ」・ボタン「出す」。分けられない名前は1行まるごとボタン */
 function rowAct(c){ if (c.row && c.act) return [c.row, c.act]; const m = /^(.+?)を(.+)$/.exec(c.name || ''); if (!m) return [c.name, '']; let a = m[2]; if (a.length > 3) a = a.replace(/する$/, ''); return [m[1], a]; }
@@ -836,6 +843,14 @@ function migrateCatalog2(){ const st = settings(); if ((st.catalog || 0) >= 2) r
       acts.forEach(([act, name], ai) => { const id = `c2_${gk}_${ri}_${ai}`; keep.add(id); mk({ id, kind:'chore', name, owner:'any', slot:'any', freq:{ type:'daily' }, def:[], group:'grp_' + gk, icon, row, act, order:ord++ }); }); }); });
   for (const it of Object.values(S.items)) if ((it.kind === 'chore' || it.kind === 'group') && !it.deleted && !keep.has(it.id)) mk({ ...it, deleted:true });
   mk({ ...st, catalog:2 }); save(); return n; }
+/* v3：買い物グループをもどす（補充の「買い出し」はこちらへ） */
+function migrateCatalog3(){ const st = settings(); if ((st.catalog || 0) >= 3 || (st.catalog || 0) < 2) return 0; const now = Date.now(); const mk = it => { it.updatedAt = now; S.items[it.id] = it; S.queue = S.queue.filter(q => q.id !== it.id); S.queue.push(it); };
+  mk({ id:'grp_kaimono', kind:'group', name:'買い物', icon:'basket', order:5.5 });
+  const base = Math.max(-1, ...all('chore').map(x => x.order ?? 0)) + 1;
+  [['買い出し', 'basket', [['スーパー', 'スーパーで買い出し'], ['ドラッグストア', 'ドラッグストアで買い物'], ['ネット注文', 'ネットで注文']]], ['買ったもの', 'bag', [['片づける', '買ったものを片づける']]]].forEach(([row, icon, acts], ri) =>
+    acts.forEach(([act, name], ai) => mk({ id:`c3_kaimono_${ri}_${ai}`, kind:'chore', name, owner:'any', slot:'any', freq:{ type:'daily' }, def:[], group:'grp_kaimono', icon, row, act, order:base + ri * 4 + ai })));
+  const old = S.items.c2_hojuu_4; if (old && !old.deleted) mk({ ...old, deleted:true });
+  mk({ ...settings(), catalog:3 }); save(); return 1; }
 function qbarHTML(){
   const logs = logsOn(dayKey(Date.now())), notes = all('note').filter(n => n.status !== 'done').length;
   return `<button class="qmenu" data-act="menu" aria-label="メニュー"><span class="qi">${ICON_MENU}${notes ? '<em class="dot"></em>' : ''}</span><span class="ql">メニュー</span></button><div class="qscroll">` + groupsSorted().map(g => {
@@ -1040,7 +1055,7 @@ function renameKid(){ let n = 0; for (const it of Object.values(S.items)){ if ((
 async function sync(){
   const ok = await pull();
   if (ok && !S.seeded) seedIfEmpty();
-  if (ok){ renameKid(); migrateCatalog2(); }
+  if (ok){ renameKid(); migrateCatalog2(); migrateCatalog3(); }
   await push();
   render();
 }
@@ -4689,7 +4704,8 @@ function viewReview(){
   const to = nm(other(S.me));
   let html = `<h2>おてがみ${open.length ? `（${open.length}）` : ''}</h2>`;
   html += open.length ? `<div class="letters">${open.map(n => noteRow(n)).join('')}</div>` : `<div class="panel"><div class="empty">ポストはからっぽ</div></div>`;
-  html += `<div class="letter compose"><div class="lto">${esc(to)}へ</div><textarea class="t" id="newnote" placeholder="あとで話したいこと、つたえたいこと"></textarea>
+  const pk = paperNow();
+  html += `<div class="ptitle">便箋をえらぶ</div>${paperPicker(pk)}<div class="letter compose p-${pk}" id="composeL" data-paper="${pk}"><div class="lto">${esc(to)}へ</div><textarea class="t" id="newnote" placeholder="あとで話したいこと、つたえたいこと"></textarea>
     <div class="row" style="margin-top:8px;justify-content:flex-end"><button class="btn small go" data-act="addnote">✉ おくる</button></div></div>`;
   if (closed.length) html += `<h2>よんだおてがみ</h2><div class="letters done">` + closed.slice(0, 20).map(n => noteRow(n)).join('') + `</div>`;
   // 今週ふたりでしたこと（だれが何回、は出さない）
@@ -4699,9 +4715,43 @@ function viewReview(){
   if (weekOff === 0 && !xmasOn(0)) html += bouquetSection();
   return html;
 }
+
+/* ===== 便箋 ===== */
+const svgUrl = (w, h, body) => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'>${body}</svg>`)}")`;
+const flower5 = (x, y, r, c, cc) => [0, 1, 2, 3, 4].map(i => { const a = i * 1.2566 - 1.5708; return `<circle cx='${(x + Math.cos(a) * r).toFixed(1)}' cy='${(y + Math.sin(a) * r).toFixed(1)}' r='${(r * .78).toFixed(1)}' fill='${c}'/>`; }).join('') + `<circle cx='${x}' cy='${y}' r='${(r * .6).toFixed(1)}' fill='${cc}'/>`;
+const heartP = (x, y, s, c) => `<path transform='translate(${x} ${y}) scale(${s})' d='M0 3 C -4 -1 -8 2 -5 6 L 0 10 L 5 6 C 8 2 4 -1 0 3Z' fill='${c}'/>`;
+const flakeP = (x, y, r, c) => [0, 1, 2].map(i => `<path transform='rotate(${i * 60} ${x} ${y})' d='M${x} ${y - r} V ${y + r} M${x - r * .3} ${y - r * .7} L ${x} ${y - r * .45} L ${x + r * .3} ${y - r * .7} M${x - r * .3} ${y + r * .7} L ${x} ${y + r * .45} L ${x + r * .3} ${y + r * .7}' stroke='${c}' stroke-width='1.4' fill='none' stroke-linecap='round'/>`).join('');
+const starP = (x, y, r, c) => `<path d='${[...Array(10)].map((_, i) => { const a = -1.5708 + i * .6283, rr = i % 2 ? r * .45 : r; return (i ? 'L' : 'M') + (x + Math.cos(a) * rr).toFixed(1) + ' ' + (y + Math.sin(a) * rr).toFixed(1); }).join(' ')}Z' fill='${c}'/>`;
+const leafP = (x, y, s, c, rot) => `<path transform='translate(${x} ${y}) rotate(${rot}) scale(${s})' d='M0 -8 L 2 -3 L 7 -5 L 4 0 L 8 3 L 2 3 L 1 8 L 0 4 L -1 8 L -2 3 L -8 3 L -4 0 L -7 -5 L -2 -3Z' fill='${c}'/>`;
+const fishP = (x, y, s, c) => `<g transform='translate(${x} ${y}) scale(${s})'><ellipse cx='0' cy='0' rx='6' ry='4' fill='${c}'/><path d='M5 0 L 11 -4 L 10 0 L 11 4Z' fill='${c}'/><circle cx='-3' cy='-1' r='1' fill='#fff'/></g>`;
+const LINES = c => `repeating-linear-gradient(transparent 0 25px,${c} 25px 26px)`;
+const AIRBAND = 'repeating-linear-gradient(-45deg,#d8433a 0 10px,#fffdf6 10px 18px,#3d7aa8 18px 28px,#fffdf6 28px 36px)';
+const PAPERS = [
+  { k:'air', n:'エアメール', bg:'#fffdf6', line:'#efe6d2', band:AIRBAND },
+  { k:'dot', n:'みずたま', bg:`${svgUrl(28, 28, `<circle cx='7' cy='7' r='3.4' fill='#bfe0f2'/><circle cx='21' cy='21' r='3.4' fill='#bfe0f2'/>`)},#fbfdff`, line:'#e2edf4', band:'#7ab8e8' },
+  { k:'check', n:'ギンガム', bg:'linear-gradient(90deg,rgba(232,88,74,.16) 50%,transparent 0) 0 0/18px 18px,linear-gradient(rgba(232,88,74,.16) 50%,transparent 0) 0 0/18px 18px,#fffaf6', line:'rgba(200,90,80,.18)', band:'#e8584a' },
+  { k:'kraft', n:'クラフト', bg:`${svgUrl(40, 40, `<path d='M3 6 l 6 1 M20 14 l 7 -1 M10 30 l 5 1 M30 34 l 6 0' stroke='#a8865a' stroke-width='.8' opacity='.6'/>`)},#e2c9a0`, line:'rgba(130,90,40,.22)', band:'repeating-linear-gradient(90deg,#fbf6ea 0 6px,#c8a070 6px 9px)', ink:'#4a3420' },
+  { k:'flower', n:'お花', bg:`${svgUrl(46, 46, flower5(12, 12, 3.4, '#f8c6d4', '#ffd84a') + flower5(34, 34, 2.6, '#cfe6f8', '#fff3a0'))},#fffaf8`, line:'#f4e2e6', band:'#f4a6bc' },
+  { k:'night', n:'ほしぞら', bg:`${svgUrl(60, 60, starP(10, 12, 3, '#ffe48a') + starP(42, 36, 2, '#fff6c8') + `<circle cx='30' cy='8' r='1' fill='#fff'/><circle cx='52' cy='54' r='1' fill='#fff'/><circle cx='14' cy='46' r='.8' fill='#fff'/>`)},linear-gradient(#24365e,#33497e)`, line:'rgba(255,255,255,.12)', band:'linear-gradient(90deg,#f2c14e,#ffe48a,#f2c14e)', ink:'#fff8e8', sub:'#c8d4f0' },
+  { k:'xmas', n:'クリスマス', season:[[11, 15], [12, 25]], bg:`${svgUrl(56, 56, `<g transform='translate(14 14)'><path d='M-6 0 C -4 -6 -1 -5 0 -1 C 1 -5 4 -6 6 0 C 2 -1 1 2 0 2 C -1 2 -2 -1 -6 0Z' fill='#3d8a55'/><circle cx='-1.6' cy='1.6' r='1.8' fill='#d8303a'/><circle cx='1.6' cy='1.6' r='1.8' fill='#e0473b'/></g>` + starP(42, 40, 3, '#f2c14e'))},#fffaf0`, line:'#efe2cc', band:'repeating-linear-gradient(-45deg,#c8352e 0 10px,#fffaf0 10px 16px,#2f7a4a 16px 26px,#fffaf0 26px 32px)' },
+  { k:'snow', n:'ゆき', season:[[12, 1], [2, 28]], bg:`${svgUrl(56, 56, flakeP(14, 14, 7, '#9cc4e8') + flakeP(42, 42, 5, '#b8d6f0'))},linear-gradient(#f4f9ff,#e8f2fc)`, line:'#d8e6f4', band:'#9cc4e8' },
+  { k:'newyear', n:'おしょうがつ', season:[[12, 26], [1, 15]], bg:`${svgUrl(56, 56, flower5(14, 14, 3.6, '#e8584a', '#f6d36a') + flower5(42, 42, 3, '#f8a8b8', '#f6d36a'))},#fffaf0`, line:'#f2e2c8', band:'linear-gradient(90deg,#c8352e 0 70%,#d9a441 70%)' },
+  { k:'heart', n:'バレンタイン', season:[[2, 1], [2, 14]], bg:`${svgUrl(48, 48, heartP(12, 8, 1, '#f4a6bc') + heartP(36, 30, .8, '#e8586a'))},#fff6f8`, line:'#f6dde4', band:'#e8586a', ink:'#6a2a3a' },
+  { k:'sakura', n:'さくら', season:[[3, 10], [4, 20]], bg:`${svgUrl(56, 56, flower5(14, 16, 3.6, '#f8c8d6', '#f6a0b8') + `<ellipse cx='42' cy='40' rx='3' ry='1.8' fill='#f8c8d6' transform='rotate(30 42 40)'/>`)},#fff8fa`, line:'#f6e2e8', band:'#f6a0b8' },
+  { k:'ajisai', n:'あじさい', season:[[6, 1], [6, 30]], bg:`${svgUrl(56, 56, [[10, 10], [16, 8], [13, 15], [8, 16]].map(([x, y], i) => `<circle cx='${x}' cy='${y}' r='3.2' fill='${['#b8b0e8', '#9cc4e8', '#c8a8e0', '#a8c8f0'][i]}'/>`).join('') + `<path d='M40 34 q 4 4 0 8' stroke='#8ab8a0' stroke-width='1.6' fill='none'/>`)},#f8f8ff`, line:'#e6e6f4', band:'#9c94d8' },
+  { k:'summer', n:'なつ', season:[[7, 1], [8, 31]], bg:`${svgUrl(64, 64, fishP(16, 18, 1, '#e8584a') + fishP(46, 44, .8, '#f08a5a') + `<path d='M4 58 q 6 -4 12 0 t 12 0' stroke='#9cd4e8' stroke-width='1.4' fill='none'/>`)},#f4fbff`, line:'#d8eef6', band:'repeating-linear-gradient(90deg,#7ac4e8 0 10px,#fff 10px 16px)' },
+  { k:'momiji', n:'もみじ', season:[[10, 1], [11, 30]], bg:`${svgUrl(60, 60, leafP(15, 15, .9, '#e8684a', 15) + leafP(44, 42, .7, '#f2a43a', -20))},#fffaf2`, line:'#f2e4d0', band:'linear-gradient(90deg,#e8684a,#f2a43a,#c8452e)' },
+];
+const md2 = (m, d) => m * 100 + d;
+function paperInSeason(p, t = new Date()){ if (!p.season) return true; const [[m1, d1], [m2, d2]] = p.season, x = md2(t.getMonth() + 1, t.getDate()), a = md2(m1, d1), b = md2(m2, d2); return a <= b ? x >= a && x <= b : x >= a || x <= b; }
+const paperOf = k => PAPERS.find(p => p.k === k) || PAPERS[0];
+function paperNow(){ let k = ''; try { k = localStorage.getItem('kaji_paper') || ''; } catch (e) {} const p = PAPERS.find(x => x.k === k); if (p && paperInSeason(p)) return p.k; const sea = PAPERS.find(x => x.season && paperInSeason(x)); return sea ? sea.k : 'air'; }
+{ const css = PAPERS.map(p => `.letter.p-${p.k}{background:${LINES(p.line)},${p.bg};background-position:0 14px,0 0}.letter.p-${p.k}::before{background:${p.band}}${p.ink ? `.letter.p-${p.k} .txt,.letter.p-${p.k} .lto,.letter.p-${p.k} .lfrom,.letter.p-${p.k} textarea{color:${p.ink}}.letter.p-${p.k} .m{color:${p.sub || p.ink}}.letter.p-${p.k} textarea::placeholder{color:${p.sub || p.ink};opacity:.6}` : ''}.pp-${p.k}{background:${p.bg}}.pp-${p.k}::before{background:${p.band}}`).join('\n');
+  const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st); }
+function paperPicker(cur){ return `<div class="ppick">${PAPERS.filter(p => paperInSeason(p)).map(p => `<button class="pp pp-${p.k} ${cur === p.k ? 'on' : ''}" data-act="paper" data-v="${p.k}" aria-label="${p.n}">${p.season ? '<em>きせつ</em>' : ''}</button>`).join('')}</div><div class="ppname">${esc(paperOf(cur).n)}</div>`; }
 function noteRow(n){
   const c = n.choreId && S.items[n.choreId], mine = n.by === S.me;
-  return `<div class="letter ${n.by}"><div class="lto">${esc(nm(other(n.by)))}へ</div><div class="txt">${esc(n.text)}</div>
+  return `<div class="letter ${n.by} p-${paperOf(n.paper || 'air').k}"><div class="lto">${esc(nm(other(n.by)))}へ</div><div class="txt">${esc(n.text)}</div>
     <div class="m"><span>${dayKey(n.at).slice(5).replace('-','/')}${c ? `・${esc(c.name)}` : ''}</span><span style="flex:1"></span><span class="lfrom">${esc(nm(n.by))}より</span></div>
     <div class="lbtn">${n.status==='done' ? `<button class="btn small ghost" data-act="reopen" data-id="${n.id}">もどす</button>` : `<button class="btn small ghost" data-act="closenote" data-id="${n.id}">話した ✓</button>`}${mine ? `<button class="btn small ghost" data-act="delnote" data-id="${n.id}">すてる</button>` : ''}</div></div>`;
 }
@@ -4994,8 +5044,9 @@ document.addEventListener('click', e => {
     case 'wk': weekOff = Math.min(0, weekOff + Number(el.dataset.d)); selDay = null; reviewOpen = false; render(); break;
     case 'selday': selDay = selDay === el.dataset.k ? null : el.dataset.k; render(); break;
     case 'reveal': reviewOpen = true; render(); break;
-    case 'addnote': { const t = $('newnote').value.trim(); if (!t) return; put({ id:uid(), kind:'note', by:S.me, text:t, choreId:null, at:Date.now(), status:'open' }); toast('おてがみをおくったよ'); break; }
-    case 'addcnote': { const t = $('cnote').value.trim(); if (!t) return; put({ id:uid(), kind:'note', by:S.me, text:t, choreId:id, at:Date.now(), status:'open' }); closeSheet(); toast('おてがみをおくったよ'); break; }
+    case 'paper': { const k = el.dataset.v; try { localStorage.setItem('kaji_paper', k); } catch (e) {} const c = $('composeL'); if (c){ c.className = c.className.replace(/p-\w+/, 'p-' + k); c.dataset.paper = k; } document.querySelectorAll('.pp').forEach(b => b.classList.toggle('on', b.dataset.v === k)); const nmEl = document.querySelector('.ppname'); if (nmEl) nmEl.textContent = paperOf(k).n; break; }
+    case 'addnote': { const t = $('newnote').value.trim(); if (!t) return; const c = $('composeL'); put({ id:uid(), kind:'note', by:S.me, text:t, choreId:null, at:Date.now(), status:'open', paper:(c && c.dataset.paper) || paperNow() }); toast('おてがみをおくったよ'); break; }
+    case 'addcnote': { const t = $('cnote').value.trim(); if (!t) return; put({ id:uid(), kind:'note', by:S.me, text:t, choreId:id, at:Date.now(), status:'open', paper:paperNow() }); closeSheet(); toast('おてがみをおくったよ'); break; }
     case 'closenote': put({ ...L, status:'done' }); break;
     case 'reopen': put({ ...L, status:'open' }); break;
     case 'delnote': remove(L); break;
@@ -5051,7 +5102,7 @@ function iconNotice(force){ let v = ''; try { v = localStorage.getItem('kaji_ico
 /* ========== 起動 ========== */
 if (!S.url) seedIfEmpty();
 renameKid();
-if (!S.url) migrateCatalog2();
+if (!S.url){ migrateCatalog2(); migrateCatalog3(); }
 render();
 if (S.url) sync();
 setTimeout(() => iconNotice(false), 1800);
