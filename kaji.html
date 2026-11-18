@@ -4756,11 +4756,7 @@ function viewReview(){
   html += `<div class="ptitle">便箋をえらぶ</div>${paperPicker(pk)}<div class="letter compose p-${pk}" id="composeL" data-paper="${pk}"><div class="lto">${esc(to)}へ</div><textarea class="t" id="newnote" placeholder="あとで話したいこと、つたえたいこと"></textarea>
     <div class="row" style="margin-top:8px;justify-content:flex-end"><button class="btn small go" data-act="addnote">✉ おくる</button></div></div>`;
   if (closed.length) html += `<h2>よんだおてがみ</h2><div class="letters done">` + closed.slice(0, 20).map(n => noteRow(n)).join('') + `</div>`;
-  // 今週おうちでやったこと（だれが何回、は出さない。いっしょにやったものだけ印をつける）
-  html += `<div class="weeknav" style="margin-top:22px"><button data-act="wk" data-d="-1">‹ 前</button><b>${weekOff===0?'今週':`${ws.getMonth()+1}/${ws.getDate()}の週`}</b><button data-act="wk" data-d="1" ${weekOff>=0?'disabled style="opacity:.3"':''}>次 ›</button></div>`;
-  const cnt = {}, tog = {}; logs.forEach(l => { cnt[l.name] = (cnt[l.name] || 0) + 1; if (l.both) tog[l.name] = 1; }); const rows = Object.entries(cnt).sort((a, b) => b[1] - a[1]), thx = logs.filter(l => l.thanks).length;
-  html += `<h2>${weekOff === 0 ? '今週' : 'この週'}やったこと</h2><div class="panel">` + (rows.length ? `<div class="didlist">${rows.map(([n, c]) => `<span>${tog[n] ? '<i class="dot both" title="いっしょに"></i>' : ''}${esc(n)}${c > 1 ? `<small>×${c}</small>` : ''}</span>`).join('')}</div>${thx ? `<div class="didthx">♥ ありがとう ${thx}</div>` : ''}` : `<div class="empty">まだ なにもないね</div>`) + `</div>`;
-  if (weekOff === 0 && !xmasOn(0)) html += bouquetSection();
+  if (!xmasOn(0)) html += bouquetSection();
   return html;
 }
 
