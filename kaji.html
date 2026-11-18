@@ -352,7 +352,7 @@ body.onebar .qbar{bottom:calc(8px + env(safe-area-inset-bottom));left:10px;right
 .letter.y::after{background:radial-gradient(circle at 50% 46%,#fff 0 6px,transparent 7px),linear-gradient(#e0473b,#b8302a)}
 .letter .lto{font-weight:900;color:var(--navy);font-size:14px;margin-bottom:6px;padding-right:44px}
 .letter .txt{font-size:15px;font-weight:700;color:#3a3a3a;line-height:26px;white-space:pre-wrap;padding-right:30px}
-.letter .m{display:flex;align-items:center;font-size:12px;color:#8a7a5a;margin-top:8px}.letter .lfrom{font-weight:900;color:var(--navy);font-size:13px}
+.letter .m{display:flex;align-items:center;font-size:12px;color:#8a7a5a;margin-top:8px}.letter .lfrom{font-weight:900;color:var(--navy);font-size:13px}.lread{align-self:center;font-size:12px;font-weight:800;color:#9a8a70;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.6)}.lread.ok{color:#2f8a6a;background:#e4f4ec}.lread small{margin-left:6px;font-weight:700;opacity:.75}
 .letter .lbtn{display:flex;gap:6px;justify-content:flex-end;margin-top:8px}
 .letters.done .letter{opacity:.7}
 .ptitle{font-size:12px;font-weight:800;color:#8a7a5a;margin:4px 2px 6px}
@@ -4833,7 +4833,8 @@ function noteRow(n){
   const c = n.choreId && S.items[n.choreId], mine = n.by === S.me;
   return `<div class="letter ${n.by} p-${paperOf(n.paper || 'air').k}"><div class="lto">${esc(nm(other(n.by)))}へ</div><div class="txt">${esc(n.text)}</div>
     <div class="m"><span>${dayKey(n.at).slice(5).replace('-','/')}${c ? `・${esc(c.name)}` : ''}</span><span style="flex:1"></span><span class="lfrom">${esc(nm(n.by))}より</span></div>
-    <div class="lbtn">${n.status==='done' ? `<button class="btn small ghost" data-act="reopen" data-id="${n.id}">もどす</button>` : `<button class="btn small ghost" data-act="closenote" data-id="${n.id}">よんだ ✓</button>`}${mine ? `<button class="btn small ghost" data-act="delnote" data-id="${n.id}">すてる</button>` : ''}</div></div>`;
+    <div class="lbtn">${mine ? `<span class="lread ${n.status === 'done' ? 'ok' : ''}">${n.status === 'done' ? `よんでくれたよ ✓${n.readAt ? `<small>${md(new Date(n.readAt))} ${new Date(n.readAt).getHours()}:${String(new Date(n.readAt).getMinutes()).padStart(2, '0')}</small>` : ''}` : 'まだとどいたばかり'}</span>`
+      : n.status === 'done' ? `<button class="btn small ghost" data-act="reopen" data-id="${n.id}">もどす</button>` : `<button class="btn small ghost" data-act="closenote" data-id="${n.id}">よんだ ✓</button>`}${mine ? `<button class="btn small ghost" data-act="delnote" data-id="${n.id}">すてる</button>` : ''}</div></div>`;
 }
 
 function viewSettings(){
@@ -5141,8 +5142,8 @@ document.addEventListener('click', e => {
     case 'paper': { const k = el.dataset.v; try { localStorage.setItem('kaji_paper', k); } catch (e) {} const c = $('composeL'); if (c){ c.className = c.className.replace(/p-\w+/, 'p-' + k); c.dataset.paper = k; } document.querySelectorAll('.pp').forEach(b => b.classList.toggle('on', b.dataset.v === k)); const nmEl = document.querySelector('.ppname'); if (nmEl) nmEl.textContent = paperOf(k).n; break; }
     case 'addnote': { const t = $('newnote').value.trim(); if (!t) return; const c = $('composeL'); put({ id:uid(), kind:'note', by:S.me, text:t, choreId:null, at:Date.now(), status:'open', paper:(c && c.dataset.paper) || paperNow() }); toast('おてがみをおくったよ'); break; }
     case 'addcnote': { const t = $('cnote').value.trim(); if (!t) return; put({ id:uid(), kind:'note', by:S.me, text:t, choreId:id, at:Date.now(), status:'open', paper:paperNow() }); closeSheet(); toast('おてがみをおくったよ'); break; }
-    case 'closenote': put({ ...L, status:'done' }); break;
-    case 'reopen': put({ ...L, status:'open' }); break;
+    case 'closenote': if (L.by === S.me) break; put({ ...L, status:'done', readAt:Date.now() }); break;
+    case 'reopen': if (L.by === S.me) break; put({ ...L, status:'open', readAt:null }); break;
     case 'delnote': remove(L); break;
     case 'edit': grpClose(); editBack = el.dataset.back || null; sheetEdit(id, el.dataset.g); break;
     case 'dset': captureEdit(); { const f = el.dataset.f, v = el.dataset.v;
