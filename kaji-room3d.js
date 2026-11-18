@@ -256,7 +256,7 @@ const gifts = [];
 const GIFT_SPOTS = Array.from({ length:9 }, (_, i) => { const t = i / 9 * Math.PI * 2 + .35; return [Math.sin(t) * .86, Math.cos(t) * .86]; }); // ツリーの枝の下に、ぐるっと
 const giftRing = new THREE.Group(); treeRoot.add(giftRing);
 // 8か所に置ききったら、その上に重ねていく（上ほど少し小さく）
-function addGift(animate = true, id = null){ const i = gifts.length, N = GIFT_SPOTS.length, lv = Math.floor(i / N); if (lv >= 4) return; const [x, z] = GIFT_SPOTS[i % N], [a, b, kind] = WRAPS[i % WRAPS.length], under = lv ? gifts[i - N] : null, sc = Math.pow(.82, lv);
+function addGift(animate = true, id = null){ const i = gifts.length, N = GIFT_SPOTS.length, lv = Math.floor(i / N); if (lv >= 2) return; const [x, z] = GIFT_SPOTS[i % N], [a, b, kind] = WRAPS[i % WRAPS.length], under = lv ? gifts[i - N] : null, sc = Math.pow(.82, lv);
   const w = .34 + rnd() * .22, h = .26 + rnd() * .2, d = .3 + rnd() * .2, g = new THREE.Group();
   const box = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 3, .035), std('#ffffff', { map:wrapTex(a, b, kind), roughness:.6 })); box.position.y = h / 2; box.castShadow = box.receiveShadow = true; g.add(box);
   const rc = a === '#f2c14e' || a === '#f3ead9' ? '#c8352e' : '#f2c14e', rm = std(rc, { roughness:.45, metalness:.15 });
@@ -600,12 +600,21 @@ let lastSel = {};
 let lampOn = false, kamaOn = false;
 
 
+/* 電飾のサムネイル：コードでつながった電球を近くで */
+function lightsThumb(k){ const g = new THREE.Group(); const kind = 'abc'[k], cols = kind === 'a' ? ['#ffd25a', '#ff7a7a', '#7ad8ff', '#a8ff8a', '#ff9ae0'] : kind === 'b' ? ['#ffe2a0', '#fff0c8', '#ffd890'] : ['#f4f8ff', '#cfe4ff', '#e8f0ff'];
+  const pts = Array.from({ length:9 }, (_, i) => new THREE.Vector3(-1 + i * .25, -.18 * Math.sin(i / 8 * Math.PI) + .06 * Math.sin(i * 1.7), 0)); const cur = new THREE.CatmullRomCurve3(pts);
+  const wire = new THREE.Mesh(new THREE.TubeGeometry(cur, 80, .014, 6), std(kind === 'a' ? '#2a5a3a' : '#d8d4c8', { roughness:.5 })); g.add(wire);
+  const N = 6; for (let i = 0; i < N; i++){ const t = (i + .5) / N, p = cur.getPointAt(t), c = cols[i % cols.length], hang = new THREE.Group(); hang.position.copy(p); hang.rotation.z = (i % 2 ? .25 : -.2); g.add(hang);
+    const sock = new THREE.Mesh(new THREE.CylinderGeometry(.035, .04, .07, 12), std(kind === 'a' ? '#2a5a3a' : '#c8c4b8', { roughness:.4 })); sock.position.y = -.05; hang.add(sock);
+    const bulb = kind === 'c' ? new THREE.Mesh(new THREE.SphereGeometry(.085, 20, 16), new THREE.MeshStandardMaterial({ color:'#ffffff', emissive:c, emissiveIntensity:.8, roughness:.6 })) : new THREE.Mesh(new THREE.SphereGeometry(kind === 'b' ? .05 : .065, 18, 14), new THREE.MeshStandardMaterial({ color:c, emissive:c, emissiveIntensity:1.5, roughness:.3 }));
+    if (kind !== 'c') bulb.scale.y = 1.45; bulb.position.y = kind === 'c' ? -.16 : -.15; hang.add(bulb); const gl = glow(c, kind === 'c' ? .5 : .42, .45); gl.position.y = bulb.position.y; hang.add(gl); }
+  return g; }
 /* 家具のサムネイル */
 let thR = null, thS = null, thC = null; const thCache = {};
 function thumbFurn(key){ if (thCache[key]) return thCache[key];
   if (!thR){ thR = new THREE.WebGLRenderer({ antialias:true, alpha:true, preserveDrawingBuffer:true }); thR.setPixelRatio(1); thR.setSize(200, 200); thR.outputColorSpace = THREE.SRGBColorSpace; thR.toneMapping = THREE.NeutralToneMapping;
     thS = new THREE.Scene(); thS.environment = scene.environment; thS.environmentIntensity = .5; thS.add(new THREE.HemisphereLight('#fff1dc', '#b98a6a', 1.5)); const d = new THREE.DirectionalLight('#fff4e0', 2.2); d.position.set(-2, 5, 5); thS.add(d); thC = new THREE.PerspectiveCamera(28, 1, .01, 100); }
-  const g = buildFurn(key); if (!g) return ''; const drop = []; g.traverse(m => { if (m.material && m.material.map === blobTex) drop.push(m); }); g.traverse(m => { if (m.userData.thumbOnly){ m.visible = true; m.position.y = 1.8; } }); drop.forEach(m => m.parent.remove(m));
+  const g = FURN_BY[key] && FURN_BY[key].slot === 'treelights' ? lightsThumb(FURN_BY[key].k) : buildFurn(key); if (!g) return ''; const drop = []; g.traverse(m => { if (m.material && m.material.map === blobTex) drop.push(m); }); g.traverse(m => { if (m.userData.thumbOnly){ m.visible = true; m.position.y = 1.8; } }); drop.forEach(m => m.parent.remove(m));
   thS.add(g); g.updateMatrixWorld(true); const box = new THREE.Box3(); g.traverse(m => { if (m.isMesh && !(m.material && m.material.blending === THREE.AdditiveBlending)) box.expandByObject(m); }); if (box.isEmpty()) box.setFromObject(g);
   const c = box.getCenter(new THREE.Vector3()), r = box.getSize(new THREE.Vector3()).length() / 2; const ft = g.userData.flatThumb, flat = FURN_BY[key].slot === 'rug' || FURN_BY[key].slot === 'treebase', dir = ft === 'wall' ? new THREE.Vector3(0, 0, 1) : ft === 'floor' ? new THREE.Vector3(0, 1, .001) : new THREE.Vector3(.35, flat ? 1.3 : .45, 1).normalize();
   thC.position.copy(c).addScaledVector(dir, r / Math.sin(THREE.MathUtils.degToRad(14))); thC.lookAt(c); thR.render(thS, thC); const url = thR.domElement.toDataURL('image/png');
