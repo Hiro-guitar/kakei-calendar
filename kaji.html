@@ -127,6 +127,12 @@ body.xfullmode header{display:none}
 #grppop .gi.done{background:#f1f8ec;box-shadow:inset 0 0 0 1.5px #cfe6c6}
 #grppop .gic{width:34px;height:34px;flex:none;display:flex;align-items:center;justify-content:center}#grppop .gic svg{width:30px;height:30px}
 #grppop .gn{flex:1;font-size:14px;font-weight:800;color:var(--navy)}#grppop .gc{font-size:12px;font-weight:900;color:#4a9a5a}
+#grppop .grow{display:flex;align-items:center;gap:8px;padding:6px 8px 6px 6px;border-radius:16px;background:#fff;box-shadow:inset 0 0 0 1.5px #efe5cf}
+#grppop .grn{width:62px;flex:none;font-size:12.5px;font-weight:900;color:var(--navy);line-height:1.25}
+#grppop .gbs{flex:1;display:flex;flex-wrap:wrap;gap:6px}
+#grppop .gb{padding:7px 11px;border-radius:999px;background:#f6eedc;color:var(--navy);font-weight:800;font-size:12.5px;box-shadow:0 2px 0 #e2d2ae}
+#grppop .gb:active{transform:translateY(2px);box-shadow:none}
+#grppop .gb.done{background:#e3f2dc;box-shadow:0 2px 0 #b8dcae;color:#3a7a4a}#grppop .gb small{margin-left:3px;font-size:10px}
 #grppop .gempty{padding:10px;text-align:center;font-size:12px;color:#a8946a}
 #grppop .gadd{width:100%;margin-top:8px;padding:9px;border-radius:14px;border:2px dashed #e2d2ae;color:#a8864a;font-weight:800;font-size:13px}
 .ipick{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.ipick button{aspect-ratio:1;border-radius:14px;background:#fff;box-shadow:inset 0 0 0 1.5px #ece2cc;display:flex;align-items:center;justify-content:center}.ipick button svg{width:80%;height:80%}.ipick button.on{box-shadow:inset 0 0 0 3px #e8a83a;background:#fff4dc}
@@ -303,6 +309,17 @@ body.onebar .qbar{bottom:calc(8px + env(safe-area-inset-bottom));left:10px;right
 .who.h{background:var(--h-soft)}.who.y{background:var(--y-soft)}
 .who .nm{font-weight:800;font-size:14px;margin-bottom:6px}
 .who ul{margin:0;padding-left:16px;font-size:13px;line-height:1.75}
+.letters{display:flex;flex-direction:column;gap:12px;margin-bottom:12px}
+.letter{position:relative;padding:18px 16px 12px;border-radius:14px;background:repeating-linear-gradient(#fffdf6 0 25px,#efe6d2 25px 26px);background-position:0 14px;box-shadow:0 3px 10px rgba(90,60,20,.12);overflow:hidden}
+.letter::before{content:'';position:absolute;left:0;right:0;top:0;height:7px;background:repeating-linear-gradient(-45deg,#d8433a 0 10px,#fffdf6 10px 18px,#3d7aa8 18px 28px,#fffdf6 28px 36px)}
+.letter::after{content:'';position:absolute;right:12px;top:16px;width:34px;height:40px;border-radius:3px;background:radial-gradient(circle at 50% 46%,#f2c14e 0 6px,transparent 7px),linear-gradient(#3d8a55,#2f6a46);box-shadow:0 0 0 3px #fff,0 0 0 4px #e2d6bc;transform:rotate(6deg)}
+.letter.y::after{background:radial-gradient(circle at 50% 46%,#fff 0 6px,transparent 7px),linear-gradient(#e0473b,#b8302a)}
+.letter .lto{font-weight:900;color:var(--navy);font-size:14px;margin-bottom:6px;padding-right:44px}
+.letter .txt{font-size:15px;font-weight:700;color:#3a3a3a;line-height:26px;white-space:pre-wrap;padding-right:30px}
+.letter .m{display:flex;align-items:center;font-size:12px;color:#8a7a5a;margin-top:8px}.letter .lfrom{font-weight:900;color:var(--navy);font-size:13px}
+.letter .lbtn{display:flex;gap:6px;justify-content:flex-end;margin-top:8px}
+.letters.done .letter{opacity:.7}
+.letter.compose{margin-bottom:8px}.letter.compose::after{display:none}.letter.compose textarea{background:transparent;border:0;box-shadow:none;min-height:78px;line-height:26px;padding:0}
 .note{padding:12px 2px;border-bottom:2px dotted var(--line)}
 .note:last-child{border-bottom:0}
 .note .txt{font-size:14px;font-weight:700;white-space:pre-wrap}
@@ -589,7 +606,7 @@ nav.tabs .tile{width:38px;height:38px}
 <nav class="tabs" id="tabs">
   <button data-t="today"><span class="tile"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg></span>今日</button>
   <button data-t="week"><span class="tile"><svg viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="3.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/><circle cx="9" cy="15" r=".6"/><circle cx="15" cy="15" r=".6"/></svg></span>週</button>
-  <button data-t="review"><span class="tile"><svg viewBox="0 0 24 24"><path d="M5 6.5c0-1.4 1.1-2.5 2.5-2.5h9c1.4 0 2.5 1.1 2.5 2.5v7c0 1.4-1.1 2.5-2.5 2.5H11l-4 3.5V16h0c-1.1 0-2-.9-2-2z"/><path d="M9 9h6M9 12h4"/></svg></span>ふたり</button>
+  <button data-t="review"><span class="tile"><svg viewBox="0 0 24 24"><rect x="3.5" y="6" width="17" height="12.5" rx="2.5"/><path d="M4.5 7.5 L12 13 L19.5 7.5"/></svg></span>おてがみ</button>
   <button data-t="zukan"><span class="tile"><svg viewBox="0 0 24 24"><path d="M5 5.5C5 4.7 5.7 4 6.5 4H18v14H6.5C5.7 18 5 18.7 5 19.5z"/><path d="M5 19.5C5 20.3 5.7 21 6.5 21H18v-3"/><circle cx="11.5" cy="10" r="2.2"/><path d="M11.5 12.2v3"/></svg></span>図鑑</button>
   <button data-t="settings"><span class="tile"><svg viewBox="0 0 24 24"><path d="M10.3 3.2h3.4l.5 2.4 1.6.7 2-1.4 2.4 2.4-1.4 2 .7 1.6 2.4.5v3.4l-2.4.5-.7 1.6 1.4 2-2.4 2.4-2-1.4-1.6.7-.5 2.4h-3.4l-.5-2.4-1.6-.7-2 1.4-2.4-2.4 1.4-2-.7-1.6-2.4-.5v-3.4l2.4-.5.7-1.6-1.4-2 2.4-2.4 2 1.4 1.6-.7z" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.1"/></svg></span>設定</button>
 </nav>
@@ -681,7 +698,7 @@ function talkMsg(due, logs){
   else if (wk.length && bloomSummary(wk).length){ const top = bloomSummary(wk)[0]; msgs.push(`今週は庭に${wk.length}輪咲いたよ。いちばん多いのは${FL[top[0]].n}。`); }
   const crw = creaturesFor(weekLogs(0)); if (crw.length) msgs.push(`今週は庭に${crw.slice(0, 2).join('と')}${crw.length > 2 ? 'たち' : ''}が遊びに来てるよ。タップしてみて。`);
   const inb = all('bouquet').filter(b => b.to === me && !b.opened); if (inb.length) msgs.unshift(`${nm(other(me))}から花束が届いてるよ。上の花束をタップしてみて。`);
-  if (openNotes) msgs.push(`ポストに${openNotes}通、手紙が入ってるよ。`);
+  if (openNotes) msgs.push(`おてがみが${openNotes}通、とどいてるよ。`);
   msgs.push(xmasOn(0) ? ['窓の外、雪がふってるね。', 'ツリーの電球、きれいだね。', 'あったかいココアがのみたいなあ。', 'もうすぐクリスマスだね。'][new Date().getDate() % 4] : ['今日はいい天気だといいね。', 'お花、元気に咲いてるかな。', 'ひと休みも、だいじなおしごとだよ。', 'ゆっくりいこうね。'][new Date().getDate() % 4]);
   return msgs[talkIdx % msgs.length];
 }
@@ -748,7 +765,7 @@ function renderAppbar(){ let b = $('appbar'); if (!b){ b = document.createElemen
   const on = S.me && tab !== 'today'; b.style.display = on ? '' : 'none'; if (!on) return; const notes = all('note').filter(n => n.status !== 'done').length;
   b.innerHTML = `<button class="qmenu home" data-act="gohome" aria-label="おへやにもどる"><span class="qi">${ICON_HOME}</span><span class="ql">おへや</span></button><button class="qmenu" data-act="menu" aria-label="メニュー"><span class="qi">${ICON_MENU}${notes ? '<em class="dot"></em>' : ''}</span><span class="ql">メニュー</span></button>`; }
 function menuOpen(){ const notes = all('note').filter(n => n.status !== 'done').length; let m = $('menupop'); if (!m){ m = document.createElement('div'); m.id = 'menupop'; document.body.appendChild(m); }
-  const apps = [...document.querySelectorAll('#tabs button')].filter(b => b.dataset.t !== 'today').map(b => `<button class="mapp" data-act="goto" data-t="${b.dataset.t}"><span class="tile t-${b.dataset.t}">${b.querySelector('svg').outerHTML}${b.dataset.t === 'review' && notes ? `<span class="badge-n">${notes}</span>` : ''}</span>${({ week:'週', review:'ふたり', zukan:'図鑑', settings:'設定' })[b.dataset.t]}</button>`).join('');
+  const apps = [...document.querySelectorAll('#tabs button')].filter(b => b.dataset.t !== 'today').map(b => `<button class="mapp" data-act="goto" data-t="${b.dataset.t}"><span class="tile t-${b.dataset.t}">${b.querySelector('svg').outerHTML}${b.dataset.t === 'review' && notes ? `<span class="badge-n">${notes}</span>` : ''}</span>${({ week:'週', review:'おてがみ', zukan:'図鑑', settings:'設定' })[b.dataset.t]}</button>`).join('');
   m.innerHTML = apps; const btn = [...document.querySelectorAll('[data-act=menu]')].find(x => x.offsetParent), r = btn ? btn.getBoundingClientRect() : null;
   if (r){ const cx = r.left + r.width / 2, W = m.offsetWidth, L = Math.min(Math.max(10, cx - 38), innerWidth - W - 10); m.style.bottom = (innerHeight - r.top + 10) + 'px'; m.style.left = L + 'px'; m.style.setProperty('--tail', (cx - L - 9) + 'px'); } requestAnimationFrame(() => m.classList.add('open')); }
 function menuClose(){ const m = $('menupop'); if (m) m.classList.remove('open'); }
@@ -759,12 +776,15 @@ const groupsSorted = () => all('group').sort((a, b) => (a.order ?? 0) - (b.order
 function guessGroup(n){ if (/こども|子ども|子供|幼稚園|保育|お迎え|送り/.test(n)) return 'grp_yusa'; if (/ゴミ|ごみ|オムツ|おむつ/.test(n)) return 'grp_gomi'; if (/洗い物|皿|食器|水筒/.test(n)) return 'grp_arai';
   if (/洗濯|取り込|たたむ|畳む|シーツ|枕カバー/.test(n)) return 'grp_sentaku'; if (/ごはん|ご飯|夕飯|夕食|朝食|昼食|料理|お弁当/.test(n)) return 'grp_gohan'; if (/買い|買出/.test(n)) return 'grp_kaimono'; if (/掃除|そうじ|風呂|トイレ|片付/.test(n)) return 'grp_souji'; return 'grp_hoka'; }
 function groupOf(c){ const g = c.group && S.items[c.group]; return g && !g.deleted ? c.group : (S.items[guessGroup(c.name)] && !S.items[guessGroup(c.name)].deleted ? guessGroup(c.name) : (groupsSorted()[0] || {}).id); }
+/* 行とボタン：「可燃ゴミを出す」→ 行「可燃ゴミ」・ボタン「出す」。分けられない名前は1行まるごとボタン */
+function rowAct(c){ if (c.row && c.act) return [c.row, c.act]; const m = /^(.+?)を(.+)$/.exec(c.name || ''); if (!m) return [c.name, '']; let a = m[2]; if (a.length > 3) a = a.replace(/する$/, ''); return [m[1], a]; }
 const choresIn = gid => choresSorted().filter(c => groupOf(c) === gid);
-const GOMI_SEED = [['kanen_m', '可燃ゴミをまとめる'], ['kanen_d', '可燃ゴミを出す'], ['funen_m', '不燃ゴミをまとめる'], ['funen_d', '不燃ゴミを出す'], ['can_m', '缶・ビンをまとめる'], ['can_d', '缶・ビンを出す'], ['omutsu_m', 'オムツをまとめる'], ['omutsu_d', 'オムツを出す'], ['bag', 'ゴミ袋を設置する']];
+const GOMI_SEED = [['kanen_m', '可燃ゴミをまとめる'], ['kanen_d', '可燃ゴミを出す'], ['kanen_b', '可燃ゴミの袋を設置', '可燃ゴミ', '袋を設置'], ['funen_m', '不燃ゴミをまとめる'], ['funen_d', '不燃ゴミを出す'], ['funen_b', '不燃ゴミの袋を設置', '不燃ゴミ', '袋を設置'], ['can_m', '缶・ビンをまとめる'], ['can_d', '缶・ビンを出す'], ['omutsu_m', 'オムツをまとめる'], ['omutsu_d', 'オムツを出す']];
 function seedGroups(){ let n = 0; const mk = it => { it.updatedAt = Date.now(); S.items[it.id] = it; S.queue = S.queue.filter(q => q.id !== it.id); S.queue.push(it); n++; };
   GROUP_SEED.forEach(([k, name, icon], i) => { if (!S.items['grp_' + k]) mk({ id:'grp_' + k, kind:'group', name, icon, order:i }); });
   const base = Math.max(-1, ...all('chore').map(x => x.order ?? 0)) + 1;
-  GOMI_SEED.forEach(([k, name], i) => { if (!S.items['seed_gomi_' + k]) mk({ id:'seed_gomi_' + k, kind:'chore', name, owner:'any', slot:'any', freq:{ type:'daily' }, def:[], group:'grp_gomi', icon:'trash', order:base + i }); });
+  GOMI_SEED.forEach(([k, name, row, act], i) => { if (!S.items['seed_gomi_' + k]) mk({ id:'seed_gomi_' + k, kind:'chore', name, owner:'any', slot:'any', freq:{ type:'daily' }, def:[], group:'grp_gomi', icon:'trash', order:base + i, ...(row ? { row, act } : {}) }); });
+  { const old = S.items.seed_gomi_bag; if (old && !old.deleted && old.name === 'ゴミ袋を設置する'){ old.deleted = true; mk(old); } }
   if (n) save(); return n; }
 function qbarHTML(){
   const logs = logsOn(dayKey(Date.now())), notes = all('note').filter(n => n.status !== 'done').length;
@@ -776,7 +796,11 @@ function qbarHTML(){
 /* グループの吹き出し */
 function grpOpen(gid, btn){ const g = S.items[gid]; if (!g) return; let m = $('grppop'); if (!m){ m = document.createElement('div'); m.id = 'grppop'; document.body.appendChild(m); }
   const logs = logsOn(dayKey(Date.now())), cs = choresIn(gid);
-  const rows = cs.map(c => { const n = logs.filter(l => l.choreId === c.id).length; return `<button class="gi ${n ? 'done' : ''}" data-act="qdo" data-id="${c.id}"><span class="gic">${QI[choreIcon(c)] || QI.spark}</span><span class="gn">${esc(c.name)}</span>${n ? `<span class="gc">✓${n > 1 ? n : ''}</span>` : ''}</button>`; }).join('');
+  const cnt = c => logs.filter(l => l.choreId === c.id).length, rowsM = new Map();
+  cs.forEach(c => { const [r, a] = rowAct(c), k = a ? 'r:' + r : 'c:' + c.id; if (!rowsM.has(k)) rowsM.set(k, { r, items:[] }); rowsM.get(k).items.push([c, a]); });
+  const rows = [...rowsM.values()].map(({ r, items }) => { const c0 = items[0][0];
+    if (items.length === 1 && !items[0][1]){ const n = cnt(c0); return `<button class="gi ${n ? 'done' : ''}" data-act="qdo" data-id="${c0.id}"><span class="gic">${QI[choreIcon(c0)] || QI.spark}</span><span class="gn">${esc(c0.name)}</span>${n ? `<span class="gc">✓${n > 1 ? n : ''}</span>` : ''}</button>`; }
+    return `<div class="grow"><span class="gic">${QI[choreIcon(c0)] || QI.spark}</span><span class="grn">${esc(r)}</span><span class="gbs">${items.map(([c, a]) => { const n = cnt(c); return `<button class="gb ${n ? 'done' : ''}" data-act="qdo" data-id="${c.id}">${n ? '✓' : ''}${esc(a || c.name)}${n > 1 ? `<small>${n}</small>` : ''}</button>`; }).join('')}</span></div>`; }).join('');
   const free = gid === 'grp_hoka' ? `<button class="gi gfree" data-act="qfree"><span class="gic">${QI.plus}</span><span class="gn">ほかの家事を書く</span></button>` : '';
   m.innerHTML = `<div class="gh"><span>${esc(g.name)}</span><button class="ged" data-act="gedit" data-g="${gid}" aria-label="グループを編集">✎</button></div><div class="gl">${rows}${free}${!rows && !free ? '<div class="gempty">まだ家事がないよ</div>' : ''}</div><button class="gadd" data-act="edit" data-id="" data-g="${gid}">＋ 家事を追加</button>`;
   const r = btn.getBoundingClientRect(), W = Math.min(300, innerWidth - 20), cx = r.left + r.width / 2, L = Math.min(Math.max(10, cx - W / 2), innerWidth - W - 10);
@@ -4555,27 +4579,25 @@ function viewReview(){
   const logs = all('log').filter(l => l.at >= ws.getTime() && l.at < we.getTime());
   const notes = all('note').sort((a,b) => b.at - a.at);
   const open = notes.filter(n => n.status !== 'done'), closed = notes.filter(n => n.status === 'done');
-  let html = `<div class="weeknav"><button data-act="wk" data-d="-1">‹ 前</button><b>${weekOff===0?'今週':`${ws.getMonth()+1}/${ws.getDate()}の週`}</b><button data-act="wk" data-d="1" ${weekOff>=0?'disabled style="opacity:.3"':''}>次 ›</button></div>`;
+  // おてがみ（あとで話したいことを、相手への手紙として）
+  const to = nm(other(S.me));
+  let html = `<h2>おてがみ${open.length ? `（${open.length}）` : ''}</h2>`;
+  html += open.length ? `<div class="letters">${open.map(n => noteRow(n)).join('')}</div>` : `<div class="panel"><div class="empty">ポストはからっぽ</div></div>`;
+  html += `<div class="letter compose"><div class="lto">${esc(to)}へ</div><textarea class="t" id="newnote" placeholder="あとで話したいこと、つたえたいこと"></textarea>
+    <div class="row" style="margin-top:8px;justify-content:flex-end"><button class="btn small go" data-act="addnote">✉ おくる</button></div></div>`;
+  if (closed.length) html += `<h2>よんだおてがみ</h2><div class="letters done">` + closed.slice(0, 20).map(n => noteRow(n)).join('') + `</div>`;
   // 今週ふたりでしたこと（だれが何回、は出さない）
+  html += `<div class="weeknav" style="margin-top:22px"><button data-act="wk" data-d="-1">‹ 前</button><b>${weekOff===0?'今週':`${ws.getMonth()+1}/${ws.getDate()}の週`}</b><button data-act="wk" data-d="1" ${weekOff>=0?'disabled style="opacity:.3"':''}>次 ›</button></div>`;
   const cnt = {}; logs.forEach(l => { cnt[l.name] = (cnt[l.name] || 0) + 1; }); const rows = Object.entries(cnt).sort((a, b) => b[1] - a[1]), thx = logs.filter(l => l.thanks).length;
-  html += `<h2>今週ふたりでしたこと</h2><div class="panel">` + (rows.length ? `<div class="didlist">${rows.map(([n, c]) => `<span>${esc(n)}${c > 1 ? `<small>×${c}</small>` : ''}</span>`).join('')}</div>${thx ? `<div class="didthx">♥ ありがとう ${thx}</div>` : ''}` : `<div class="empty">まだ なにもないね</div>`) + `</div>`;
+  html += `<h2>ふたりでしたこと</h2><div class="panel">` + (rows.length ? `<div class="didlist">${rows.map(([n, c]) => `<span>${esc(n)}${c > 1 ? `<small>×${c}</small>` : ''}</span>`).join('')}</div>${thx ? `<div class="didthx">♥ ありがとう ${thx}</div>` : ''}` : `<div class="empty">まだ なにもないね</div>`) + `</div>`;
   if (weekOff === 0 && !xmasOn(0)) html += bouquetSection();
-  html += `<h2>ふたりのポスト${open.length ? `（${open.length}）` : ''}</h2><div class="panel">`;
-  html += open.length ? open.map(n => noteRow(n)).join('') : `<div class="empty">からっぽ</div>`;
-  html += `<div style="margin-top:10px"><textarea class="t" id="newnote" placeholder="あとで話したいこと"></textarea>
-    <div class="row" style="margin-top:8px;justify-content:flex-end"><button class="btn small" data-act="addnote">入れる</button></div></div></div>`;
-  if (closed.length){
-    html += `<h2>話したこと</h2><div class="panel">` + closed.slice(0,20).map(n => noteRow(n)).join('') + `</div>`;
-  }
   return html;
 }
 function noteRow(n){
-  const c = n.choreId && S.items[n.choreId];
-  return `<div class="note"><div class="txt">${esc(n.text)}</div>
-    <div class="m"><span class="dot ${n.by}"></span>${esc(nm(n.by))}・${dayKey(n.at).slice(5).replace('-','/')}${c?`・${esc(c.name)}`:''}
-    <span style="flex:1"></span>
-    ${n.status==='done' ? `<button class="btn small ghost" data-act="reopen" data-id="${n.id}">もどす</button>` : `<button class="btn small ghost" data-act="closenote" data-id="${n.id}">話した ✓</button>`}
-    ${n.by===S.me?`<button class="btn small ghost" data-act="delnote" data-id="${n.id}">すてる</button>`:''}</div></div>`;
+  const c = n.choreId && S.items[n.choreId], mine = n.by === S.me;
+  return `<div class="letter ${n.by}"><div class="lto">${esc(nm(other(n.by)))}へ</div><div class="txt">${esc(n.text)}</div>
+    <div class="m"><span>${dayKey(n.at).slice(5).replace('-','/')}${c ? `・${esc(c.name)}` : ''}</span><span style="flex:1"></span><span class="lfrom">${esc(nm(n.by))}より</span></div>
+    <div class="lbtn">${n.status==='done' ? `<button class="btn small ghost" data-act="reopen" data-id="${n.id}">もどす</button>` : `<button class="btn small ghost" data-act="closenote" data-id="${n.id}">話した ✓</button>`}${mine ? `<button class="btn small ghost" data-act="delnote" data-id="${n.id}">すてる</button>` : ''}</div></div>`;
 }
 
 function viewSettings(){
@@ -4692,7 +4714,7 @@ function sheetChore(id){
   if (tl.length){
     h += `<label class="f">今日の記録</label><div class="panel">` + tl.map(l => `<div class="minirow"><span class="t">${hm(l.at)}</span><span class="dot ${cls(l)}"></span><span class="n">${esc(whoText(l))}</span>${l.by===S.me?`<button class="btn small ghost" data-act="undo" data-id="${l.id}" data-close="1">取り消す</button>`:''}</div>`).join('') + `</div>`;
   }
-  h += `<label class="f">ふたりのポストに入れる</label><textarea class="t" id="cnote" placeholder="あとで話したいこと"></textarea>
+  h += `<label class="f">おてがみを書く</label><textarea class="t" id="cnote" placeholder="あとで話したいこと、つたえたいこと"></textarea>
     <div class="row" style="margin-top:8px"><button class="btn ghost" style="flex:1" data-act="edit" data-id="${c.id}">家事を編集</button><button class="btn" style="flex:1" data-act="addcnote" data-id="${c.id}">入れる</button></div>`;
   openSheet(h);
 }
@@ -4712,6 +4734,7 @@ function renderEdit(){
     <label class="f">名前 <span class="muted" style="font-weight:600">（12文字まで）</span></label><input class="t" id="e_name" maxlength="12" value="${esc(d.name)}" placeholder="例：夜の洗い物">
     <label class="f">グループ</label><div class="gpick">${groupsSorted().map(g => `<button class="${d.group === g.id ? 'on' : ''}" data-act="dset" data-f="group" data-v="${g.id}">${QI[g.icon] || ''}<span>${esc(g.name)}</span></button>`).join('')}</div>
     <label class="f">アイコン</label>${iconPicker(d.icon || choreIcon(d), 'cicon')}
+    <label class="f">吹き出しでの見せ方 <span class="muted" style="font-weight:600">（空なら名前から自動）</span></label><div class="row" style="gap:6px"><input class="t" id="e_row" maxlength="8" value="${esc(d.row || '')}" placeholder="行：${esc(rowAct(d)[0] || '可燃ゴミ')}" style="flex:1"><input class="t" id="e_act" maxlength="6" value="${esc(d.act || '')}" placeholder="ボタン：${esc(rowAct(d)[1] || '出す')}" style="flex:1"></div>
     <label class="f">担当</label>${seg('owner',[['h',nm('h')],['y',nm('y')],['any','どちらでも']],d.owner)}
     <label class="f">時間帯</label>${seg('slot',SLOTS,d.slot||'any')}
     <label class="f">頻度</label>${seg('ftype',[['daily','毎日'],['weekly','曜日'],['interval','◯日ごと']],f.type)}`;
@@ -4726,7 +4749,7 @@ function renderEdit(){
 }
 function captureEdit(){
   if (!draft) return;
-  const n = $('e_name'); if (n) draft.name = n.value;
+  const n = $('e_name'); if (n) draft.name = n.value; const er = $('e_row'), ea = $('e_act'); if (er) draft.row = er.value.trim(); if (ea) draft.act = ea.value.trim(); if (!draft.row || !draft.act){ delete draft.row; delete draft.act; }
   const en = $('e_n'); if (en) draft.freq.n = Math.max(1, parseInt(en.value)||1);
   const defs = [...document.querySelectorAll('.e_def')].map(i => i.value);
   if (defs.length) draft.def = defs;
@@ -4828,7 +4851,6 @@ document.addEventListener('click', e => {
     case 'qfree': grpClose(); sheetFree(); break;
     case 'qgrp': { if (qLong){ qLong = false; break; } const g = el.dataset.g, cs = choresIn(g), m = $('grppop');
       if (m && m.classList.contains('open') && m.dataset.g === g){ grpClose(); break; }
-      if (cs.length === 1 && g !== 'grp_hoka'){ const c = cs[0], recent = all('log').filter(l => l.choreId === c.id && Date.now() - l.at < 10 * 60e3)[0]; if (recent){ toast(`「${c.name}」はさっきやったよ`); break; } const qi = el.querySelector('.qi'); if (qi){ qi.classList.remove('hit'); void qi.offsetWidth; qi.classList.add('hit'); } burst(el, 'star'); doChore(c); break; }
       grpOpen(g, el); break; }
     case 'gedit': grpClose(); sheetGroup(el.dataset.g); break;
     case 'gicon': { const n = $('g_name'); if (n) gdraft.name = n.value; gdraft.icon = el.dataset.v; renderGroup(); break; }
@@ -4854,8 +4876,8 @@ document.addEventListener('click', e => {
     case 'wk': weekOff = Math.min(0, weekOff + Number(el.dataset.d)); selDay = null; reviewOpen = false; render(); break;
     case 'selday': selDay = selDay === el.dataset.k ? null : el.dataset.k; render(); break;
     case 'reveal': reviewOpen = true; render(); break;
-    case 'addnote': { const t = $('newnote').value.trim(); if (!t) return; put({ id:uid(), kind:'note', by:S.me, text:t, choreId:null, at:Date.now(), status:'open' }); toast('ポストに入れたよ'); break; }
-    case 'addcnote': { const t = $('cnote').value.trim(); if (!t) return; put({ id:uid(), kind:'note', by:S.me, text:t, choreId:id, at:Date.now(), status:'open' }); closeSheet(); toast('ポストに入れたよ'); break; }
+    case 'addnote': { const t = $('newnote').value.trim(); if (!t) return; put({ id:uid(), kind:'note', by:S.me, text:t, choreId:null, at:Date.now(), status:'open' }); toast('おてがみをおくったよ'); break; }
+    case 'addcnote': { const t = $('cnote').value.trim(); if (!t) return; put({ id:uid(), kind:'note', by:S.me, text:t, choreId:id, at:Date.now(), status:'open' }); closeSheet(); toast('おてがみをおくったよ'); break; }
     case 'closenote': put({ ...L, status:'done' }); break;
     case 'reopen': put({ ...L, status:'open' }); break;
     case 'delnote': remove(L); break;
