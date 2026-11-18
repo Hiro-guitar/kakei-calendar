@@ -4273,16 +4273,16 @@ function advOpen(i){ if (!advCan(i)) return; rmod().then(m => { const keys = m.A
   put({ ...st, adv, room });
   openSheet(`<div class="advopen"><div style="font-size:12px;color:#a8946a;font-weight:800">${md(advDay(i))} のとびら</div><div class="row">${keys.map(fimg).join('')}</div><b>${keys.map(k => m.FURN_BY[k].name).join('と')}</b><p>部屋に置いたよ。もようがえで入れかえられる</p><button class="btn go" style="margin-top:14px;padding:11px 22px" data-act="advent">カレンダーにもどる</button></div>`);
   setTimeout(() => { fillFurn(); const b = document.querySelector('.advopen .row'); if (b) burst(b, 'star'); }, 30); }); }
-function unlockedFurn(m){ const o = advOpened(), u = new Map(); m.ADVENT.forEach((keys, i) => keys.forEach(k => u.set(k, i))); return { has:k => o.has(u.get(k)), day:k => advDay(u.get(k)) }; }
+function unlockedFurn(m){ const o = advOpened(), u = new Map(); m.ADVENT.forEach((keys, i) => keys.forEach(k => u.set(k, i))); return { has:k => (m.TREE_PARTS.includes(m.FURN_BY[k].slot) && k.endsWith('_a')) || o.has(u.get(k)), day:k => advDay(u.get(k)) }; }
 function moyouSheet(){ rmod().then(m => { const U = unlockedFurn(m), room = settings().room || {};
-  const secs = m.FURN_SLOTS.map(([slot, label]) => { const items = m.FURN_ITEMS.filter(it => it.slot === slot), cur = room[slot] || '';
+  const secs = m.FURN_SLOTS.map(([slot, label]) => { const items = m.FURN_ITEMS.filter(it => it.slot === slot), tp = m.TREE_PARTS.includes(slot), cur = tp ? (room[slot] === undefined ? slot + '_a' : room[slot] === 'none' ? '' : room[slot]) : (room[slot] || '');
     const needFp = (slot === 'stockings' || slot === 'mantel') && !room.fireplace;
     const tiles = [`<button class="myt ${!cur ? 'on' : ''}" data-act="furn" data-slot="${slot}" data-key=""><span class="lk">—</span>なし</button>`].concat(items.map(it => U.has(it.key)
       ? `<button class="myt ${cur === it.key ? 'on' : ''}" data-act="furn" data-slot="${slot}" data-key="${it.key}">${fimg(it.key)}${esc(it.name)}</button>`
       : `<div class="myt lock"><span class="lk">🔒</span>${md(U.day(it.key))}</div>`));
     return `<div class="mysec"><h3>${label}${needFp ? '<small style="font-weight:400;color:#a8946a">（暖炉を置くと飾れる）</small>' : ''}</h3><div class="myrow">${tiles.join('')}</div></div>`; }).join('');
   openSheet(`<div class="advhd"><b>もようがえ</b><p>手に入れた家具を、場所ごとに入れかえられるよ</p></div>${secs}`); setTimeout(fillFurn, 30); }); }
-function setFurn(slot, key){ const st = settings(), room = { ...(st.room || {}) }; if (key) room[slot] = key; else delete room[slot]; put({ ...st, room }); }
+function setFurn(slot, key){ const st = settings(), room = { ...(st.room || {}) }; if (key) room[slot] = key; else if (['topper', 'treelights', 'garland'].includes(slot)) room[slot] = 'none'; else delete room[slot]; put({ ...st, room }); }
 
 /* ===== 3Dの部屋 ===== */
 let ROOM = null, ROOM_FAIL = false, ROOM_LOADING = false, ORN3D = null, ORN3D_FAIL = false;
