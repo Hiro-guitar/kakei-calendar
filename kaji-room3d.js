@@ -512,6 +512,8 @@ function thumbFurn(key){ if (thCache[key]) return thCache[key];
   if (!thR){ thR = new THREE.WebGLRenderer({ antialias:true, alpha:true, preserveDrawingBuffer:true }); thR.setPixelRatio(1); thR.setSize(200, 200); thR.outputColorSpace = THREE.SRGBColorSpace; thR.toneMapping = THREE.NeutralToneMapping;
     thS = new THREE.Scene(); thS.environment = scene.environment; thS.environmentIntensity = .5; thS.add(new THREE.HemisphereLight('#fff1dc', '#b98a6a', 1.5)); const d = new THREE.DirectionalLight('#fff4e0', 2.2); d.position.set(-2, 5, 5); thS.add(d); thC = new THREE.PerspectiveCamera(28, 1, .01, 100); }
   const g = buildFurn(key); if (!g) return ''; const drop = []; g.traverse(m => { if (m.material && m.material.map === blobTex) drop.push(m); }); g.traverse(m => { if (m.userData.thumbOnly){ m.visible = true; m.position.y = 1.8; } }); drop.forEach(m => m.parent.remove(m));
+  if (FURN_BY[key].slot === 'treelights' || FURN_BY[key].slot === 'garland'){ tree.children.forEach(m => { if (m.isMesh && m.material === tierMat){ const c = m.clone(); c.userData.thumbTree = 1; g.add(c); } }); }
+  if (FURN_BY[key].slot === 'topper'){ const top = tree.children.find(m => m.isMesh && m.material === tierMat && m.position.y === TIERS[4][0]); if (top){ const c = top.clone(); c.scale.setScalar(.6); c.position.y = -TIERS[4][2] * .6 - .02; g.add(c); } }
   thS.add(g); g.updateMatrixWorld(true); const box = new THREE.Box3(); g.traverse(m => { if (m.isMesh && !(m.material && m.material.blending === THREE.AdditiveBlending)) box.expandByObject(m); }); if (box.isEmpty()) box.setFromObject(g);
   const c = box.getCenter(new THREE.Vector3()), r = box.getSize(new THREE.Vector3()).length() / 2; const flat = FURN_BY[key].slot === 'rug' || FURN_BY[key].slot === 'treebase', dir = new THREE.Vector3(.35, flat ? 1.3 : .45, 1).normalize();
   thC.position.copy(c).addScaledVector(dir, r / Math.sin(THREE.MathUtils.degToRad(14))); thC.lookAt(c); thR.render(thS, thC); const url = thR.domElement.toDataURL('image/png');
@@ -560,8 +562,8 @@ const TYPE = { ball:(c, map) => () => ball(c, map ? .35 : .25, map ? .3 : .6, ma
 function typeFor(o){ if (o.ball) return () => ball(o.color, o.pat ? .35 : .25, o.pat ? .3 : .6, o.pat ? stripeTex(o.color, o.pat === 'dot' ? '#ffffff' : '#f3ead9', o.pat === 'dot') : null);
   if (o.shape === 'bell') return bell; if (o.shape === 'candy') return candy; if (o.shape === 'star') return miniStar; return () => ball(o.color || '#c8352e'); }
 function clearAll(){ usedSlots.clear(); placed.splice(0).forEach(o => tree.remove(o)); gifts.splice(0).forEach(g => { scene.remove(g); scene.remove(g.userData.blob); }); }
-let sig = '';
-function sync(list, giftList){
+let sig = '', lastList = [], lastGifts = [];
+function sync(list, giftList){ lastList = list; lastGifts = giftList;
   const s2 = list.map(o => o.id).join(',') + '|' + giftList.map(g => g.id).join(',');
   if (s2 === sig) return; const prev = sig; sig = s2;
   const prevIds = new Set(prev.split('|')[0].split(',').filter(Boolean)), prevG = new Set((prev.split('|')[1] || '').split(',').filter(Boolean));
@@ -585,5 +587,15 @@ function tapAt(e){ const r = renderer.domElement.getBoundingClientRect(); v2.set
   const th = ray.intersectObjects(tree.children, true)[0]; if (th){ tree.rotation.z = .02; setTimeout(() => tree.rotation.z = -.015, 120); setTimeout(() => tree.rotation.z = 0, 260); opts.onTree && opts.onTree(); } }
 function ornScreen(i){ const o = placed[i]; if (!o) return null; const v = new THREE.Vector3(); o.children[0].getWorldPosition(v); v.y -= .1; v.project(camera); const r = renderer.domElement.getBoundingClientRect(); return [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height]; }
 const ornRot = i => placed[i] && [+placed[i].userData.th.toFixed(3), +(placed[i].userData.tilt || 0).toFixed(3)];
-return { sync, setRoom, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize(){ renderer.setSize(VW(), VH()); placeCamera(); } };
+/* ある日のツリーを写真にする（週の画面用）。いまのツリーはあとで元にもどす */
+let snR = null; const snCam = new THREE.PerspectiveCamera(30, 1, .1, 100);
+function snapshot(list, giftList, w = 640, h = 720){
+  const keepL = lastList, keepG = lastGifts, rot = tree.rotation.y;
+  clearAll(); sig = ''; tree.rotation.y = 0; list.forEach(o => addOrnament(false, o.id, o.key, o.slot)); giftList.forEach(g => addGift(false, g.id)); placed.forEach(o => { o.rotation.z = o.userData.rz; o.rotation.x = 0; });
+  if (!snR){ snR = new THREE.WebGLRenderer({ antialias:true, preserveDrawingBuffer:true }); snR.setPixelRatio(1); snR.outputColorSpace = THREE.SRGBColorSpace; snR.toneMapping = THREE.NeutralToneMapping; snR.shadowMap.enabled = true; snR.shadowMap.type = THREE.PCFSoftShadowMap; }
+  snR.setSize(w, h); snCam.aspect = w / h; const c = new THREE.Vector3(tree.position.x + .25, 1.45, tree.position.z + .3), dir = new THREE.Vector3(.18, .42, 1).normalize();
+  snCam.position.copy(c).addScaledVector(dir, 8.2); snCam.lookAt(c); snCam.updateProjectionMatrix(); scene.updateMatrixWorld(true); snR.render(scene, snCam);
+  const url = snR.domElement.toDataURL('image/jpeg', .88);
+  clearAll(); sig = ''; tree.rotation.y = rot; sync(keepL, keepG); shadowsDirty = true; return url; }
+return { sync, setRoom, snapshot, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize(){ renderer.setSize(VW(), VH()); placeCamera(); } };
 }

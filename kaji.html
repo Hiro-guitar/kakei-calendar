@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="うちの家事">
 <meta name="theme-color" content="#faf6ef">
@@ -22,7 +22,7 @@
   --ink:var(--navy); --card:var(--cream); --accent:var(--navy);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;color:var(--navy);font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif;font-weight:500;font-size:15px}
+html,body{margin:0;touch-action:manipulation;color:var(--navy);font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif;font-weight:500;font-size:15px}
 body{background-color:var(--sand);background-image:radial-gradient(rgba(147,124,96,.13) 1.6px,transparent 1.8px);background-size:18px 18px}
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 input,textarea,select{font:inherit;color:inherit}
@@ -111,6 +111,8 @@ body.xfullmode main{padding-bottom:0}
 .xfull-top{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 10px)}
 body.xfullmode header{display:none}
 .xdate{font-weight:800;color:var(--navy)}
+.fz{display:flex;align-items:center;justify-content:center;width:56px;height:56px}.fz img{width:56px;height:56px;object-fit:contain}.fz .lk{font-size:22px;color:#c8b898;font-weight:800}
+.wt3{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:640/720;background:#7a3a2a;margin-top:6px}.wt3 img{width:100%;height:100%;object-fit:cover;display:block}.wt3 img:not([src]){visibility:hidden}.wt3.loading::after{content:'ツリーを用意しているよ…';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff3dc;font-size:13px;font-weight:800}
 .xside{margin-left:auto;display:flex;gap:8px}
 .xbtn{position:relative;display:flex;align-items:center;width:38px;height:38px;justify-content:center;padding:0;border:0;border-radius:50%;background:var(--cream);box-shadow:var(--sh-lift);font-weight:800;color:var(--navy);white-space:nowrap}
 .xbtn svg{width:24px;height:24px}.xbtn .bdg{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#d8403a;color:#fff;font-size:11px;line-height:18px;text-align:center;box-shadow:0 0 0 2px #fff8e8;animation:pop .5s}
@@ -4136,7 +4138,14 @@ function viewZukanOrn(){
       return `<button class="zcell ${ok ? '' : 'un'}" data-act="ornz" data-k="${k}"><span class="zno">${RL[o.r] || '&nbsp;'}</span>${ornIcon(k)}<span class="zn">${ok ? o.n : '？？？'}</span></button>`; }).join('') + `</div>`; }
   return html;
 }
-function zSeg(){ const opts = [['flower', '花']]; if (CREATURES_ON) opts.push(['creature', '生き物']); if (xmasOn(0) || Object.keys(ornFound().f).length) opts.push(['orn', 'オーナメント']);
+function viewZukanFurn(){ const m = RMOD; if (!m){ ensureRoom().then(() => render()); return zSeg() + `<div class="empty">読みこみ中…</div>`; }
+  const U = unlockedFurn(m), tot = m.FURN_ITEMS.length, got = m.FURN_ITEMS.filter(it => U.has(it.key)).length;
+  let html = zSeg() + `<div class="panel zhead"><div class="ztitle">アドベントの家具</div><div class="zcount"><b>${got}</b> / ${tot}こ</div><div class="zbar"><i style="width:${(got / tot * 100).toFixed(1)}%"></i></div><div class="muted" style="margin-top:6px">11/19から12/25まで、毎日アドベントのとびらから届くよ。置き場所は右上の家のマークで入れかえられる</div></div>`;
+  for (const [slot, label] of m.FURN_SLOTS){ const its = m.FURN_ITEMS.filter(it => it.slot === slot); html += `<h2>${label}</h2><div class="zgrid">` + its.map(it => U.has(it.key)
+      ? `<div class="zcell"><span class="zno">&nbsp;</span><span class="fz">${fimg(it.key)}</span><span class="zn">${esc(it.name)}</span></div>`
+      : `<div class="zcell un"><span class="zno">${md(U.day(it.key))}</span><span class="fz"><span class="lk">？</span></span><span class="zn">？？？</span></div>`).join('') + `</div>`; }
+  return html; }
+function zSeg(){ const opts = [['flower', '花']]; if (CREATURES_ON) opts.push(['creature', '生き物']); if (xmasOn(0) || Object.keys(ornFound().f).length) opts.push(['orn', 'オーナメント']); if (!ROOM_FAIL && (advToday() >= 0 || (settings().adv || []).length)) opts.push(['furn', '家具']);
   return opts.length > 1 ? `<div class="seg" style="margin:6px 0 12px">${opts.map(([v, l]) => `<button class="${zMode === v ? 'on' : ''}" data-act="zm" data-v="${v}">${l}</button>`).join('')}</div>` : ''; }
 
 function weekLogs(off){ const ws = weekStart(off), we = new Date(ws); we.setDate(ws.getDate()+7); return all('log').filter(l => l.at >= ws.getTime() && l.at < we.getTime()); }
@@ -4152,7 +4161,7 @@ function render(){
   const me = S.me;
   $('mechip').innerHTML = me ? `<span class="dot ${me}"></span>${esc(nm(me))}` : '未設定';
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
-  $('fab').style.display = 'none'; renderQbar(); document.body.classList.toggle('xfullmode', !!(me && tab === 'today' && xmasOn(0))); syncRoom(); setTimeout(fillThumbs, 0);
+  $('fab').style.display = 'none'; renderQbar(); document.body.classList.toggle('xfullmode', !!(me && tab === 'today' && xmasOn(0))); syncRoom(); setTimeout(fillThumbs, 0); if (tab === 'week') setTimeout(fillWeekTree, 0); if (tab === 'zukan' && zMode === 'furn') setTimeout(() => ensureRoom().then(fillFurn), 0);
   if (LISTOPEN && tab === 'today') $('sheet').innerHTML = `<button class="x" data-act="close" aria-label="閉じる">✕</button><div class="listsheet">${LIST_HTML}</div>`;
   const v = $('view');
   if (!me) { v.innerHTML = viewOnboard(); return; }
@@ -4307,15 +4316,24 @@ function orn3dOld(l){ const k = ornamentOf(l), o = ORN[k], h = hash(l.id);
 function ornSlot(){ try { if (ROOM && document.body.classList.contains('xfullmode')){ const si = ROOM.frontSlot(); if (si >= 0) return { oslot:si }; } } catch (e) {} return {}; }
 function treeMem(){ const day = dayKey(Date.now()); try { const t = JSON.parse(localStorage.getItem('kaji_tree') || 'null'); if (t && t.day === day) return t; } catch (e) {} return { day, rot:0 }; }
 function treeSave(t){ try { localStorage.setItem('kaji_tree', JSON.stringify(t)); } catch (e) {} }
+/* 週の画面：その日のツリーを3Dで写真に（同じ中身ならとっておいた写真を使う） */
+const WT3 = {};
+function fillWeekTree(){ const box = document.querySelector('.wt3[data-day]'); if (!box) return; const day = box.dataset.day, img = box.querySelector('img');
+  const dl = logsOn(day).slice().sort((a, b) => a.at - b.at), sigk = day + '|' + dl.map(l => l.id + (l.thanks ? '+' : '')).join(',') + '|' + JSON.stringify(settings().room || {});
+  if (WT3[sigk]){ img.src = WT3[sigk]; return; } box.classList.add('loading');
+  ensureRoom().then(r => { if (!r || !box.isConnected) return; r.setRoom(settings().room || {}); setTimeout(() => { try { const u = r.snapshot(dl.map(orn3d), dl.filter(l => l.thanks).map(l => ({ id:l.id })), 640, 720); WT3[sigk] = u; if (box.isConnected){ img.src = u; box.classList.remove('loading'); } } catch (e) { console.warn(e); } }, 60); }); }
 function syncRoom(){
   const el = $('room3d'), on = document.body.classList.contains('xfullmode') && !ROOM_FAIL;
   el.style.display = on ? '' : 'none'; if (ROOM) ROOM.pause(!on); if (!on) return;
   const logs = logsOn(dayKey(Date.now())).slice().sort((a, b) => a.at - b.at), hr = new Date().getHours();
   const doSync = () => { ROOM.setNight(hr >= 17 || hr < 6); ROOM.setRoom(settings().room || {}); ROOM.sync(logs.map(orn3d), logs.filter(l => l.thanks).map(l => ({ id:l.id }))); };
   if (ROOM){ ROOM.resize(); doSync(); return; }
-  if (ROOM_LOADING) return; ROOM_LOADING = true;
-  import('./kaji-room3d.js').then(m => { ROOM = m.mountRoom(el, { shiftY:.06, rot:treeMem().rot, onRot:r => { const t = treeMem(); t.rot = r; treeSave(t); }, onTap:(id, gift) => { chime('do'); setTimeout(() => ornSheet(id, gift), gift ? 250 : 650); }, onTree:() => chime('do'), onSpin:() => { try { localStorage.setItem('kaji_spun', '1'); } catch (e) {} } }); try { if (!localStorage.getItem('kaji_spun')) setTimeout(() => toast('ツリーは指で横になぞると回せるよ'), 1500); else if (advBadge() && !localStorage.getItem('kaji_advhint')){ localStorage.setItem('kaji_advhint', '1'); setTimeout(() => toast('右上の🎁からアドベントのとびらを開けられるよ'), 1500); } } catch (e) {} ROOM_LOADING = false; doSync(); })
-    .catch(e => { console.warn(e); ROOM_FAIL = true; ROOM_LOADING = false; render(); });
+  ensureRoom().then(r => { if (r) doSync(); });
+}
+let ROOM_P = null;
+function ensureRoom(){ if (ROOM) return Promise.resolve(ROOM); if (ROOM_FAIL) return Promise.resolve(null); if (ROOM_P) return ROOM_P; const el = $('room3d'); ROOM_LOADING = true;
+  return ROOM_P = import('./kaji-room3d.js').then(m => { RMOD = m; ROOM = m.mountRoom(el, { shiftY:.06, rot:treeMem().rot, onRot:r => { const t = treeMem(); t.rot = r; treeSave(t); }, onTap:(id, gift) => { chime('do'); setTimeout(() => ornSheet(id, gift), gift ? 250 : 650); }, onTree:() => chime('do'), onSpin:() => { try { localStorage.setItem('kaji_spun', '1'); } catch (e) {} } }); try { if (!localStorage.getItem('kaji_spun')) setTimeout(() => toast('ツリーは指で横になぞると回せるよ'), 1500); else if (advBadge() && !localStorage.getItem('kaji_advhint')){ localStorage.setItem('kaji_advhint', '1'); setTimeout(() => toast('右上の🎁からアドベントのとびらを開けられるよ'), 1500); } } catch (e) {} ROOM_LOADING = false; return ROOM; })
+    .catch(e => { console.warn(e); ROOM_FAIL = true; ROOM_LOADING = false; render(); return null; });
 }
 function ornSheet(id, gift){ const l = S.items[id]; if (!l) return; const k = ornamentOf(l), mine = l.by === S.me && !l.both, when = `${dayKey(l.at).slice(5).replace('-','/')} ${hm(l.at)}`;
   openSheet(`<div class="ornsheet">${gift ? `<svg viewBox="-12 -16 34 30" width="120" height="106">${giftSVG(0, 10, 16, 12, 6, '#e85050', '#fff0c0', 'dot', 'og1')}</svg>` : ornIcon(k, 120)}<b>${gift ? 'ありがとうのプレゼント' : ORN[k].n}</b><div class="muted">${when}　${esc(whoText(l))}が「${esc(l.name)}」</div>
@@ -4328,6 +4346,12 @@ function viewWeek(){
   const label = `${ws.getMonth()+1}/${ws.getDate()} 〜 ${days[6].getMonth()+1}/${days[6].getDate()}`;
   let html = `<div class="weeknav"><button data-act="wk" data-d="-1">‹ 前</button><b>${weekOff===0?'今週':label}</b><button data-act="wk" data-d="1" ${weekOff>=0?'disabled style="opacity:.3"':''}>次 ›</button></div>`;
   const wlg = weekLogs(weekOff), bs = bloomSummary(wlg);
+  const tday = (selDay && days.some(d => dayKey(d.getTime()) === selDay)) ? selDay : (weekOff === 0 ? tk : dayKey(days[6].getTime()));
+  if (xmasOn(weekOff) && !ROOM_FAIL && inXmas(new Date(tday + 'T12:00').getTime())){ const dl = logsOn(tday).slice().sort((a, b) => a.at - b.at), d0 = new Date(tday + 'T12:00');
+    html += `<div class="panel gpanel" style="margin-bottom:12px"><div class="gtitle" style="display:flex;justify-content:space-between"><span>${d0.getMonth() + 1}/${d0.getDate()}（${WD[d0.getDay()]}）のツリー</span><span class="muted" style="font-size:12px">${dl.length}個</span></div>
+      <div class="wt3" data-day="${tday}"><img alt=""></div>${dl.length ? `<div class="bloomlist">${ornSummary(dl).slice(0, 10).map(([k, n]) => `<span>${ornIcon(k, 24)}${ORN[k].n}${n > 1 ? ` ×${n}` : ''}</span>`).join('')}</div>` : `<div class="muted" style="text-align:center;margin-top:6px">この日はまだオーナメントがないよ</div>`}
+      <div class="muted" style="font-size:11px;text-align:center;margin-top:4px">下の日付をタップすると、その日のツリーに切りかわるよ</div></div>`;
+  } else
   html += `<div class="panel gpanel" style="margin-bottom:12px"><div class="gtitle">${sceneTitle(weekOff, wlg.length)}</div>${sceneSVG(wlg, true, weekOff)}
     ${xmasOn(weekOff) ? (wlg.length ? `<div class="bloomlist">${ornSummary(wlg).slice(0,8).map(([k,n]) => `<span>${ornIcon(k, 24)}${ORN[k].n}${n>1?` ×${n}`:''}</span>`).join('')}</div>` : '') : bs.length?`<div class="bloomlist">${bs.slice(0,8).map(([k,n]) => `<span><svg viewBox="-14 -16 28 28">${flowerSVG(k,k)}</svg>${FL[k].n}${n>1?` ×${n}`:''}</span>`).join('')}${bs.length>8?`<span>ほか${bs.length-8}種</span>`:''}</div>`:''}</div>`;
   html += `<div class="wgrid">` + days.map(d => {
@@ -4421,7 +4445,7 @@ function viewSettings(){
   return html;
 }
 
-let zFilter = 'month', zMode = 'flower';
+let zFilter = 'month', zMode = xmasOn(0) ? 'orn' : 'flower';
 function viewZukanCreature(){
   const found = new Set(all('creature').map(c => c.name)), keys = Object.keys(CR), mo = new Date().getMonth() + 1;
   let list = keys; if (zFilter === 'month') list = keys.filter(k => CR[k].months.includes(mo)); if (zFilter === 'found') list = keys.filter(k => found.has(k));
@@ -4447,6 +4471,7 @@ function sheetCreature(k){ const c = CR[k], rec = S.items['cr_' + k], ok = rec &
 function viewZukan(){
   if (CREATURES_ON && zMode === 'creature') return viewZukanCreature();
   if (zMode === 'orn') return viewZukanOrn();
+  if (zMode === 'furn') return viewZukanFurn();
   const logs = all('log'), found = {}, first = {};
   for (const l of logs.filter(l => !inXmas(l.at)).sort((a,b) => a.at - b.at)){ const k = flowerOf(l); found[k] = (found[k]||0) + 1; if (!first[k]) first[k] = l; }
   const keys = Object.keys(FL), nf = Object.keys(found).length, mo = new Date().getMonth() + 1;
@@ -4674,6 +4699,10 @@ $('scrim').addEventListener('click', closeSheet);
 document.addEventListener('change', e => { if (e.target.id === 'freeboth') freeBoth = e.target.checked; });
 $('mechip').addEventListener('click', () => { tab = 'settings'; render(); });
 $('fab').addEventListener('click', sheetFree);
+// ピンチやダブルタップで拡大しない（iPhoneのSafariは viewport の指定を無視するので、ジェスチャーも止める）
+['gesturestart', 'gesturechange', 'gestureend'].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive:false }));
+document.addEventListener('touchmove', e => { if (e.touches.length > 1 || (e.scale && e.scale !== 1)) e.preventDefault(); }, { passive:false });
+{ let lastT = 0; document.addEventListener('touchend', e => { const t = Date.now(); if (t - lastT < 320 && !e.target.closest('input,textarea,select')) e.preventDefault(); lastT = t; }, { passive:false }); }
 let rsT; addEventListener('resize', () => { clearTimeout(rsT); rsT = setTimeout(() => { if (tab === 'today') render(); }, 200); });
 $('tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; tab = b.dataset.t; weekOff = 0; selDay = null; reviewOpen = false; closeSheet(); render(); window.scrollTo(0,0); });
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'freein') { doFree(e.target.value); closeSheet(); } });
