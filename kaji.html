@@ -143,6 +143,8 @@ body.xfullmode header{display:none}
 #grppop .gplus{width:40px;flex:none;align-self:stretch;border-radius:14px;border:2px dashed #e2c88a;color:#c8862a;font-weight:900;font-size:18px}
 #grppop .pen{color:#c8a050;font-size:13px}
 #grppop .gadd.sub{border:0;padding:6px;margin-top:2px;font-size:12px;text-decoration:underline}
+#grppop .grh{display:flex;align-items:center;gap:8px;padding:2px 4px 2px 0;border-radius:12px;background:#fffaf0;box-shadow:inset 0 0 0 2px #e8c47a;text-align:left}
+#grppop .grn em{display:block;font-style:normal;color:#c8a050;font-size:11px}
 #grppop .gempty{padding:10px;text-align:center;font-size:12px;color:#a8946a}
 #grppop .gadd{width:100%;margin-top:8px;padding:9px;border-radius:14px;border:2px dashed #e2d2ae;color:#a8864a;font-weight:800;font-size:13px}
 .ipick{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.ipick button{aspect-ratio:1;border-radius:14px;background:#fff;box-shadow:inset 0 0 0 1.5px #ece2cc;display:flex;align-items:center;justify-content:center}.ipick button svg{width:80%;height:80%}.ipick button.on{box-shadow:inset 0 0 0 3px #e8a83a;background:#fff4dc}
@@ -813,11 +815,12 @@ function grpOpen(gid, btn, edit){ const g = S.items[gid]; if (!g) return; grpEdi
   const act = c => E ? `data-act="edit" data-id="${c.id}" data-back="${gid}"` : `data-act="qdo" data-id="${c.id}"`;
   const rows = [...rowsM.values()].map(({ r, items }) => { const c0 = items[0][0];
     if (items.length === 1 && !items[0][1]){ const n = E ? 0 : cnt(c0); return `<div class="grow single"><button class="gi ${n ? 'done' : ''}" ${act(c0)}><span class="gic">${QI[choreIcon(c0)] || QI.spark}</span><span class="gn">${esc(c0.name)}</span>${n ? `<span class="gc">✓${n > 1 ? n : ''}</span>` : ''}${E ? '<span class="pen">✎</span>' : ''}</button>${E ? `<button class="gplus" data-act="rowadd" data-id="${c0.id}" aria-label="ボタンを足す">＋</button>` : ''}</div>`; }
-    return `<div class="grow"><span class="gic">${QI[choreIcon(c0)] || QI.spark}</span><span class="grn">${esc(r)}</span><span class="gbs">${items.map(([c, a]) => { const n = E ? 0 : cnt(c); return `<button class="gb ${n ? 'done' : ''}" ${act(c)}>${n ? '✓' : ''}${esc(a || c.name)}${n > 1 ? `<small>${n}</small>` : ''}${E ? ' ✎' : ''}</button>`; }).join('')}${E ? `<button class="gb gbplus" data-act="rowadd" data-id="${c0.id}">＋</button>` : ''}</span></div>`; }).join('');
+    const head = `<span class="gic">${QI[choreIcon(c0)] || QI.spark}</span><span class="grn">${esc(r)}${E ? '<em>✎</em>' : ''}</span>`;
+    return `<div class="grow">${E ? `<button class="grh" data-act="rowedit" data-id="${c0.id}">${head}</button>` : head}<span class="gbs">${items.map(([c, a]) => { const n = E ? 0 : cnt(c); return `<button class="gb ${n ? 'done' : ''}" ${act(c)}>${n ? '✓' : ''}${esc(a || c.name)}${n > 1 ? `<small>${n}</small>` : ''}${E ? ' ✎' : ''}</button>`; }).join('')}${E ? `<button class="gb gbplus" data-act="rowadd" data-id="${c0.id}">＋</button>` : ''}</span></div>`; }).join('');
   const free = gid === 'grp_hoka' && !E ? `<button class="gi gfree" data-act="qfree"><span class="gic">${QI.plus}</span><span class="gn">ほかの家事を書く</span></button>` : '';
   m.classList.toggle('editing', E);
   m.innerHTML = E
-    ? `<div class="gh"><span>${esc(g.name)}<small>　へんしゅう中</small></span><button class="gdone" data-act="gedmode" data-g="${gid}" data-v="0">おわる</button></div><div class="ghint">ボタンを押すと直せるよ。＋でボタンを足せるよ</div><div class="gl">${rows}</div><button class="gadd" data-act="rownew" data-g="${gid}">＋ 新しい行を足す</button><button class="gadd sub" data-act="gedit" data-g="${gid}">グループの名前・アイコンを変える</button>`
+    ? `<div class="gh"><span>${esc(g.name)}<small>　へんしゅう中</small></span><button class="gdone" data-act="gedmode" data-g="${gid}" data-v="0">おわる</button></div><div class="ghint">✎を押すと直せるよ。行の名前を押すと、名前とアイコンを変えられるよ</div><div class="gl">${rows}</div><button class="gadd" data-act="rownew" data-g="${gid}">＋ 新しい行を足す</button><button class="gadd sub" data-act="gedit" data-g="${gid}">グループの名前・アイコンを変える</button>`
     : `<div class="gh"><span>${esc(g.name)}</span><button class="ged" data-act="gedmode" data-g="${gid}" data-v="1">✎ へんしゅう</button></div><div class="gl">${rows}${free}${!rows && !free ? '<div class="gempty">まだ家事がないよ</div>' : ''}</div>${!rows ? `<button class="gadd" data-act="rownew" data-g="${gid}">＋ 家事を足す</button>` : ''}`;
   const r = btn.getBoundingClientRect(), W = Math.min(320, innerWidth - 20), cx = r.left + r.width / 2, L = Math.min(Math.max(10, cx - W / 2), innerWidth - W - 10);
   m.style.width = W + 'px'; m.style.left = L + 'px'; m.style.bottom = (innerHeight - r.top + 12) + 'px'; m.style.setProperty('--tail', (cx - L - 9) + 'px'); m.dataset.g = gid; requestAnimationFrame(() => m.classList.add('open')); }
@@ -834,6 +837,15 @@ function sheetRowNew(gid){ const g = S.items[gid]; qadd = { gid, row:null, base:
     <label class="f">ボタンの名前 <span class="muted" style="font-weight:600">（いくつでも。空ならボタン1つの行）</span></label><input class="t" id="qa_acts" maxlength="40" placeholder="例：洗う しまう（スペースで区切る）">
     <label class="f">アイコン</label>${iconPicker(qadd.icon, 'qaicon')}
     <div class="row" style="margin-top:18px"><button class="btn ghost" style="flex:1" data-act="qaback">もどる</button><button class="btn go" style="flex:2" data-act="qasave">足す</button></div>`); setTimeout(() => { const i = $('qa_row'); if (i) i.focus(); }, 250); }
+/* 行の名前とアイコンを変える（行の中の家事ぜんぶに） */
+let redit = null;
+function sheetRowEdit(cid){ const c = S.items[cid]; if (!c) return; const [r] = rowAct(c), gid = groupOf(c); const ids = choresIn(gid).filter(x => rowAct(x)[1] && rowAct(x)[0] === r).map(x => x.id);
+  redit = { gid, row:r, ids, icon:c.icon || choreIcon(c) }; renderRowEdit(); }
+function renderRowEdit(keep){ const d = redit;
+  openSheet(`<h3>行を編集</h3><label class="f">行の名前</label><input class="t" id="re_row" maxlength="8" value="${esc(keep ?? d.row)}">
+    <label class="f">アイコン</label>${iconPicker(d.icon, 'reicon')}
+    <div class="row" style="margin-top:18px"><button class="btn ghost" style="flex:1" data-act="reback">もどる</button><button class="btn go" style="flex:2" data-act="resave">保存</button></div>
+    <button class="btn danger wide" style="margin-top:10px" data-act="redel">この行を削除（ボタン${d.ids.length}つ）</button>`); }
 function qaChore(row, act){ const nm2 = act ? `${row}（${act}）` : row; return { id:uid(), kind:'chore', name:nm2.slice(0, 12), owner:'any', slot:'any', freq:{ type:'daily' }, def:[], group:qadd.gid, icon:qadd.icon, order:Math.max(-1, ...all('chore').map(x => x.order ?? 0)) + 1, ...(act ? { row, act } : {}) }; }
 function grpClose(){ const m = $('grppop'); if (m) m.classList.remove('open'); }
 document.addEventListener('pointerdown', e => { const m = $('grppop'); if (m && m.classList.contains('open') && !e.target.closest('#grppop,[data-act=qgrp]')) grpClose(); }, true);
@@ -4883,6 +4895,13 @@ document.addEventListener('click', e => {
       if (m && m.classList.contains('open') && m.dataset.g === g){ grpClose(); break; }
       grpOpen(g, el); break; }
     case 'gedit': grpClose(); sheetGroup(el.dataset.g); break;
+    case 'rowedit': grpClose(); sheetRowEdit(el.dataset.id); break;
+    case 'reicon': { const v = $('re_row') ? $('re_row').value : null; redit.icon = el.dataset.v; renderRowEdit(v); break; }
+    case 'reback': { const g = redit && redit.gid; closeSheet(); redit = null; if (g) setTimeout(() => grpOpen(g, null, true), 200); break; }
+    case 'resave': { const row = $('re_row').value.trim(); if (!row){ toast('行の名前を入れてね'); return; } const g = redit.gid;
+      redit.ids.forEach(id => { const c = S.items[id]; if (!c) return; const [r0, a] = rowAct(c); const name = (c.name.startsWith(r0) ? row + c.name.slice(r0.length) : c.name).slice(0, 12); put({ ...c, row, act:a, icon:redit.icon, name }); });
+      closeSheet(); redit = null; toast('ほぞんしたよ'); setTimeout(() => grpOpen(g, null, true), 250); break; }
+    case 'redel': { if (!el.dataset.sure){ el.dataset.sure = '1'; el.textContent = 'もう一度押すと削除するよ'; return; } const g = redit.gid; redit.ids.forEach(id => S.items[id] && remove(S.items[id])); closeSheet(); redit = null; toast('削除したよ'); setTimeout(() => grpOpen(g, null, true), 250); break; }
     case 'gedmode': grpOpen(el.dataset.g, null, el.dataset.v === '1'); break;
     case 'rowadd': grpClose(); sheetRowAdd(el.dataset.id); break;
     case 'rownew': grpClose(); sheetRowNew(el.dataset.g); break;
