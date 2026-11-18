@@ -4634,13 +4634,13 @@ function moyouSheet(){ rmod().then(m => { const U = unlockedFurn(m), room = sett
   const layout = settings().layout || (ROOM ? ROOM.layoutOf() : []), cntK = k => layout.filter(r => r.key === k).length;
   const secs = m.FURN_SLOTS.map(([slot, label]) => { const items = m.FURN_ITEMS.filter(it => it.slot === slot);
     if (m.FLOOR_SLOTS.includes(slot) || m.WALL_SLOTS.includes(slot)){
-      const tiles = items.map(it => U.has(it.key) ? `<button class="myt ${cntK(it.key) ? 'on' : ''}" data-act="furnadd" data-key="${it.key}">${fimg(it.key)}${esc(it.name)}${cntK(it.key) ? `<span class="myc">${cntK(it.key)}</span>` : ''}<span class="myadd">＋ おく</span></button>` : `<div class="myt lock"><span class="lk">🔒</span>${md(U.day(it.key))}</div>`);
+      const tiles = items.map(it => U.has(it.key) ? `<button class="myt ${cntK(it.key) ? 'on' : ''}" data-act="furnadd" data-key="${it.key}">${fimg(it.key)}${esc(it.name)}${cntK(it.key) ? `<span class="myc">${cntK(it.key)}</span>` : ''}<span class="myadd">＋ おく</span></button>` : `<div class="myt lock"><span class="lk">🔒</span>？？？</div>`);
       return `<div class="mysec"><h3>${label}</h3><div class="myrow">${tiles.join('')}</div></div>`; }
     const tp = m.TREE_PARTS.includes(slot), cur = tp ? (room[slot] === undefined ? slot + '_a' : room[slot] === 'none' ? '' : room[slot]) : (room[slot] || '');
     const needFp = (slot === 'stockings' || slot === 'mantel') && !room.fireplace;
     const tiles = (slot === 'wallpaper' || slot === 'flooring' ? [] : [`<button class="myt ${!cur ? 'on' : ''}" data-act="furn" data-slot="${slot}" data-key=""><span class="lk">—</span>なし</button>`]).concat(items.map(it => U.has(it.key)
       ? `<button class="myt ${cur === it.key ? 'on' : ''}" data-act="furn" data-slot="${slot}" data-key="${it.key}">${fimg(it.key)}${esc(it.name)}</button>`
-      : `<div class="myt lock"><span class="lk">🔒</span>${md(U.day(it.key))}</div>`));
+      : `<div class="myt lock"><span class="lk">🔒</span>？？？</div>`));
     return `<div class="mysec"><h3>${label}${needFp ? '<small style="font-weight:400;color:#a8946a">　暖炉があると飾れるよ</small>' : ''}</h3><div class="myrow">${tiles.join('')}</div></div>`; }).join('');
   openSheet(`<div class="advhd"><b>もようがえ</b></div><button class="btn go wide" style="margin:0 0 14px;padding:13px" data-act="roomedit">家具を動かす・しまう</button>${secs}`); setTimeout(fillFurn, 30); }); }
 /* 家具を動かすモード */
