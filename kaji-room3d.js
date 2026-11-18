@@ -515,7 +515,7 @@ const BUILD = {
 function buildFurn(key){ const it = FURN_BY[key]; if (!it) return null; const g = BUILD[it.slot](it.k); g.userData.key = key; return g; }
 // 置き場所：[x, y, z, 向き]
 const ANCHOR = { fireplace:[FPX, 0, bz], stockings:[FPX, FPH, bz], mantel:[FPX, FPH + .12, bz + .2], wall:[FPX, FPH + .2, bz + .05], curtain:[WX, WY, bz], wintop:[WX, WY + WH / 2 + .2, bz + .3], sill:[WX, WY - WH / 2 - .12, bz], outside:[WX + .15, .6, bz - .02 - 2.7],
-  table:[1.05, 0, -.55], toys:[.05, 0, .95], rug:[.15, 0, .35], shelf:[-RW / 2 + .32, 0, .45, Math.PI / 2 - .6], sofa:[RW / 2 - .1, 0, .75, -Math.PI / 2 + .2], lamp:[1.98, 0, -1.55], treebase:null, special:null, wallpaper:null, flooring:null, topper:null, treelights:null, garland:null };
+  table:[1.05, 0, -.55], toys:[.05, 0, .95], rug:[.15, 0, .35], shelf:[-RW / 2 + .32, 0, .8, Math.PI / 2 - .6], sofa:[RW / 2 - .1, 0, .75, -Math.PI / 2 + .2], lamp:[1.98, 0, -1.55], treebase:null, special:null, wallpaper:null, flooring:null, topper:null, treelights:null, garland:null };
 const NEEDS_FP = { stockings:1, mantel:1 };
 const mounted = {};
 function disposeG(o){ o.traverse(m => { if (m.isMesh || m.isPoints){ m.geometry && m.geometry.dispose(); } }); }
@@ -530,7 +530,8 @@ function placeItem(slot, key){ if (slot === 'wallpaper'){ applyWall(key ? key.sl
 const GRID = .25, ZMAX = 2.6;
 const inst = {}; // id → { g, rec }
 function partBox(g, opt = {}){ g.updateMatrixWorld(true); const box = new THREE.Box3(); g.traverse(m => { if (!m.isMesh || !m.visible) return; if (m.material && (m.material.map === blobTex || m.material.blending === THREE.AdditiveBlending)) return; if (m.userData.thumbTree || m.userData.selMark) return; if (opt.noGift && m.parent && m.parent.userData.gift) return; box.expandByObject(m); }); return box; }
-function instBox(o){ if (o.rec.key === 'tree'){ const b = partBox(tree); return b; } return partBox(o.g); }
+// ツリーは、まわりのプレゼント置き場（いくつ置いてあっても）まで含めて場所をとる
+function instBox(o){ if (o.rec.key === 'tree'){ const b = partBox(tree); treeRoot.updateMatrixWorld(true); for (const [x, z] of GIFT_SPOTS){ const p = treeRoot.localToWorld(new THREE.Vector3(x, 0, z)); b.expandByPoint(new THREE.Vector3(p.x - .26, 0, p.z - .24)); b.expandByPoint(new THREE.Vector3(p.x + .26, .9, p.z + .24)); } return b; } return partBox(o.g); }
 function recDefault(key){ const it = FURN_BY[key]; if (!it) return null; const a = ANCHOR[it.slot]; if (WALL_SLOTS.includes(it.slot)) return { key, wall:'back', u:a[0], y:a[1] }; return { key, x:a[0], z:a[2], r:a[3] || 0 }; }
 function placeInst(o){ const r = o.rec;
   if (r.key === 'tree'){ treeRoot.position.set(r.x, 0, r.z); return; }
