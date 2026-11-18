@@ -254,7 +254,8 @@ function wrapTex(a, b, kind){ return canvasTex(128, 128, (g, w, h) => { g.fillSt
   if (kind === 'check'){ g.globalAlpha = .45; for (let i = 0; i < 4; i++){ g.fillRect(i * 32 + 8, 0, 14, h); g.fillRect(0, i * 32 + 8, w, 14); } } }); }
 const gifts = [];
 const GIFT_SPOTS = [[-1.7, -.7], [-.6, -.65], [-1.15, -.3], [-.25, -1.0], [-1.95, -1.2], [-.45, -.15], [-.0, -.5], [-1.65, -.05]].map(([x, z]) => [x + 1.15, z + 1.65]); // ツリーからの位置
-function addGift(animate = true, id = null){ const i = gifts.length; if (i >= GIFT_SPOTS.length) return; const [x, z] = GIFT_SPOTS[i], [a, b, kind] = WRAPS[i % WRAPS.length];
+// 8か所に置ききったら、その上に重ねていく（上ほど少し小さく）
+function addGift(animate = true, id = null){ const i = gifts.length, N = GIFT_SPOTS.length, lv = Math.floor(i / N); if (lv >= 5) return; const [x, z] = GIFT_SPOTS[i % N], [a, b, kind] = WRAPS[i % WRAPS.length], under = lv ? gifts[i - N] : null, sc = Math.pow(.82, lv);
   const w = .34 + rnd() * .22, h = .26 + rnd() * .2, d = .3 + rnd() * .2, g = new THREE.Group();
   const box = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 3, .035), std('#ffffff', { map:wrapTex(a, b, kind), roughness:.6 })); box.position.y = h / 2; box.castShadow = box.receiveShadow = true; g.add(box);
   const rc = a === '#f2c14e' || a === '#f3ead9' ? '#c8352e' : '#f2c14e', rm = std(rc, { roughness:.45, metalness:.15 });
@@ -262,7 +263,8 @@ function addGift(animate = true, id = null){ const i = gifts.length; if (i >= GI
   const r2 = new THREE.Mesh(new RoundedBoxGeometry(.06, h + .012, d + .012, 2, .01), rm); r2.position.y = h / 2; g.add(r2);
   for (const s of [-1, 1]){ const t = new THREE.Mesh(new THREE.TorusGeometry(.06, .022, 8, 16), rm); t.position.set(s * .055, h + .045, 0); t.rotation.set(0, Math.PI / 2, s * .5); t.scale.set(1, 1.25, .8); t.castShadow = true; g.add(t); }
   const knot = new THREE.Mesh(new THREE.SphereGeometry(.03, 10, 8), rm); knot.position.y = h + .03; g.add(knot);
-  g.position.set(x, 0, z); g.rotation.y = (rnd() - .5) * .6; g.userData.id = id; g.userData.gift = true; treeRoot.add(g); gifts.push(g); g.userData.blob = blob(x, z, w * 2.1, d * 2.1, .9); treeRoot.add(g.userData.blob);
+  const y0 = under ? under.position.y + under.userData.h * under.userData.base : 0; g.userData.h = h; g.userData.base = sc; g.scale.setScalar(sc);
+  g.position.set(x + (lv ? (rnd() - .5) * .05 : 0), y0, z + (lv ? (rnd() - .5) * .05 : 0)); g.rotation.y = (rnd() - .5) * (lv ? 1.2 : .6); g.userData.id = id; g.userData.gift = true; treeRoot.add(g); gifts.push(g); if (!lv){ g.userData.blob = blob(x, z, w * 2.1, d * 2.1, .9); treeRoot.add(g.userData.blob); }
   if (animate){ g.scale.setScalar(.001); appear.push({ o:g, t0:performance.now() }); } shadowsDirty = true; }
 
 /* ---------- 家具（アドベントで手に入る。場所ごとに3種類から選べる） ---------- */
@@ -662,7 +664,7 @@ renderer.domElement.addEventListener('webglcontextlost', e => e.preventDefault()
 const TYPE = { ball:(c, map) => () => ball(c, map ? .35 : .25, map ? .3 : .6, map), bell:() => bell, candy:() => candy, star:() => miniStar };
 function typeFor(o){ if (o.ball) return () => ball(o.color, o.pat ? .35 : .25, o.pat ? .3 : .6, o.pat ? stripeTex(o.color, o.pat === 'dot' ? '#ffffff' : '#f3ead9', o.pat === 'dot') : null);
   if (o.shape === 'bell') return bell; if (o.shape === 'candy') return candy; if (o.shape === 'star') return miniStar; return () => ball(o.color || '#c8352e'); }
-function clearAll(){ usedSlots.clear(); placed.splice(0).forEach(o => tree.remove(o)); gifts.splice(0).forEach(g => { treeRoot.remove(g); treeRoot.remove(g.userData.blob); }); }
+function clearAll(){ usedSlots.clear(); placed.splice(0).forEach(o => tree.remove(o)); gifts.splice(0).forEach(g => { treeRoot.remove(g); if (g.userData.blob) treeRoot.remove(g.userData.blob); }); }
 let sig = '', lastList = [], lastGifts = [];
 function sync(list, giftList){ lastList = list; lastGifts = giftList;
   const s2 = list.map(o => o.id).join(',') + '|' + giftList.map(g => g.id).join(',');
