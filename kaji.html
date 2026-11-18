@@ -885,6 +885,15 @@ function migrateCatalog4(){ const st = settings(); if ((st.catalog || 0) >= 4 ||
   const base = Math.max(-1, ...all('chore').map(x => x.order ?? 0)) + 1;
   ['リビング', '和室', '仕事部屋', 'リラックスルーム'].forEach((room, ai) => mk({ id:`c4_kanki_${ai}`, kind:'chore', name:room + 'の換気', owner:'any', slot:'any', freq:{ type:'daily' }, def:[], group:'grp_kanki', icon:'kanki', row:'換気', act:room, order:base + ai }));
   mk({ ...settings(), catalog:4 }); save(); return 1; }
+// 洗い物をごはんから分けて、ひとつのグループに（2026/11/19）
+function migrateCatalog5(){ const st = settings(); if ((st.catalog || 0) >= 5 || (st.catalog || 0) < 4) return 0; const now = Date.now(); const mk = it => { it.updatedAt = now; S.items[it.id] = it; S.queue = S.queue.filter(q => q.id !== it.id); S.queue.push(it); };
+  const gh = S.items.grp_gohan; mk({ id:'grp_araimono', kind:'group', name:'洗い物', icon:'dish', order:(gh && gh.order != null ? gh.order : 0) + .5 });
+  // ごはんの中の「洗い物」はなくす（これまでの記録はそのまま残る）
+  for (const c of all('chore')) if (c.group === 'grp_gohan' && (c.act === '洗い物' || /の洗い物$/.test(c.name))) mk({ ...c, deleted:true });
+  const base = Math.max(-1, ...all('chore').map(x => x.order ?? 0)) + 1;
+  [['朝', 'egg'], ['昼', 'onigiri'], ['夜', 'nabe'], ['その他', 'dish']].forEach(([row, icon], ri) => [['洗う', `${row}の洗い物を洗う`], ['片づける', `${row}の食器を片づける`]].forEach(([act, name], ai) =>
+    mk({ id:`c5_arai_${ri}_${ai}`, kind:'chore', name:row === 'その他' ? (ai ? 'その他の食器を片づける' : 'その他の洗い物を洗う') : name, owner:'any', slot:'any', freq:{ type:'daily' }, def:[], group:'grp_araimono', icon, row, act, order:base + ri * 2 + ai })));
+  mk({ ...settings(), catalog:5 }); save(); return 1; }
 function qbarHTML(){
   const logs = logsOn(dayKey(Date.now())), notes = unreadNotes();
   return `<button class="qmenu" data-act="menu" aria-label="メニュー"><span class="qi">${ICON_MENU}${notes ? '<em class="dot"></em>' : ''}</span><span class="ql">メニュー</span></button><div class="qscroll">` + groupsSorted().map(g => {
@@ -1091,7 +1100,7 @@ function renameKid(){ const K = (settings().names || {}).k; if (!K) return 0; le
 async function sync(){
   const ok = await pull();
   if (ok && !S.seeded) seedIfEmpty();
-  if (ok){ renameKid(); migrateCatalog2(); migrateCatalog3(); migrateCatalog4(); }
+  if (ok){ renameKid(); migrateCatalog2(); migrateCatalog3(); migrateCatalog4(); migrateCatalog5(); }
   await push();
   render();
 }
@@ -5187,7 +5196,7 @@ function iconNotice(force){ let v = ''; try { v = localStorage.getItem('kaji_ico
 /* ========== 起動 ========== */
 if (!S.url) seedIfEmpty();
 renameKid();
-if (!S.url){ migrateCatalog2(); migrateCatalog3(); migrateCatalog4(); }
+if (!S.url){ migrateCatalog2(); migrateCatalog3(); migrateCatalog4(); migrateCatalog5(); }
 render();
 if (S.url) sync();
 setTimeout(() => iconNotice(false), 1800);
