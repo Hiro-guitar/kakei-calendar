@@ -4799,7 +4799,7 @@ function noteRow(n){
   const c = n.choreId && S.items[n.choreId], mine = n.by === S.me;
   return `<div class="letter ${n.by} p-${paperOf(n.paper || 'air').k}"><div class="lto">${esc(nm(other(n.by)))}へ</div><div class="txt">${esc(n.text)}</div>
     <div class="m"><span>${dayKey(n.at).slice(5).replace('-','/')}${c ? `・${esc(c.name)}` : ''}</span><span style="flex:1"></span><span class="lfrom">${esc(nm(n.by))}より</span></div>
-    <div class="lbtn">${n.status==='done' ? `<button class="btn small ghost" data-act="reopen" data-id="${n.id}">もどす</button>` : `<button class="btn small ghost" data-act="closenote" data-id="${n.id}">話した ✓</button>`}${mine ? `<button class="btn small ghost" data-act="delnote" data-id="${n.id}">すてる</button>` : ''}</div></div>`;
+    <div class="lbtn">${n.status==='done' ? `<button class="btn small ghost" data-act="reopen" data-id="${n.id}">もどす</button>` : `<button class="btn small ghost" data-act="closenote" data-id="${n.id}">よんだ ✓</button>`}${mine ? `<button class="btn small ghost" data-act="delnote" data-id="${n.id}">すてる</button>` : ''}</div></div>`;
 }
 
 function viewSettings(){
