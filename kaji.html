@@ -148,6 +148,8 @@ body.xfullmode header{display:none}
 body.dragmode{user-select:none;-webkit-user-select:none}
 .dragging{position:relative;z-index:5;transition:none!important;box-shadow:0 10px 22px rgba(80,50,10,.3)!important;opacity:.95}
 .qbar,.qbar *, #grppop, #grppop *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.qbar,.qbar *,#grppop,#grppop *,#menupop *,#appbar *{-webkit-tap-highlight-color:transparent}
+.qb.dragging{box-shadow:none!important;opacity:1}.qb.dragging .qi{box-shadow:0 12px 22px rgba(80,50,10,.3)}
 #grppop .gempty{padding:10px;text-align:center;font-size:12px;color:#a8946a}
 #grppop .gadd{width:100%;margin-top:8px;padding:9px;border-radius:14px;border:2px dashed #e2d2ae;color:#a8864a;font-weight:800;font-size:13px}
 .ipick{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.ipick button{aspect-ratio:1;border-radius:14px;background:#fff;box-shadow:inset 0 0 0 1.5px #ece2cc;display:flex;align-items:center;justify-content:center}.ipick button svg{width:80%;height:80%}.ipick button.on{box-shadow:inset 0 0 0 3px #e8a83a;background:#fff4dc}
