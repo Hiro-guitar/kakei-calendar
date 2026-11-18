@@ -242,7 +242,12 @@ const slots = []; { const N = 120, yTop = treeTopY - .4, yBot = TIERS[0][0] + .1
 const placed = [], appear = [];
 const usedSlots = new Set();
 // いま手前を向いている面の、あいている場所を選ぶ（回したあとでも、見えている側に付く）
-function pickSlot(){ const rot = tree.rotation.y; let best = -1, bs = 1e9; for (let i = 0; i < slots.length; i++){ if (usedSlots.has(i)) continue; const p = slots[i]; let d = Math.atan2(p.x, p.z) + rot; d = Math.atan2(Math.sin(d), Math.cos(d)); const sc = Math.abs(d) + rnd() * 1.1; if (sc < bs){ bs = sc; best = i; } } return best; }
+function pickSlot(){ const rot = tree.rotation.y, used = [...usedSlots].map(i => slots[i]); let best = -1, bs = -1e9, near = -1, nd = 1e9;
+  for (let i = 0; i < slots.length; i++){ if (usedSlots.has(i)) continue; const p = slots[i]; let d = Math.atan2(p.x, p.z) + rot; d = Math.abs(Math.atan2(Math.sin(d), Math.cos(d)));
+    if (d < nd){ nd = d; near = i; } if (d > 1.15) continue; // 見えている側だけ
+    // まわりの飾りからいちばん離れたところ（上下にも左右にも散らばる）。正面寄りを少しだけ好む
+    let m = 9; for (const q of used) m = Math.min(m, p.distanceTo(q)); const sc = Math.min(m, 1.2) - d * .18 + rnd() * .12; if (sc > bs){ bs = sc; best = i; } }
+  return best >= 0 ? best : near; }
 // 決まった場所があればそこ。ふたりがたまたま同じ場所を選んでいたら、いちばん近いあいている場所。なければ前から順に（どの端末でも同じ結果）
 function slotFor(want){ if (Number.isInteger(want) && want >= 0 && want < slots.length){ if (!usedSlots.has(want)) return want; let best = -1, bd = 1e9; for (let i = 0; i < slots.length; i++){ if (usedSlots.has(i)) continue; const d = slots[i].distanceToSquared(slots[want]); if (d < bd){ bd = d; best = i; } } return best; }
   for (let i = 0; i < slots.length; i++) if (!usedSlots.has(i)) return i; return -1; }
