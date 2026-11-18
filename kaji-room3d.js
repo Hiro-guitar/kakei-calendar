@@ -502,10 +502,8 @@ function sparkle(){ const g = new THREE.Group(); const n = 90, geo = new THREE.B
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color:'#ffe08a', size:.09, map:glowTex, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending })); g.add(pts); g.userData.sparkle = pts; const st = new THREE.Shape(); for (let i = 0; i < 10; i++){ const a = Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? .18 : .42; i ? st.lineTo(Math.cos(a) * r, Math.sin(a) * r) : st.moveTo(Math.cos(a) * r, Math.sin(a) * r); } const sm = new THREE.Mesh(new THREE.ExtrudeGeometry(st, { depth:.08, bevelEnabled:true, bevelThickness:.05, bevelSize:.04, bevelSegments:3 }), M('#f2c14e', { metalness:.7, roughness:.25, emissive:'#a86a10', emissiveIntensity:.4 })); sm.visible = false; sm.userData.thumbOnly = true; g.add(sm); return g; }
 
 /* 場所ごとの作り方（種類は FURN_ITEMS の順） */
-function swatch(kind, isWall){ const g = new THREE.Group(); const t = isWall ? wallTexOf(kind) : floorTexOf(kind); t.repeat.set(isWall ? 1.2 : .8, isWall ? 1.2 : .8);
-  const f = new THREE.Mesh(new THREE.BoxGeometry(1.2, .04, 1.2), std('#ffffff', { map:isWall ? floorTexOf(floorKind) : t })); if (isWall) f.material.map.repeat.set(.6, .6); g.add(f);
-  const w = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.1, .04), std('#ffffff', { map:isWall ? t : wallTexOf(wallKind) })); w.position.set(0, .55, -.6); if (!isWall) w.material.map.repeat.set(.6, .6); g.add(w);
-  const bb = new THREE.Mesh(new THREE.BoxGeometry(1.2, .08, .06), trimMat); bb.position.set(0, .06, -.56); g.add(bb); return g; }
+function swatch(kind, isWall){ const g = new THREE.Group(); const t = isWall ? wallTexOf(kind) : floorTexOf(kind); t.repeat.set(isWall ? 1.2 : .9, isWall ? 1.2 : .9);
+  const m = new THREE.Mesh(new RoundedBoxGeometry(1.2, isWall ? 1.2 : .05, isWall ? .05 : 1.2, 2, .02), std('#ffffff', { map:t, roughness:.7 })); m.position.y = isWall ? .6 : 0; g.add(m); g.userData.flatThumb = isWall ? 'wall' : 'floor'; return g; }
 const BUILD = {
   wallpaper:k => swatch('abc'[k], true), flooring:k => swatch('abc'[k], false),
   topper:k => treeTopper('abc'[k]), treelights:k => treeLights('abc'[k]), garland:k => treeGarland('abc'[k]),
@@ -608,10 +606,8 @@ function thumbFurn(key){ if (thCache[key]) return thCache[key];
   if (!thR){ thR = new THREE.WebGLRenderer({ antialias:true, alpha:true, preserveDrawingBuffer:true }); thR.setPixelRatio(1); thR.setSize(200, 200); thR.outputColorSpace = THREE.SRGBColorSpace; thR.toneMapping = THREE.NeutralToneMapping;
     thS = new THREE.Scene(); thS.environment = scene.environment; thS.environmentIntensity = .5; thS.add(new THREE.HemisphereLight('#fff1dc', '#b98a6a', 1.5)); const d = new THREE.DirectionalLight('#fff4e0', 2.2); d.position.set(-2, 5, 5); thS.add(d); thC = new THREE.PerspectiveCamera(28, 1, .01, 100); }
   const g = buildFurn(key); if (!g) return ''; const drop = []; g.traverse(m => { if (m.material && m.material.map === blobTex) drop.push(m); }); g.traverse(m => { if (m.userData.thumbOnly){ m.visible = true; m.position.y = 1.8; } }); drop.forEach(m => m.parent.remove(m));
-  if (FURN_BY[key].slot === 'treelights' || FURN_BY[key].slot === 'garland'){ tree.children.forEach(m => { if (m.isMesh && m.material === tierMat){ const c = m.clone(); c.userData.thumbTree = 1; g.add(c); } }); }
-  if (FURN_BY[key].slot === 'topper'){ const top = tree.children.find(m => m.isMesh && m.material === tierMat && m.position.y === TIERS[4][0]); if (top){ const c = top.clone(); c.scale.setScalar(.6); c.position.y = -TIERS[4][2] * .6 - .02; g.add(c); } }
   thS.add(g); g.updateMatrixWorld(true); const box = new THREE.Box3(); g.traverse(m => { if (m.isMesh && !(m.material && m.material.blending === THREE.AdditiveBlending)) box.expandByObject(m); }); if (box.isEmpty()) box.setFromObject(g);
-  const c = box.getCenter(new THREE.Vector3()), r = box.getSize(new THREE.Vector3()).length() / 2; const flat = FURN_BY[key].slot === 'rug' || FURN_BY[key].slot === 'treebase', dir = new THREE.Vector3(.35, flat ? 1.3 : .45, 1).normalize();
+  const c = box.getCenter(new THREE.Vector3()), r = box.getSize(new THREE.Vector3()).length() / 2; const ft = g.userData.flatThumb, flat = FURN_BY[key].slot === 'rug' || FURN_BY[key].slot === 'treebase', dir = ft === 'wall' ? new THREE.Vector3(0, 0, 1) : ft === 'floor' ? new THREE.Vector3(0, 1, .001) : new THREE.Vector3(.35, flat ? 1.3 : .45, 1).normalize();
   thC.position.copy(c).addScaledVector(dir, r / Math.sin(THREE.MathUtils.degToRad(14))); thC.lookAt(c); thR.render(thS, thC); const url = thR.domElement.toDataURL('image/png');
   thS.remove(g); disposeG(g); thCache[key] = url; return url; }
 
