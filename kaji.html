@@ -774,7 +774,8 @@ const QI = (() => {
     tub: c(0, `<path d="M4 20 H 36 V 25 C 36 31 31 33 26 33 H 14 C 9 33 4 31 4 25Z" fill="#fff" stroke="#c8d4e0" stroke-width="1.2"/><path d="M6 20 V 8 C 6 5 11 5 11 9" stroke="#b8c0cc" stroke-width="2" fill="none"/>${[[14, 15, 4], [21, 13, 5], [28, 16, 3.6]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#dff0ff" stroke="#9acce8" stroke-width=".8"/>`).join('')}<path d="M10 33 V 36 M30 33 V 36" stroke="#b8c0cc" stroke-width="2.4" stroke-linecap="round"/>`),
     duck: c(0, `<path d="M8 24 C 8 32 32 34 33 24 C 33 20 28 20 25 21 C 27 17 26 10 19 10 C 13 10 12 17 15 21 C 12 19 8 19 8 24Z" fill="#ffd23a" stroke="#e0a81a" stroke-width="1"/><path d="M11 15 L 5 16.5 L 11 18Z" fill="#f08a2a"/><circle cx="16" cy="14.5" r="1.4" fill="#2a2a2e"/><path d="M4 33 q 4 -2 8 0 t 8 0 t 8 0 t 8 0" stroke="#8ac8f0" stroke-width="2" fill="none"/>`),
     trash: c(0, `<path d="M10 14 C 6 20 7 33 12 35 H 28 C 33 33 34 20 30 14Z" fill="#7a8a9a"/><path d="M14 14 L 16 8 L 20 11 L 24 7 L 26 14Z" fill="#5a6a7a"/><path d="M14 20 Q 20 23 26 20" stroke="#9aaaba" stroke-width="1.6" fill="none"/><rect x="17" y="12" width="6" height="3" rx="1.4" fill="#ffd84a"/>`),
-    vacuum: c(0, `<path d="M26 6 L 18 28" stroke="#8a90a0" stroke-width="3" stroke-linecap="round"/><rect x="8" y="27" width="22" height="7" rx="3.5" fill="#5a8ad8"/><circle cx="12" cy="35" r="2" fill="#3a3f4a"/><circle cx="26" cy="35" r="2" fill="#3a3f4a"/><rect x="23" y="4" width="8" height="5" rx="2.4" fill="#f07a5a"/>`),
+    kanki: c(0, `<rect x="5" y="6" width="22" height="26" rx="2.5" fill="#a8703e"/><rect x="8" y="9" width="16" height="20" rx="1" fill="#cfe8f6"/><path d="M8 19 H 24 M16 9 V 29" stroke="#a8703e" stroke-width="2"/><path d="M18 9 L 24 7 V 27 L 18 29Z" fill="#fff" opacity=".85"/><path d="M24 14 C 30 14 33 11 31 9 C 29.5 7.5 27.5 9 28.5 10.5 M22 21 C 31 21 36 19 36 16 C 36 13.5 33 13.5 33 15.5 M24 27 C 30 27 33 30 31 32.5 C 29.5 34 27.5 32.5 28.5 31" stroke="#5aaedc" stroke-width="2.2" fill="none" stroke-linecap="round"/>`),
+  vacuum: c(0, `<path d="M26 6 L 18 28" stroke="#8a90a0" stroke-width="3" stroke-linecap="round"/><rect x="8" y="27" width="22" height="7" rx="3.5" fill="#5a8ad8"/><circle cx="12" cy="35" r="2" fill="#3a3f4a"/><circle cx="26" cy="35" r="2" fill="#3a3f4a"/><rect x="23" y="4" width="8" height="5" rx="2.4" fill="#f07a5a"/>`),
     toilet: c(0, `<rect x="9" y="5" width="15" height="11" rx="3" fill="#fff" stroke="#c8d4e0" stroke-width="1.2"/><path d="M7 17 H 33 C 33 25 27 28 20 28 H 18 L 19 35 H 12 L 12 26 C 8 24 7 21 7 17Z" fill="#fff" stroke="#c8d4e0" stroke-width="1.2"/><ellipse cx="20" cy="18" rx="10" ry="2.4" fill="#dfeaf4"/><circle cx="32" cy="9" r="3" fill="#bfe4ff" stroke="#8ac0e8" stroke-width=".8"/>`),
     basket: c(0, `<path d="M8 15 C 8 5 32 5 32 15" stroke="#c8965a" stroke-width="2.6" fill="none"/><path d="M5 15 H 35 L 31 34 H 9Z" fill="#e2b06a" stroke="#b8864a" stroke-width="1"/>${[11, 17, 23, 29].map(x => `<path d="M${x} 17 L ${x - (x - 20) * .15} 32" stroke="#b8864a" stroke-width="1.2"/>`).join('')}<path d="M7 22 H 33 M8 27 H 32" stroke="#b8864a" stroke-width="1.2"/><circle cx="14" cy="13" r="3.6" fill="#e85a4a"/><path d="M22 8 L 27 14" stroke="#4aa060" stroke-width="3.4" stroke-linecap="round"/>`),
     pillow: c(0, `<path d="M6 12 C 6 8 34 8 34 12 L 33 30 C 33 34 7 34 7 30Z" fill="#fff" stroke="#c8d4e0" stroke-width="1.2"/><path d="M6 12 L 3 9 M34 12 L 37 9 M7 30 L 4 33 M33 30 L 36 33" stroke="#c8d4e0" stroke-width="2" stroke-linecap="round"/>${[13, 20, 27].map(x => `<circle cx="${x}" cy="21" r="1.6" fill="#f4b8c8"/>`).join('')}`),
@@ -878,6 +879,12 @@ function migrateCatalog3(){ const st = settings(); if ((st.catalog || 0) >= 3 ||
     acts.forEach(([act, name], ai) => mk({ id:`c3_kaimono_${ri}_${ai}`, kind:'chore', name, owner:'any', slot:'any', freq:{ type:'daily' }, def:[], group:'grp_kaimono', icon, row, act, order:base + ri * 4 + ai })));
   const old = S.items.c2_hojuu_4; if (old && !old.deleted) mk({ ...old, deleted:true });
   mk({ ...settings(), catalog:3 }); save(); return 1; }
+// 換気のグループ（2026/11/19 追加）
+function migrateCatalog4(){ const st = settings(); if ((st.catalog || 0) >= 4 || (st.catalog || 0) < 3) return 0; const now = Date.now(); const mk = it => { it.updatedAt = now; S.items[it.id] = it; S.queue = S.queue.filter(q => q.id !== it.id); S.queue.push(it); };
+  const sj = S.items.grp_souji; mk({ id:'grp_kanki', kind:'group', name:'換気', icon:'kanki', order:(sj && sj.order != null ? sj.order : 3) + .5 });
+  const base = Math.max(-1, ...all('chore').map(x => x.order ?? 0)) + 1;
+  ['リビング', '和室', '仕事部屋', 'リラックスルーム'].forEach((room, ai) => mk({ id:`c4_kanki_${ai}`, kind:'chore', name:room + 'の換気', owner:'any', slot:'any', freq:{ type:'daily' }, def:[], group:'grp_kanki', icon:'kanki', row:'換気', act:room, order:base + ai }));
+  mk({ ...settings(), catalog:4 }); save(); return 1; }
 function qbarHTML(){
   const logs = logsOn(dayKey(Date.now())), notes = unreadNotes();
   return `<button class="qmenu" data-act="menu" aria-label="メニュー"><span class="qi">${ICON_MENU}${notes ? '<em class="dot"></em>' : ''}</span><span class="ql">メニュー</span></button><div class="qscroll">` + groupsSorted().map(g => {
@@ -967,7 +974,7 @@ function renderGroup(){ const d = gdraft;
     <label class="f">アイコン</label>${iconPicker(d.icon, 'gicon')}
     <div class="row" style="margin-top:18px"><button class="btn ghost" style="flex:1" data-act="close">キャンセル</button><button class="btn go" style="flex:2" data-act="gsave">保存</button></div>
     ${!d._new && d.id !== 'grp_hoka' ? `<button class="btn danger wide" style="margin-top:10px" data-act="gdel">このグループを削除</button><p class="muted" style="font-size:11px;text-align:center">中の家事は「そのほか」に移るよ</p>` : ''}`); }
-const ICON_NAMES = { rice:'すいはんき', bowl:'ごはん', towel:'タオル', roller:'コロコロ', tatami:'たたみ', shoes:'くつ', bag_y:'黄色いゴミ袋', bag_g:'グレーのゴミ袋', canbin:'缶とビン', diaper:'オムツ', shampoo:'シャンプー', tp:'トイレットペーパー', refill:'つめかえ', kid:'こども', broom:'ほうき', shirt2:'子どもの服', egg:'たまご', onigiri:'おにぎり', nabe:'なべ', pan:'フライパン', dish:'お皿', washer:'洗濯機', shirt:'シャツ', bag:'かばん', tub:'おふろ', duck:'アヒル', trash:'ゴミ袋', vacuum:'掃除機', toilet:'トイレ', basket:'かご', pillow:'まくら', spark:'きらきら', plus:'プラス' };
+const ICON_NAMES = { kanki:'換気', rice:'すいはんき', bowl:'ごはん', towel:'タオル', roller:'コロコロ', tatami:'たたみ', shoes:'くつ', bag_y:'黄色いゴミ袋', bag_g:'グレーのゴミ袋', canbin:'缶とビン', diaper:'オムツ', shampoo:'シャンプー', tp:'トイレットペーパー', refill:'つめかえ', kid:'こども', broom:'ほうき', shirt2:'子どもの服', egg:'たまご', onigiri:'おにぎり', nabe:'なべ', pan:'フライパン', dish:'お皿', washer:'洗濯機', shirt:'シャツ', bag:'かばん', tub:'おふろ', duck:'アヒル', trash:'ゴミ袋', vacuum:'掃除機', toilet:'トイレ', basket:'かご', pillow:'まくら', spark:'きらきら', plus:'プラス' };
 function iconPicker(cur, act){ return `<div class="ipick">${Object.keys(QI).filter(k => k !== 'plus').map(k => `<button class="${cur === k ? 'on' : ''}" data-act="${act}" data-v="${k}" aria-label="${ICON_NAMES[k] || k}">${QI[k]}</button>`).join('')}</div>`; }
 function renderQbar(){ const q = $('qbar'); if (!q) return; const on = S.me && tab === 'today'; q.style.display = on ? '' : 'none'; if (!on){ menuClose(); return; } const sc = q.querySelector('.qscroll'), x = sc ? sc.scrollLeft : 0; q.innerHTML = qbarHTML(); q.querySelector('.qscroll').scrollLeft = x; }
 
@@ -1084,7 +1091,7 @@ function renameKid(){ const K = (settings().names || {}).k; if (!K) return 0; le
 async function sync(){
   const ok = await pull();
   if (ok && !S.seeded) seedIfEmpty();
-  if (ok){ renameKid(); migrateCatalog2(); migrateCatalog3(); }
+  if (ok){ renameKid(); migrateCatalog2(); migrateCatalog3(); migrateCatalog4(); }
   await push();
   render();
 }
@@ -5180,7 +5187,7 @@ function iconNotice(force){ let v = ''; try { v = localStorage.getItem('kaji_ico
 /* ========== 起動 ========== */
 if (!S.url) seedIfEmpty();
 renameKid();
-if (!S.url){ migrateCatalog2(); migrateCatalog3(); }
+if (!S.url){ migrateCatalog2(); migrateCatalog3(); migrateCatalog4(); }
 render();
 if (S.url) sync();
 setTimeout(() => iconNotice(false), 1800);
