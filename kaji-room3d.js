@@ -117,13 +117,15 @@ for (const s of [-1, 1]){ const t = wallTex.clone(); t.needsUpdate = true; t.rep
 // 腰板と巾木（奥の壁と左右の壁）
 const wainMat = std('#efe2c8', { roughness:.7 }), trimMat = std('#7a4b2a', { roughness:.6 }), panelMat = std('#e4d4b4', { roughness:.7 }), railMat = std('#7a4b2a', { roughness:.5 }), baseMat = std('#7a4b2a', { roughness:.6 });
 /* 壁紙ごとの腰板（下の板・パネル・上の縁・巾木）の色 */
-const WAIN = { a:['#2f6a46', '#3a7a54', '#d9b45a', '#5a3a22'], b:['#c23b34', '#d24a40', '#fbf3e2', '#6a3a22'], c:['#8a5a32', '#9a6a3e', '#e0b84e', '#5a3a22'] };
-function applyWain(kind){ const [w, p, r, b] = WAIN[kind] || WAIN.a; wainMat.color.set(w); panelMat.color.set(p); railMat.color.set(r); baseMat.color.set(b); railMat.metalness = kind === 'b' ? 0 : .35; railMat.needsUpdate = true; }
-function wainscot(len, place){ const g = new THREE.Group(); const w = new THREE.Mesh(new RoundedBoxGeometry(len, 1.05, .08, 2, .02), wainMat); w.position.set(0, .525, .04); w.receiveShadow = true; g.add(w);
-  const n = Math.round(len / .76); for (let i = 0; i < n; i++){ const p = new THREE.Mesh(new RoundedBoxGeometry(.62, .62, .03, 2, .02), panelMat); p.position.set(-len / 2 + (i + .5) * len / n, .55, .09); g.add(p); }
-  const rail = new THREE.Mesh(new RoundedBoxGeometry(len, .07, .14, 2, .025), railMat); rail.position.set(0, 1.07, .07); g.add(rail);
+// 腰板があるのは一部の壁紙だけ（null は巾木だけ）
+const WAIN = { a:null, b:null, c:['#8a5a32', '#9a6a3e', '#e0b84e', '#5a3a22'] }, BASE = { a:'#6a3a22', b:'#7a4b2a', c:'#5a3a22' }; const wainParts = [];
+function applyWain(kind){ const W = WAIN[kind]; wainParts.forEach(m => m.visible = !!W); baseMat.color.set(W ? W[3] : (BASE[kind] || BASE.a)); if (W){ wainMat.color.set(W[0]); panelMat.color.set(W[1]); railMat.color.set(W[2]); railMat.metalness = .35; railMat.needsUpdate = true; } shadowsDirty = true; }
+function wainscot(len, place){ const g = new THREE.Group(); const w = new THREE.Mesh(new RoundedBoxGeometry(len, 1.05, .08, 2, .02), wainMat); w.position.set(0, .525, .04); w.receiveShadow = true; g.add(w); wainParts.push(w);
+  const n = Math.round(len / .76); for (let i = 0; i < n; i++){ const p = new THREE.Mesh(new RoundedBoxGeometry(.62, .62, .03, 2, .02), panelMat); p.position.set(-len / 2 + (i + .5) * len / n, .55, .09); g.add(p); wainParts.push(p); }
+  const rail = new THREE.Mesh(new RoundedBoxGeometry(len, .07, .14, 2, .025), railMat); rail.position.set(0, 1.07, .07); g.add(rail); wainParts.push(rail);
   const base = new THREE.Mesh(new RoundedBoxGeometry(len, .14, .12, 2, .03), baseMat); base.position.set(0, .07, .06); base.receiveShadow = true; g.add(base); place(g); scene.add(g); }
 wainscot(RW, g => g.position.set(0, 0, bz));
+wainParts.forEach(m => m.visible = !!WAIN.a); baseMat.color.set(BASE.a);
 for (const s of [-1, 1]) wainscot(RD, g => { g.position.set(s * RW / 2, 0, RZ); g.rotation.y = -s * Math.PI / 2; });
 
 // 窓（壁にあいた穴）と、その向こうの雪の外
@@ -135,7 +137,7 @@ for (const [w, h, d, x, y] of [[WW, .02, .3, 0, WH / 2], [WW, .02, .3, 0, -WH / 
 const sill = new THREE.Mesh(new RoundedBoxGeometry(WW + .45, .09, .34, 2, .03), frameMat); sill.position.set(0, -WH / 2 - .17, .16); sill.castShadow = true; win.add(sill);
 const glassPane = new THREE.Mesh(new THREE.PlaneGeometry(WW, WH), new THREE.MeshPhysicalMaterial({ color:'#dfeeff', transparent:true, opacity:.12, roughness:.05, depthWrite:false })); glassPane.position.z = -.02; win.add(glassPane);
 // 外：空・雪の地面・木
-let wallKind = 'a', floorKind = 'a'; applyWain('a');
+let wallKind = 'a', floorKind = 'a';
 function applyWall(kind){ kind = kind || 'a'; if (kind === wallKind) return; wallKind = kind; applyWain(kind); const t = wallTexOf(kind), bt = t.clone(); bt.needsUpdate = true; bt.repeat.set(5 / RW, 4 / RH); back.material.map.dispose(); back.material.map = bt; back.material.needsUpdate = true;
   sideWalls.forEach(sw => { const st = t.clone(); st.needsUpdate = true; st.repeat.set(5 * RD / RW, 4); sw.material.map.dispose(); sw.material.map = st; sw.material.color.set('#ead8d0'); sw.material.needsUpdate = true; }); }
 function applyFloor(kind){ kind = kind || 'a'; if (kind === floorKind) return; floorKind = kind; floor.material.map.dispose(); floor.material.map = floorTexOf(kind); floor.material.needsUpdate = true; }
@@ -183,6 +185,7 @@ function tierGeo(R, h){
 const needleTex = canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#ffffff'; g.fillRect(0, 0, w, h); for (let i = 0; i < 1400; i++){ const x = Math.random() * w, y = Math.random() * h, l = 5 + Math.random() * 7, a = Math.PI / 2 + (Math.random() - .5) * .8; g.strokeStyle = Math.random() < .55 ? 'rgba(0,40,10,.25)' : 'rgba(255,255,220,.25)'; g.lineWidth = 1.3; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke(); } }, [8, 2]);
 const tierMat = std('#ffffff', { vertexColors:true, map:needleTex, roughness:.9 });
 TIERS.forEach(([yb, R, h]) => { const m = new THREE.Mesh(tierGeo(R, h), tierMat); m.position.y = yb; m.castShadow = m.receiveShadow = true; tree.add(m); });
+const firBase = [...tree.children];
 function radiusAt(y){ let best = 0; for (const [yb, R, h] of TIERS){ if (y >= yb && y <= yb + h) best = Math.max(best, tierR(R, h, y - yb)); } return best; }
 // 金のモール（らせんの Tube）
 // ツリーの飾り（モール・電球・てっぺん）は入れかえられる。作り方は下の treeGarland / treeLights / treeTopper
@@ -504,7 +507,7 @@ function sparkle(){ const g = new THREE.Group(); const n = 90, geo = new THREE.B
 /* 場所ごとの作り方（種類は FURN_ITEMS の順） */
 function swatch(kind, isWall){ const g = new THREE.Group(); const t = isWall ? wallTexOf(kind) : floorTexOf(kind); t.repeat.set(isWall ? 1.2 : .9, isWall ? 1.2 : .9);
   const m = new THREE.Mesh(new RoundedBoxGeometry(1.2, isWall ? 1.2 : .05, isWall ? .05 : 1.2, 2, .02), std('#ffffff', { map:t, roughness:.7 })); m.position.y = isWall ? .6 : 0; g.add(m); g.userData.flatThumb = isWall ? 'wall' : 'floor';
-  if (isWall){ const [w, p, r, b] = WAIN[kind] || WAIN.a; const add = (W, H, D, c, y, z) => { const x = new THREE.Mesh(new RoundedBoxGeometry(W, H, D, 2, .01), std(c, { roughness:.6 })); x.position.set(0, y, z); g.add(x); return x; };
+  if (isWall && WAIN[kind]){ const [w, p, r, b] = WAIN[kind]; const add = (W, H, D, c, y, z) => { const x = new THREE.Mesh(new RoundedBoxGeometry(W, H, D, 2, .01), std(c, { roughness:.6 })); x.position.set(0, y, z); g.add(x); return x; };
     add(1.2, .42, .04, w, .21, .04); for (const x of [-.4, 0, .4]){ const pn = add(.3, .26, .02, p, .22, .07); pn.position.x = x; } add(1.22, .04, .08, r, .43, .06); add(1.22, .06, .07, b, .03, .06); }
   return g; }
 const BUILD = {
@@ -617,6 +620,8 @@ let thR = null, thS = null, thC = null; const thCache = {};
 function thumbFurn(key){ if (thCache[key]) return thCache[key];
   if (!thR){ thR = new THREE.WebGLRenderer({ antialias:true, alpha:true, preserveDrawingBuffer:true }); thR.setPixelRatio(1); thR.setSize(200, 200); thR.outputColorSpace = THREE.SRGBColorSpace; thR.toneMapping = THREE.NeutralToneMapping;
     thS = new THREE.Scene(); thS.environment = scene.environment; thS.environmentIntensity = .5; thS.add(new THREE.HemisphereLight('#fff1dc', '#b98a6a', 1.5)); const d = new THREE.DirectionalLight('#fff4e0', 2.2); d.position.set(-2, 5, 5); thS.add(d); thC = new THREE.PerspectiveCamera(28, 1, .01, 100); }
+  if (key === 'tree'){ const g = new THREE.Group(); firBase.forEach(m => g.add(m.clone())); g.scale.setScalar(.86); thS.add(g); g.updateMatrixWorld(true); const box = new THREE.Box3().setFromObject(g), c = box.getCenter(new THREE.Vector3()), r = box.getSize(new THREE.Vector3()).length() / 2;
+    thC.position.copy(c).addScaledVector(new THREE.Vector3(.35, .45, 1).normalize(), r / Math.sin(THREE.MathUtils.degToRad(14))); thC.lookAt(c); thR.render(thS, thC); const url = thR.domElement.toDataURL('image/png'); thS.remove(g); return thCache[key] = url; }
   const g = FURN_BY[key] && FURN_BY[key].slot === 'treelights' ? lightsThumb(FURN_BY[key].k) : buildFurn(key); if (!g) return ''; const drop = []; g.traverse(m => { if (m.material && m.material.map === blobTex) drop.push(m); }); g.traverse(m => { if (m.userData.thumbOnly){ m.visible = true; m.position.y = 1.8; } }); drop.forEach(m => m.parent.remove(m));
   thS.add(g); g.updateMatrixWorld(true); const box = new THREE.Box3(); g.traverse(m => { if (m.isMesh && !(m.material && m.material.blending === THREE.AdditiveBlending)) box.expandByObject(m); }); if (box.isEmpty()) box.setFromObject(g);
   const c = box.getCenter(new THREE.Vector3()), r = box.getSize(new THREE.Vector3()).length() / 2; const ft = g.userData.flatThumb, flat = FURN_BY[key].slot === 'rug' || FURN_BY[key].slot === 'treebase', dir = ft === 'wall' ? new THREE.Vector3(0, 0, 1) : ft === 'floor' ? new THREE.Vector3(0, 1, .001) : new THREE.Vector3(.35, flat ? 1.3 : .45, 1).normalize();
@@ -711,8 +716,10 @@ function snapshot(list, giftList, w = 640, h = 720){
   const keepL = lastList, keepG = lastGifts, rot = tree.rotation.y;
   clearAll(); sig = ''; tree.rotation.y = 0; list.forEach(o => addOrnament(false, o.id, o.key, o.slot)); giftList.forEach(g => addGift(false, g.id)); placed.forEach(o => { o.rotation.z = o.userData.rz; o.rotation.x = 0; });
   if (!snR){ snR = new THREE.WebGLRenderer({ antialias:true, preserveDrawingBuffer:true }); snR.setPixelRatio(1); snR.outputColorSpace = THREE.SRGBColorSpace; snR.toneMapping = THREE.NeutralToneMapping; snR.shadowMap.enabled = true; snR.shadowMap.type = THREE.PCFSoftShadowMap; }
-  snR.setSize(w, h); snCam.aspect = w / h; const c = new THREE.Vector3(treeRoot.position.x + .25, 1.45, treeRoot.position.z + .3), dir = new THREE.Vector3(.18, .42, 1).normalize();
-  snCam.position.copy(c).addScaledVector(dir, 8.2); snCam.lookAt(c); snCam.updateProjectionMatrix(); scene.updateMatrixWorld(true); snR.render(scene, snCam);
+  // 部屋ぜんたいを、ふだんと同じ向きから
+  snR.setSize(w, h); snCam.fov = camera.fov; snCam.aspect = w / h; const look = new THREE.Vector3(0, 1.25, -.45), dir = camera.position.clone().sub(target).normalize();
+  const halfW = RW / 2 + .25, dist = halfW / (Math.tan(THREE.MathUtils.degToRad(snCam.fov / 2)) * snCam.aspect);
+  snCam.position.copy(look).addScaledVector(dir, dist); snCam.lookAt(look); snCam.updateProjectionMatrix(); scene.updateMatrixWorld(true); snR.render(scene, snCam);
   const url = snR.domElement.toDataURL('image/jpeg', .88);
   clearAll(); sig = ''; tree.rotation.y = rot; sync(keepL, keepG); shadowsDirty = true; return url; }
 const _proj = (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera), r = cv.getBoundingClientRect(); return [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height]; };
