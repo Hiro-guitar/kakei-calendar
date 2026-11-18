@@ -5,8 +5,8 @@ import { RoomEnvironment } from './vendor/three/RoomEnvironment.js';
 import { makeOrnament, makeDeco } from './kaji-orn3d.js';
 
 /* ---------- 家具の一覧（アドベントで手に入る） ---------- */
-export const FURN_SLOTS = [['wallpaper', '壁紙'], ['flooring', '床'], ['topper', 'ツリーのてっぺん'], ['treelights', 'ツリーの電球'], ['garland', 'ツリーのモール'], ['fireplace', '暖炉'], ['stockings', 'くつした'], ['mantel', '暖炉の上'], ['wall', '暖炉の上の壁'], ['curtain', 'カーテン'], ['wintop', '窓の上'], ['sill', '窓辺'], ['outside', '窓の外'],
-  ['shelf', '左の壁ぎわ'], ['sofa', '右の壁ぎわ'], ['lamp', 'あかり'], ['table', 'テーブル'], ['rug', 'ラグ'], ['toys', '床のおもちゃ'], ['treebase', 'ツリーの足もと'], ['special', 'クリスマスの特別']];
+export const FURN_SLOTS = [['wallpaper', '壁紙'], ['flooring', '床'], ['topper', 'ツリーのてっぺん'], ['treelights', 'ツリーの電球'], ['garland', 'ツリーのモール'], ['fireplace', '暖炉'], ['stockings', 'くつした'], ['mantel', '暖炉の上のかざり'], ['wall', '壁かざり'], ['curtain', 'カーテン'], ['wintop', '窓の上のかざり'], ['sill', '窓辺のかざり'], ['outside', '窓の外'],
+  ['shelf', '棚・時計'], ['sofa', 'ソファ・ベンチ'], ['lamp', 'あかり'], ['table', 'テーブル・いす'], ['rug', 'ラグ'], ['toys', 'おもちゃ'], ['treebase', 'ツリーの足もと'], ['special', 'クリスマスの特別']];
 const NAMES = {
   wallpaper:['雪の結晶の赤い壁紙', 'ヒイラギのストライプ壁紙', '金の星のみどりの壁紙'], flooring:['ジンジャークッキーの床', 'タータンチェックのじゅうたん', 'キャンディの市松タイル'],
   topper:['金の星', '雪の結晶', '赤いリボン'], treelights:['カラフルな電球', 'あたたかい白の電球', '雪玉ライト'], garland:['金のモール', '銀のモール', '赤と白のビーズ'],
