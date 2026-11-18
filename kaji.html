@@ -116,6 +116,24 @@ body.xfullmode main{padding-bottom:0}
 .xfull-top{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 10px)}
 body.xfullmode header{display:none}
 .xdate{font-weight:800;color:var(--navy)}
+#grppop{position:fixed;z-index:30;padding:12px 12px 10px;border-radius:22px;background:var(--cream);box-shadow:0 10px 30px rgba(60,40,10,.25);opacity:0;transform:translateY(10px) scale(.94);transform-origin:var(--tail,50%) 100%;pointer-events:none;transition:opacity .16s,transform .22s cubic-bezier(.3,1.5,.5,1)}
+#grppop.open{opacity:1;transform:none;pointer-events:auto}
+#grppop::after{content:'';position:absolute;left:var(--tail,50%);bottom:-8px;width:18px;height:18px;background:var(--cream);transform:rotate(45deg);border-radius:3px}
+#grppop .gh{display:flex;align-items:center;justify-content:space-between;padding:0 4px 6px;font-weight:900;color:var(--navy);font-size:14px}
+#grppop .ged{width:30px;height:30px;border-radius:50%;background:#f1e8d4;color:#8a7a5a;font-size:14px}
+#grppop .gl{max-height:46vh;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+#grppop .gi{display:flex;align-items:center;gap:10px;padding:6px 10px 6px 6px;border-radius:14px;background:#fff;box-shadow:inset 0 0 0 1.5px #efe5cf;text-align:left}
+#grppop .gi:active{transform:scale(.97)}
+#grppop .gi.done{background:#f1f8ec;box-shadow:inset 0 0 0 1.5px #cfe6c6}
+#grppop .gic{width:34px;height:34px;flex:none;display:flex;align-items:center;justify-content:center}#grppop .gic svg{width:30px;height:30px}
+#grppop .gn{flex:1;font-size:14px;font-weight:800;color:var(--navy)}#grppop .gc{font-size:12px;font-weight:900;color:#4a9a5a}
+#grppop .gempty{padding:10px;text-align:center;font-size:12px;color:#a8946a}
+#grppop .gadd{width:100%;margin-top:8px;padding:9px;border-radius:14px;border:2px dashed #e2d2ae;color:#a8864a;font-weight:800;font-size:13px}
+.ipick{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.ipick button{aspect-ratio:1;border-radius:14px;background:#fff;box-shadow:inset 0 0 0 1.5px #ece2cc;display:flex;align-items:center;justify-content:center}.ipick button svg{width:80%;height:80%}.ipick button.on{box-shadow:inset 0 0 0 3px #e8a83a;background:#fff4dc}
+.gpick{display:flex;flex-wrap:wrap;gap:6px}.gpick button{display:flex;align-items:center;gap:4px;padding:4px 10px 4px 4px;border-radius:999px;background:#fff;box-shadow:inset 0 0 0 1.5px #ece2cc;font-size:12px;font-weight:800;color:var(--navy)}.gpick button svg{width:22px;height:22px}.gpick button.on{box-shadow:inset 0 0 0 2.5px #e8a83a;background:#fff4dc}
+.gset{margin-bottom:10px}.gsh{display:flex;align-items:center;gap:8px;padding-bottom:6px;border-bottom:1.5px solid #f0e6d0;margin-bottom:4px}.gsh b{flex:1;font-size:15px;color:var(--navy)}.gsh b small{color:#b8a888;font-size:12px}
+.gsi{width:30px;height:30px;flex:none;display:flex;align-items:center;justify-content:center}.gsi svg{width:28px;height:28px}.gsi.sm svg{width:24px;height:24px}
+
 .iconnew{display:flex;flex-direction:column;align-items:center;text-align:center;padding:6px 4px}.iconnew img{width:96px;height:96px;border-radius:22px;box-shadow:0 6px 16px rgba(40,60,40,.25);margin-bottom:10px}.iconnew b{font-size:18px;color:var(--navy)}.iconnew ol{text-align:left;margin:12px 0 6px;padding-left:22px;font-size:14px;line-height:1.7;color:var(--navy)}.iconnew .sh{display:inline-block;padding:0 6px;border-radius:6px;background:#efe6d2;font-size:12px}.iconnew p{margin:4px 0 14px;font-size:12px}
 /* アドベントボックス（木のおうちに、柄ちがいの小さなとびら） */
 .abox{position:relative;margin:66px 4px 4px;padding:16px 12px 14px;border-radius:10px 10px 18px 18px;background:linear-gradient(#b4402f,#9a3226);box-shadow:inset 0 0 0 4px #c9583f,inset 0 0 0 7px #7e2a20,0 6px 0 #6a2219,0 10px 18px rgba(80,30,10,.25)}
@@ -735,15 +753,50 @@ function menuOpen(){ const notes = all('note').filter(n => n.status !== 'done').
   if (r){ const cx = r.left + r.width / 2, W = m.offsetWidth, L = Math.min(Math.max(10, cx - 38), innerWidth - W - 10); m.style.bottom = (innerHeight - r.top + 10) + 'px'; m.style.left = L + 'px'; m.style.setProperty('--tail', (cx - L - 9) + 'px'); } requestAnimationFrame(() => m.classList.add('open')); }
 function menuClose(){ const m = $('menupop'); if (m) m.classList.remove('open'); }
 document.addEventListener('pointerdown', e => { const m = $('menupop'); if (m && m.classList.contains('open') && !e.target.closest('#menupop,[data-act=menu]')) menuClose(); }, true);
+/* ===== グループ（ゴミ・洗濯…）。帯にはグループだけ、押すと中の家事が開く ===== */
+const GROUP_SEED = [['gohan', 'ごはん', 'pan'], ['arai', '洗い物', 'dish'], ['sentaku', '洗濯', 'washer'], ['souji', 'そうじ', 'vacuum'], ['gomi', 'ゴミ', 'trash'], ['yusa', 'こども', 'bag'], ['kaimono', '買い物', 'basket'], ['hoka', 'そのほか', 'spark']];
+const groupsSorted = () => all('group').sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+function guessGroup(n){ if (/こども|子ども|子供|幼稚園|保育|お迎え|送り/.test(n)) return 'grp_yusa'; if (/ゴミ|ごみ|オムツ|おむつ/.test(n)) return 'grp_gomi'; if (/洗い物|皿|食器|水筒/.test(n)) return 'grp_arai';
+  if (/洗濯|取り込|たたむ|畳む|シーツ|枕カバー/.test(n)) return 'grp_sentaku'; if (/ごはん|ご飯|夕飯|夕食|朝食|昼食|料理|お弁当/.test(n)) return 'grp_gohan'; if (/買い|買出/.test(n)) return 'grp_kaimono'; if (/掃除|そうじ|風呂|トイレ|片付/.test(n)) return 'grp_souji'; return 'grp_hoka'; }
+function groupOf(c){ const g = c.group && S.items[c.group]; return g && !g.deleted ? c.group : (S.items[guessGroup(c.name)] && !S.items[guessGroup(c.name)].deleted ? guessGroup(c.name) : (groupsSorted()[0] || {}).id); }
+const choresIn = gid => choresSorted().filter(c => groupOf(c) === gid);
+const GOMI_SEED = [['kanen_m', '可燃ゴミをまとめる'], ['kanen_d', '可燃ゴミを出す'], ['funen_m', '不燃ゴミをまとめる'], ['funen_d', '不燃ゴミを出す'], ['can_m', '缶・ビンをまとめる'], ['can_d', '缶・ビンを出す'], ['omutsu_m', 'オムツをまとめる'], ['omutsu_d', 'オムツを出す'], ['bag', 'ゴミ袋を設置する']];
+function seedGroups(){ let n = 0; const mk = it => { it.updatedAt = Date.now(); S.items[it.id] = it; S.queue = S.queue.filter(q => q.id !== it.id); S.queue.push(it); n++; };
+  GROUP_SEED.forEach(([k, name, icon], i) => { if (!S.items['grp_' + k]) mk({ id:'grp_' + k, kind:'group', name, icon, order:i }); });
+  const base = Math.max(-1, ...all('chore').map(x => x.order ?? 0)) + 1;
+  GOMI_SEED.forEach(([k, name], i) => { if (!S.items['seed_gomi_' + k]) mk({ id:'seed_gomi_' + k, kind:'chore', name, owner:'any', slot:'any', freq:{ type:'daily' }, def:[], group:'grp_gomi', icon:'trash', order:base + i }); });
+  if (n) save(); return n; }
 function qbarHTML(){
-  const tk = dayKey(Date.now()), logs = logsOn(tk), cur = currentSlot(), cs = choresSorted(), due = new Set(cs.filter(isDueToday).map(c => c.id));
-  const rank = c => { const s = c.slot || 'any', done = logs.some(l => l.choreId === c.id); if (!due.has(c.id)) return 50; if (done) return 40;
-    if (s === cur) return 0; if (s === 'any') return 20; const si = SLOT_ORDER.indexOf(s), ci = SLOT_ORDER.indexOf(cur); return si > ci ? 10 + si : 30; };
-  const list = cs.slice(), notes = all('note').filter(n => n.status !== 'done').length;
-  return `<button class="qmenu" data-act="menu" aria-label="メニュー"><span class="qi">${ICON_MENU}${notes ? '<em class="dot"></em>' : ''}</span><span class="ql">メニュー</span></button><div class="qscroll">` + list.map(c => { const n = logs.filter(l => l.choreId === c.id).length;
-    return `<button class="qb" data-act="qdo" data-id="${c.id}"><span class="qi">${QI[choreIcon(c)]}${n ? `<em>${n}</em>` : ''}</span><span class="ql">${esc(c.name.replace(/（.*?）/g, ''))}</span></button>`; }).join('')
-    + `<button class="qb" data-act="qfree"><span class="qi">${QI.plus}</span><span class="ql">ほかの家事</span></button></div>`;
+  const logs = logsOn(dayKey(Date.now())), notes = all('note').filter(n => n.status !== 'done').length;
+  return `<button class="qmenu" data-act="menu" aria-label="メニュー"><span class="qi">${ICON_MENU}${notes ? '<em class="dot"></em>' : ''}</span><span class="ql">メニュー</span></button><div class="qscroll">` + groupsSorted().map(g => {
+    const ids = new Set(choresIn(g.id).map(c => c.id)), n = logs.filter(l => (l.choreId && ids.has(l.choreId)) || (!l.choreId && g.id === 'grp_hoka')).length;
+    return `<button class="qb" data-act="qgrp" data-g="${g.id}"><span class="qi">${QI[g.icon] || QI.spark}${n ? `<em>${n}</em>` : ''}</span><span class="ql">${esc(g.name)}</span></button>`; }).join('')
+    + `<button class="qb qadd" data-act="gedit" data-g=""><span class="qi">${QI.plus}</span><span class="ql">グループ</span></button></div>`;
 }
+/* グループの吹き出し */
+function grpOpen(gid, btn){ const g = S.items[gid]; if (!g) return; let m = $('grppop'); if (!m){ m = document.createElement('div'); m.id = 'grppop'; document.body.appendChild(m); }
+  const logs = logsOn(dayKey(Date.now())), cs = choresIn(gid);
+  const rows = cs.map(c => { const n = logs.filter(l => l.choreId === c.id).length; return `<button class="gi ${n ? 'done' : ''}" data-act="qdo" data-id="${c.id}"><span class="gic">${QI[choreIcon(c)] || QI.spark}</span><span class="gn">${esc(c.name)}</span>${n ? `<span class="gc">✓${n > 1 ? n : ''}</span>` : ''}</button>`; }).join('');
+  const free = gid === 'grp_hoka' ? `<button class="gi gfree" data-act="qfree"><span class="gic">${QI.plus}</span><span class="gn">ほかの家事を書く</span></button>` : '';
+  m.innerHTML = `<div class="gh"><span>${esc(g.name)}</span><button class="ged" data-act="gedit" data-g="${gid}" aria-label="グループを編集">✎</button></div><div class="gl">${rows}${free}${!rows && !free ? '<div class="gempty">まだ家事がないよ</div>' : ''}</div><button class="gadd" data-act="edit" data-id="" data-g="${gid}">＋ 家事を追加</button>`;
+  const r = btn.getBoundingClientRect(), W = Math.min(300, innerWidth - 20), cx = r.left + r.width / 2, L = Math.min(Math.max(10, cx - W / 2), innerWidth - W - 10);
+  m.style.width = W + 'px'; m.style.left = L + 'px'; m.style.bottom = (innerHeight - r.top + 12) + 'px'; m.style.setProperty('--tail', (cx - L - 9) + 'px'); m.dataset.g = gid; requestAnimationFrame(() => m.classList.add('open')); }
+function grpClose(){ const m = $('grppop'); if (m) m.classList.remove('open'); }
+document.addEventListener('pointerdown', e => { const m = $('grppop'); if (m && m.classList.contains('open') && !e.target.closest('#grppop,[data-act=qgrp]')) grpClose(); }, true);
+let qLong = false, qLT = null;
+document.addEventListener('pointerdown', e => { const b = e.target.closest('[data-act=qgrp]'); if (!b) return; clearTimeout(qLT); qLT = setTimeout(() => { qLong = true; grpOpen(b.dataset.g, b); }, 480); });
+['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => document.addEventListener(ev, () => clearTimeout(qLT)));
+document.addEventListener('scroll', () => clearTimeout(qLT), true);
+/* グループの編集 */
+let gdraft = null;
+function sheetGroup(gid){ const g = gid ? S.items[gid] : null; gdraft = g ? { ...g } : { id:'grp_' + uid(), kind:'group', name:'', icon:'spark', order:Math.max(-1, ...all('group').map(x => x.order ?? 0)) + 1, _new:true }; renderGroup(); }
+function renderGroup(){ const d = gdraft;
+  openSheet(`<h3>${d._new ? 'グループを作る' : 'グループを編集'}</h3><label class="f">名前 <span class="muted" style="font-weight:600">（6文字まで）</span></label><input class="t" id="g_name" maxlength="6" value="${esc(d.name)}" placeholder="例：ゴミ">
+    <label class="f">アイコン</label>${iconPicker(d.icon, 'gicon')}
+    <div class="row" style="margin-top:18px"><button class="btn ghost" style="flex:1" data-act="close">キャンセル</button><button class="btn go" style="flex:2" data-act="gsave">保存</button></div>
+    ${!d._new && d.id !== 'grp_hoka' ? `<button class="btn danger wide" style="margin-top:10px" data-act="gdel">このグループを削除</button><p class="muted" style="font-size:11px;text-align:center">中の家事は「そのほか」に移るよ</p>` : ''}`); }
+const ICON_NAMES = { egg:'たまご', onigiri:'おにぎり', nabe:'なべ', pan:'フライパン', dish:'お皿', washer:'洗濯機', shirt:'シャツ', bag:'かばん', tub:'おふろ', duck:'アヒル', trash:'ゴミ袋', vacuum:'掃除機', toilet:'トイレ', basket:'かご', pillow:'まくら', spark:'きらきら', plus:'プラス' };
+function iconPicker(cur, act){ return `<div class="ipick">${Object.keys(QI).filter(k => k !== 'plus').map(k => `<button class="${cur === k ? 'on' : ''}" data-act="${act}" data-v="${k}" aria-label="${ICON_NAMES[k] || k}">${QI[k]}</button>`).join('')}</div>`; }
 function renderQbar(){ const q = $('qbar'); if (!q) return; const on = S.me && tab === 'today'; q.style.display = on ? '' : 'none'; if (!on){ menuClose(); return; } const sc = q.querySelector('.qscroll'), x = sc ? sc.scrollLeft : 0; q.innerHTML = qbarHTML(); q.querySelector('.qscroll').scrollLeft = x; }
 
 function chime(kind){
@@ -857,7 +910,7 @@ function renameKid(){ let n = 0; for (const it of Object.values(S.items)){ if ((
 async function sync(){
   const ok = await pull();
   if (ok && !S.seeded) seedIfEmpty();
-  if (ok) renameKid();
+  if (ok){ renameKid(); seedGroups(); }
   await push();
   render();
 }
@@ -4527,13 +4580,15 @@ function noteRow(n){
 
 function viewSettings(){
   const n = settings().names;
-  let html = `<h2>家事リスト</h2><div class="panel">`;
-  const cs = choresSorted();
-  html += cs.map((c,i) => `<div class="list-item"><span class="stripe ${c.owner}" style="width:5px;height:34px;border-radius:3px"></span>
+  let html = `<h2>家事リスト</h2>`;
+  const gs = groupsSorted();
+  html += gs.map((g, gi) => { const cs = choresIn(g.id);
+    return `<div class="panel gset"><div class="gsh"><span class="gsi">${QI[g.icon] || ''}</span><b data-act="gedit" data-g="${g.id}">${esc(g.name)} <small>✎</small></b><div class="ord"><button data-act="gmv" data-g="${g.id}" data-d="-1" ${gi === 0 ? 'disabled' : ''}>▲</button><button data-act="gmv" data-g="${g.id}" data-d="1" ${gi === gs.length - 1 ? 'disabled' : ''}>▼</button></div></div>`
+      + cs.map((c, i) => `<div class="list-item"><span class="gsi sm">${QI[choreIcon(c)] || ''}</span>
     <div class="n" data-act="edit" data-id="${c.id}"><div>${esc(c.name)}</div><small>${esc(nm(c.owner))}・${SLOTS.find(s=>s[0]===(c.slot||'any'))[1]}・${freqText(c)}</small></div>
     <div class="ord"><button data-act="mv" data-id="${c.id}" data-d="-1" ${i===0?'disabled':''}>▲</button><button data-act="mv" data-id="${c.id}" data-d="1" ${i===cs.length-1?'disabled':''}>▼</button></div></div>`).join('')
-    || `<div class="empty">家事がありません</div>`;
-  html += `<button class="btn go wide" style="margin-top:12px" data-act="edit" data-id="">＋ 家事を追加</button></div>`;
+      + `<button class="btn small ghost" style="margin-top:8px" data-act="edit" data-id="" data-g="${g.id}">＋ ${esc(g.name)}に家事を追加</button></div>`; }).join('');
+  html += `<button class="btn go wide" style="margin:4px 0 8px" data-act="gedit" data-g="">＋ グループを作る</button>`;
 
   html += `<h2>ふたりの名前</h2><div class="panel">
     <div class="row"><span class="dot h"></span><input class="t" id="name_h" value="${esc(n.h)}"></div>
@@ -4643,9 +4698,10 @@ function sheetChore(id){
 }
 
 let draft = null;
-function sheetEdit(id){
+function sheetEdit(id, gid){
   const c = id ? S.items[id] : null;
-  draft = c ? JSON.parse(JSON.stringify(c)) : { id:uid(), kind:'chore', name:'', owner:S.me||'any', slot:'any', freq:{type:'daily'}, def:['','',''], order: (Math.max(-1,...all('chore').map(x=>x.order??0))+1), _new:true };
+  draft = c ? JSON.parse(JSON.stringify(c)) : { id:uid(), kind:'chore', name:'', owner:S.me||'any', slot:'any', freq:{type:'daily'}, def:['','',''], order: (Math.max(-1,...all('chore').map(x=>x.order??0))+1), group: gid || 'grp_hoka', icon: ((S.items[gid || 'grp_hoka'] || {}).icon || 'spark'), _new:true };
+  if (c && !draft.group) draft.group = groupOf(c);
   while ((draft.def||[]).length < 3) (draft.def = draft.def||[]).push('');
   renderEdit();
 }
@@ -4654,6 +4710,8 @@ function renderEdit(){
   const seg = (field, opts, cur) => `<div class="seg">${opts.map(([v,l]) => `<button class="${cur===v?'on':''}" data-act="dset" data-f="${field}" data-v="${v}">${esc(l)}</button>`).join('')}</div>`;
   let h = `<h3>${d._new?'家事を追加':'家事を編集'}</h3>
     <label class="f">名前 <span class="muted" style="font-weight:600">（12文字まで）</span></label><input class="t" id="e_name" maxlength="12" value="${esc(d.name)}" placeholder="例：夜の洗い物">
+    <label class="f">グループ</label><div class="gpick">${groupsSorted().map(g => `<button class="${d.group === g.id ? 'on' : ''}" data-act="dset" data-f="group" data-v="${g.id}">${QI[g.icon] || ''}<span>${esc(g.name)}</span></button>`).join('')}</div>
+    <label class="f">アイコン</label>${iconPicker(d.icon || choreIcon(d), 'cicon')}
     <label class="f">担当</label>${seg('owner',[['h',nm('h')],['y',nm('y')],['any','どちらでも']],d.owner)}
     <label class="f">時間帯</label>${seg('slot',SLOTS,d.slot||'any')}
     <label class="f">頻度</label>${seg('ftype',[['daily','毎日'],['weekly','曜日'],['interval','◯日ごと']],f.type)}`;
@@ -4766,8 +4824,19 @@ document.addEventListener('click', e => {
     case 'talk': talkIdx++; lastTyped = ''; render(); break;
     case 'qdo': { const c = S.items[id]; if (!c) break; const recent = all('log').filter(l => l.choreId === id && Date.now() - l.at < 10 * 60e3).sort((a, b) => b.at - a.at)[0];
       if (recent){ toast(`「${c.name}」はさっきやったよ`); break; }
-      const qi = el.querySelector('.qi'); if (qi){ qi.classList.remove('hit'); void qi.offsetWidth; qi.classList.add('hit'); } burst(el, 'star'); doChore(c); break; }
-    case 'qfree': sheetFree(); break;
+      const qi = el.querySelector('.qi'); if (qi){ qi.classList.remove('hit'); void qi.offsetWidth; qi.classList.add('hit'); } burst(el, 'star'); doChore(c); setTimeout(grpClose, 180); break; }
+    case 'qfree': grpClose(); sheetFree(); break;
+    case 'qgrp': { if (qLong){ qLong = false; break; } const g = el.dataset.g, cs = choresIn(g), m = $('grppop');
+      if (m && m.classList.contains('open') && m.dataset.g === g){ grpClose(); break; }
+      if (cs.length === 1 && g !== 'grp_hoka'){ const c = cs[0], recent = all('log').filter(l => l.choreId === c.id && Date.now() - l.at < 10 * 60e3)[0]; if (recent){ toast(`「${c.name}」はさっきやったよ`); break; } const qi = el.querySelector('.qi'); if (qi){ qi.classList.remove('hit'); void qi.offsetWidth; qi.classList.add('hit'); } burst(el, 'star'); doChore(c); break; }
+      grpOpen(g, el); break; }
+    case 'gedit': grpClose(); sheetGroup(el.dataset.g); break;
+    case 'gicon': { const n = $('g_name'); if (n) gdraft.name = n.value; gdraft.icon = el.dataset.v; renderGroup(); break; }
+    case 'gsave': { const n = $('g_name'); gdraft.name = (n ? n.value : gdraft.name).trim(); if (!gdraft.name){ toast('名前を入れてね'); return; } const d = { ...gdraft }; delete d._new; put(d); gdraft = null; closeSheet(); toast('ほぞんしたよ'); break; }
+    case 'gdel': { if (!el.dataset.sure){ el.dataset.sure = '1'; el.textContent = 'もう一度押すと削除するよ'; return; } const gid = gdraft.id; choresSorted().filter(c => c.group === gid).forEach(c => put({ ...c, group:'grp_hoka' })); remove(S.items[gid]); gdraft = null; closeSheet(); toast('削除したよ'); break; }
+    case 'gmv': { const gs = groupsSorted(), i = gs.findIndex(g => g.id === el.dataset.g), j = i + Number(el.dataset.d); if (j < 0 || j >= gs.length) return; [gs[i], gs[j]] = [gs[j], gs[i]];
+      gs.forEach((g, k) => { if (g.order !== k){ g.order = k; g.updatedAt = Date.now(); S.items[g.id] = g; S.queue = S.queue.filter(q => q.id !== g.id); S.queue.push(g); } }); save(); render(); push(); break; }
+    case 'cicon': captureEdit(); draft.icon = el.dataset.v; renderEdit(); break;
     case 'slotx': SLOTX[el.dataset.v] = !SLOTX[el.dataset.v]; render(); break;
     case 'do': burst(el, 'star'); doChore(S.items[id]); if (el.dataset.close) closeSheet(); break;
     case 'open': sheetChore(id); break;
@@ -4790,7 +4859,7 @@ document.addEventListener('click', e => {
     case 'closenote': put({ ...L, status:'done' }); break;
     case 'reopen': put({ ...L, status:'open' }); break;
     case 'delnote': remove(L); break;
-    case 'edit': sheetEdit(id); break;
+    case 'edit': grpClose(); sheetEdit(id, el.dataset.g); break;
     case 'dset': captureEdit(); { const f = el.dataset.f, v = el.dataset.v;
       if (f === 'ftype') { draft.freq = { type:v, days: draft.freq.days || [new Date().getDay()], n: draft.freq.n || 3 }; }
       else draft[f] = v; } renderEdit(); break;
@@ -4805,9 +4874,9 @@ document.addEventListener('click', e => {
       if (!el.dataset.sure) { el.dataset.sure = '1'; el.textContent = 'もう一度押すと削除します'; return; }
       remove(S.items[draft.id]); draft = null; closeSheet(); toast('削除しました'); break;
     case 'close': closeSheet(); break;
-    case 'mv': { const cs = choresSorted(); const i = cs.findIndex(c => c.id === id), j = i + Number(el.dataset.d);
-      if (j < 0 || j >= cs.length) return; [cs[i], cs[j]] = [cs[j], cs[i]];
-      cs.forEach((c,k) => { if (c.order !== k) { c.order = k; c.updatedAt = Date.now(); S.items[c.id] = c; S.queue = S.queue.filter(q => q.id !== c.id); S.queue.push(c); } });
+    case 'mv': { const cs = choresIn(groupOf(S.items[id])), all2 = choresSorted(); const i = cs.findIndex(c => c.id === id), j = i + Number(el.dataset.d);
+      if (j < 0 || j >= cs.length) return; const a = all2.findIndex(c => c.id === cs[i].id), b2 = all2.findIndex(c => c.id === cs[j].id); [all2[a], all2[b2]] = [all2[b2], all2[a]];
+      all2.forEach((c,k) => { if (c.order !== k) { c.order = k; c.updatedAt = Date.now(); S.items[c.id] = c; S.queue = S.queue.filter(q => q.id !== c.id); S.queue.push(c); } });
       save(); render(); push(); break; }
     case 'savenames': { const s = { ...settings(), names:{ h:$('name_h').value.trim()||'パパ', y:$('name_y').value.trim()||'ママ' } }; put(s); toast('ほぞんしたよ'); break; }
     case 'savesync': S.url = $('s_url').value.trim(); S.key = $('s_key').value.trim(); S.lastSync = 0; save(); toast('同期しています…'); sync().then(() => toast(syncState==='ok'?'同期しました':'同期できませんでした')); break;
@@ -4843,6 +4912,7 @@ function iconNotice(force){ let v = ''; try { v = localStorage.getItem('kaji_ico
 /* ========== 起動 ========== */
 if (!S.url) seedIfEmpty();
 renameKid();
+if (!S.url) seedGroups();
 render();
 if (S.url) sync();
 setTimeout(() => iconNotice(false), 1800);
