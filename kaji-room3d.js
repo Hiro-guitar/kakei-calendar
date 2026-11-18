@@ -25,6 +25,21 @@ export const TREE_PARTS = ['wallpaper', 'flooring', 'topper', 'treelights', 'gar
 export const ADVENT = Array.from({ length:37 }, () => []);
 FIRST.forEach((s, i) => ADVENT[i].push(s + '_a')); { const rest = [...FIRST.map(s => s + '_b'), 'wallpaper_b', 'topper_b', 'flooring_b', 'garland_b', 'treelights_b', ...FIRST.map(s => s + '_c'), 'wallpaper_c', 'topper_c', 'flooring_c', 'garland_c', 'treelights_c']; rest.forEach((k, i) => ADVENT[15 + Math.floor(i * 21 / rest.length)].push(k)); } ADVENT[36].push('special_a');
 export const advDate = (year, i) => new Date(year, 10, 19 + i);
+// ありがとうのプレゼントの種類
+export const GIFT_TYPES = [
+  { k:'red', n:'赤いしましまの箱', a:'#c8352e', b:'#f3ead9', p:'stripe', r:'#f2c14e', s:'box' },
+  { k:'blue', n:'青い水玉の箱', a:'#3a6ab8', b:'#ffffff', p:'dot', r:'#f2c14e', s:'box' },
+  { k:'yellow', n:'黄色いチェックの箱', a:'#f2c14e', b:'#e0564a', p:'check', r:'#c8352e', s:'box' },
+  { k:'green', n:'みどりの水玉の箱', a:'#3f9a4f', b:'#f3ead9', p:'dot', r:'#c8352e', s:'box' },
+  { k:'cream', n:'クリーム色のしましまの箱', a:'#f3ead9', b:'#c8352e', p:'stripe', r:'#c8352e', s:'box' },
+  { k:'purple', n:'むらさきのチェックの箱', a:'#8a5ab8', b:'#f2c14e', p:'check', r:'#f2c14e', s:'box' },
+  { k:'pink', n:'ピンクの水玉の箱', a:'#f4a6bc', b:'#ffffff', p:'dot', r:'#c8352e', s:'box' },
+  { k:'tallgold', n:'背の高い金の箱', a:'#d9a52a', b:'#fff1a8', p:'dot', r:'#c8352e', s:'tall' },
+  { k:'hatred', n:'まるい赤の帽子箱', a:'#c8352e', b:'#ffffff', p:'dot', r:'#ffffff', s:'round' },
+  { k:'hatblue', n:'まるい水色の帽子箱', a:'#7cc0e4', b:'#ffffff', p:'stripe', r:'#c8352e', s:'round' },
+  { k:'flat', n:'ぺたんこのみどりの箱', a:'#3f9a4f', b:'#f2c14e', p:'stripe', r:'#f2c14e', s:'flat' },
+  { k:'silver', n:'銀のキューブ', a:'#c8ccd6', b:'#ffffff', p:'check', r:'#3a6ab8', s:'cube' },
+];
 export function mountRoom(el, opts = {}){
 const VW = () => el.clientWidth || innerWidth, VH = () => el.clientHeight || innerHeight;
 
@@ -265,17 +280,30 @@ const gifts = [];
 const GIFT_SPOTS = Array.from({ length:9 }, (_, i) => { const t = i / 9 * Math.PI * 2 + .35; return [Math.sin(t) * .86, Math.cos(t) * .86]; }); // ツリーの枝の下に、ぐるっと
 const giftRing = new THREE.Group(); treeRoot.add(giftRing);
 // 8か所に置ききったら、その上に重ねていく（上ほど少し小さく）
-function addGift(animate = true, id = null){ const i = gifts.length, N = GIFT_SPOTS.length, lv = Math.floor(i / N); if (lv >= 2) return; const [x, z] = GIFT_SPOTS[i % N], [a, b, kind] = WRAPS[i % WRAPS.length], under = lv ? gifts[i - N] : null, sc = Math.pow(.82, lv);
-  const w = .34 + rnd() * .22, h = .26 + rnd() * .2, d = .3 + rnd() * .2, g = new THREE.Group();
-  const box = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 3, .035), std('#ffffff', { map:wrapTex(a, b, kind), roughness:.6 })); box.position.y = h / 2; box.castShadow = box.receiveShadow = true; g.add(box);
-  const rc = a === '#f2c14e' || a === '#f3ead9' ? '#c8352e' : '#f2c14e', rm = std(rc, { roughness:.45, metalness:.15 });
-  const r1 = new THREE.Mesh(new RoundedBoxGeometry(w + .012, h + .012, .06, 2, .01), rm); r1.position.y = h / 2; g.add(r1);
-  const r2 = new THREE.Mesh(new RoundedBoxGeometry(.06, h + .012, d + .012, 2, .01), rm); r2.position.y = h / 2; g.add(r2);
+function giftSeed(id){ let h = 2166136261; for (const ch of String(id || '')){ h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function buildGift(id){ const T = GIFT_TYPES[giftSeed(id) % GIFT_TYPES.length], g = new THREE.Group(), s1 = (giftSeed(id + 'w') % 1000) / 1000, s2 = (giftSeed(id + 'h') % 1000) / 1000;
+  const rm = std(T.r, { roughness:.45, metalness:T.r === '#f2c14e' || T.r === '#d9a52a' ? .35 : .1 }), mat = std('#ffffff', { map:wrapTex(T.a, T.b, T.p), roughness:.6 });
+  let w, h, d;
+  if (T.s === 'round'){ const r = .19 + s1 * .04; h = .26 + s2 * .08; w = d = r * 2;
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 28), mat); body.position.y = h / 2; body.castShadow = body.receiveShadow = true; g.add(body);
+    const lid = new THREE.Mesh(new THREE.CylinderGeometry(r + .02, r + .02, .06, 28), std(T.a, { roughness:.55 })); lid.position.y = h - .02; lid.castShadow = true; g.add(lid);
+    for (const rot of [0, Math.PI / 2]){ const b = new THREE.Mesh(new THREE.BoxGeometry(r * 2 + .05, h + .02, .05), rm); b.position.y = h / 2; b.rotation.y = rot; g.add(b); } }
+  else { [w, h, d] = T.s === 'tall' ? [.3 + s1 * .06, .52 + s2 * .14, .3 + s1 * .06] : T.s === 'flat' ? [.56 + s1 * .1, .15 + s2 * .05, .44 + s2 * .06] : T.s === 'cube' ? [.36, .36, .36] : [.34 + s1 * .22, .26 + s2 * .2, .3 + s2 * .2];
+    const box = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 3, .035), mat); box.position.y = h / 2; box.castShadow = box.receiveShadow = true; g.add(box);
+    const r1 = new THREE.Mesh(new RoundedBoxGeometry(w + .012, h + .012, .06, 2, .01), rm); r1.position.y = h / 2; g.add(r1);
+    const r2 = new THREE.Mesh(new RoundedBoxGeometry(.06, h + .012, d + .012, 2, .01), rm); r2.position.y = h / 2; g.add(r2); }
   for (const s of [-1, 1]){ const t = new THREE.Mesh(new THREE.TorusGeometry(.06, .022, 8, 16), rm); t.position.set(s * .055, h + .045, 0); t.rotation.set(0, Math.PI / 2, s * .5); t.scale.set(1, 1.25, .8); t.castShadow = true; g.add(t); }
   const knot = new THREE.Mesh(new THREE.SphereGeometry(.03, 10, 8), rm); knot.position.y = h + .03; g.add(knot);
-  const y0 = under ? under.position.y + under.userData.h * under.userData.base : 0; g.userData.h = h; g.userData.base = sc; g.scale.setScalar(sc);
+  g.userData.h = h; g.userData.w = w; g.userData.d = d; return g; }
+// 8か所に置ききったら、その上に重ねていく（上ほど少し小さく）。見た目はプレゼントごとにランダム（どの端末でも同じ）
+function addGift(animate = true, id = null){ const i = gifts.length, N = GIFT_SPOTS.length, lv = Math.floor(i / N); if (lv >= 2) return; const [x, z] = GIFT_SPOTS[i % N], under = lv ? gifts[i - N] : null, sc = Math.pow(.82, lv);
+  const g = buildGift(id || 'g' + i), h = g.userData.h, w = g.userData.w, d = g.userData.d;
+  const y0 = under ? under.position.y + under.userData.h * under.userData.base : 0; g.userData.base = sc; g.scale.setScalar(sc);
   g.position.set(x + (lv ? (rnd() - .5) * .05 : 0), y0, z + (lv ? (rnd() - .5) * .05 : 0)); g.rotation.y = Math.atan2(x, z) + (rnd() - .5) * (lv ? 1.2 : .6); g.userData.id = id; g.userData.gift = true; giftRing.add(g); gifts.push(g); if (!lv){ g.userData.blob = blob(x, z, w * 2.1, d * 2.1, .9); giftRing.add(g.userData.blob); }
   if (animate){ g.scale.setScalar(.001); appear.push({ o:g, t0:performance.now() }); } shadowsDirty = true; }
+function thumbGift(id){ const key = 'gift:' + (GIFT_TYPES[giftSeed(id) % GIFT_TYPES.length].k); if (thCache[key]) return thCache[key]; thumbFurn('tree'); const g = buildGift(id); thS.add(g); g.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(g), c = box.getCenter(new THREE.Vector3()), r = box.getSize(new THREE.Vector3()).length() / 2;
+  thC.position.copy(c).addScaledVector(new THREE.Vector3(.35, .55, 1).normalize(), r / Math.sin(THREE.MathUtils.degToRad(14))); thC.lookAt(c); thR.render(thS, thC); const url = thR.domElement.toDataURL('image/png'); thS.remove(g); disposeG(g); return thCache[key] = url; }
 
 // アドベントの開けていない箱：ツリーの足もと、正面でぴょこぴょこ
 const advBox = (() => { const g = new THREE.Group(), w = .44, h = .38, d = .4;
@@ -743,5 +771,5 @@ function snapshot(list, giftList, w = 640, h = 720){
   advBox.visible = abv; clearAll(); sig = ''; tree.rotation.y = rot; sync(keepL, keepG); shadowsDirty = true; return url; }
 const _proj = (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera), r = cv.getBoundingClientRect(); return [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height]; };
 const _dbg = () => Object.values(inst).map(o => { const b = instBox(o); return [o.rec.key, ...[b.min.x, b.max.x, b.min.y, b.max.y, b.min.z, b.max.z].map(v => +v.toFixed(2)), boxOK(o)]; });
-return { setAdvBox, zoomTo, zoomOut, zoomed:() => zoomed, _dbg, _proj, sync, setRoom, snapshot, setEdit, editRotate, editRemove, autoPlace, layoutOf, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize(){ renderer.setSize(VW(), VH()); placeCamera(); } };
+return { thumbGift, giftType:id => GIFT_TYPES[giftSeed(id) % GIFT_TYPES.length], setAdvBox, zoomTo, zoomOut, zoomed:() => zoomed, _dbg, _proj, sync, setRoom, snapshot, setEdit, editRotate, editRemove, autoPlace, layoutOf, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize(){ renderer.setSize(VW(), VH()); placeCamera(); } };
 }
