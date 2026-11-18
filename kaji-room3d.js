@@ -296,9 +296,14 @@ function buildGift(id){ const T = GIFT_TYPES[giftSeed(id) % GIFT_TYPES.length], 
   const knot = new THREE.Mesh(new THREE.SphereGeometry(.03, 10, 8), rm); knot.position.y = h + .03; g.add(knot);
   g.userData.h = h; g.userData.w = w; g.userData.d = d; return g; }
 // 8か所に置ききったら、その上に重ねていく（上ほど少し小さく）。見た目はプレゼントごとにランダム（どの端末でも同じ）
-function addGift(animate = true, id = null){ const i = gifts.length, N = GIFT_SPOTS.length, lv = Math.floor(i / N); if (lv >= 2) return; const [x, z] = GIFT_SPOTS[i % N], under = lv ? gifts[i - N] : null, sc = Math.pow(.82, lv);
+function addGift(animate = true, id = null){ const i = gifts.length, N = GIFT_SPOTS.length, lv = Math.floor(i / N); if (lv >= 2) return;
+  // 場所もランダム（プレゼントごとに決まる）。あいている場所を、その子の番号から順にさがす
+  const taken = new Set(gifts.filter(o => o.userData.lv === lv).map(o => o.userData.spot)); let spot = giftSeed(id + 'spot') % N; while (taken.has(spot)) spot = (spot + 1) % N;
+  const ja = ((giftSeed(id + 'a') % 1000) / 1000 - .5) * .14, jr = .86 + ((giftSeed(id + 'r') % 1000) / 1000 - .5) * .12, t0 = spot / N * Math.PI * 2 + .35 + ja;
+  const under = lv ? gifts.find(o => o.userData.lv === 0 && o.userData.spot === spot) : null, sc = Math.pow(.82, lv);
+  const [x, z] = under ? [under.position.x, under.position.z] : [Math.sin(t0) * jr, Math.cos(t0) * jr];
   const g = buildGift(id || 'g' + i), h = g.userData.h, w = g.userData.w, d = g.userData.d;
-  const y0 = under ? under.position.y + under.userData.h * under.userData.base : 0; g.userData.base = sc; g.scale.setScalar(sc);
+  const y0 = under ? under.position.y + under.userData.h * under.userData.base : 0; g.userData.base = sc; g.userData.lv = lv; g.userData.spot = spot; g.scale.setScalar(sc);
   g.position.set(x + (lv ? (rnd() - .5) * .05 : 0), y0, z + (lv ? (rnd() - .5) * .05 : 0)); g.rotation.y = Math.atan2(x, z) + (rnd() - .5) * (lv ? 1.2 : .6); g.userData.id = id; g.userData.gift = true; giftRing.add(g); gifts.push(g); if (!lv){ g.userData.blob = blob(x, z, w * 2.1, d * 2.1, .9); giftRing.add(g.userData.blob); }
   if (animate){ g.scale.setScalar(.001); appear.push({ o:g, t0:performance.now() }); } shadowsDirty = true; }
 function thumbGift(id){ const key = 'gift:' + (GIFT_TYPES[giftSeed(id) % GIFT_TYPES.length].k); if (thCache[key]) return thCache[key]; thumbFurn('tree'); const g = buildGift(id); thS.add(g); g.updateMatrixWorld(true);
