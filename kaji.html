@@ -748,6 +748,22 @@ const QI = (() => {
     basket: c(0, `<path d="M8 15 C 8 5 32 5 32 15" stroke="#c8965a" stroke-width="2.6" fill="none"/><path d="M5 15 H 35 L 31 34 H 9Z" fill="#e2b06a" stroke="#b8864a" stroke-width="1"/>${[11, 17, 23, 29].map(x => `<path d="M${x} 17 L ${x - (x - 20) * .15} 32" stroke="#b8864a" stroke-width="1.2"/>`).join('')}<path d="M7 22 H 33 M8 27 H 32" stroke="#b8864a" stroke-width="1.2"/><circle cx="14" cy="13" r="3.6" fill="#e85a4a"/><path d="M22 8 L 27 14" stroke="#4aa060" stroke-width="3.4" stroke-linecap="round"/>`),
     pillow: c(0, `<path d="M6 12 C 6 8 34 8 34 12 L 33 30 C 33 34 7 34 7 30Z" fill="#fff" stroke="#c8d4e0" stroke-width="1.2"/><path d="M6 12 L 3 9 M34 12 L 37 9 M7 30 L 4 33 M33 30 L 36 33" stroke="#c8d4e0" stroke-width="2" stroke-linecap="round"/>${[13, 20, 27].map(x => `<circle cx="${x}" cy="21" r="1.6" fill="#f4b8c8"/>`).join('')}`),
     spark: c(0, `<path d="M20 4 L 23 16 L 35 19 L 23 22 L 20 35 L 17 22 L 5 19 L 17 16Z" fill="#ffd84a" stroke="#e0a81a" stroke-width="1"/><circle cx="31" cy="8" r="2.4" fill="#ffe89a"/><circle cx="9" cy="30" r="2" fill="#ffe89a"/>`),
+    rice: c(0, `<ellipse cx="20" cy="33" rx="13" ry="2.4" fill="#e8dcc4"/><path d="M7 17 C 7 13 33 13 33 17 V 29 C 33 33 7 33 7 29Z" fill="#fbfbf6" stroke="#d8d4ca" stroke-width="1"/><path d="M6 17 C 6 10 34 10 34 17Z" fill="#f2efe6" stroke="#d8d4ca" stroke-width="1"/><rect x="16" y="9" width="8" height="2.6" rx="1.3" fill="#c8c4b8"/><rect x="14" y="21" width="12" height="6" rx="2" fill="#5a8ad8"/><circle cx="17" cy="24" r="1.1" fill="#ffd84a"/><circle cx="21" cy="24" r="1.1" fill="#fff"/><path d="M15 7 q -2 -2 0 -4 M20 7 q -2 -2 0 -4 M25 7 q -2 -2 0 -4" stroke="#c8d8e8" stroke-width="1.4" fill="none" stroke-linecap="round"/>`),
+    bowl: c(0, `<path d="M5 19 H 35 C 35 28 29 33 20 33 C 11 33 5 28 5 19Z" fill="#e8584a"/><path d="M5 19 H 35" stroke="#c8402e" stroke-width="2"/><path d="M8 19 C 8 11 32 11 32 19Z" fill="#fff"/><circle cx="14" cy="15" r="1" fill="#efe6d2"/><circle cx="20" cy="13" r="1" fill="#efe6d2"/><circle cx="26" cy="15" r="1" fill="#efe6d2"/><rect x="15" y="32" width="10" height="3" rx="1.5" fill="#c8402e"/><path d="M27 5 L 22 18 M31 6 L 25 18" stroke="#a8703e" stroke-width="1.8" stroke-linecap="round"/>`),
+    towel: c(0, `<rect x="6" y="25" width="28" height="9" rx="3" fill="#7ab8e8"/><rect x="6" y="25" width="28" height="2.4" fill="#5a98c8"/><rect x="8" y="16" width="25" height="9" rx="3" fill="#f4a6bc"/><rect x="8" y="16" width="25" height="2.4" fill="#e086a0"/><rect x="10" y="7" width="22" height="9" rx="3" fill="#fbf6ea"/><rect x="10" y="7" width="22" height="2.4" fill="#e8dcc4"/><path d="M14 12 h 14 M12 21 h 18 M10 30 h 20" stroke="#fff" stroke-width="1" stroke-dasharray="1.6 1.4" opacity=".7"/>`),
+    roller: c(0, `<path d="M20 22 L 20 30 L 28 36" stroke="#8a90a0" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="25" y="33" width="9" height="5" rx="2.5" fill="#f07a5a" transform="rotate(35 29 35)"/><rect x="6" y="9" width="28" height="13" rx="6.5" fill="#fff" stroke="#c8d4e0" stroke-width="1.2"/>${[11, 16, 21, 26, 30].map(x => `<path d="M${x} 10 V 21" stroke="#e2e8ef" stroke-width="1"/>`).join('')}<rect x="4" y="13" width="3" height="5" rx="1.5" fill="#5aa98c"/><rect x="33" y="13" width="3" height="5" rx="1.5" fill="#5aa98c"/><circle cx="14" cy="15" r="1" fill="#d8c8a8"/><path d="M23 14 l 3 2" stroke="#d8c8a8" stroke-width="1" stroke-linecap="round"/>`),
+    tatami: c(0, `<rect x="5" y="6" width="30" height="28" rx="2.6" fill="#b8c878"/><rect x="5" y="6" width="5" height="28" rx="1.6" fill="#3f6a4a"/><rect x="30" y="6" width="5" height="28" rx="1.6" fill="#3f6a4a"/>${[10, 14, 18, 22, 26, 30].map(y => `<path d="M10 ${y} H 30" stroke="#a0b060" stroke-width="1"/>`).join('')}<path d="M7.5 9 v 22 M32.5 9 v 22" stroke="#e8d8a0" stroke-width=".8" stroke-dasharray="1.4 1.4"/>`),
+    shoes: c(0, `<path d="M4 27 C 4 21 8 19 11 19 L 14 22 C 17 23 21 23 22 26 C 23 29 21 31 18 31 H 6 C 4.6 31 4 29.6 4 27Z" fill="#f07a5a"/><path d="M4 28 H 22.6" stroke="#fff" stroke-width="2"/><path d="M9 21 l 2 2 M11 20 l 2 2" stroke="#fff" stroke-width="1" stroke-linecap="round"/><path d="M17 20 C 17 14 21 12 24 12 L 27 15 C 30 16 34 16 35 19 C 36 22 34 24 31 24 H 19 C 17.6 24 17 22.6 17 20Z" fill="#5a8ad8"/><path d="M17 21 H 35.6" stroke="#fff" stroke-width="2"/><path d="M22 14 l 2 2 M24 13 l 2 2" stroke="#fff" stroke-width="1" stroke-linecap="round"/>`),
+    bag_y: c(0, `<path d="M10 14 C 6 20 7 33 12 35 H 28 C 33 33 34 20 30 14Z" fill="#f6cc3a"/><path d="M14 14 L 16 8 L 20 11 L 24 7 L 26 14Z" fill="#e0a81a"/><path d="M14 20 Q 20 23 26 20 M13 27 Q 20 30 27 27" stroke="#ffe48a" stroke-width="1.6" fill="none"/><rect x="17" y="12" width="6" height="3" rx="1.4" fill="#d0402e"/>`),
+    bag_g: c(0, `<path d="M10 14 C 6 20 7 33 12 35 H 28 C 33 33 34 20 30 14Z" fill="#8a929c"/><path d="M14 14 L 16 8 L 20 11 L 24 7 L 26 14Z" fill="#6a727c"/><path d="M14 20 Q 20 23 26 20 M13 27 Q 20 30 27 27" stroke="#aab2bc" stroke-width="1.6" fill="none"/><rect x="17" y="12" width="6" height="3" rx="1.4" fill="#fbfbf6"/>`),
+    canbin: c(0, `<rect x="6" y="13" width="13" height="22" rx="3" fill="#e8584a"/><rect x="6" y="13" width="13" height="3" rx="1.5" fill="#c8ccd4"/><rect x="6" y="32" width="13" height="3" rx="1.5" fill="#c8ccd4"/><rect x="8.5" y="20" width="8" height="7" rx="1.5" fill="#fff" opacity=".85"/><path d="M27 5 h 4 v 6 C 31 13 35 15 35 19 V 33 C 35 34.6 34 35 32.6 35 H 25.4 C 24 35 23 34.6 23 33 V 19 C 23 15 27 13 27 11Z" fill="#5aa98c" opacity=".9"/><rect x="26.4" y="3.6" width="5.2" height="3" rx="1" fill="#e0a81a"/><path d="M25.6 20 V 30" stroke="#c8f0e0" stroke-width="1.6" stroke-linecap="round"/>`),
+    diaper: c(0, `<path d="M5 12 H 35 L 33 18 C 29 20 26 24 25 31 C 25 34 15 34 15 31 C 14 24 11 20 7 18Z" fill="#fff" stroke="#c8d4e0" stroke-width="1.2"/><path d="M5 12 H 35 V 15 H 5Z" fill="#bfe4ff"/><rect x="3" y="12" width="5" height="6" rx="1.4" fill="#f4a6bc"/><rect x="32" y="12" width="5" height="6" rx="1.4" fill="#f4a6bc"/><circle cx="17" cy="21" r="1.4" fill="#ffd84a"/><circle cx="23" cy="21" r="1.4" fill="#7ab8e8"/><circle cx="20" cy="26" r="1.4" fill="#f4a6bc"/>`),
+    shampoo: c(0, `<rect x="10" y="14" width="20" height="22" rx="6" fill="#9ad0c0"/><rect x="13" y="20" width="14" height="9" rx="2.4" fill="#fff" opacity=".85"/><path d="M16 23 h 8 M16 26 h 5" stroke="#5aa98c" stroke-width="1.4" stroke-linecap="round"/><rect x="16" y="9" width="8" height="5" rx="1.6" fill="#f2efe6"/><path d="M20 9 V 5 H 29" stroke="#f2efe6" stroke-width="2.6" fill="none" stroke-linecap="round"/><circle cx="31" cy="8" r="1.6" fill="#bfe4ff"/>`),
+    tp: c(0, `<path d="M8 12 C 8 8 30 8 30 12 V 30 C 30 34 8 34 8 30Z" fill="#fbfbf6" stroke="#d8d4ca" stroke-width="1"/><ellipse cx="19" cy="12" rx="11" ry="4" fill="#fff" stroke="#d8d4ca" stroke-width="1"/><ellipse cx="19" cy="12" rx="3.6" ry="1.4" fill="#c8b898"/><path d="M30 19 H 35 V 33 C 33 35 31 33 30 34" fill="#fbfbf6" stroke="#d8d4ca" stroke-width="1"/><path d="M31 23 h 3 M31 27 h 3" stroke="#e2dcd0" stroke-width="1" stroke-dasharray="1.2 1.2"/><path d="M12 20 q 2 1 4 0 M12 25 q 2 1 4 0" stroke="#f4c6d4" stroke-width="1.2" fill="none"/>`),
+    refill: c(0, `<path d="M9 9 C 9 6.5 31 6.5 31 9 L 33 33 C 33 35 7 35 7 33Z" fill="#7ab8e8"/><path d="M9 9 C 9 6.5 31 6.5 31 9 L 31 12 H 9Z" fill="#5a98c8"/><path d="M24 6 L 28 2 L 31 5 L 27 9" fill="#e2eaf2" stroke="#b8c8d8" stroke-width=".8"/><rect x="12" y="17" width="16" height="11" rx="2.6" fill="#fff" opacity=".9"/><path d="M20 19.5 c 3 3.6 3 5.6 0 6.6 c -3 -1 -3 -3 0 -6.6Z" fill="#7ab8e8"/>`),
+    kid: c(0, `<circle cx="20" cy="22" r="13" fill="#ffd9c0"/><path d="M8 19 C 9 9 31 9 32 19 C 28 15 22 14 20 12 C 18 14 12 15 8 19Z" fill="#6a4630"/><path d="M19 10 C 18 6 22 5 23 7" stroke="#6a4630" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="15" cy="23" r="1.6" fill="#3a2a1e"/><circle cx="25" cy="23" r="1.6" fill="#3a2a1e"/><circle cx="12.6" cy="27" r="2.2" fill="#f8a8a0" opacity=".7"/><circle cx="27.4" cy="27" r="2.2" fill="#f8a8a0" opacity=".7"/><path d="M17.6 28 q 2.4 2 4.8 0" stroke="#c8604a" stroke-width="1.4" fill="none" stroke-linecap="round"/>`),
+    broom: c(0, `<path d="M27 4 L 19 22" stroke="#a8703e" stroke-width="2.8" stroke-linecap="round"/><path d="M14 20 L 24 24 L 22 36 C 17 36 10 34 7 30Z" fill="#e8c46a"/><path d="M14 20 L 24 24" stroke="#c8402e" stroke-width="3" stroke-linecap="round"/>${[[12, 26, 10, 32], [16, 27, 14, 34], [20, 28, 19, 35]].map(([a, b, c2, d]) => `<path d="M${a} ${b} L ${c2} ${d}" stroke="#c8a04a" stroke-width="1"/>`).join('')}`),
+    shirt2: c(0, `<path d="M12 8 L 6 13 L 9 19 L 12 17 V 33 H 28 V 17 L 31 19 L 34 13 L 28 8 Q 20 13 12 8Z" fill="#f4a6bc" stroke="#d886a0" stroke-width="1"/><circle cx="17" cy="22" r="1.4" fill="#fff"/><circle cx="23" cy="26" r="1.4" fill="#fff"/><circle cx="18" cy="29" r="1.2" fill="#fff"/>`),
     plus: c(0, `<circle cx="20" cy="20" r="14" fill="#fff" stroke="#e2b23a" stroke-width="2" stroke-dasharray="3 2.4"/><path d="M20 13 V 27 M13 20 H 27" stroke="#e2a020" stroke-width="3.4" stroke-linecap="round"/>`),
   };
 })();
@@ -790,8 +806,8 @@ document.addEventListener('pointerdown', e => { const m = $('menupop'); if (m &&
 /* ===== グループ（ゴミ・洗濯…）。帯にはグループだけ、押すと中の家事が開く ===== */
 const GROUP_SEED = [['gohan', 'ごはん', 'pan'], ['arai', '洗い物', 'dish'], ['sentaku', '洗濯', 'washer'], ['souji', 'そうじ', 'vacuum'], ['gomi', 'ゴミ', 'trash'], ['yusa', 'こども', 'bag'], ['kaimono', '買い物', 'basket'], ['hoka', 'そのほか', 'spark']];
 const groupsSorted = () => all('group').sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-function guessGroup(n){ if (/こども|子ども|子供|幼稚園|保育|お迎え|送り/.test(n)) return 'grp_yusa'; if (/ゴミ|ごみ|オムツ|おむつ/.test(n)) return 'grp_gomi'; if (/洗い物|皿|食器|水筒/.test(n)) return 'grp_arai';
-  if (/洗濯|取り込|たたむ|畳む|シーツ|枕カバー/.test(n)) return 'grp_sentaku'; if (/ごはん|ご飯|夕飯|夕食|朝食|昼食|料理|お弁当/.test(n)) return 'grp_gohan'; if (/買い|買出/.test(n)) return 'grp_kaimono'; if (/掃除|そうじ|風呂|トイレ|片付/.test(n)) return 'grp_souji'; return 'grp_hoka'; }
+function guessGroup(n){ if (/こども|子ども|子供|幼稚園|保育|お迎え|送り/.test(n)) return 'grp_yusa'; if (/ゴミ|ごみ|オムツ|おむつ/.test(n)) return 'grp_gomi'; if (/洗い物|皿|食器|水筒/.test(n)) return 'grp_gohan';
+  if (/洗濯|取り込|たたむ|畳む|シーツ|枕カバー/.test(n)) return 'grp_sentaku'; if (/ごはん|ご飯|夕飯|夕食|朝食|昼食|料理|お弁当/.test(n)) return 'grp_gohan'; if (/買い|買出|補充|つめかえ/.test(n)) return 'grp_hojuu'; if (/掃除|そうじ|風呂|トイレ|片付/.test(n)) return 'grp_souji'; return 'grp_hoka'; }
 function groupOf(c){ const g = c.group && S.items[c.group]; return g && !g.deleted ? c.group : (S.items[guessGroup(c.name)] && !S.items[guessGroup(c.name)].deleted ? guessGroup(c.name) : (groupsSorted()[0] || {}).id); }
 /* 行とボタン：「可燃ゴミを出す」→ 行「可燃ゴミ」・ボタン「出す」。分けられない名前は1行まるごとボタン */
 function rowAct(c){ if (c.row && c.act) return [c.row, c.act]; const m = /^(.+?)を(.+)$/.exec(c.name || ''); if (!m) return [c.name, '']; let a = m[2]; if (a.length > 3) a = a.replace(/する$/, ''); return [m[1], a]; }
@@ -803,6 +819,23 @@ function seedGroups(){ let n = 0; const mk = it => { it.updatedAt = Date.now(); 
   GOMI_SEED.forEach(([k, name, row, act], i) => { if (!S.items['seed_gomi_' + k]) mk({ id:'seed_gomi_' + k, kind:'chore', name, owner:'any', slot:'any', freq:{ type:'daily' }, def:[], group:'grp_gomi', icon:'trash', order:base + i, ...(row ? { row, act } : {}) }); });
   { const old = S.items.seed_gomi_bag; if (old && !old.deleted && old.name === 'ゴミ袋を設置する'){ old.deleted = true; mk(old); } }
   if (n) save(); return n; }
+/* 家事の一覧（2026/11/18 版）。一度だけ、今までの家事と入れかえる（ふたりのスマホで同じIDなので重ならない） */
+const CATALOG2 = [
+  ['gohan', 'ごはん', 'bowl', [['朝ごはん', 'egg', [['作る', '朝ごはんを作る'], ['洗い物', '朝ごはんの洗い物']]], ['昼ごはん', 'onigiri', [['作る', '昼ごはんを作る'], ['洗い物', '昼ごはんの洗い物']]], ['夜ごはん', 'nabe', [['作る', '夜ごはんを作る'], ['洗い物', '夜ごはんの洗い物']]], ['お米をたく', 'rice', null]]],
+  ['sentaku', '洗濯', 'washer', [['洗濯物', 'shirt', ['回す', '干す', '取り込む', 'たたむ', '片づける'].map(a => [a, '洗濯物を' + a])], ['シーツ・枕カバー', 'pillow', ['回す', '干す', '取り込む', 'たたむ', '片づける'].map(a => [a, 'シーツ類を' + a])], ['そのほか', 'towel', ['回す', '干す', '取り込む', 'たたむ', '片づける'].map(a => [a, 'ほかの洗濯物を' + a])]]],
+  ['souji', 'そうじ', 'vacuum', [['お風呂', 'tub', [['洗う', 'お風呂を洗う'], ['排水口', 'お風呂の排水口'], ['ハイター', 'お風呂のハイター']]], ['トイレ', 'toilet', [['便座', 'トイレの便座'], ['床', 'トイレの床'], ['便器', 'トイレの便器']]], ['コロコロ', 'roller', [['リビング', 'コロコロ（リビング）'], ['そのほか', 'コロコロ（ほか）']]], ['和室のそうじ', 'tatami', null], ['玄関', 'shoes', [['掃き掃除', '玄関の掃き掃除'], ['拭き掃除', '玄関の拭き掃除']]]]],
+  ['gomi', 'ゴミ', 'trash', [['可燃ゴミ', 'bag_y', [['まとめる', '可燃ゴミをまとめる'], ['出す', '可燃ゴミを出す'], ['袋を設置', '可燃ゴミの袋を設置']]], ['不燃ゴミ', 'bag_g', [['まとめる', '不燃ゴミをまとめる'], ['出す', '不燃ゴミを出す'], ['袋を設置', '不燃ゴミの袋を設置']]], ['缶・ビン', 'canbin', [['まとめる', '缶・ビンをまとめる'], ['出す', '缶・ビンを出す']]], ['オムツ', 'diaper', [['まとめる', 'オムツをまとめる'], ['出す', 'オムツを出す']]]]],
+  ['yusa', 'こども', 'kid', [['こどもの支度', 'bag', null], ['お風呂', 'duck', [['入れる', 'こどもをお風呂に入れる'], ['保湿', 'こどもの保湿']]]]],
+  ['hojuu', '補充', 'refill', [['シャンプー', 'shampoo', [['つめかえ', 'シャンプーのつめかえ'], ['買う', 'シャンプーを買う']]], ['洗剤', 'refill', [['つめかえ', '洗剤のつめかえ'], ['買う', '洗剤を買う']]], ['トイレットペーパー', 'tp', [['補充', 'トイレの紙の補充'], ['買う', 'トイレの紙を買う']]], ['オムツ', 'diaper', [['補充', 'オムツの補充'], ['買う', 'オムツを買う']]], ['買い出し', 'basket', null]]],
+  ['hoka', 'そのほか', 'spark', []],
+];
+function migrateCatalog2(){ const st = settings(); if ((st.catalog || 0) >= 2) return 0; let n = 0, ord = 0; const now = Date.now();
+  const mk = it => { it.updatedAt = now; S.items[it.id] = it; S.queue = S.queue.filter(q => q.id !== it.id); S.queue.push(it); n++; };
+  const keep = new Set(); CATALOG2.forEach(([gk, gname, gicon, rows], gi) => { keep.add('grp_' + gk); mk({ id:'grp_' + gk, kind:'group', name:gname, icon:gicon, order:gi });
+    rows.forEach(([row, icon, acts], ri) => { if (!acts){ const id = `c2_${gk}_${ri}`; keep.add(id); mk({ id, kind:'chore', name:row, owner:'any', slot:'any', freq:{ type:'daily' }, def:[], group:'grp_' + gk, icon, order:ord++ }); return; }
+      acts.forEach(([act, name], ai) => { const id = `c2_${gk}_${ri}_${ai}`; keep.add(id); mk({ id, kind:'chore', name, owner:'any', slot:'any', freq:{ type:'daily' }, def:[], group:'grp_' + gk, icon, row, act, order:ord++ }); }); }); });
+  for (const it of Object.values(S.items)) if ((it.kind === 'chore' || it.kind === 'group') && !it.deleted && !keep.has(it.id)) mk({ ...it, deleted:true });
+  mk({ ...st, catalog:2 }); save(); return n; }
 function qbarHTML(){
   const logs = logsOn(dayKey(Date.now())), notes = all('note').filter(n => n.status !== 'done').length;
   return `<button class="qmenu" data-act="menu" aria-label="メニュー"><span class="qi">${ICON_MENU}${notes ? '<em class="dot"></em>' : ''}</span><span class="ql">メニュー</span></button><div class="qscroll">` + groupsSorted().map(g => {
@@ -892,7 +925,7 @@ function renderGroup(){ const d = gdraft;
     <label class="f">アイコン</label>${iconPicker(d.icon, 'gicon')}
     <div class="row" style="margin-top:18px"><button class="btn ghost" style="flex:1" data-act="close">キャンセル</button><button class="btn go" style="flex:2" data-act="gsave">保存</button></div>
     ${!d._new && d.id !== 'grp_hoka' ? `<button class="btn danger wide" style="margin-top:10px" data-act="gdel">このグループを削除</button><p class="muted" style="font-size:11px;text-align:center">中の家事は「そのほか」に移るよ</p>` : ''}`); }
-const ICON_NAMES = { egg:'たまご', onigiri:'おにぎり', nabe:'なべ', pan:'フライパン', dish:'お皿', washer:'洗濯機', shirt:'シャツ', bag:'かばん', tub:'おふろ', duck:'アヒル', trash:'ゴミ袋', vacuum:'掃除機', toilet:'トイレ', basket:'かご', pillow:'まくら', spark:'きらきら', plus:'プラス' };
+const ICON_NAMES = { rice:'すいはんき', bowl:'ごはん', towel:'タオル', roller:'コロコロ', tatami:'たたみ', shoes:'くつ', bag_y:'黄色いゴミ袋', bag_g:'グレーのゴミ袋', canbin:'缶とビン', diaper:'オムツ', shampoo:'シャンプー', tp:'トイレットペーパー', refill:'つめかえ', kid:'こども', broom:'ほうき', shirt2:'子どもの服', egg:'たまご', onigiri:'おにぎり', nabe:'なべ', pan:'フライパン', dish:'お皿', washer:'洗濯機', shirt:'シャツ', bag:'かばん', tub:'おふろ', duck:'アヒル', trash:'ゴミ袋', vacuum:'掃除機', toilet:'トイレ', basket:'かご', pillow:'まくら', spark:'きらきら', plus:'プラス' };
 function iconPicker(cur, act){ return `<div class="ipick">${Object.keys(QI).filter(k => k !== 'plus').map(k => `<button class="${cur === k ? 'on' : ''}" data-act="${act}" data-v="${k}" aria-label="${ICON_NAMES[k] || k}">${QI[k]}</button>`).join('')}</div>`; }
 function renderQbar(){ const q = $('qbar'); if (!q) return; const on = S.me && tab === 'today'; q.style.display = on ? '' : 'none'; if (!on){ menuClose(); return; } const sc = q.querySelector('.qscroll'), x = sc ? sc.scrollLeft : 0; q.innerHTML = qbarHTML(); q.querySelector('.qscroll').scrollLeft = x; }
 
@@ -947,7 +980,7 @@ function newFlower(lg){
 function toggleThanks(log){ if (!log.thanks) chime('thanks'); put({ ...log, thanks: !log.thanks }); if (!log.thanks) toast('ありがとう、とどけたよ'); }
 
 /* ========== 初期データ（仮） ========== */
-function seedIfEmpty(){
+function seedIfEmpty(){ S.seeded = true; save(); return; // 家事の一覧は migrateCatalog2 で用意する
   if (S.seeded || all('chore').length || Object.values(S.items).some(i => i.kind === 'chore')) { S.seeded = true; save(); return; }
   const C = (id,name,owner,slot,freq,def) => ({ id:'seed_'+id, kind:'chore', name, owner, slot, freq, def });
   const list = [
@@ -1007,7 +1040,7 @@ function renameKid(){ let n = 0; for (const it of Object.values(S.items)){ if ((
 async function sync(){
   const ok = await pull();
   if (ok && !S.seeded) seedIfEmpty();
-  if (ok){ renameKid(); seedGroups(); }
+  if (ok){ renameKid(); migrateCatalog2(); }
   await push();
   render();
 }
@@ -5018,7 +5051,7 @@ function iconNotice(force){ let v = ''; try { v = localStorage.getItem('kaji_ico
 /* ========== 起動 ========== */
 if (!S.url) seedIfEmpty();
 renameKid();
-if (!S.url) seedGroups();
+if (!S.url) migrateCatalog2();
 render();
 if (S.url) sync();
 setTimeout(() => iconNotice(false), 1800);
