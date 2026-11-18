@@ -8,7 +8,7 @@ import { makeOrnament, makeDeco } from './kaji-orn3d.js';
 export const FURN_SLOTS = [['wallpaper', '壁紙'], ['flooring', '床'], ['topper', 'ツリーのてっぺん'], ['treelights', 'ツリーの電球'], ['garland', 'ツリーのモール'], ['fireplace', '暖炉'], ['stockings', 'くつした'], ['mantel', '暖炉の上'], ['wall', '暖炉の上の壁'], ['curtain', 'カーテン'], ['wintop', '窓の上'], ['sill', '窓辺'], ['outside', '窓の外'],
   ['shelf', '左の壁ぎわ'], ['sofa', '右の壁ぎわ'], ['lamp', 'あかり'], ['table', 'テーブル'], ['rug', 'ラグ'], ['toys', '床のおもちゃ'], ['treebase', 'ツリーの足もと'], ['special', 'クリスマスの特別']];
 const NAMES = {
-  wallpaper:['赤いダマスクの壁紙', 'ストライプの壁紙', '雪の結晶の壁紙'], flooring:['ヘリンボーンの床', '明るい板の床', '市松もようのタイル'],
+  wallpaper:['雪の結晶の赤い壁紙', 'ヒイラギのストライプ壁紙', '金の星のみどりの壁紙'], flooring:['ジンジャークッキーの床', 'タータンチェックのじゅうたん', 'キャンディの市松タイル'],
   topper:['金の星', '雪の結晶', '赤いリボン'], treelights:['カラフルな電球', 'あたたかい白の電球', '雪玉ライト'], garland:['金のモール', '銀のモール', '赤と白のビーズ'],
   fireplace:['石の暖炉', 'レンガの暖炉', '白い暖炉'], stockings:['フェルトのくつした', 'ニットのくつした', 'チェックのくつした'], mantel:['ろうそくとくるみ割り人形', 'おかしの家とミニツリー', 'スノードームとランタン'],
   wall:['リース', '木の掛け時計', '雪の町の絵'], curtain:['赤いチェックのカーテン', 'みどりのベルベットのカーテン', '白いレースのカーテン'], wintop:['電飾', '星のガーランド', '雪の結晶のモビール'],
@@ -72,44 +72,38 @@ function glow(color, size, op = .9){ const s = new THREE.Sprite(new THREE.Sprite
 
 /* ---------- 部屋：床・壁・腰板・巾木・窓（奥行きのある部屋） ---------- */
 const RW = 4.6, RH = 7, FRONT = 4.2, bz = -2.7, RD = FRONT - bz, RZ = (bz + FRONT) / 2;
-/* 床（3種）：ヘリンボーン・明るい板張り・市松のタイル */
-const FLOOR_REP = { a:[3, 3 * RD / RW], b:[2, 2 * RD / RW], c:[2.2, 2.2 * RD / RW] };
+/* 床（3種）：ジンジャークッキーの板・赤とみどりのタータン・キャンディの市松 */
+const FLOOR_REP = { a:[2, 2 * RD / RW], b:[2.4, 2.4 * RD / RW], c:[2.2, 2.2 * RD / RW] };
 function floorTexOf(kind){ return canvasTex(512, 512, (g, w, h) => {
-  if (kind === 'b'){ g.fillStyle = '#e8c79a'; g.fillRect(0, 0, w, h); const ph = 64;
-    for (let r = 0; r < h / ph; r++){ let x = -((r * 173) % 300); while (x < w){ const L = 220 + ((x * 7 + r * 31) % 140), sh = .9 + ((r * 13 + x) % 17) / 17 * .16; g.fillStyle = `rgb(${236 * sh | 0},${203 * sh | 0},${158 * sh | 0})`; g.fillRect(x + 1, r * ph + 1, L - 2, ph - 2);
-      g.strokeStyle = 'rgba(160,110,60,.18)'; g.lineWidth = 1.2; for (let k = 0; k < 5; k++){ g.beginPath(); const yy = r * ph + 10 + k * 11; g.moveTo(x + 4, yy); g.bezierCurveTo(x + L * .3, yy + 4, x + L * .6, yy - 4, x + L - 4, yy + 1); g.stroke(); }
-      g.strokeStyle = 'rgba(120,80,40,.4)'; g.lineWidth = 2; g.strokeRect(x + 1, r * ph + 1, L - 2, ph - 2); x += L; } } return; }
-  if (kind === 'c'){ const n = 8, c = w / n; for (let i = 0; i < n; i++) for (let j = 0; j < n; j++){ const red = (i + j) % 2; g.fillStyle = red ? '#b8473c' : '#f3e6cc'; g.fillRect(i * c, j * c, c, c); g.fillStyle = red ? 'rgba(255,255,255,.06)' : 'rgba(160,120,70,.08)'; g.fillRect(i * c + 4, j * c + 4, c - 8, 6); }
-    g.strokeStyle = 'rgba(90,60,40,.35)'; g.lineWidth = 2; for (let i = 0; i <= n; i++){ g.beginPath(); g.moveTo(i * c, 0); g.lineTo(i * c, h); g.stroke(); g.beginPath(); g.moveTo(0, i * c); g.lineTo(w, i * c); g.stroke(); } return; }
-
-  g.fillStyle = '#c98f5a'; g.fillRect(0, 0, w, h);
-  const pw = 128, ph = 32; // ヘリンボーン
-  for (let y = -ph * 4; y < h + ph * 4; y += ph) for (let x = -pw; x < w + pw; x += pw){
-    const off = (Math.floor(y / ph) % 2) * pw / 2;
-    for (const dir of [1, -1]){ g.save(); g.translate(x + off + (dir > 0 ? 0 : pw / 2), y); g.rotate(dir * Math.PI / 4);
-      const shade = 0.88 + ((x * 7 + y * 13 + dir * 5) % 23) / 23 * 0.2; g.fillStyle = `rgb(${201 * shade | 0},${143 * shade | 0},${90 * shade | 0})`; g.fillRect(0, 0, pw * .7, ph * .7);
-      g.strokeStyle = 'rgba(110,64,32,.45)'; g.lineWidth = 2; g.strokeRect(0, 0, pw * .7, ph * .7);
-      g.strokeStyle = 'rgba(255,230,190,.12)'; g.beginPath(); for (let k = 4; k < ph * .7; k += 5){ g.moveTo(2, k); g.lineTo(pw * .7 - 2, k + Math.sin(k + x) * 1.5); } g.stroke(); g.restore(); }
-  }
+  if (kind === 'a'){ g.fillStyle = '#f6efe2'; g.fillRect(0, 0, w, h); const ph = 64;
+    for (let r = 0; r < h / ph; r++){ let x = -((r * 173) % 300); while (x < w){ const L = 200 + ((x * 7 + r * 31) % 120), sh = .93 + ((r * 13 + x) % 17) / 17 * .1;
+      g.fillStyle = `rgb(${196 * sh | 0},${132 * sh | 0},${78 * sh | 0})`; g.beginPath(); g.roundRect ? g.roundRect(x + 3, r * ph + 3, L - 6, ph - 6, 10) : g.rect(x + 3, r * ph + 3, L - 6, ph - 6); g.fill();
+      g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(x + 10, r * ph + 7, L - 20, 5);
+      g.strokeStyle = '#fffaf0'; g.lineWidth = 3; g.setLineDash([2, 7]); g.lineCap = 'round'; g.beginPath(); g.roundRect ? g.roundRect(x + 10, r * ph + 10, L - 20, ph - 20, 6) : g.rect(x + 10, r * ph + 10, L - 20, ph - 20); g.stroke(); g.setLineDash([]); x += L; } } return; }
+  if (kind === 'b'){ g.fillStyle = '#b83a32'; g.fillRect(0, 0, w, h); const band = (c, a, x0, wd, vert) => { g.fillStyle = c; g.globalAlpha = a; for (let k = 0; k < 4; k++){ const p = k * 128 + x0; vert ? g.fillRect(p, 0, wd, h) : g.fillRect(0, p, w, wd); } g.globalAlpha = 1; };
+    for (const v of [true, false]){ band('#2f6a46', .55, 20, 46, v); band('#1f4a30', .35, 34, 18, v); band('#f2d27a', .7, 90, 4, v); band('#fff6e6', .45, 106, 3, v); }
+    for (let i = 0; i < 2200; i++){ g.fillStyle = `rgba(${Math.random() < .5 ? '255,255,255' : '0,0,0'},.05)`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); } return; }
+  const n = 8, c = w / n; for (let i = 0; i < n; i++) for (let j = 0; j < n; j++){ const red = (i + j) % 2; g.fillStyle = red ? '#d8433a' : '#fff7ec'; g.beginPath(); g.roundRect ? g.roundRect(i * c + 2, j * c + 2, c - 4, c - 4, 8) : g.rect(i * c + 2, j * c + 2, c - 4, c - 4); g.fill();
+    if (red){ g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 5; g.beginPath(); g.moveTo(i * c + 12, j * c + c - 12); g.lineTo(i * c + c - 12, j * c + 12); g.stroke(); } else { g.fillStyle = '#7cc4a8'; g.beginPath(); g.arc(i * c + c / 2, j * c + c / 2, 5, 0, 7); g.fill(); } }
+  g.strokeStyle = 'rgba(160,90,70,.25)'; g.lineWidth = 3; for (let i = 0; i <= n; i++){ g.beginPath(); g.moveTo(i * c, 0); g.lineTo(i * c, h); g.stroke(); g.beginPath(); g.moveTo(0, i * c); g.lineTo(w, i * c); g.stroke(); }
 }, FLOOR_REP[kind] || FLOOR_REP.a); }
 const floorTex = floorTexOf('a');
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(RW, RD), std('#ffffff', { map:floorTex, roughness:.75 }));
 floor.rotation.x = -Math.PI / 2; floor.position.z = RZ; floor.receiveShadow = true; scene.add(floor);
 
-/* 壁紙（3種）：赤いダマスク・クリームとみどりのストライプ・雪の結晶の水色 */
+/* 壁紙（3種）：赤い北欧もよう・ヒイラギとキャンディのストライプ・みどりに金の星 */
+const flakeAt = (g, cx, cy, r, col, lw = 2.2) => { g.save(); g.translate(cx, cy); g.strokeStyle = col; g.lineWidth = lw; g.lineCap = 'round'; for (let k = 0; k < 6; k++){ g.rotate(Math.PI / 3); g.beginPath(); g.moveTo(0, 0); g.lineTo(0, -r); g.moveTo(0, -r * .55); g.lineTo(-r * .3, -r * .82); g.moveTo(0, -r * .55); g.lineTo(r * .3, -r * .82); g.stroke(); } g.restore(); };
+const starAt = (g, cx, cy, r, col) => { g.fillStyle = col; g.beginPath(); for (let i = 0; i < 10; i++){ const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r; g.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } g.closePath(); g.fill(); };
+const hollyAt = (g, cx, cy, s) => { g.save(); g.translate(cx, cy); g.scale(s, s); g.fillStyle = '#3d8a55'; for (const a of [-.6, .6]){ g.save(); g.rotate(a); g.beginPath(); g.ellipse(0, -9, 5, 10, 0, 0, 7); g.fill(); g.restore(); } g.fillStyle = '#d8303a'; for (const [x, y] of [[-3, 1], [3, 1], [0, -3]]){ g.beginPath(); g.arc(x, y, 3.4, 0, 7); g.fill(); } g.restore(); };
 function wallTexOf(kind){ return canvasTex(256, 256, (g, w, h) => {
-  if (kind === 'b'){ g.fillStyle = '#f4ead2'; g.fillRect(0, 0, w, h); for (let x = 0; x < w; x += 64){ g.fillStyle = '#3f7a52'; g.fillRect(x + 18, 0, 22, h); g.fillStyle = '#c8a24a'; g.fillRect(x + 14, 0, 2, h); g.fillRect(x + 42, 0, 2, h); }
-    for (let y = 32; y < h; y += 64) for (let x = 0; x < w; x += 64){ const cx = x + 52, cy = y + (x / 64 % 2) * 32; g.fillStyle = '#3f7a52'; for (const s of [-1, 1]){ g.beginPath(); g.ellipse(cx + s * 5, cy, 6, 3, s * .5, 0, 7); g.fill(); } g.fillStyle = '#c8352e'; g.beginPath(); g.arc(cx, cy - 2, 2.6, 0, 7); g.fill(); } return; }
-  if (kind === 'c'){ const l = g.createLinearGradient(0, 0, 0, h); l.addColorStop(0, '#a9c6e4'); l.addColorStop(1, '#9dbbdc'); g.fillStyle = l; g.fillRect(0, 0, w, h);
-    const flake = (cx, cy, r) => { g.save(); g.translate(cx, cy); g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = r > 12 ? 2.6 : 2; g.lineCap = 'round'; for (let k = 0; k < 6; k++){ g.rotate(Math.PI / 3); g.beginPath(); g.moveTo(0, 0); g.lineTo(0, -r); g.moveTo(0, -r * .55); g.lineTo(-r * .28, -r * .8); g.moveTo(0, -r * .55); g.lineTo(r * .28, -r * .8); g.stroke(); } g.restore(); };
-    flake(64, 64, 18); flake(192, 192, 18); flake(192, 60, 9); flake(60, 190, 9); g.fillStyle = 'rgba(255,255,255,.7)'; for (const [x, y] of [[128, 20], [20, 128], [236, 128], [128, 236], [128, 128]]){ g.beginPath(); g.arc(x, y, 2.5, 0, 7); g.fill(); } return; }
-
-  g.fillStyle = '#b5403a'; g.fillRect(0, 0, w, h);
-  g.fillStyle = 'rgba(255,255,255,.05)'; for (let x = 0; x < w; x += 32) g.fillRect(x, 0, 14, h);
-  const motif = (cx, cy, s) => { g.save(); g.translate(cx, cy); g.scale(s, s); g.fillStyle = '#d9a441'; g.globalAlpha = .55;
-    g.beginPath(); g.moveTo(0, -26); g.bezierCurveTo(14, -14, 14, 8, 0, 26); g.bezierCurveTo(-14, 8, -14, -14, 0, -26); g.fill();
-    g.globalAlpha = .45; for (const sx of [-1, 1]){ g.beginPath(); g.ellipse(sx * 14, 0, 6, 12, sx * .5, 0, Math.PI * 2); g.fill(); } g.restore(); };
-  motif(64, 64, 1); motif(192, 192, 1); motif(192, 64, .55); motif(64, 192, .55);
+  if (kind === 'a'){ g.fillStyle = '#c23b34'; g.fillRect(0, 0, w, h); flakeAt(g, 64, 64, 20, 'rgba(255,248,236,.92)', 3); flakeAt(g, 192, 192, 20, 'rgba(255,248,236,.92)', 3);
+    for (const [x, y] of [[192, 64], [64, 192]]){ g.fillStyle = 'rgba(255,248,236,.85)'; g.beginPath(); g.moveTo(x, y + 9); g.bezierCurveTo(x - 14, y - 2, x - 6, y - 14, x, y - 5); g.bezierCurveTo(x + 6, y - 14, x + 14, y - 2, x, y + 9); g.fill(); }
+    g.fillStyle = 'rgba(255,248,236,.6)'; for (const [x, y] of [[128, 20], [20, 128], [236, 128], [128, 236], [128, 128], [20, 20], [236, 236], [236, 20], [20, 236]]){ g.beginPath(); g.arc(x, y, 2.6, 0, 7); g.fill(); } return; }
+  if (kind === 'b'){ g.fillStyle = '#fbf3e2'; g.fillRect(0, 0, w, h); for (let x = 0; x < w; x += 64){ g.fillStyle = '#d8433a'; g.fillRect(x + 4, 0, 10, h); g.fillStyle = '#3d8a55'; g.fillRect(x + 18, 0, 4, h); g.fillStyle = '#d8433a'; g.fillRect(x + 26, 0, 3, h); }
+    for (let y = 0; y < h; y += 64) for (let x = 0; x < w; x += 64) hollyAt(g, x + 46, y + 32 + (x / 64 % 2) * 32, .9); return; }
+  g.fillStyle = '#2f6a46'; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(255,255,255,.04)'; for (let x = 0; x < w; x += 16) g.fillRect(x, 0, 7, h);
+  starAt(g, 64, 64, 14, '#f2c14e'); starAt(g, 192, 192, 14, '#f2c14e'); starAt(g, 192, 64, 7, '#fbe3a0'); starAt(g, 64, 192, 7, '#fbe3a0');
+  g.fillStyle = 'rgba(255,248,236,.55)'; for (const [x, y] of [[128, 30], [30, 128], [226, 128], [128, 226], [128, 128]]){ g.beginPath(); g.arc(x, y, 2.2, 0, 7); g.fill(); }
 }, [5, 4]); }
 const wallTex = wallTexOf('a');
 const WX = -.05, WY = 2.45, WW = 1.24, WH = 1.44; // 窓の開口
@@ -142,7 +136,7 @@ const glassPane = new THREE.Mesh(new THREE.PlaneGeometry(WW, WH), new THREE.Mesh
 // 外：空・雪の地面・木
 let wallKind = 'a', floorKind = 'a';
 function applyWall(kind){ kind = kind || 'a'; if (kind === wallKind) return; wallKind = kind; const t = wallTexOf(kind), bt = t.clone(); bt.needsUpdate = true; bt.repeat.set(5 / RW, 4 / RH); back.material.map.dispose(); back.material.map = bt; back.material.needsUpdate = true;
-  sideWalls.forEach(sw => { const st = t.clone(); st.needsUpdate = true; st.repeat.set(5 * RD / RW, 4); sw.material.map.dispose(); sw.material.map = st; sw.material.color.set(kind === 'a' ? '#ead2cc' : '#e6e0d8'); sw.material.needsUpdate = true; }); }
+  sideWalls.forEach(sw => { const st = t.clone(); st.needsUpdate = true; st.repeat.set(5 * RD / RW, 4); sw.material.map.dispose(); sw.material.map = st; sw.material.color.set('#ead8d0'); sw.material.needsUpdate = true; }); }
 function applyFloor(kind){ kind = kind || 'a'; if (kind === floorKind) return; floorKind = kind; floor.material.map.dispose(); floor.material.map = floorTexOf(kind); floor.material.needsUpdate = true; }
 const OUT_Z = bz - .02, outside = new THREE.Group(); scene.add(outside);
 const skyTex = canvasTex(512, 512, (g, w, h) => { const l = g.createLinearGradient(0, 0, 0, h); l.addColorStop(0, '#1b2a55'); l.addColorStop(.7, '#3b4f8a'); l.addColorStop(1, '#5a6aa0'); g.fillStyle = l; g.fillRect(0, 0, w, h);

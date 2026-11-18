@@ -4625,7 +4625,7 @@ function renderEdit(){
   const d = draft, f = d.freq || {type:'daily'};
   const seg = (field, opts, cur) => `<div class="seg">${opts.map(([v,l]) => `<button class="${cur===v?'on':''}" data-act="dset" data-f="${field}" data-v="${v}">${esc(l)}</button>`).join('')}</div>`;
   let h = `<h3>${d._new?'家事を追加':'家事を編集'}</h3>
-    <label class="f">名前</label><input class="t" id="e_name" value="${esc(d.name)}" placeholder="例：夜の洗い物">
+    <label class="f">名前 <span class="muted" style="font-weight:600">（12文字まで）</span></label><input class="t" id="e_name" maxlength="12" value="${esc(d.name)}" placeholder="例：夜の洗い物">
     <label class="f">担当</label>${seg('owner',[['h',nm('h')],['y',nm('y')],['any','どちらでも']],d.owner)}
     <label class="f">時間帯</label>${seg('slot',SLOTS,d.slot||'any')}
     <label class="f">頻度</label>${seg('ftype',[['daily','毎日'],['weekly','曜日'],['interval','◯日ごと']],f.type)}`;
@@ -4654,7 +4654,7 @@ function sheetFree(){
   openSheet(`<h3>ほかの家事</h3>
     <div class="chips">${chips.map(c => `<button data-act="free" data-v="${esc(c)}">${esc(c)}</button>`).join('')}</div>
     <label class="togglerow"><input type="checkbox" id="freeboth" ${freeBoth?'checked':''}>ふたりでやった</label>
-    <label class="f">じぶんで書く</label><div class="row"><input class="t" id="freein" placeholder="例：網戸の掃除"><button class="btn" data-act="freein">記録</button></div>`);
+    <label class="f">じぶんで書く</label><div class="row"><input class="t" id="freein" maxlength="12" placeholder="例：網戸の掃除"><button class="btn" data-act="freein">記録</button></div>`);
 }
 
 /* ========== イベント ========== */
