@@ -70,7 +70,7 @@ const glowTex = canvasTex(128, 128, (g, w) => { const r = g.createRadialGradient
 function glow(color, size, op = .9){ const s = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color, transparent:true, opacity:op, blending:THREE.AdditiveBlending, depthWrite:false })); s.scale.set(size, size, 1); return s; }
 
 /* ---------- 部屋：床・壁・腰板・巾木・窓（奥行きのある部屋） ---------- */
-const RW = 4.6, RH = 7, FRONT = 2.6, bz = -2.7, RD = FRONT - bz, RZ = (bz + FRONT) / 2;
+const RW = 4.6, RH = 7, FRONT = 4.2, bz = -2.7, RD = FRONT - bz, RZ = (bz + FRONT) / 2;
 const floorTex = canvasTex(512, 512, (g, w, h) => {
   g.fillStyle = '#c98f5a'; g.fillRect(0, 0, w, h);
   const pw = 128, ph = 32; // ヘリンボーン

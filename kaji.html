@@ -211,6 +211,17 @@ body.xfullmode .qbar{background:rgba(255,250,236,.55);-webkit-backdrop-filter:bl
 .slotdone b{font-size:15px}.slotdone span{flex:1;color:#4a8a5a;font-weight:800}.slotdone small{color:var(--sub);font-weight:700}
 .nowchip{margin-left:8px;font-size:11px;font-weight:800;color:#fff;background:var(--amber);padding:3px 9px;border-radius:999px;vertical-align:middle}
 .slotfold{margin-left:8px;font-size:11px;font-weight:700;color:var(--sub);background:var(--paper);padding:3px 9px;border-radius:999px}
+body.onebar nav.tabs{display:none}
+body.onebar .qbar{bottom:calc(8px + env(safe-area-inset-bottom));left:10px;right:10px;border-radius:26px;padding:10px 12px 10px 0;box-shadow:var(--sh-lift)}
+.qb.qmenu{position:sticky;left:0;z-index:2;width:84px;padding-left:12px;background:linear-gradient(90deg,#e9dfc6 78%,rgba(233,223,198,0))}
+.qb.qmenu .qi{background:var(--brown);border-radius:20px}
+.qb.qmenu .qi .dot{position:absolute;top:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#e8586a;box-shadow:0 0 0 2px #fff8e8}
+.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:10px 0 6px}
+.mapp{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--navy)}
+.mapp .tile{position:relative;width:62px;height:62px;border-radius:20px;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh-lift)}
+.mapp .tile svg{width:30px;height:30px;fill:none;stroke:#fffbed;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.mapp .t-week{background:var(--h)}.mapp .t-review{background:var(--y)}.mapp .t-zukan{background:#8b7bb5}.mapp .t-settings{background:var(--brown)}
+.mapp .badge-n{position:absolute;top:-5px;right:-5px;left:auto}
 .qb{flex:0 0 auto;width:74px;display:flex;flex-direction:column;align-items:center;gap:4px}
 .qb .qi{position:relative;width:64px;height:64px;border-radius:50%;background:var(--cream);box-shadow:var(--sh-lift);display:flex;align-items:center;justify-content:center;transition:transform .12s}
 .qb .qi svg{width:42px;height:42px}
@@ -685,12 +696,16 @@ const SLOT_ORDER = ['morning', 'day', 'night'];
 function currentSlot(){ const due = all('chore').filter(isDueToday), tk = dayKey(Date.now());
   for (const s of SLOT_ORDER){ const cs = due.filter(c => (c.slot || 'any') === s); if (cs.length && cs.some(c => !logsOn(tk).some(l => l.choreId === c.id))) return s; }
   return null; }
+const ICON_MENU = `<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fffbed" stroke-width="2.2" stroke-linecap="round"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></svg>`;
+function menuSheet(){ const notes = all('note').filter(n => n.status !== 'done').length;
+  const apps = [...document.querySelectorAll('#tabs button')].filter(b => b.dataset.t !== 'today').map(b => `<button class="mapp" data-act="goto" data-t="${b.dataset.t}"><span class="tile t-${b.dataset.t}">${b.querySelector('svg').outerHTML}${b.dataset.t === 'review' && notes ? `<span class="badge-n">${notes}</span>` : ''}</span>${({ week:'週', review:'ふたり', zukan:'図鑑', settings:'設定' })[b.dataset.t]}</button>`).join('');
+  openSheet(`<div class="mgrid">${apps}</div>`); }
 function qbarHTML(){
   const tk = dayKey(Date.now()), logs = logsOn(tk), cur = currentSlot(), cs = choresSorted(), due = new Set(cs.filter(isDueToday).map(c => c.id));
   const rank = c => { const s = c.slot || 'any', done = logs.some(l => l.choreId === c.id); if (!due.has(c.id)) return 50; if (done) return 40;
     if (s === cur) return 0; if (s === 'any') return 20; const si = SLOT_ORDER.indexOf(s), ci = SLOT_ORDER.indexOf(cur); return si > ci ? 10 + si : 30; };
-  const list = cs.slice();
-  return list.map(c => { const n = logs.filter(l => l.choreId === c.id).length;
+  const list = cs.slice(), notes = all('note').filter(n => n.status !== 'done').length;
+  return `<button class="qb qmenu" data-act="menu" aria-label="メニュー"><span class="qi">${ICON_MENU}${notes ? '<em class="dot"></em>' : ''}</span><span class="ql">メニュー</span></button>` + list.map(c => { const n = logs.filter(l => l.choreId === c.id).length;
     return `<button class="qb" data-act="qdo" data-id="${c.id}"><span class="qi">${QI[choreIcon(c)]}${n ? `<em>${n}</em>` : ''}</span><span class="ql">${esc(c.name.replace(/（.*?）/g, ''))}</span></button>`; }).join('')
     + `<button class="qb" data-act="qfree"><span class="qi">${QI.plus}</span><span class="ql">ほかの家事</span></button>`;
 }
@@ -4222,7 +4237,7 @@ function render(){
   const me = S.me;
   $('mechip').innerHTML = me ? `<span class="dot ${me}"></span>${esc(nm(me))}` : '未設定';
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
-  $('fab').style.display = 'none'; renderQbar(); document.body.classList.toggle('xfullmode', !!(me && tab === 'today' && xmasOn(0))); syncRoom(); setTimeout(fillThumbs, 0); if (tab === 'week') setTimeout(fillWeekTree, 0); if (tab === 'zukan' && zMode === 'furn') setTimeout(() => ensureRoom().then(fillFurn), 0);
+  $('fab').style.display = 'none'; renderQbar(); document.body.classList.toggle('onebar', !!(me && tab === 'today')); document.body.classList.toggle('xfullmode', !!(me && tab === 'today' && xmasOn(0))); syncRoom(); setTimeout(fillThumbs, 0); if (tab === 'week') setTimeout(fillWeekTree, 0); if (tab === 'zukan' && zMode === 'furn') setTimeout(() => ensureRoom().then(fillFurn), 0);
   if (LISTOPEN && tab === 'today') $('sheet').innerHTML = `<button class="x" data-act="close" aria-label="閉じる">✕</button><div class="listsheet">${LIST_HTML}</div>`;
   const v = $('view');
   if (!me) { v.innerHTML = viewOnboard(); return; }
@@ -4403,7 +4418,7 @@ function syncRoom(){
 }
 let ROOM_P = null;
 function ensureRoom(){ if (ROOM) return Promise.resolve(ROOM); if (ROOM_FAIL) return Promise.resolve(null); if (ROOM_P) return ROOM_P; const el = $('room3d'); ROOM_LOADING = true;
-  return ROOM_P = import('./kaji-room3d.js').then(m => { RMOD = m; ROOM = m.mountRoom(el, { shiftY:.06, rot:treeMem().rot, onRot:r => { const t = treeMem(); t.rot = r; treeSave(t); }, onTap:(id, gift) => { chime('do'); setTimeout(() => ornSheet(id, gift), gift ? 250 : 650); }, onTree:() => chime('do'), onSpin:() => { try { localStorage.setItem('kaji_spun', '1'); } catch (e) {} } }); try { if (!localStorage.getItem('kaji_spun')) setTimeout(() => toast('ツリーは指でくるっと回せるよ'), 1500); else if (advBadge() && !localStorage.getItem('kaji_advhint')){ localStorage.setItem('kaji_advhint', '1'); setTimeout(() => toast('🎁 アドベントのとびらがあいてるよ'), 1500); } } catch (e) {} ROOM_LOADING = false; return ROOM; })
+  return ROOM_P = import('./kaji-room3d.js').then(m => { RMOD = m; ROOM = m.mountRoom(el, { shiftY:.01, rot:treeMem().rot, onRot:r => { const t = treeMem(); t.rot = r; treeSave(t); }, onTap:(id, gift) => { chime('do'); setTimeout(() => ornSheet(id, gift), gift ? 250 : 650); }, onTree:() => chime('do'), onSpin:() => { try { localStorage.setItem('kaji_spun', '1'); } catch (e) {} } }); try { if (!localStorage.getItem('kaji_spun')) setTimeout(() => toast('ツリーは指でくるっと回せるよ'), 1500); else if (advBadge() && !localStorage.getItem('kaji_advhint')){ localStorage.setItem('kaji_advhint', '1'); setTimeout(() => toast('🎁 アドベントのとびらがあいてるよ'), 1500); } } catch (e) {} ROOM_LOADING = false; return ROOM; })
     .catch(e => { console.warn(e); ROOM_FAIL = true; ROOM_LOADING = false; render(); return null; });
 }
 function ornSheet(id, gift){ const l = S.items[id]; if (!l) return; const k = ornamentOf(l), mine = l.by === S.me && !l.both, when = `${dayKey(l.at).slice(5).replace('-','/')} ${hm(l.at)}`;
@@ -4662,6 +4677,8 @@ document.addEventListener('click', e => {
         ${mine ? (l.thanks ? '<div class="thanks on" style="margin-top:12px">♥ ありがとうが届いてる</div>' : '') : `<button class="btn ${l.thanks ? 'ghost' : 'go'}" style="margin-top:14px;padding:12px 22px" data-act="othanks" data-id="${l.id}">${l.thanks ? '♥ ありがとう、とどいてるよ' : '♡ ありがとう'}</button>`}</div>`), 220); break; }
     case 'othanks': { if (!L) break; if (!L.thanks) burst(el, 'heart'); toggleThanks(L); closeSheet(); break; }
     case 'advent': advSheet(); break;
+    case 'menu': menuSheet(); break;
+    case 'goto': tab = el.dataset.t; weekOff = 0; selDay = null; reviewOpen = false; closeSheet(); render(); window.scrollTo(0, 0); break;
     case 'advopen': advOpen(+el.dataset.i); break;
     case 'moyou': moyouSheet(); break;
     case 'furn': { setFurn(el.dataset.slot, el.dataset.key); const sc = $('sheet').scrollTop; moyouSheet(); setTimeout(() => { $('sheet').scrollTop = sc; }, 60); break; }
