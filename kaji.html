@@ -1012,7 +1012,7 @@ const TEST_DAYS = new Set(['2026-11-18']);
 function foundSet(){ return new Set(all('log').filter(l => !inXmas(l.at) && !TEST_DAYS.has(dayKey(l.at))).map(flowerOf)); }
 function isNewFind(lg){ return inXmas(lg.at) ? !ornFound().f[ornamentOf(lg)] : !foundSet().has(flowerOf(lg)); }
 function newFlower(lg){
-  if (inXmas(lg.at)){ const k = ornamentOf(lg); setTimeout(() => { chime('thanks'); toast(`${isEngi(k) ? 'はじめての縁起物！' : 'はじめてのオーナメント！'} ${ORN[k].n}`); }, 350); return; }
+  if (inXmas(lg.at)){ const k = ornamentOf(lg); setTimeout(() => { chime('thanks'); toast(`${isEngi(k) ? 'はじめての福かざり！' : 'はじめてのオーナメント！'} ${ORN[k].n}`); }, 350); return; }
   const k = flowerOf(lg);
   setTimeout(() => { chime('thanks'); toast(`新しい花を見つけた！ ${FL[k].n}`); }, 350);
 }
@@ -4165,7 +4165,7 @@ const XMAS_FROM = [11, 15], XMAS_TO = [1, 7], NY_FROM = [12, 26];
 const mdv = ts => { const d = appDate(ts); return (d.getMonth() + 1) * 100 + d.getDate(); };
 function inXmas(ts){ const v = mdv(ts); return v >= XMAS_FROM[0] * 100 + XMAS_FROM[1] || v <= XMAS_TO[0] * 100 + XMAS_TO[1]; }
 function inNY(ts){ const v = mdv(ts); return v >= NY_FROM[0] * 100 + NY_FROM[1] || v <= XMAS_TO[0] * 100 + XMAS_TO[1]; }
-const isEngi = k => !!(ORN[k] && ORN[k].c === '縁起物');
+const isEngi = k => !!(ORN[k] && ORN[k].c === '福かざり');
 function xmasOn(off = 0){ const ws = weekStart(off); for (let i = 0; i < 7; i++){ const d = new Date(ws); d.setDate(ws.getDate() + i); if (inXmas(d.getTime())) return true; } return false; }
 const capS = (y = -4.2) => `<g transform="translate(0,${y})"><path d="M0 -3.6 a1.15 1.15 0 1 0 .01 0Z M0 -3.05 a.6 .6 0 1 1 -.01 0Z" fill-rule="evenodd" fill="url(#capG)"/><rect x="-1.3" y="-1.5" width="2.6" height="1.8" rx=".45" fill="url(#capG)"/>${[-.7, 0, .7].map(x => `<path d="M${x} -1.3 V .1" stroke="#7a5410" stroke-width=".18" opacity=".6"/>`).join('')}<rect x="-1.3" y="-1.5" width="2.6" height=".45" rx=".2" fill="#fff4c0" opacity=".55"/></g>`;
 function ballArt(c, extra = '', id = ''){ const cid = 'obc' + c.slice(1);
@@ -4467,8 +4467,8 @@ function treeSVG(logs, big, opt = {}){
   ['e_tsuru0','赤い折り鶴',1,1],['e_tsuru1','金の折り鶴',3],['e_tsuru2','ピンクの折り鶴',1],['e_kame','亀',2,1],['e_matsu','松',1],['e_take','竹',1],['e_ume0','ピンクの梅',1],['e_ume1','白い梅',1],['e_ume2','紅梅',2],
   ['e_kagami','鏡もち',2,1],['e_kado','門松',2],['e_hitsuji0','晴れ着のひつじ',1],['e_hitsuji1','マフラーのひつじ',2],['e_fuji','富士山',2],['e_nasu','なす',2],['e_ebi','えび',2],['e_omikuji','おみくじ',1],['e_hamaya','破魔矢',2],
   ['e_tako','凧',1],['e_shishi','獅子舞',3],['e_senryo','千両箱',3],['e_mikan','みかん',1],['e_mizuhiki','紅白の水引',1],['e_takara','宝船',3,1]];
-  E.forEach(([k, n, r, both]) => { ORN[k] = { n, c:'縁起物', r, both:both ? 1 : 0, a:() => '<circle r="4" fill="#d8303a" stroke="#a82a2a" stroke-width=".4"/>' }; }); }
-const ORN_CATS = ['ボール', 'ガラス', 'フェルト', 'おかし', 'クラシック', 'ふゆ', 'そら', 'ふたりで', '縁起物'];
+  E.forEach(([k, n, r, both]) => { ORN[k] = { n, c:'福かざり', r, both:both ? 1 : 0, a:() => '<circle r="4" fill="#d8303a" stroke="#a82a2a" stroke-width=".4"/>' }; }); }
+const ORN_CATS = ['ボール', 'ガラス', 'フェルト', 'おかし', 'クラシック', 'ふゆ', 'そら', 'ふたりで', '福かざり'];
 ORN_KEYS.length = 0; ORN_CATS.forEach(c => Object.keys(ORN).filter(k => ORN[k].c === c).forEach(k => ORN_KEYS.push(k)));
 ORN_W[1] = 3; ORN_W[2] = 2; ORN_W[3] = 1;
 
@@ -4480,7 +4480,7 @@ function ornFound(){ const f = {}, first = {}; all('log').filter(l => inXmas(l.a
 let zoFilter = 'all';
 function viewZukanOrn(engi = false){
   const { f: f0 } = ornFound(), KEYS = ORN_KEYS.filter(k => isEngi(k) === engi), f = {}; KEYS.forEach(k => { if (f0[k]) f[k] = f0[k]; }); const nf = Object.keys(f).length, RL = { 0:'ふたりで', 1:'', 2:'ちょっとレア', 3:'レア' };
-  let html = zSeg() + `<div class="panel zhead"><div class="ztitle">${engi ? '年末年始の縁起物' : 'クリスマスのオーナメント'}</div><div class="zcount"><b>${nf}</b> / ${KEYS.length}種</div><div class="zbar"><i style="width:${(nf / KEYS.length * 100).toFixed(1)}%"></i></div></div>`;
+  let html = zSeg() + `<div class="panel zhead"><div class="ztitle">${engi ? 'おしょうがつの福かざり' : 'クリスマスのオーナメント'}</div><div class="zcount"><b>${nf}</b> / ${KEYS.length}種</div><div class="zbar"><i style="width:${(nf / KEYS.length * 100).toFixed(1)}%"></i></div></div>`;
   html += `<div class="seg" style="margin:14px 0 4px">${[['all', 'すべて'], ['found', '見つけた'], ['yet', 'まだ']].map(([v, l]) => `<button class="${zoFilter === v ? 'on' : ''}" data-act="zof" data-v="${v}">${l}</button>`).join('')}</div>`;
   for (const c of ORN_CATS){ const ks = KEYS.filter(k => ORN[k].c === c && (zoFilter === 'all' || (zoFilter === 'found') === !!f[k])); if (!ks.length) continue;
     const got = KEYS.filter(k => ORN[k].c === c && f[k]).length, tot = KEYS.filter(k => ORN[k].c === c).length;
@@ -4496,7 +4496,7 @@ function viewZukanFurn(){ const m = RMOD; if (!m){ ensureRoom().then(() => rende
       ? `<div class="zcell" data-act="furnz" data-k="${it.key}"><span class="zno">${m.TREE_PARTS.includes(it.slot) && it.k === 0 ? 'はじめから' : '&nbsp;'}</span><span class="fz">${fimg(it.key)}</span><span class="zn">${esc(it.name)}</span></div>`
       : `<div class="zcell un"><span class="zno">&nbsp;</span><span class="fz"><span class="lk">？</span></span><span class="zn">？？？</span></div>`).join('') + `</div>`; }
   return html; }
-function zSeg(){ const opts = [['flower', '花']]; if (CREATURES_ON) opts.push(['creature', '生き物']); { const fk = Object.keys(ornFound().f), ny = inNY(Date.now()); if ((xmasOn(0) && !ny) || fk.some(k => !isEngi(k))) opts.push(['orn', 'オーナメント']); if (ny || fk.some(isEngi)) opts.push(['engi', '縁起物']); } if (!ROOM_FAIL && (xmasOn(0) || (settings().adv || []).length)) opts.push(['furn', '家具']);
+function zSeg(){ const opts = [['flower', '花']]; if (CREATURES_ON) opts.push(['creature', '生き物']); { const fk = Object.keys(ornFound().f), ny = inNY(Date.now()); if ((xmasOn(0) && !ny) || fk.some(k => !isEngi(k))) opts.push(['orn', 'オーナメント']); if (ny || fk.some(isEngi)) opts.push(['engi', '福かざり']); } if (!ROOM_FAIL && (xmasOn(0) || (settings().adv || []).length)) opts.push(['furn', '家具']);
   return opts.length > 1 ? `<div class="seg" style="margin:6px 0 12px">${opts.map(([v, l]) => `<button class="${zMode === v ? 'on' : ''}" data-act="zm" data-v="${v}">${l}</button>`).join('')}</div>` : ''; }
 
 function weekLogs(off){ const ws = weekStart(off), we = new Date(ws); we.setDate(ws.getDate()+7); return all('log').filter(l => l.at >= ws.getTime() && l.at < we.getTime()); }
@@ -5028,7 +5028,7 @@ document.addEventListener('click', e => {
     case 'furnz': { const k = el.dataset.k, it = RMOD && RMOD.FURN_BY[k], U = RMOD && unlockedFurn(RMOD), init = k === 'tree' || (it && RMOD.TREE_PARTS.includes(it.slot) && it.k === 0);
       openSheet(`<div class="ornsheet"><img data-fk="${k}" alt="" style="width:150px;height:150px"><b>${esc(k === 'tree' ? 'もみの木' : it.name)}</b><p class="odesc">${esc(FURN_DESC[k] || '')}</p><div class="muted">${init ? 'はじめから持っているもの' : `アドベント ${md(U.day(k))} にとどいたもの`}</div></div>`); setTimeout(() => ensureRoom().then(fillFurn), 30); break; }
     case 'zof': zoFilter = el.dataset.v; render(); break;
-    case 'ornz': { const k = el.dataset.k, z = ornFound(); if (!z.f[k]){ toast(ORN[k].both ? 'ふたりでやった家事で見つかるよ' : isEngi(k) ? 'まだ見つけていない縁起物' : 'まだ見つけていないオーナメント'); break; }
+    case 'ornz': { const k = el.dataset.k, z = ornFound(); if (!z.f[k]){ toast(ORN[k].both ? 'ふたりでやった家事で見つかるよ' : isEngi(k) ? 'まだ見つけていない福かざり' : 'まだ見つけていないオーナメント'); break; }
       openSheet(`<div class="ornsheet">${ornIcon(k, 150)}<b>${ORN[k].n}</b><p class="odesc">${esc(ornDesc(k))}</p><div class="muted">これまでに${z.f[k]}こ・はじめては ${dayKey(z.first[k].at).slice(5).replace('-','/')} の「${esc(z.first[k].name)}」</div></div>`); setTimeout(fillThumbs, 30); break; }
     case 'zm': zMode = el.dataset.v; zFilter = 'month'; render(); break;
     case 'zc': sheetCreature(el.dataset.k); break;
