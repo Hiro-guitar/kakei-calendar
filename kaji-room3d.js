@@ -220,7 +220,10 @@ const placed = [], appear = [];
 const usedSlots = new Set();
 // いま手前を向いている面の、あいている場所を選ぶ（回したあとでも、見えている側に付く）
 function pickSlot(){ const rot = tree.rotation.y; let best = -1, bs = 1e9; for (let i = 0; i < slots.length; i++){ if (usedSlots.has(i)) continue; const p = slots[i]; let d = Math.atan2(p.x, p.z) + rot; d = Math.atan2(Math.sin(d), Math.cos(d)); const sc = Math.abs(d) + rnd() * 1.1; if (sc < bs){ bs = sc; best = i; } } return best; }
-function addOrnament(animate = true, id = null, type = null){ const idx = placed.length; let si = id && opts.slotOf ? opts.slotOf(id) : null, p; if (!(si >= 0 && si < slots.length) || usedSlots.has(si)){ si = pickSlot(); if (si >= 0 && id && opts.onPlace) opts.onPlace(id, si); } if (si >= 0){ usedSlots.add(si); p = slots[si].clone(); } else { p = slots[idx % slots.length].clone().multiplyScalar(1.02).add(new THREE.Vector3(0, -.04 * Math.floor(idx / slots.length), 0)); } const o = makeOrnament(type || 'red'); o.userData.id = id; o.userData.base = 1.45; o.scale.setScalar(1.45); o.children[0].position.y -= .13; o.position.copy(p).add(new THREE.Vector3(0, .13 * 1.45, 0)); o.userData.orn = true; o.userData.ph = rnd() * 6; o.rotation.order = 'YXZ'; o.rotation.y = Math.atan2(p.x, p.z) + (rnd() - .5) * .6; o.rotation.z = (rnd() - .5) * .25; o.userData.rz = o.rotation.z; o.traverse(m => { if (m.isMesh) m.castShadow = true; }); tree.add(o); placed.push(o);
+// 決まった場所があればそこ。ふたりがたまたま同じ場所を選んでいたら、いちばん近いあいている場所。なければ前から順に（どの端末でも同じ結果）
+function slotFor(want){ if (Number.isInteger(want) && want >= 0 && want < slots.length){ if (!usedSlots.has(want)) return want; let best = -1, bd = 1e9; for (let i = 0; i < slots.length; i++){ if (usedSlots.has(i)) continue; const d = slots[i].distanceToSquared(slots[want]); if (d < bd){ bd = d; best = i; } } return best; }
+  for (let i = 0; i < slots.length; i++) if (!usedSlots.has(i)) return i; return -1; }
+function addOrnament(animate = true, id = null, type = null, want = null){ const idx = placed.length; let si = slotFor(want), p; if (si >= 0){ usedSlots.add(si); p = slots[si].clone(); } else { p = slots[idx % slots.length].clone().multiplyScalar(1.02).add(new THREE.Vector3(0, -.04 * Math.floor(idx / slots.length), 0)); } const o = makeOrnament(type || 'red'); o.userData.id = id; o.userData.base = 1.45; o.scale.setScalar(1.45); o.children[0].position.y -= .13; o.position.copy(p).add(new THREE.Vector3(0, .13 * 1.45, 0)); o.userData.orn = true; o.userData.ph = rnd() * 6; o.rotation.order = 'YXZ'; o.rotation.y = Math.atan2(p.x, p.z) + (rnd() - .5) * .6; o.rotation.z = (rnd() - .5) * .25; o.userData.rz = o.rotation.z; o.traverse(m => { if (m.isMesh) m.castShadow = true; }); tree.add(o); placed.push(o);
   if (animate){ o.scale.setScalar(.001); appear.push({ o, t0:performance.now() }); } shadowsDirty = true; }
 
 /* ---------- プレゼント ---------- */
@@ -564,7 +567,7 @@ function sync(list, giftList){
   const prevIds = new Set(prev.split('|')[0].split(',').filter(Boolean)), prevG = new Set((prev.split('|')[1] || '').split(',').filter(Boolean));
   const append = list.length >= placed.length && placed.every((o, i) => list[i] && list[i].id === o.userData.id) && gifts.every((g, i) => giftList[i] && giftList[i].id === g.userData.id);
   if (!append) clearAll();
-  list.slice(placed.length).forEach(o => addOrnament(append && !!prev && !prevIds.has(o.id), o.id, o.key));
+  list.slice(placed.length).forEach(o => addOrnament(append && !!prev && !prevIds.has(o.id), o.id, o.key, o.slot));
   giftList.slice(gifts.length).forEach(g => addGift(append && !!prev && !prevG.has(g.id), g.id));
   shadowsDirty = true;
 }
@@ -582,5 +585,5 @@ function tapAt(e){ const r = renderer.domElement.getBoundingClientRect(); v2.set
   const th = ray.intersectObjects(tree.children, true)[0]; if (th){ tree.rotation.z = .02; setTimeout(() => tree.rotation.z = -.015, 120); setTimeout(() => tree.rotation.z = 0, 260); opts.onTree && opts.onTree(); } }
 function ornScreen(i){ const o = placed[i]; if (!o) return null; const v = new THREE.Vector3(); o.children[0].getWorldPosition(v); v.y -= .1; v.project(camera); const r = renderer.domElement.getBoundingClientRect(); return [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height]; }
 const ornRot = i => placed[i] && [+placed[i].userData.th.toFixed(3), +(placed[i].userData.tilt || 0).toFixed(3)];
-return { sync, setRoom, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize(){ renderer.setSize(VW(), VH()); placeCamera(); } };
+return { sync, setRoom, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize(){ renderer.setSize(VW(), VH()); placeCamera(); } };
 }

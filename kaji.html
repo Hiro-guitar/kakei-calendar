@@ -662,7 +662,7 @@ const whoText = l => l.both ? 'ふたりで' : nm(l.by);
 const involves = (l,k) => l.by === k || !!l.both;
 function doChore(c, both){
   if (!S.me) return;
-  const lg = { id:uid(), kind:'log', choreId:c.id, name:c.name, by:S.me, both:!!both, at:Date.now(), thanks:false };
+  const lg = { id:uid(), kind:'log', choreId:c.id, name:c.name, by:S.me, both:!!both, at:Date.now(), thanks:false, ...ornSlot() };
   const isNew = isNewFind(lg);
   popId = lg.id; chime('do'); put(lg); setTimeout(() => { popId = null; }, 600);
   if (isNew) newFlower(lg); else toast(both ? `「${c.name}」ふたりでやった！` : `「${c.name}」やった！`);
@@ -670,7 +670,7 @@ function doChore(c, both){
 let freeBoth = false;
 function doFree(name){
   name = name.trim(); if (!name || !S.me) return;
-  const lg = { id:uid(), kind:'log', choreId:null, name, by:S.me, both:freeBoth, at:Date.now(), thanks:false };
+  const lg = { id:uid(), kind:'log', choreId:null, name, by:S.me, both:freeBoth, at:Date.now(), thanks:false, ...ornSlot() };
   const isNew = isNewFind(lg);
   put(lg); if (isNew) newFlower(lg); else toast(`「${name}」を記録しました`);
 }
@@ -4292,7 +4292,7 @@ function fillThumbs(){ if (ORN3D_FAIL) return; const els = [...document.querySel
   const go = m => { let i = 0; const step = () => { const t0 = performance.now(); while (i < els.length && performance.now() - t0 < 12){ const e = els[i++]; if (!e.isConnected) continue; try { const u = m.thumb(e.dataset.k); if (e.tagName.toLowerCase() === 'g') e.innerHTML = `<image href="${u}" x="-7" y="-7.6" width="14" height="14"/>`; else e.innerHTML = `<img src="${u}" alt="">`; e.classList.add('done'); } catch (err) { console.warn(err); } } if (i < els.length) requestAnimationFrame(step); }; step(); };
   if (ORN3D) go(ORN3D); else import('./kaji-orn3d.js').then(m => { ORN3D = m; go(m); }).catch(e => { console.warn(e); ORN3D_FAIL = true; }); }
 const BALLC = ['#f08aa8', '#7cc0e4', '#9a72c8', '#f2f0ea', '#3a3a44', '#8a2a3a', '#7ccab0', '#f0943a'], BALLP = ['dot', 'stripe', '', '', 'stripe'];
-function orn3d(l){ return { id:l.id, key:ornamentOf(l) }; }
+function orn3d(l){ return { id:l.id, key:ornamentOf(l), slot:l.oslot }; }
 function orn3dOld(l){ const k = ornamentOf(l), o = ORN[k], h = hash(l.id);
   const base = { red:'#c8352e', gold:'#f2c14e', silver:'#c8ccd4', blue:'#3a6ab8', green:'#3f9a4f', pinkst:'#f4a6bc' };
   if (base[k]) return { id:l.id, ball:1, color:base[k], pat:k === 'pinkst' ? 'stripe' : '' };
@@ -4302,8 +4302,10 @@ function orn3dOld(l){ const k = ornamentOf(l), o = ORN[k], h = hash(l.id);
   if (o.c === 'ふゆ' || o.c === 'そら') return { id:l.id, shape:'star' };
   if (o.c === 'ふたりで') return { id:l.id, ball:1, color:'#e8586a', pat:'dot' };
   return { id:l.id, ball:1, color:['#e04a5a', '#e8b84a', '#8ec8ec', '#5aac7a', '#a682d8', '#f4a0c0'][h % 6] }; }
-/* 今日のツリーの向きとオーナメントの場所はこの端末に覚えておく（日がかわると新しいツリー） */
-function treeMem(){ const day = dayKey(Date.now()); try { const t = JSON.parse(localStorage.getItem('kaji_tree') || 'null'); if (t && t.day === day) return t; } catch (e) {} return { day, rot:0, slots:{} }; }
+/* オーナメントの場所は記録した人のツリーで「いま手前の面」を選んで、記録と一緒にふたりで共有する。
+   ツリーの向きだけはこの端末に覚えておく（日がかわると新しいツリー） */
+function ornSlot(){ try { if (ROOM && document.body.classList.contains('xfullmode')){ const si = ROOM.frontSlot(); if (si >= 0) return { oslot:si }; } } catch (e) {} return {}; }
+function treeMem(){ const day = dayKey(Date.now()); try { const t = JSON.parse(localStorage.getItem('kaji_tree') || 'null'); if (t && t.day === day) return t; } catch (e) {} return { day, rot:0 }; }
 function treeSave(t){ try { localStorage.setItem('kaji_tree', JSON.stringify(t)); } catch (e) {} }
 function syncRoom(){
   const el = $('room3d'), on = document.body.classList.contains('xfullmode') && !ROOM_FAIL;
@@ -4312,7 +4314,7 @@ function syncRoom(){
   const doSync = () => { ROOM.setNight(hr >= 17 || hr < 6); ROOM.setRoom(settings().room || {}); ROOM.sync(logs.map(orn3d), logs.filter(l => l.thanks).map(l => ({ id:l.id }))); };
   if (ROOM){ ROOM.resize(); doSync(); return; }
   if (ROOM_LOADING) return; ROOM_LOADING = true;
-  import('./kaji-room3d.js').then(m => { ROOM = m.mountRoom(el, { shiftY:.06, rot:treeMem().rot, slotOf:id => treeMem().slots[id], onPlace:(id, si) => { const t = treeMem(); t.slots[id] = si; treeSave(t); }, onRot:r => { const t = treeMem(); t.rot = r; treeSave(t); }, onTap:(id, gift) => { chime('do'); setTimeout(() => ornSheet(id, gift), gift ? 250 : 650); }, onTree:() => chime('do'), onSpin:() => { try { localStorage.setItem('kaji_spun', '1'); } catch (e) {} } }); try { if (!localStorage.getItem('kaji_spun')) setTimeout(() => toast('ツリーは指で横になぞると回せるよ'), 1500); else if (advBadge() && !localStorage.getItem('kaji_advhint')){ localStorage.setItem('kaji_advhint', '1'); setTimeout(() => toast('右上の🎁からアドベントのとびらを開けられるよ'), 1500); } } catch (e) {} ROOM_LOADING = false; doSync(); })
+  import('./kaji-room3d.js').then(m => { ROOM = m.mountRoom(el, { shiftY:.06, rot:treeMem().rot, onRot:r => { const t = treeMem(); t.rot = r; treeSave(t); }, onTap:(id, gift) => { chime('do'); setTimeout(() => ornSheet(id, gift), gift ? 250 : 650); }, onTree:() => chime('do'), onSpin:() => { try { localStorage.setItem('kaji_spun', '1'); } catch (e) {} } }); try { if (!localStorage.getItem('kaji_spun')) setTimeout(() => toast('ツリーは指で横になぞると回せるよ'), 1500); else if (advBadge() && !localStorage.getItem('kaji_advhint')){ localStorage.setItem('kaji_advhint', '1'); setTimeout(() => toast('右上の🎁からアドベントのとびらを開けられるよ'), 1500); } } catch (e) {} ROOM_LOADING = false; doSync(); })
     .catch(e => { console.warn(e); ROOM_FAIL = true; ROOM_LOADING = false; render(); });
 }
 function ornSheet(id, gift){ const l = S.items[id]; if (!l) return; const k = ornamentOf(l), mine = l.by === S.me && !l.both, when = `${dayKey(l.at).slice(5).replace('-','/')} ${hm(l.at)}`;
