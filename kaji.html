@@ -283,7 +283,9 @@ nav.tabs .tile{width:38px;height:38px}
 .zgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .zcell{background:var(--cream);border-radius:18px;padding:6px 4px 8px;box-shadow:var(--sh);display:flex;flex-direction:column;align-items:center;gap:2px}
 .zcell svg{width:46px;height:46px}
-.zcell.un svg,.zbig.un svg{filter:brightness(0) opacity(.13)}
+.zcell.un svg,.zbig.un svg,.zcell.un .o3 img{filter:brightness(0) opacity(.13)}
+.o3{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}.o3 img{width:100%;height:100%;object-fit:contain}
+.zcell .o3{width:58px!important;height:58px!important}.zcell .o3 svg{width:46px;height:46px}
 .zcell .zn{font-size:10.5px;font-weight:800;line-height:1.3;text-align:center;min-height:2.6em;display:flex;align-items:center}
 .zcell.un .zn{color:var(--sub)}
 .zno{font-size:10px;font-weight:800;color:var(--sub)}
@@ -3979,7 +3981,7 @@ function treeSVG(logs, big, opt = {}){
   const slots2 = pts.map((p, q) => [p, hash('s2' + q) % 9973]).sort((a, b) => a[1] - b[1]).map(a => a[0]);
   // オーナメント（少し影を落として、ツリーにのっている感じに）
   items.forEach((l, i) => { const base = slots2[i % slots2.length], lap = Math.floor(i / slots2.length), x = base[0] + lap * 5, y = base[1] + lap * 4, k = ornamentOf(l), sw = ((rnd(l.id, 5) - .5) * 14).toFixed(0), s2 = (sc * (lap ? .85 : 1)).toFixed(2);
-    svg += `<g class="orn" data-act="orn" data-id="${l.id}" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><g class="sw" style="--r:${sw}deg;--s:${(-rnd(l.id, 6) * 3).toFixed(2)}s"><ellipse cx="${(1.4 * sc).toFixed(1)}" cy="${(1.8 * sc).toFixed(1)}" rx="${(4.2 * sc).toFixed(1)}" ry="${(4 * sc).toFixed(1)}" fill="#1f5a2a" opacity=".22"/><g transform="scale(${s2})">${ornArt(k)}</g></g><circle r="${(6 * sc).toFixed(1)}" fill="transparent"/></g>`; });
+    svg += `<g class="orn" data-act="orn" data-id="${l.id}" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><g class="sw" style="--r:${sw}deg;--s:${(-rnd(l.id, 6) * 3).toFixed(2)}s"><ellipse cx="${(1.4 * sc).toFixed(1)}" cy="${(1.8 * sc).toFixed(1)}" rx="${(4.2 * sc).toFixed(1)}" ry="${(4 * sc).toFixed(1)}" fill="#1f5a2a" opacity=".22"/><g transform="scale(${s2})"><g class="o3g" data-k="${k}">${ornArt(k)}</g></g></g><circle r="${(6 * sc).toFixed(1)}" fill="transparent"/></g>`; });
   // てっぺんの星（大きな金の星。立体の面と光の筋）
   svg += `<g class="xstar" transform="translate(${cx},${tTop - 2 * gs}) scale(${(gs * 1.15).toFixed(2)})"><circle r="15" fill="#fff3b0" opacity=".28"/><circle r="9" fill="#fff6c8" opacity=".35"/><path d="M7.05 -9.71 L 9.70 -13.35" stroke="#fff3b0" stroke-width="1.1" stroke-linecap="round" opacity=".8"/><path d="M11.41 3.71 L 15.69 5.10" stroke="#fff3b0" stroke-width="1.1" stroke-linecap="round" opacity=".8"/><path d="M0.00 12.00 L 0.00 16.50" stroke="#fff3b0" stroke-width="1.1" stroke-linecap="round" opacity=".8"/><path d="M-11.41 3.71 L -15.69 5.10" stroke="#fff3b0" stroke-width="1.1" stroke-linecap="round" opacity=".8"/><path d="M-7.05 -9.71 L -9.70 -13.35" stroke="#fff3b0" stroke-width="1.1" stroke-linecap="round" opacity=".8"/><g filter="url(#acnhF)"><path d="M0.00 -10.00 L 2.47 -3.40 L 9.51 -3.09 L 3.99 1.30 L 5.88 8.09 L 0.00 4.20 L -5.88 8.09 L -3.99 1.30 L -9.51 -3.09 L -2.47 -3.40Z" fill="#e0a82a" stroke="#a87810" stroke-width=".6" stroke-linejoin="round"/><path d="M0 0 L 0.00 -10.00 L 2.47 -3.40Z M0 0 L 9.51 -3.09 L 3.99 1.30Z M0 0 L 5.88 8.09 L 0.00 4.20Z M0 0 L -5.88 8.09 L -3.99 1.30Z M0 0 L -9.51 -3.09 L -2.47 -3.40Z" fill="#ffd95a"/><circle r="1.8" fill="#fff0a8"/></g></g>`;
 
@@ -4110,7 +4112,7 @@ function viewZukanOrn(){
   for (const c of ORN_CATS){ const ks = ORN_KEYS.filter(k => ORN[k].c === c && (zoFilter === 'all' || (zoFilter === 'found') === !!f[k])); if (!ks.length) continue;
     const got = ORN_KEYS.filter(k => ORN[k].c === c && f[k]).length, tot = ORN_KEYS.filter(k => ORN[k].c === c).length;
     html += `<h2 style="display:flex;justify-content:space-between">${c}<span class="muted" style="font-size:12px">${got} / ${tot}</span></h2><div class="zgrid">` + ks.map(k => { const ok = !!f[k], o = ORN[k];
-      return `<button class="zcell ${ok ? '' : 'un'}" data-act="ornz" data-k="${k}"><span class="zno">${RL[o.r] || '&nbsp;'}</span><svg viewBox="-7 -7.5 14 14">${ornArt(k)}</svg><span class="zn">${ok ? o.n : '？？？'}</span></button>`; }).join('') + `</div>`; }
+      return `<button class="zcell ${ok ? '' : 'un'}" data-act="ornz" data-k="${k}"><span class="zno">${RL[o.r] || '&nbsp;'}</span>${ornIcon(k)}<span class="zn">${ok ? o.n : '？？？'}</span></button>`; }).join('') + `</div>`; }
   return html;
 }
 function zSeg(){ const opts = [['flower', '花']]; if (CREATURES_ON) opts.push(['creature', '生き物']); if (xmasOn(0) || Object.keys(ornFound().f).length) opts.push(['orn', 'オーナメント']);
@@ -4129,7 +4131,7 @@ function render(){
   const me = S.me;
   $('mechip').innerHTML = me ? `<span class="dot ${me}"></span>${esc(nm(me))}` : '未設定';
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
-  $('fab').style.display = 'none'; renderQbar(); document.body.classList.toggle('xfullmode', !!(me && tab === 'today' && xmasOn(0))); syncRoom();
+  $('fab').style.display = 'none'; renderQbar(); document.body.classList.toggle('xfullmode', !!(me && tab === 'today' && xmasOn(0))); syncRoom(); setTimeout(fillThumbs, 0);
   if (LISTOPEN && tab === 'today') $('sheet').innerHTML = `<button class="x" data-act="close" aria-label="閉じる">✕</button><div class="listsheet">${LIST_HTML}</div>`;
   const v = $('view');
   if (!me) { v.innerHTML = viewOnboard(); return; }
@@ -4224,9 +4226,15 @@ function viewToday(){
 }
 let LIST_HTML = '', LISTOPEN = false;
 /* ===== 3Dの部屋 ===== */
-let ROOM = null, ROOM_FAIL = false, ROOM_LOADING = false;
+let ROOM = null, ROOM_FAIL = false, ROOM_LOADING = false, ORN3D = null, ORN3D_FAIL = false;
+/* オーナメントの絵：3Dの画像ができたら差しかえる（できないときは今の絵） */
+function ornIcon(k, px = 56){ return `<span class="o3" data-k="${k}" style="width:${px}px;height:${px}px"><svg viewBox="-7 -7.5 14 14" width="${px}" height="${px}">${ornArt(k)}</svg></span>`; }
+function fillThumbs(){ if (ORN3D_FAIL) return; const els = [...document.querySelectorAll('.o3[data-k]:not(.done),.o3g[data-k]:not(.done)')]; if (!els.length) return;
+  const go = m => { let i = 0; const step = () => { const t0 = performance.now(); while (i < els.length && performance.now() - t0 < 12){ const e = els[i++]; if (!e.isConnected) continue; try { const u = m.thumb(e.dataset.k); if (e.tagName.toLowerCase() === 'g') e.innerHTML = `<image href="${u}" x="-7" y="-7.6" width="14" height="14"/>`; else e.innerHTML = `<img src="${u}" alt="">`; e.classList.add('done'); } catch (err) { console.warn(err); } } if (i < els.length) requestAnimationFrame(step); }; step(); };
+  if (ORN3D) go(ORN3D); else import('./kaji-orn3d.js').then(m => { ORN3D = m; go(m); }).catch(e => { console.warn(e); ORN3D_FAIL = true; }); }
 const BALLC = ['#f08aa8', '#7cc0e4', '#9a72c8', '#f2f0ea', '#3a3a44', '#8a2a3a', '#7ccab0', '#f0943a'], BALLP = ['dot', 'stripe', '', '', 'stripe'];
-function orn3d(l){ const k = ornamentOf(l), o = ORN[k], h = hash(l.id);
+function orn3d(l){ return { id:l.id, key:ornamentOf(l) }; }
+function orn3dOld(l){ const k = ornamentOf(l), o = ORN[k], h = hash(l.id);
   const base = { red:'#c8352e', gold:'#f2c14e', silver:'#c8ccd4', blue:'#3a6ab8', green:'#3f9a4f', pinkst:'#f4a6bc' };
   if (base[k]) return { id:l.id, ball:1, color:base[k], pat:k === 'pinkst' ? 'stripe' : '' };
   const m = /^b(\d)(\d)$/.exec(k); if (m) return { id:l.id, ball:1, color:BALLC[+m[2]], pat:BALLP[+m[1]] };
@@ -4246,7 +4254,7 @@ function syncRoom(){
     .catch(e => { console.warn(e); ROOM_FAIL = true; ROOM_LOADING = false; render(); });
 }
 function ornSheet(id, gift){ const l = S.items[id]; if (!l) return; const k = ornamentOf(l), mine = l.by === S.me && !l.both, when = `${dayKey(l.at).slice(5).replace('-','/')} ${hm(l.at)}`;
-  openSheet(`<div class="ornsheet">${gift ? `<svg viewBox="-12 -16 34 30" width="120" height="106">${giftSVG(0, 10, 16, 12, 6, '#e85050', '#fff0c0', 'dot', 'og1')}</svg>` : `<svg viewBox="-7 -7.5 14 14" width="110" height="110">${ornArt(k)}</svg>`}<b>${gift ? 'ありがとうのプレゼント' : ORN[k].n}</b><div class="muted">${when}　${esc(whoText(l))}が「${esc(l.name)}」</div>
+  openSheet(`<div class="ornsheet">${gift ? `<svg viewBox="-12 -16 34 30" width="120" height="106">${giftSVG(0, 10, 16, 12, 6, '#e85050', '#fff0c0', 'dot', 'og1')}</svg>` : ornIcon(k, 120)}<b>${gift ? 'ありがとうのプレゼント' : ORN[k].n}</b><div class="muted">${when}　${esc(whoText(l))}が「${esc(l.name)}」</div>
     ${mine ? (l.thanks ? '<div class="thanks on" style="margin-top:12px">♥ ありがとうが届いてる</div>' : '') : `<button class="btn ${l.thanks ? 'ghost' : 'go'}" style="margin-top:14px;padding:12px 22px" data-act="othanks" data-id="${l.id}">${l.thanks ? '♥ ありがとう済み' : '♡ ありがとうを送る'}</button>`}</div>`); }
 
 function viewWeek(){
@@ -4257,7 +4265,7 @@ function viewWeek(){
   let html = `<div class="weeknav"><button data-act="wk" data-d="-1">‹ 前</button><b>${weekOff===0?'今週':label}</b><button data-act="wk" data-d="1" ${weekOff>=0?'disabled style="opacity:.3"':''}>次 ›</button></div>`;
   const wlg = weekLogs(weekOff), bs = bloomSummary(wlg);
   html += `<div class="panel gpanel" style="margin-bottom:12px"><div class="gtitle">${sceneTitle(weekOff, wlg.length)}</div>${sceneSVG(wlg, true, weekOff)}
-    ${xmasOn(weekOff) ? (wlg.length ? `<div class="bloomlist">${ornSummary(wlg).slice(0,8).map(([k,n]) => `<span><svg viewBox="-7 -7.5 14 14">${ornArt(k)}</svg>${ORN[k].n}${n>1?` ×${n}`:''}</span>`).join('')}</div>` : '') : bs.length?`<div class="bloomlist">${bs.slice(0,8).map(([k,n]) => `<span><svg viewBox="-14 -16 28 28">${flowerSVG(k,k)}</svg>${FL[k].n}${n>1?` ×${n}`:''}</span>`).join('')}${bs.length>8?`<span>ほか${bs.length-8}種</span>`:''}</div>`:''}</div>`;
+    ${xmasOn(weekOff) ? (wlg.length ? `<div class="bloomlist">${ornSummary(wlg).slice(0,8).map(([k,n]) => `<span>${ornIcon(k, 24)}${ORN[k].n}${n>1?` ×${n}`:''}</span>`).join('')}</div>` : '') : bs.length?`<div class="bloomlist">${bs.slice(0,8).map(([k,n]) => `<span><svg viewBox="-14 -16 28 28">${flowerSVG(k,k)}</svg>${FL[k].n}${n>1?` ×${n}`:''}</span>`).join('')}${bs.length>8?`<span>ほか${bs.length-8}種</span>`:''}</div>`:''}</div>`;
   html += `<div class="wgrid">` + days.map(d => {
     const k = dayKey(d.getTime()); const logs = logsOn(k);
     return `<button class="wday ${k===tk?'today':''} ${k===selDay?'sel':''}" data-act="selday" data-k="${k}">
@@ -4413,7 +4421,7 @@ function sheetZukan(k){
 }
 
 /* ========== シート ========== */
-function openSheet(html){ $('sheet').innerHTML = `<button class="x" data-act="close" aria-label="閉じる">✕</button>` + html; $('sheet').classList.add('open'); $('scrim').classList.add('open'); }
+function openSheet(html){ $('sheet').innerHTML = `<button class="x" data-act="close" aria-label="閉じる">✕</button>` + html; $('sheet').classList.add('open'); $('scrim').classList.add('open'); setTimeout(fillThumbs, 0); }
 function closeSheet(){ LISTOPEN = false; $('sheet').classList.remove('open'); $('scrim').classList.remove('open'); }
 
 function sheetChore(id){
@@ -4502,7 +4510,7 @@ document.addEventListener('click', e => {
       toast(`${FL[k].n}｜${dayKey(l.at).slice(5).replace('-','/')} ${l.name}`); break; }
     case 'orn': { const l = S.items[id]; if (!l) break; const g = el.querySelector('.sw'); if (g){ g.classList.remove('tap'); void g.getBBox(); g.classList.add('tap'); }
       const k = ornamentOf(l), mine = l.by === S.me && !l.both, gift = !!el.dataset.gift, when = `${dayKey(l.at).slice(5).replace('-','/')} ${hm(l.at)}`;
-      setTimeout(() => openSheet(`<div class="ornsheet">${gift ? `<svg viewBox="-12 -16 34 30" width="120" height="106">${giftSVG(0, 10, 16, 12, 6, '#e85050', '#fff0c0', 'dot', 'og1')}</svg>` : `<svg viewBox="-7 -7.5 14 14" width="110" height="110">${ornArt(k)}</svg>`}<b>${gift ? 'ありがとうのプレゼント' : ORN[k].n}</b><div class="muted">${when}　${esc(whoText(l))}が「${esc(l.name)}」</div>
+      setTimeout(() => openSheet(`<div class="ornsheet">${gift ? `<svg viewBox="-12 -16 34 30" width="120" height="106">${giftSVG(0, 10, 16, 12, 6, '#e85050', '#fff0c0', 'dot', 'og1')}</svg>` : ornIcon(k, 120)}<b>${gift ? 'ありがとうのプレゼント' : ORN[k].n}</b><div class="muted">${when}　${esc(whoText(l))}が「${esc(l.name)}」</div>
         ${mine ? (l.thanks ? '<div class="thanks on" style="margin-top:12px">♥ ありがとうが届いてる</div>' : '') : `<button class="btn ${l.thanks ? 'ghost' : 'go'}" style="margin-top:14px;padding:12px 22px" data-act="othanks" data-id="${l.id}">${l.thanks ? '♥ ありがとう済み' : '♡ ありがとうを送る'}</button>`}</div>`), 220); break; }
     case 'othanks': { if (!L) break; if (!L.thanks) burst(el, 'heart'); toggleThanks(L); closeSheet(); break; }
     case 'listopen': LISTOPEN = true; openSheet(`<div class="listsheet">${LIST_HTML}</div>`); LISTOPEN = true; break;
