@@ -872,7 +872,7 @@ function qbarHTML(){
   const logs = logsOn(dayKey(Date.now())), notes = unreadNotes();
   return `<button class="qmenu" data-act="menu" aria-label="メニュー"><span class="qi">${ICON_MENU}${notes ? '<em class="dot"></em>' : ''}</span><span class="ql">メニュー</span></button><div class="qscroll">` + groupsSorted().map(g => {
     const ids = new Set(choresIn(g.id).map(c => c.id)), n = logs.filter(l => (l.choreId && ids.has(l.choreId)) || (!l.choreId && g.id === 'grp_hoka')).length;
-    return `<button class="qb" data-act="qgrp" data-g="${g.id}"><span class="qi">${QI[g.icon] || QI.spark}${n ? `<em>${n}</em>` : ''}</span><span class="ql">${esc(g.name)}</span></button>`; }).join('')
+    return `<button class="qb" data-act="qgrp" data-g="${g.id}"><span class="qi">${QI[g.icon] || QI.spark}</span><span class="ql">${esc(g.name)}</span></button>`; }).join('')
     + `<button class="qb qadd" data-act="gedit" data-g=""><span class="qi">${QI.plus}</span><span class="ql">グループ</span></button></div>`;
 }
 /* グループの吹き出し */
@@ -884,9 +884,9 @@ function grpOpen(gid, btn, edit, keepWho){ const g = S.items[gid]; if (!g) retur
   cs.forEach(c => { const [r, a] = rowAct(c), k = a ? 'r:' + r : 'c:' + c.id; if (!rowsM.has(k)) rowsM.set(k, { r, items:[] }); rowsM.get(k).items.push([c, a]); });
   const act = c => E ? `data-act="edit" data-id="${c.id}" data-back="${gid}"` : `data-act="qdo" data-id="${c.id}"`;
   const rows = [...rowsM.values()].map(({ r, items }) => { const c0 = items[0][0];
-    if (items.length === 1 && !items[0][1]){ const n = E ? 0 : cnt(c0); return `<div class="grow single"><button class="gi ${n ? 'done' : ''}" ${act(c0)}><span class="gic">${QI[choreIcon(c0)] || QI.spark}</span><span class="gn">${esc(c0.name)}</span>${n ? `<span class="gc">✓${n > 1 ? n : ''}</span>` : ''}${E ? '<span class="pen">✎</span>' : ''}</button>${E ? `<button class="gplus" data-act="rowadd" data-id="${c0.id}" aria-label="ボタンを足す">＋</button>` : ''}</div>`; }
+    if (items.length === 1 && !items[0][1]){ return `<div class="grow single"><button class="gi" ${act(c0)}><span class="gic">${QI[choreIcon(c0)] || QI.spark}</span><span class="gn">${esc(c0.name)}</span>${E ? '<span class="pen">✎</span>' : ''}</button>${E ? `<button class="gplus" data-act="rowadd" data-id="${c0.id}" aria-label="ボタンを足す">＋</button>` : ''}</div>`; }
     const head = `<span class="gic">${QI[choreIcon(c0)] || QI.spark}</span><span class="grn">${esc(r)}${E ? '<em>✎</em>' : ''}</span>`;
-    return `<div class="grow">${E ? `<button class="grh" data-act="rowedit" data-id="${c0.id}">${head}</button>` : head}<span class="gbs">${items.map(([c, a]) => { const n = E ? 0 : cnt(c); return `<button class="gb ${n ? 'done' : ''}" ${act(c)}>${n ? '✓' : ''}${esc(a || c.name)}${n > 1 ? `<small>${n}</small>` : ''}${E ? ' ✎' : ''}</button>`; }).join('')}${E ? `<button class="gb gbplus" data-act="rowadd" data-id="${c0.id}">＋</button>` : ''}</span></div>`; }).join('');
+    return `<div class="grow">${E ? `<button class="grh" data-act="rowedit" data-id="${c0.id}">${head}</button>` : head}<span class="gbs">${items.map(([c, a]) => `<button class="gb" ${act(c)}>${esc(a || c.name)}${E ? ' ✎' : ''}</button>`).join('')}${E ? `<button class="gb gbplus" data-act="rowadd" data-id="${c0.id}">＋</button>` : ''}</span></div>`; }).join('');
   const free = gid === 'grp_hoka' && !E ? `<button class="gi gfree" data-act="qfree"><span class="gic">${QI.plus}</span><span class="gn">ほかの家事を書く</span></button>` : '';
   m.classList.toggle('editing', E);
   m.innerHTML = E
