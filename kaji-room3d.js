@@ -576,6 +576,7 @@ function frame(now){
   { const a = snowGeo.attributes.position; for (let i = 0; i < snowN; i++){ let y = a.getY(i) - .012; if (y < .6) y = 4.6; a.setY(i, y); a.setX(i, a.getX(i) + Math.sin(now / 900 + i) * .0015); } a.needsUpdate = true; }
   if (shadowsDirty){ renderer.shadowMap.needsUpdate = true; shadowsDirty = false; }
   renderer.render(scene, camera);
+  if (!el.classList.contains('ready')) setTimeout(() => el.classList.add('ready'), 60);
 }
 requestAnimationFrame(frame);
 addEventListener('resize', () => { renderer.setSize(VW(), VH()); placeCamera(); });

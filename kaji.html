@@ -103,7 +103,12 @@ h2.s-morning{background:var(--amber)} h2.s-day{background:var(--h)} h2.s-night{b
 .qbar{position:fixed;left:0;right:0;bottom:calc(88px + env(safe-area-inset-bottom));z-index:5;display:flex;gap:10px;overflow-x:auto;padding:10px 14px 12px;background:#e9dfc6;border-radius:22px 22px 0 0;box-shadow:0 -2px 10px rgba(80,60,20,.08);scrollbar-width:none;-webkit-overflow-scrolling:touch;max-width:660px;margin:0 auto}
 .qbar::-webkit-scrollbar{display:none}
 body.xfullmode main{padding-bottom:0}
-#room3d{position:fixed;inset:0;z-index:0;background:#2a1c14}
+#room3d{position:fixed;inset:0;z-index:0;background:linear-gradient(#c23b34 0 46%,#7a4b2a 46% 47.5%,#d9a06a 47.5%)}
+#room3d canvas{opacity:0;transition:opacity .6s}#room3d.ready canvas{opacity:1}
+#room3d .r3load{position:absolute;left:0;right:0;top:38%;display:flex;flex-direction:column;align-items:center;gap:10px;color:#fff6e6;text-shadow:0 1px 3px rgba(80,30,10,.6);font-size:13px;font-weight:800;transition:opacity .4s;pointer-events:none}
+#room3d.ready .r3load{opacity:0}
+#room3d .r3load svg{width:64px;height:76px;animation:r3bob 1.4s ease-in-out infinite}
+@keyframes r3bob{50%{transform:translateY(-6px) rotate(3deg)}}
 .xfull.r3{pointer-events:none}.xfull.r3 .xfull-top{pointer-events:auto}
 .xfull{position:fixed;left:0;right:0;top:0;bottom:0;max-width:660px;margin:0 auto;z-index:0;overflow:hidden}
 .xfull-svg .garden{width:100%;height:100%}
@@ -212,6 +217,11 @@ body.xfullmode .qbar{background:rgba(255,250,236,.55);-webkit-backdrop-filter:bl
 .nowchip{margin-left:8px;font-size:11px;font-weight:800;color:#fff;background:var(--amber);padding:3px 9px;border-radius:999px;vertical-align:middle}
 .slotfold{margin-left:8px;font-size:11px;font-weight:700;color:var(--sub);background:var(--paper);padding:3px 9px;border-radius:999px}
 body.onebar nav.tabs{display:none}
+body.onebar header{display:none}
+body.onebar main{padding-top:calc(env(safe-area-inset-top) + 14px);padding-bottom:calc(110px + env(safe-area-inset-bottom))}
+body.onebar.xfullmode main{padding:0}
+#syncwarn{position:fixed;top:calc(env(safe-area-inset-top) + 8px);right:10px;z-index:40;padding:5px 12px;border-radius:999px;background:#fff1ee;color:#c8352e;font-size:11px;font-weight:800;box-shadow:var(--sh-lift);display:none}
+body.syncerr #syncwarn{display:block}
 #appbar{position:fixed;left:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:6;display:flex;gap:2px;padding:0 10px 0 0;border-radius:26px;background:var(--cream);box-shadow:var(--sh-lift)}
 #appbar .qmenu::after{display:none}
 #appbar .qmenu{width:72px}
@@ -553,7 +563,7 @@ nav.tabs .tile{width:38px;height:38px}
   <span class="sync" id="sync" title="同期"></span>
   <button class="me-chip" id="mechip" style="display:none"></button>
 </div></header>
-<div id="room3d" style="display:none"></div>
+<div id="room3d" style="display:none"><div class="r3load"><svg viewBox="0 0 64 76"><path d="M32 6 L50 32 H40 L56 54 H8 L24 32 H14Z" fill="#3d8a55"/><rect x="27" y="54" width="10" height="12" rx="2" fill="#8a5a32"/><path d="M32 0 L34.5 5.5 L40 6 L36 10 L37 16 L32 13 L27 16 L28 10 L24 6 L29.5 5.5Z" fill="#f6c84a"/><circle cx="26" cy="36" r="3" fill="#e0473b"/><circle cx="38" cy="44" r="3" fill="#f2c14e"/><circle cx="30" cy="48" r="3" fill="#7cc0e4"/></svg>おへやを じゅんびしているよ</div></div>
 <main id="view"></main>
 <button class="fab" id="fab" style="display:none">＋ 名もなき家事</button>
 <div class="qbar" id="qbar" style="display:none"></div>
@@ -849,6 +859,7 @@ function setSync(s){
   const st = s || (!S.url ? 'local' : S.queue.length ? (syncState==='err'?'err':'pending') : syncState);
   el.className = 'sync ' + (st==='ok'?'ok':st==='pending'?'pending':st==='err'?'err':'');
   el.title = { local:'この端末だけに保存中', ok:'同期済み', pending:'同期待ち', err:'同期エラー' }[st] || '';
+  let w = $('syncwarn'); if (!w){ w = document.createElement('div'); w.id = 'syncwarn'; w.textContent = 'うまく同期できていないみたい'; document.body.appendChild(w); } document.body.classList.toggle('syncerr', st === 'err');
 }
 
 /* ========== 季節の庭 ========== */
@@ -4349,7 +4360,7 @@ function viewToday(){
   LIST_HTML = html;
   const vw = Math.min(innerWidth, 660), Hpx = innerHeight, k = 360 / vw, Hs = Math.round(Hpx * k), pad = Math.round(222 * k), topUi = Math.round(196 * k);
   const cur = currentSlot(), curLeft = cur ? due.filter(c => (c.slot || 'any') === cur && !logs.some(l => l.choreId === c.id)).length : 0, curLabel = cur ? SLOTS.find(x => x[0] === cur)[1] : '';
-  return `<div class="xfull ${ROOM_FAIL ? '' : 'r3'}"><div class="xfull-svg">${ROOM_FAIL ? treeSVG(wl, 'full', { H:Hs, pad, maxTh:Hs - pad - topUi }) : ''}</div><div class="xfull-top"><div class="xchips" style="margin:0 0 20px"><span class="xcount xdate">${new Date().getMonth() + 1}/${new Date().getDate()}（${WD[new Date().getDay()]}）</span><button class="listhandle" data-act="listopen"><i></i><span>今日の記録</span><small>${logs.length}件</small>${logs.some(l => l.by !== S.me && !l.both && !l.thanks) ? '<span class="lhheart">♡</span>' : ''}</button>${advChips()}</div></div></div>`;
+  return `<div class="xfull ${ROOM_FAIL ? '' : 'r3'}"><div class="xfull-svg">${ROOM_FAIL ? treeSVG(wl, 'full', { H:Hs, pad, maxTh:Hs - pad - topUi }) : ''}</div><div class="xfull-top"><div class="xchips" style="margin:0 0 20px"><button class="listhandle" data-act="listopen"><i></i><span>${new Date().getMonth() + 1}/${new Date().getDate()}（${WD[new Date().getDay()]}）の記録</span><small>${logs.length}件</small>${logs.some(l => l.by !== S.me && !l.both && !l.thanks) ? '<span class="lhheart">♡</span>' : ''}</button>${advChips()}</div></div></div>`;
 }
 let LIST_HTML = '', LISTOPEN = false;
 /* ===== アドベント（11/19〜12/25、毎日ひとつ家具が届く。家事とは関係なし） ===== */
