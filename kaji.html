@@ -726,7 +726,7 @@ function talkMsg(due, logs){
   const left = due.filter(c => !doneIds.has(c.id));
   const mine = left.filter(c => c.owner === me).length;
   const fromOther = logs.filter(l => l.by !== me && !l.thanks);
-  const openNotes = all('note').filter(n => n.status !== 'done').length;
+  const openNotes = unreadNotes();
   const msgs = [];
   if (!logs.length) msgs.push(`${greet} 今日もいい日になりそう。`);
   else msgs.push(`${greet} 今日はふたりで${logs.length}こ、おうちのことをしたね。`);
@@ -816,9 +816,11 @@ const ICON_MENU = `<svg viewBox="0 0 40 40" width="38" height="38"><rect x="9" y
 /* 今日以外の画面：左下に「おへやにもどる」と「メニュー」だけ */
 const ICON_HOME = `<svg viewBox="0 0 40 40" width="32" height="32"><path d="M8 19 L20 9 L32 19 V31 a2 2 0 0 1 -2 2 H10 a2 2 0 0 1 -2 -2Z" fill="#fff8e8"/><path d="M5.5 20 L20 8 L34.5 20" stroke="#fff8e8" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="16.5" y="23" width="7" height="10" rx="2" fill="#e8a83a"/><path d="M26 12 V7.5 h3.5 V15" fill="#fff8e8"/></svg>`;
 function renderAppbar(){ let b = $('appbar'); if (!b){ b = document.createElement('div'); b.id = 'appbar'; document.body.appendChild(b); }
-  const on = S.me && tab !== 'today'; b.style.display = on ? '' : 'none'; if (!on) return; const notes = all('note').filter(n => n.status !== 'done').length;
+  const on = S.me && tab !== 'today'; b.style.display = on ? '' : 'none'; if (!on) return; const notes = unreadNotes();
   b.innerHTML = `<button class="qmenu home" data-act="gohome" aria-label="おへやにもどる"><span class="qi">${ICON_HOME}</span><span class="ql">おへや</span></button><button class="qmenu" data-act="menu" aria-label="メニュー"><span class="qi">${ICON_MENU}${notes ? '<em class="dot"></em>' : ''}</span><span class="ql">メニュー</span></button>`; }
-function menuOpen(){ const notes = all('note').filter(n => n.status !== 'done').length; let m = $('menupop'); if (!m){ m = document.createElement('div'); m.id = 'menupop'; document.body.appendChild(m); }
+// 赤いマークは、相手からとどいてまだ読んでいない手紙だけ（自分が出した手紙は数えない）
+const unreadNotes = () => all('note').filter(n => n.status !== 'done' && n.by !== S.me).length;
+function menuOpen(){ const notes = unreadNotes(); let m = $('menupop'); if (!m){ m = document.createElement('div'); m.id = 'menupop'; document.body.appendChild(m); }
   const apps = [...document.querySelectorAll('#tabs button')].filter(b => b.dataset.t !== 'today').map(b => `<button class="mapp" data-act="goto" data-t="${b.dataset.t}"><span class="tile t-${b.dataset.t}">${b.querySelector('svg').outerHTML}${b.dataset.t === 'review' && notes ? `<span class="badge-n">${notes}</span>` : ''}</span>${({ week:'週', review:'おてがみ', zukan:'図鑑', settings:'設定' })[b.dataset.t]}</button>`).join('');
   const extra = ROOM_FAIL || !xmasOn(0) ? '' : `<button class="mapp" data-act="mymenu"><span class="tile fic" style="background:#fff4dc">${ICON_MY}</span>もようがえ</button>` + (advToday() >= 0 ? `<button class="mapp" data-act="advmenu"><span class="tile fic" style="background:#fff4dc">${ICON_ADV}${advBadge() ? `<span class="badge-n">${advBadge()}</span>` : ''}</span>アドベント</button>` : '');
   m.innerHTML = apps + extra; const btn = [...document.querySelectorAll('[data-act=menu]')].find(x => x.offsetParent), r = btn ? btn.getBoundingClientRect() : null;
@@ -867,7 +869,7 @@ function migrateCatalog3(){ const st = settings(); if ((st.catalog || 0) >= 3 ||
   const old = S.items.c2_hojuu_4; if (old && !old.deleted) mk({ ...old, deleted:true });
   mk({ ...settings(), catalog:3 }); save(); return 1; }
 function qbarHTML(){
-  const logs = logsOn(dayKey(Date.now())), notes = all('note').filter(n => n.status !== 'done').length;
+  const logs = logsOn(dayKey(Date.now())), notes = unreadNotes();
   return `<button class="qmenu" data-act="menu" aria-label="メニュー"><span class="qi">${ICON_MENU}${notes ? '<em class="dot"></em>' : ''}</span><span class="ql">メニュー</span></button><div class="qscroll">` + groupsSorted().map(g => {
     const ids = new Set(choresIn(g.id).map(c => c.id)), n = logs.filter(l => (l.choreId && ids.has(l.choreId)) || (!l.choreId && g.id === 'grp_hoka')).length;
     return `<button class="qb" data-act="qgrp" data-g="${g.id}"><span class="qi">${QI[g.icon] || QI.spark}${n ? `<em>${n}</em>` : ''}</span><span class="ql">${esc(g.name)}</span></button>`; }).join('')
@@ -4496,7 +4498,7 @@ function render(){
   v.innerHTML = { today:viewToday, week:viewWeek, review:viewReview, settings:viewSettings, zukan:viewZukan }[tab]();
   if (LISTOPEN && tab === 'today'){ const sh = $('sheet'), st = sh.scrollTop; sh.innerHTML = `<button class="x" data-act="close" aria-label="閉じる">✕</button><div class="listsheet">${LIST_HTML}</div>`; sh.scrollTop = st; }
   const rb = document.querySelector('#tabs button[data-t=review]'); rb.querySelector('.badge-n')?.remove();
-  const on = all('note').filter(n => n.status !== 'done').length;
+  const on = unreadNotes();
   if (on) rb.insertAdjacentHTML('beforeend', `<span class="badge-n">${on}</span>`);
   typeTalk();
   setSync();
