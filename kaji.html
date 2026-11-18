@@ -145,20 +145,30 @@ body.xfullmode header{display:none}
 .ad .in{position:absolute;inset:3px;border-radius:7px;background:radial-gradient(circle at 50% 70%,#fff3d6,#f2d9a8);display:flex;align-items:center;justify-content:center;overflow:hidden}
 .ad .in img{width:80%;max-height:86%;object-fit:contain}.ad.two .in img{width:50%}
 .ad .in .dn{position:absolute;left:4px;top:2px;font-size:9px;font-weight:900;color:#c8862a}
-/* ひらいたとき */
-.aopen{position:relative;text-align:center;padding:4px 0 6px;overflow:hidden}
-.aopen .rays{position:absolute;left:50%;top:108px;width:420px;height:420px;margin:-210px 0 0 -210px;background:repeating-conic-gradient(rgba(255,214,110,.32) 0 10deg,transparent 10deg 20deg);border-radius:50%;-webkit-mask:radial-gradient(circle,#000 30%,transparent 68%);mask:radial-gradient(circle,#000 30%,transparent 68%);animation:arays 14s linear infinite}
-@keyframes arays{to{transform:rotate(360deg)}}
-.aopen .day{position:relative;display:inline-block;padding:3px 12px;border-radius:999px;background:#c8352e;color:#fff;font-weight:900;font-size:12px}
-.aopen .gift{position:relative;height:196px;display:flex;align-items:center;justify-content:center;gap:6px}
-.aopen .gift img{width:168px;height:168px;object-fit:contain;animation:apop .8s cubic-bezier(.3,1.6,.5,1) both;filter:drop-shadow(0 8px 10px rgba(120,70,20,.25))}
-.aopen .gift.two img{width:130px;height:130px}.aopen .gift img:nth-child(2){animation-delay:.15s}
-@keyframes apop{0%{transform:translateY(40px) scale(.2) rotate(-12deg);opacity:0}60%{transform:translateY(-10px) scale(1.12) rotate(4deg);opacity:1}100%{transform:none}}
-.aopen b{position:relative;display:block;font-size:19px;color:var(--navy);animation:apop .7s .25s both}
-.aopen p{position:relative;margin:4px 0 0;font-size:14px;color:#c8862a;font-weight:800;animation:apop .7s .35s both}
+/* ひらいたとき：雪のふる夜の窓辺で、小さなプレゼントの箱から */
+.aopen{position:relative;text-align:center;margin:-6px -4px 0;padding:18px 0 16px;border-radius:20px;overflow:hidden;background:radial-gradient(ellipse at 50% 62%,rgba(255,214,140,.38),transparent 55%),linear-gradient(#24365e,#3b4f86 70%,#4a5f96);box-shadow:inset 0 0 0 5px #fbf6ea,inset 0 0 0 8px #c8352e}
+.aopen .holly{position:absolute;width:46px;height:46px}.aopen .holly.l{left:6px;top:6px}.aopen .holly.r{right:6px;top:6px;transform:scaleX(-1)}
+.aopen .sn{position:absolute;top:-10px;color:#fff;opacity:.85;font-size:10px;animation:asn linear infinite}
+@keyframes asn{to{transform:translate(var(--dx),330px)}}
+.aopen .tag{position:relative;display:inline-block;padding:4px 14px 4px 22px;background:#fbf1dc;color:#9a3226;font-weight:900;font-size:13px;border-radius:4px 10px 10px 4px;clip-path:polygon(10px 0,100% 0,100% 100%,10px 100%,0 50%);box-shadow:0 2px 0 rgba(0,0,0,.2)}
+.aopen .tag::before{content:'';position:absolute;left:9px;top:50%;width:5px;height:5px;margin-top:-2.5px;border-radius:50%;background:#c8a070}
+.aopen .stage{position:relative;height:200px;margin-top:6px}
+.aopen .gbox{position:absolute;left:50%;bottom:6px;width:96px;height:66px;margin-left:-48px;animation:agone .5s 1.5s ease forwards}
+.aopen .gbox i{position:absolute;inset:0;border-radius:6px;background:linear-gradient(90deg,transparent 42%,#f2c14e 42% 58%,transparent 58%),#c8352e;box-shadow:inset 0 -6px 0 rgba(0,0,0,.12)}
+.aopen .gbox b{position:absolute;left:-6px;right:-6px;top:-18px;height:22px;border-radius:5px;background:linear-gradient(90deg,transparent 42%,#f2c14e 42% 58%,transparent 58%),#d8433a;box-shadow:0 2px 0 rgba(0,0,0,.15);animation:alid 1s .35s cubic-bezier(.4,0,.3,1) forwards}
+.aopen .gbox b::before,.aopen .gbox b::after{content:'';position:absolute;top:-14px;left:50%;width:20px;height:16px;border:5px solid #f2c14e;border-radius:50% 50% 50% 0;margin-left:-22px;transform:rotate(-20deg)}
+.aopen .gbox b::after{margin-left:2px;border-radius:50% 50% 0 50%;transform:rotate(20deg)}
+@keyframes alid{30%{transform:translateY(-14px) rotate(-6deg)}100%{transform:translate(-70px,-60px) rotate(-38deg);opacity:0}}
+@keyframes agone{to{opacity:0;transform:translateY(10px) scale(.9)}}
+.aopen .item{position:absolute;left:0;right:0;bottom:16px;display:flex;justify-content:center;gap:4px;opacity:0;animation:arise 1.3s .75s cubic-bezier(.3,1.2,.5,1) forwards}
+.aopen .item img{width:150px;height:150px;object-fit:contain;filter:drop-shadow(0 6px 8px rgba(0,0,0,.35))}.aopen .item.two img{width:118px;height:118px}
+@keyframes arise{0%{opacity:0;transform:translateY(30px) scale(.5)}100%{opacity:1;transform:translateY(-12px) scale(1)}}
+.aopen .item::after{content:'';position:absolute;left:50%;bottom:-8px;width:130px;height:14px;margin-left:-65px;border-radius:50%;background:rgba(0,0,0,.18)}
+.aopen .nm{position:relative;margin-top:4px;color:#fff6e0;font-size:18px;font-weight:900;opacity:0;animation:afade .6s 1.6s forwards;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+.aopen .msg{position:relative;margin-top:2px;color:#f6d98a;font-size:13px;font-weight:800;opacity:0;animation:afade .6s 1.8s forwards}
+.aopen .btn{position:relative;opacity:0;animation:afade .5s 2s forwards}
+@keyframes afade{to{opacity:1}}
 img[data-fk]:not([src]){visibility:hidden}
-.aconf{position:fixed;top:-20px;z-index:60;pointer-events:none;font-size:14px;animation:afall linear forwards}
-@keyframes afall{to{transform:translate(var(--dx),110vh) rotate(var(--r))}}
 
 .fz{display:flex;align-items:center;justify-content:center;width:56px;height:56px}.fz img{width:56px;height:56px;object-fit:contain}.fz .lk{font-size:22px;color:#c8b898;font-weight:800}
 .wt3{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:640/720;background:#7a3a2a;margin-top:6px}.wt3 img{width:100%;height:100%;object-fit:cover;display:block}.wt3 img:not([src]){visibility:hidden}.wt3.loading::after{content:'ツリーを用意しているよ…';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff3dc;font-size:13px;font-weight:800}
@@ -689,7 +699,7 @@ function chime(kind){
   if (S.sound === false) return;
   try {
     actx = actx || new (window.AudioContext || window.webkitAudioContext)();
-    const notes = kind === 'thanks' ? [988, 1319] : kind === 'undo' ? [587, 440] : kind === 'bell' ? [1047, 1319, 1568, 2093] : [784, 1175];
+    const notes = kind === 'thanks' ? [988, 1319] : kind === 'undo' ? [587, 440] : kind === 'bell' ? [1319, 1047] : [784, 1175];
     notes.forEach((f, i) => { const o = actx.createOscillator(), g = actx.createGain(); o.type = 'sine'; o.frequency.value = f;
       const t = actx.currentTime + i * 0.09; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.13, t + 0.012); g.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
       o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.42); });
@@ -4334,12 +4344,14 @@ function confetti(n = 46){ const cols = ['#e0473b', '#f2c14e', '#3d8a55', '#ffff
     e.style.left = (Math.random() * 100) + 'vw'; e.style.setProperty('--dx', ((Math.random() - .5) * 120) + 'px'); e.style.setProperty('--r', ((Math.random() - .5) * 900) + 'deg'); e.style.animationDuration = (1.8 + Math.random() * 1.6) + 's'; e.style.animationDelay = (Math.random() * .5) + 's'; if (kind === 0) e.style.textShadow = '0 0 3px rgba(120,160,220,.9)';
     document.body.appendChild(e); setTimeout(() => e.remove(), 4200); } }
 function advOpen(i){ if (!advCan(i) || advOpened().has(i)) return; rmod().then(m => { const keys = m.ADVENT[i];
-  const cell = document.querySelector(`.ad.can[data-i="${i}"]`); if (cell){ cell.classList.remove('can'); cell.classList.add('opening'); burst(cell, 'star'); }
+  const cell = document.querySelector(`.ad.can[data-i="${i}"]`); if (cell){ cell.classList.remove('can'); cell.classList.add('opening'); }
   chime('bell');
   setTimeout(() => { const st = settings(), adv = [...new Set([...(st.adv || []), i])].sort((a, b) => a - b), room = { ...(st.room || {}) };
     keys.forEach(k => { room[m.FURN_BY[k].slot] = k; }); put({ ...st, adv, room });
-    openSheet(`<div class="aopen"><div class="rays"></div><span class="day">${md(advDay(i))}</span><div class="gift ${keys.length > 1 ? 'two' : ''}">${keys.map(fimg).join('')}</div><b>${keys.map(k => m.FURN_BY[k].name).join('と')}</b><p>おへやに飾ったよ！</p><button class="btn go" style="position:relative;margin-top:16px;padding:11px 26px" data-act="advent">ボックスにもどる</button></div>`);
-    fillFurn(); confetti(); chime('thanks'); }, cell ? 750 : 0); }); }
+    const HOLLY = `<svg viewBox="0 0 46 46" class="holly HL"><path d="M6 20 C 10 12 16 14 18 6 C 20 12 26 12 24 20 C 30 18 32 24 26 28 C 18 30 12 28 6 20Z" fill="#3d8a55"/><path d="M14 30 C 16 36 22 34 24 40 C 26 34 32 34 30 28 C 36 26 34 20 28 22" fill="#2f7346"/><circle cx="22" cy="24" r="3.6" fill="#d8303a"/><circle cx="27" cy="26" r="3.2" fill="#e0473b"/><circle cx="24" cy="29" r="3" fill="#c8252e"/></svg>`;
+    const snow = Array.from({ length:16 }, (_, k) => `<span class="sn" style="left:${(k * 37) % 100}%;--dx:${(k % 5 - 2) * 12}px;animation-duration:${5 + (k % 4)}s;animation-delay:-${(k * 0.7) % 5}s;font-size:${8 + (k % 3) * 3}px">❄</span>`).join('');
+    openSheet(`<div class="aopen">${snow}${HOLLY.replace('HL', 'l')}${HOLLY.replace('HL', 'r')}<span class="tag">${md(advDay(i))} のプレゼント</span><div class="stage"><div class="item ${keys.length > 1 ? 'two' : ''}">${keys.map(fimg).join('')}</div><div class="gbox"><i></i><b></b></div></div><div class="nm">${keys.map(k => m.FURN_BY[k].name).join('と')}</div><div class="msg">おへやに飾ったよ</div><button class="btn go" style="margin-top:14px;padding:10px 24px" data-act="advent">ボックスにもどる</button></div>`);
+    fillFurn(); setTimeout(() => chime('thanks'), 800); }, cell ? 750 : 0); }); }
 function unlockedFurn(m){ const o = advOpened(), u = new Map(); m.ADVENT.forEach((keys, i) => keys.forEach(k => u.set(k, i))); return { has:k => (m.TREE_PARTS.includes(m.FURN_BY[k].slot) && k.endsWith('_a')) || o.has(u.get(k)), day:k => advDay(u.get(k)) }; }
 function moyouSheet(){ rmod().then(m => { const U = unlockedFurn(m), room = settings().room || {};
   const secs = m.FURN_SLOTS.map(([slot, label]) => { const items = m.FURN_ITEMS.filter(it => it.slot === slot), tp = m.TREE_PARTS.includes(slot), cur = tp ? (room[slot] === undefined ? slot + '_a' : room[slot] === 'none' ? '' : room[slot]) : (room[slot] || '');
