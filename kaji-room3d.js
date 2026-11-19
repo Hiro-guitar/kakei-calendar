@@ -817,10 +817,45 @@ function xkNutcracker(){ const g = new THREE.Group(); const n = makeDeco('c0', 1
 function xkGingerHouse(){ const g = new THREE.Group(); const h = makeDeco('s10', .62); g.add(h); addM(g, new THREE.CylinderGeometry(.42, .44, .04, 40), M('#fbfbf6', { roughness:.3 }), 0, .02); h.position.y = .04; for (let i = 0; i < 10; i++){ const a = i / 10 * Math.PI * 2; const c = makeDeco(i % 2 ? 'candy' : 's4', .1); c.position.set(Math.cos(a) * .36, .04, Math.sin(a) * .36); g.add(c); } return g; }
 function xkBoot(){ const g = new THREE.Group(); const red = M('#c8302c', { roughness:.75 }), fur = M('#fbf6ec', { roughness:1 }); addM(g, RB(.22, .12, .4, .05), red, 0, .06, .08); addM(g, new THREE.CylinderGeometry(.13, .12, .42, 24), red, 0, .3, -.03); addM(g, new THREE.TorusGeometry(.14, .045, 10, 24), fur, 0, .52, -.03, Math.PI / 2); addM(g, RB(.24, .03, .42, .02), M('#2a2020'), 0, .01, .08);
   for (const [k, x, y, z, r] of [['gift', -.02, .52, -.05, .2], ['candy', .07, .55, 0, .1], ['c15', -.08, .55, .02, -.2]]){ const o = makeDeco(k, .2); o.position.set(x, y, z); o.rotation.y = r; g.add(o); } return g; }
+/* ===== クリスマスのオルゴール：さわるたびに次の曲、鳴っているときにさわると止まる（曲はどれも作者没後かなり経った古い曲） ===== */
+const MB_SONGS = [
+  ['ジングルベル', 150, 0, 'E1 E1 E2 E1 E1 E2 E1 G1 C1.5 D.5 E4 F1 F1 F1.5 F.5 F1 E1 E1 E.5 E.5 E1 D1 D1 E1 D2 G2 E1 E1 E2 E1 E1 E2 E1 G1 C1.5 D.5 E4 F1 F1 F1 F1 F1 E1 E1 E.5 E.5 G1 G1 F1 D1 C4'],
+  ['きよしこの夜', 84, 0, 'G1.5 A.5 G1 E3 G1.5 A.5 G1 E3 d2 d1 B3 c2 c1 G3 A2 A1 c1.5 B.5 A1 G1.5 A.5 G1 E3 A2 A1 c1.5 B.5 A1 G1.5 A.5 G1 E3 d2 d1 f1.5 d.5 B1 c3 e3 c1.5 G.5 E1 G1.5 F.5 D1 C6'],
+  ['もろびとこぞりて', 116, 0, 'c2 B1.5 A.5 G3 F1 E2 D2 C3 G1 A3 A1 B3 B1 c3 c1 c1 B1 A1 G1 G1.5 F.5 E1 c1 c1 B1 A1 G1 G1.5 F.5 E1 E1 E1 E1 E1 E.5 F.5 G3 F.5 E.5 D1 D1 D1 D.5 E.5 F3 E.5 D.5 C1 c2 A1 G1.5 F.5 E1 F1 E2 D2 C4'],
+  ['ひいらぎかざろう', 132, 0, 'G1.5 F.5 E1 D1 C1 D1 E1 C1 D.5 E.5 F.5 D.5 E1.5 D.5 C1 b1 C2 G1.5 F.5 E1 D1 C1 D1 E1 C1 D.5 E.5 F.5 D.5 E1.5 D.5 C1 b1 C2 D1.5 E.5 F1 D1 E1.5 F.5 G1 D1 E.5 #F.5 G1 A.5 B.5 c1 B1 A1 G2 G1.5 F.5 E1 D1 C1 D1 E1 C1 A.5 A.5 A.5 A.5 G1.5 F.5 E1 D1 C2'],
+  ['おめでとうクリスマス', 132, 0, 'G1 c1 c.5 d.5 c.5 B.5 A1 A1 A1 d1 d.5 e.5 d.5 c.5 B1 G1 G1 e1 e.5 f.5 e.5 d.5 c1 A1 G.5 G.5 A1 d1 B1 c3']
+];
+const MB_NOTE = { C:60, D:62, E:64, F:65, G:67, A:69, B:71 };
+const mbParse = str => str.split(' ').map(t => { const m = /^(#?)([A-Ga-g])([\d.]+)$/.exec(t); const up = m[2] === m[2].toLowerCase(); let n = MB_NOTE[m[2].toUpperCase()] + (up ? 12 : 0) + (m[1] ? 1 : 0); if (m[2] === 'b') n = 59; return [n, +m[3]]; });
+const MB = { on:false, i:0, ctx:null, out:null, timer:0 };
+function mbStop(){ if (!MB.on) return; MB.on = false; clearTimeout(MB.timer); const o = MB.out; if (o){ try { o.gain.setTargetAtTime(0, MB.ctx.currentTime, .15); setTimeout(() => o.disconnect(), 900); } catch (e) {} } MB.out = null; }
+function musicBoxTap(){
+  if (MB.on){ mbStop(); return; }
+  try {
+    const ctx = MB.ctx = MB.ctx || new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === 'suspended') ctx.resume();
+    const [name, bpm, tr, score] = MB_SONGS[MB.i % MB_SONGS.length]; MB.i++;
+    const out = MB.out = ctx.createGain(); out.gain.value = .9; out.connect(ctx.destination);
+    const beat = 60 / bpm; let t = ctx.currentTime + .08;
+    for (const [n, b] of mbParse(score)){
+      const f = 440 * Math.pow(2, (n + tr + 12 - 69) / 12);
+      // オルゴールらしい音：基音＋高い倍音を、ちいさく速く減衰させる
+      for (const [mul, amp, dec] of [[1, .12, 1.4], [3, .025, .35], [5.2, .012, .18]]){
+        const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.value = f * mul;
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(amp, t + .006); g.gain.exponentialRampToValueAtTime(.0005, t + dec);
+        o.connect(g); g.connect(out); o.start(t); o.stop(t + dec + .05);
+      }
+      t += b * beat;
+    }
+    MB.on = true; const end = (t - ctx.currentTime + 1.2) * 1000; MB.timer = setTimeout(() => { MB.on = false; MB.out = null; }, end);
+    if (window.kajiToast) window.kajiToast(`♪ ${name}`);
+  } catch (e) { MB.on = false; }
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) mbStop(); });
 function xkMusicBox(){ const g = new THREE.Group(); const wd = WOOD('#8a4a22', '#5a2a10', { roughness:.3 }); addM(g, RB(.42, .2, .3, .02), wd, 0, .1); addM(g, RB(.44, .02, .32, .008), M('#e7b84a', { metalness:.6, roughness:.3 }), 0, .2);
   const lid = new THREE.Group(); lid.position.set(0, .21, -.15); lid.rotation.x = -1.2; g.add(lid); addM(lid, RB(.42, .03, .3, .01), wd, 0, 0, .15); addM(lid, new THREE.PlaneGeometry(.36, .24), new THREE.MeshStandardMaterial({ color:'#eef4f8', metalness:.6, roughness:.08 }), 0, -.016, .15, Math.PI / 2);
   const stage = new THREE.Group(); stage.position.set(0, .21, .02); g.add(stage); addM(stage, new THREE.CylinderGeometry(.09, .09, .02, 28), M('#c8302c', { roughness:.6 }), 0, .01); const tr = makeDeco('c15', .2); tr.position.y = .02; stage.add(tr); const sm = makeDeco('snowman', .1); sm.position.set(.06, .02, .02); stage.add(sm);
-  g.userData.onTap = () => { const r0 = stage.rotation.y; animate(5000, k => { stage.rotation.y = r0 + k * Math.PI * 4; }); }; for (const s of [-1, 1]) addM(g, new THREE.SphereGeometry(.018, 10, 8), M('#e7b84a', { metalness:.6 }), s * .17, .015, .12); return g; }
+  ticker(stage, () => { if (MB.on){ const n = performance.now(); stage.rotation.y += Math.min(.05, (n - (stage.userData.t || n)) / 1000) * 1.6; stage.userData.t = n; lid.rotation.x += (-1.75 - lid.rotation.x) * .08; } else { stage.userData.t = 0; lid.rotation.x += (-1.2 - lid.rotation.x) * .08; } });
+  g.userData.onTap = () => musicBoxTap(); for (const s of [-1, 1]) addM(g, new THREE.SphereGeometry(.018, 10, 8), M('#e7b84a', { metalness:.6 }), s * .17, .015, .12); return g; }
 function xkLantern(){ const g = new THREE.Group(); const l = makeDeco('c7', .9); g.add(l); glowIn(g, '#ffd070', 1.3, .6, 0, .42, .05); g.userData.lamp = [0, .45, 0]; const p = makeDeco('pine', .14); p.position.set(.22, 0, .1); g.add(p); const p2 = makeDeco('c12', .12); p2.position.set(-.2, 0, .12); g.add(p2); blobIn(g, 0, 0, .6, .6, .5); return g; }
 function xkPoinsettia(){ const g = new THREE.Group(); const top = kpot(g, .24, .34, glaze('#c8302c')); addM(g, new THREE.TorusGeometry(.26, .02, 8, 32), M('#e7b84a', { metalness:.5, roughness:.3 }), 0, top - .02, 0, Math.PI / 2);
   const geo = leafGeo(leafShape(.35, 1), .1, .1), red = leafMat('#d8302e', '#a82020'), grn = leafMat('#2f7a3e', '#21592b'); for (let r = 0; r < 3; r++) for (let k = 0; k < 7; k++){ const a = k / 7 * Math.PI * 2 + r * .45, c = KV(Math.cos(a) * r * .06, top + .2 + r * .05, Math.sin(a) * r * .06); leafAt(g, geo, r < 2 ? grn : red, c, KV(Math.cos(a), .35 + r * .15, Math.sin(a)), .26 - r * .03, 0); }
