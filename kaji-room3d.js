@@ -822,7 +822,7 @@ const MB_SONGS = [
   ['ジングルベル', 150, 4, 'E1 E1 E2 E1 E1 E2 E1 G1 C1.5 D.5 E4 F1 F1 F1.5 F.5 F1 E1 E1 E.5 E.5 E1 D1 D1 E1 D2 G2 E1 E1 E2 E1 E1 E2 E1 G1 C1.5 D.5 E4 F1 F1 F1 F1 F1 E1 E1 E.5 E.5 G1 G1 F1 D1 C4', 'C4 C4 C4 C4 F4 C4 D74 G74 C4 C4 C4 C4 F4 C4 G74 C4'],
   ['きらきら星', 116, 4, 'C1 C1 G1 G1 A1 A1 G2 F1 F1 E1 E1 D1 D1 C2 G1 G1 F1 F1 E1 E1 D2 G1 G1 F1 F1 E1 E1 D2 C1 C1 G1 G1 A1 A1 G2 F1 F1 E1 E1 D1 D1 C2', 'C4 F2 C2 F2 C2 G2 C2 C2 F2 C2 G2 C2 F2 C2 G2 C4 F2 C2 F2 C2 G2 C2'],
   ['ひいらぎかざろう', 132, 4, 'G1.5 F.5 E1 D1 C1 D1 E1 C1 D.5 E.5 F.5 D.5 E1.5 D.5 C1 b1 C2 G1.5 F.5 E1 D1 C1 D1 E1 C1 D.5 E.5 F.5 D.5 E1.5 D.5 C1 b1 C2 D1.5 E.5 F1 D1 E1.5 F.5 G1 D1 E.5 #F.5 G1 A.5 B.5 c1 B1 A1 G2 G1.5 F.5 E1 D1 C1 D1 E1 C1 A.5 A.5 A.5 A.5 G1.5 F.5 E1 D1 C2', 'C4 C4 G4 C2 G1 C1 C4 C4 G4 C2 G1 C1 G4 C2 G2 C2 D72 G4 C4 C4 F2 C2 G2 C2'],
-  ['もみの木', 100, 3, 'G1 c.75 c.25 c1.5 d.5 e.75 e.25 e1.5 e.5 d.75 e.25 f1 B1 d1 c1 G1 c.75 c.25 c1.5 d.5 e.75 e.25 e1.5 e.5 d.75 e.25 f1 B1 d1 c2', 'G1 C3 C3 G73 C3 C3 C3 G73 C3'],
+  ['もみの木', 100, 3, 'G1 c.75 c.25 c1.5 d.5 e.75 e.25 e1.5 e.5 d.5 e.5 f1 B1 d1 c1 G1 c.75 c.25 c1.5 d.5 e.75 e.25 e1.5 e.5 d.5 e.5 f1 B1 d1 c2', 'G1 C3 C3 G73 C3 C3 C3 G73 C3'],
   ['もろびとこぞりて', 116, 4, 'c2 B1.5 A.5 G3 F1 E2 D2 C3 G1 A3 A1 B3 B1 c3 R4 c1 c1 B1 A1 G1 G1.5 F.5 E1 c1 c1 B1 A1 G1 G1.5 F.5 E1 E1 E1 E1 E1 E.5 F.5 G3 F.5 E.5 D1 D1 D1 D.5 E.5 F3 E.5 D.5 C1 c2 A1 G1.5 F.5 E1 F1 E2 D2 C4', 'C2 G2 C3 F1 C2 G2 C3 G1 F4 G4 C3 R4 C4 G73 C1 C4 G73 C1 C8 G71 G78 C3 F1 C2 F2 C2 G72 C4'],
   ['まきびとひつじを', 120, 3, 'E.5 D.5 C1.5 D.5 E.5 F.5 G2 A.5 B.5 c1 B1 A1 G2 A.5 B.5 c1 B1 A1 G1 A1 B1 c1 G1 F1 E2 E.5 D.5 C1.5 D.5 E.5 F.5 G2 A.5 B.5 c1 B1 A1 G2 A.5 B.5 c1 B1 A1 G1 A1 B1 c1 G1 F1 E2 E.5 D.5 C1.5 D.5 E.5 F.5 G2 c.5 B.5 A2 A1 G2 c1 B1 A1 G1 c1 G1 F1 E3', 'C1 C3 C3 F3 C3 F3 C3 F1 G72 C2 C1 C3 C3 F3 C3 F3 C3 F1 G72 C2 C1 C3 C3 F3 C3 G73 F1 G72 C3'],
   ['荒野のはてに', 120, 4, 'E1 E1 E1 G1 G1.5 F.5 E2 E1 D1 E1 G1 E1.5 D.5 C2 E1 E1 E1 G1 G1.5 F.5 E2 E1 D1 E1 G1 E1.5 D.5 C2 G2 A.5 G.5 F.5 E.5 F2 G.5 F.5 E.5 D.5 E2 F.5 E.5 D.5 C.5 D1.5 _G.5 _G2 C1 D1 E1 F1 E2 D2 C4 G2 A.5 G.5 F.5 E.5 F2 G.5 F.5 E.5 D.5 E2 F.5 E.5 D.5 C.5 D1.5 _G.5 _G2 C1 D1 E1 F1 E2 D2 C4', 'C4 G72 C2 C4 G72 C2 C4 G72 C2 C4 G72 C2 C4 F4 C4 G4 C1 G1 C1 F1 C2 G72 C4 C4 F4 C4 G4 C1 G1 C1 F1 C2 G72 C4'],
@@ -833,15 +833,14 @@ const MB_SONGS = [
 const MB_NOTE = { C:60, D:62, E:64, F:65, G:67, A:69, B:71 };
 const mbParse = str => str.split(' ').map(t => { if (t[0] === 'R') return [null, +t.slice(1)]; const m = /^(_?)(#?)([A-Ga-g])([\d.]+)$/.exec(t); const up = m[3] === m[3].toLowerCase(); let n = MB_NOTE[m[3].toUpperCase()] + (up ? 12 : 0) + (m[2] ? 1 : 0) - (m[1] ? 12 : 0); if (m[3] === 'b') n = 59; return [n, +m[4]]; });
 const MB = { on:false, i:0, ctx:null, out:null, timer:0 };
-function mbStop(){ if (!MB.on) return; MB.on = false; clearTimeout(MB.timer); const o = MB.out; if (o){ try { o.gain.setTargetAtTime(0, MB.ctx.currentTime, .15); setTimeout(() => o.disconnect(), 900); } catch (e) {} } MB.out = null; }
+function mbStop(){ if (!MB.on) return; MB.on = false; clearTimeout(MB.timer); const o = MB.out; if (o){ try { o.gain.setTargetAtTime(0, MB.ctx.currentTime, .15); const c = MB.comp; setTimeout(() => { o.disconnect(); if (c) c.disconnect(); }, 900); } catch (e) {} } MB.out = null; MB.comp = null; }
 // 伴奏の和音：[ベース, [和音]]
 const MB_CH = { C:[48, [55, 60, 64]], F:[53, [57, 60, 65]], G:[43, [55, 59, 62]], G7:[43, [53, 59, 62]], D7:[50, [54, 57, 60]], E7:[52, [56, 59, 62]], Am:[45, [57, 60, 64]], Dm:[50, [57, 62, 65]] };
-let mbVerb = null;
-function mbReverb(ctx){ // 小さなホールの響き（ノイズを減衰させたインパルス）
-  if (mbVerb && mbVerb.context === ctx) return mbVerb;
-  const len = ctx.sampleRate * 2.4, buf = ctx.createBuffer(2, len, ctx.sampleRate);
-  for (let c = 0; c < 2; c++){ const d = buf.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
-  const cv = ctx.createConvolver(); cv.buffer = buf; return (mbVerb = cv);
+let mbIR = null;
+function mbReverb(ctx){ // 小さなホールの響き（ノイズを減衰させたインパルス）。曲ごとに新しく作る（前の曲の響きが残らないように）
+  if (!mbIR || mbIR.sampleRate !== ctx.sampleRate){ const len = ctx.sampleRate * 2.4; mbIR = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let c = 0; c < 2; c++){ const d = mbIR.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); } }
+  const cv = ctx.createConvolver(); cv.buffer = mbIR; return cv;
 }
 function mbNote(ctx, out, t, n, vol, pan, lead){
   const f = 440 * Math.pow(2, (n + 12 - 69) / 12), p = ctx.createStereoPanner ? ctx.createStereoPanner() : null, dst = p || out; if (p){ p.pan.value = pan; p.connect(out); }
@@ -860,7 +859,7 @@ function musicBoxTap(){
     const [name, bpm, meter, score, chords] = MB_SONGS[MB.i % MB_SONGS.length]; MB.i++;
     const out = MB.out = ctx.createGain(); out.gain.value = 2.2; out.connect(ctx.destination);
     const dry = ctx.createGain(), wet = ctx.createGain(), comp = ctx.createDynamicsCompressor(); dry.gain.value = 1; wet.gain.value = .32;
-    comp.threshold.value = -14; comp.ratio.value = 3; comp.connect(dry); dry.connect(out); const rv = mbReverb(ctx); comp.connect(rv); rv.connect(wet); wet.connect(out);
+    MB.comp = comp; comp.threshold.value = -14; comp.ratio.value = 3; comp.connect(dry); dry.connect(out); const rv = mbReverb(ctx); comp.connect(rv); rv.connect(wet); wet.connect(out);
     const beat = 60 / bpm, t0 = ctx.currentTime + .1; let t = t0, last = t0;
     // メロディ（すこしだけ揺らして手回しっぽく）
     for (const [n, b] of mbParse(score)){ if (n !== null) mbNote(ctx, comp, t + (Math.random() - .5) * .012, n, 1, .15, true); last = t; t += b * beat; }
