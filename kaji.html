@@ -4733,7 +4733,7 @@ function kujiSheet(){ rmod().then(m => { const left = kujiLeft(), c = kujiCount(
     ${pool.length ? (left ? `<p class="kjmsg"><b>${left}</b>回まわせるよ</p>` : `<p class="kjmsg">つぎのくじまで あと<b>${KUJI_PER - c}</b>回</p>`) : `<p class="kjmsg">ぜんぶ当たったよ！</p>`}
     <div class="kjdots">${dots}</div>
     <button class="btn kjbtn" data-act="kujidraw" ${left && pool.length ? '' : 'disabled'}>ガラガラ回す</button></div>`); }); }
-function kujiDraw(){ rmod().then(m => { if (!kujiLeft()) return; const pool = kujiPool(m); if (!pool.length) return; const n = all('kuji').length, key = pool[hash('kuji' + n) % pool.length];
+function kujiDraw(){ rmod().then(m => { if (!kujiLeft()) return; const pool = kujiPool(m); if (!pool.length) return; const n = all('kuji').length, own = kujiOwned(), firstX = pool.includes('xzakka_g') && !m.FURN_ITEMS.some(it => m.XKUJI_SLOTS.includes(it.slot) && own.has(it.key)), key = firstX ? 'xzakka_g' : pool[hash('kuji' + n) % pool.length]; /* クリスマスふくびきの1回目は必ずオルゴール */
   const box = document.querySelector('.kuji'); if (box){ box.classList.add('spin'); const b = box.querySelector('.kjbtn'); if (b) b.disabled = true; } chime('bell');
   setTimeout(() => { put({ id:'kuji_' + n, kind:'kuji', n, key, by:S.me, at:Date.now() }); const it = m.FURN_BY[key];
     openSheet(`<div class="kuji result"><div class="kjsign">あたり！</div><div class="kjprize">${fimg(key)}</div><b class="kjname">${esc(it.name)}</b><p class="odesc">${esc(FURN_DESC[key] || '')}</p>
