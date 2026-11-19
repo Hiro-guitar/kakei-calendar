@@ -863,7 +863,7 @@ function musicBoxTap(){
     try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {} // マナーモードでもオルゴールは鳴らす
     const ctx = mbCtx();
     const [name, bpm, meter, score, chords] = MB_SONGS[MB.i % MB_SONGS.length]; MB.i++;
-    const out = MB.out = ctx.createGain(), lim = ctx.createDynamicsCompressor(); out.gain.value = 2; lim.threshold.value = -4; lim.knee.value = 2; lim.ratio.value = 20; lim.attack.value = .002; lim.release.value = .15; out.connect(lim); lim.connect(ctx.destination); /* 音割れしないように最後にリミッター */
+    const out = MB.out = ctx.createGain(), lim = ctx.createDynamicsCompressor(); out.gain.value = 1; lim.threshold.value = -4; lim.knee.value = 2; lim.ratio.value = 20; lim.attack.value = .002; lim.release.value = .15; out.connect(lim); lim.connect(ctx.destination); /* 音割れしないように最後にリミッター */
     const dry = ctx.createGain(), wet = ctx.createGain(), comp = ctx.createDynamicsCompressor(); dry.gain.value = 1; wet.gain.value = .32;
     MB.comp = comp; comp.threshold.value = -14; comp.ratio.value = 3; comp.connect(dry); dry.connect(out); const rv = mbReverb(ctx); comp.connect(rv); rv.connect(wet); wet.connect(out);
     const beat = 60 / bpm, t0 = ctx.currentTime + .1; let t = t0, last = t0;
