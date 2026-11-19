@@ -646,6 +646,7 @@ nav.tabs .tile{width:38px;height:38px}
 .ribgrid.charms svg{width:34px;height:34px;margin:4px 0}
 .ribgrid span{font-size:10.5px;font-weight:800;line-height:1.2;text-align:center}
 .ribgrid em{position:absolute;top:-5px;right:-3px;font-style:normal;background:var(--red);color:#fff;font-size:8.5px;font-weight:800;padding:1px 5px;border-radius:999px}
+.pcat{display:flex;align-items:center;justify-content:space-between;padding:9px 2px;border-top:1px solid rgba(31,82,110,.08);font-size:14px;font-weight:600}.pcat input{position:absolute;opacity:0;pointer-events:none}.pcat i{width:44px;height:26px;border-radius:13px;background:#d9dee3;position:relative;transition:.2s;flex:none}.pcat i::after{content:'';position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:.2s}.pcat input:checked+i{background:#3fb98a}.pcat input:checked+i::after{left:21px}
 </style>
 <script type="importmap">{"imports":{"three":"./vendor/three/three.module.min.js"}}</script>
 </head>
@@ -691,6 +692,7 @@ const all = kind => Object.values(S.items).filter(i => i.kind === kind && !i.del
 const $ = id => document.getElementById(id);
 
 function put(item){
+  try { const ev = pushEvent(S.items[item.id], item); if (ev) sendPush(ev); } catch (e) {}
   item.updatedAt = Date.now();
   S.items[item.id] = item;
   S.queue = S.queue.filter(q => q.id !== item.id);
@@ -698,6 +700,67 @@ function put(item){
   save(); render(); push();
 }
 const remove = item => put({ ...item, deleted:true });
+
+/* ========== 通知（Web Push） ==========
+   通知サーバーのURLは設定（同期データ）にだけ持つ。端末ごとの受け取り設定は kind:'pushsub' として同期し、
+   送る側が相手の端末の設定を見て、オンのものだけ中継サーバーに頼む */
+const PUSH_CATS = [['chore', '家事の記録'], ['thanks', 'ありがとう'], ['note', 'おてがみ'], ['read', 'おてがみを読んでくれたとき'], ['gift', '花束']];
+const pushUrl = () => (settings().pushUrl || '').replace(/\/+$/, '');
+const pushOK = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+function pushEvent(prev, it){
+  if (!S.me || !it || it.deleted) return null;
+  const me = nm(S.me), q = s => `「${s}」`;
+  if (it.kind === 'log'){
+    if (!prev && (it.rec || it.by) === S.me){
+      if (it.by === S.me || it.by === 'any') return { cat:'chore', title:it.both ? `${me}が${q(it.name)}をふたりでやったよ` : `${me}が${q(it.name)}をやったよ`, body:'' };
+      return { cat:'chore', title:`${me}が${q(it.name)}を記録したよ`, body:`${nm(it.by)}がやった家事として入れたよ` };
+    }
+    if (prev && !prev.thanks && it.thanks && it.by !== S.me) return { cat:'thanks', title:'♥ ありがとうが届いたよ', body:`${q(it.name)}に、${me}から` };
+    if (prev && !prev.both && it.both && it.by !== S.me) return { cat:'chore', title:`${me}も${q(it.name)}をいっしょにやったよ`, body:'' };
+  }
+  if (it.kind === 'note'){
+    if (!prev && it.by === S.me) return { cat:'note', title:`✉ ${me}からおてがみが届いたよ`, body:String(it.text || '').slice(0, 120) };
+    if (prev && prev.status !== 'done' && it.status === 'done' && it.by !== S.me) return { cat:'read', title:`${me}がおてがみを読んでくれたよ ✓`, body:String(it.text || '').slice(0, 60) };
+  }
+  if (it.kind === 'bouquet' && !prev && it.from === S.me) return { cat:'gift', title:`💐 ${me}から花束が届いたよ`, body:it.name ? q(it.name) : '' };
+  return null;
+}
+function sendPush(ev){
+  const url = pushUrl(); if (!url || !S.key) return;
+  const subs = all('pushsub').filter(p => p.me === other(S.me) && p.sub && (p.prefs || {})[ev.cat] !== false);
+  if (!subs.length) return;
+  fetch(url, { method:'POST', keepalive:true, headers:{ 'Content-Type':'text/plain' }, body:JSON.stringify({ key:S.key, subs:subs.map(p => p.sub), msg:{ title:ev.title, body:ev.body, tag:ev.cat } }) })
+    .then(r => r.json()).then(d => { for (const r of (d.res || [])) if (r.gone){ const p = subs.find(p => p.sub.endpoint === r.endpoint); if (p) setTimeout(() => remove(p), 0); } }).catch(() => {});
+}
+let swReg = null;
+function swReady(){ if (!pushOK()) return Promise.resolve(null); if (!swReg) swReg = navigator.serviceWorker.register('kaji-sw.js', { scope:'./kaji' }).then(() => navigator.serviceWorker.ready).catch(() => null); return swReg; }
+const pushIdOf = ep => { let h = 0; for (let i = 0; i < ep.length; i++) h = (h * 31 + ep.charCodeAt(i)) | 0; return 'pushsub_' + (h >>> 0).toString(36); };
+let PUSH_HERE = null; // この端末の購読（endpoint）
+async function pushHere(){ const r = await swReady(); if (!r) return null; const s = await r.pushManager.getSubscription(); PUSH_HERE = s ? s.endpoint : ''; return s; }
+const myPushItem = () => PUSH_HERE ? S.items[pushIdOf(PUSH_HERE)] : null;
+async function pushOn(){
+  const url = pushUrl(); if (!url) { toast('通知サーバーのURLが未設定だよ'); return; }
+  const perm = await Notification.requestPermission(); if (perm !== 'granted'){ toast('通知が許可されなかったよ（iPhoneの設定から許可できるよ）'); return; }
+  const r = await swReady(); if (!r) { toast('この端末では通知が使えないみたい'); return; }
+  let s = await r.pushManager.getSubscription();
+  if (!s){ const v = await fetch(url + '/vapid').then(r => r.json()); const raw = atob(v.pub.replace(/-/g, '+').replace(/_/g, '/')), key = new Uint8Array(raw.length); for (let i = 0; i < raw.length; i++) key[i] = raw.charCodeAt(i); s = await r.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:key }); }
+  PUSH_HERE = s.endpoint; const id = pushIdOf(s.endpoint), old = S.items[id];
+  put({ id, kind:'pushsub', me:S.me, sub:s.toJSON(), prefs:(old && !old.deleted && old.prefs) || Object.fromEntries(PUSH_CATS.map(([k]) => [k, true])), at:Date.now(), deleted:false });
+  toast('通知をオンにしたよ');
+}
+async function pushOff(){ const s = await pushHere(); const it = myPushItem(); if (it) remove(it); if (s) { try { await s.unsubscribe(); } catch (e) {} } PUSH_HERE = ''; toast('通知をオフにしたよ'); render(); }
+function pushPanel(){
+  let h = `<h2>つうち</h2><div class="panel">`;
+  if (!pushOK() || !isStandalone()) h += `<p class="hint" style="margin:0">ホーム画面に追加したアプリから開くと、相手が家事を入れたときなどに通知を受け取れるよ（iOS 16.4以降）</p>`;
+  else if (!pushUrl()) h += `<p class="hint" style="margin-top:0">通知サーバーのURLを入れてね（どちらか1台で入れれば、もう1台にも同期されるよ）</p><input class="t" id="s_push" placeholder="https://….workers.dev"><div class="row" style="margin-top:10px;justify-content:flex-end"><button class="btn small" data-act="savepush">保存</button></div>`;
+  else {
+    const it = myPushItem(), on = !!(it && !it.deleted && Notification.permission === 'granted');
+    h += `<div class="seg"><button class="${on ? 'on' : ''}" data-act="pushon">受け取る</button><button class="${on ? '' : 'on'}" data-act="pushoff">受け取らない</button></div>`;
+    if (on) h += `<p class="hint">${esc(nm(other(S.me)))}が…</p>` + PUSH_CATS.map(([k, l]) => `<label class="pcat"><span>${l}</span><input type="checkbox" data-act="pushcat" data-k="${k}" ${(it.prefs || {})[k] !== false ? 'checked' : ''}><i></i></label>`).join('');
+    else if ('Notification' in window && Notification.permission === 'denied') h += `<p class="hint">通知がブロックされているよ。iPhoneの「設定 → 通知 → さんにんのおうち」から許可してね</p>`;
+  }
+  return h + `</div>`;
+}
 
 // 名前はコードに書かず、設定（同期データ）にだけ持つ
 const DEF_NAMES = { h:'パパ', y:'ママ' };
@@ -4909,6 +4972,7 @@ function viewSettings(){
     <button class="btn small" data-act="savesync">保存して同期</button></div>
     <p class="hint">2台のスマホで同じURLと合言葉を入れると、記録が共有されます。</p></div>`;
 
+  html += pushPanel();
   html += `<h2>おと</h2><div class="panel"><div class="seg">
     <button class="${S.sound!==false?'on':''}" data-act="sound" data-v="1">鳴らす</button>
     <button class="${S.sound===false?'on':''}" data-act="sound" data-v="0">鳴らさない</button></div></div>`;
@@ -5210,6 +5274,10 @@ document.addEventListener('click', e => {
       all2.forEach((c,k) => { if (c.order !== k) { c.order = k; c.updatedAt = Date.now(); S.items[c.id] = c; S.queue = S.queue.filter(q => q.id !== c.id); S.queue.push(c); } });
       save(); render(); push(); break; }
     case 'savenames': { const s = { ...settings(), names:{ h:$('name_h').value.trim()||DEF_NAMES.h, y:$('name_y').value.trim()||DEF_NAMES.y, k:$('name_k').value.trim() } }; put(s); renameKid(); toast('ほぞんしたよ'); break; }
+    case 'savepush': { const v = $('s_push').value.trim(); if (!/^https:\/\//.test(v)) { toast('https:// からはじまるURLを入れてね'); break; } put({ ...settings(), pushUrl:v.replace(/\/+$/, '') }); toast('ほぞんしたよ'); break; }
+    case 'pushon': pushOn().then(render).catch(e => toast('通知をオンにできなかったよ')); break;
+    case 'pushoff': pushOff(); break;
+    case 'pushcat': { const it = myPushItem(); if (!it) break; put({ ...it, prefs:{ ...(it.prefs || {}), [el.dataset.k]:el.checked } }); break; }
     case 'savesync': S.url = $('s_url').value.trim(); S.key = $('s_key').value.trim(); S.lastSync = 0; save(); toast('同期しています…'); sync().then(() => toast(syncState==='ok'?'同期しました':'同期できませんでした')); break;
     case 'export': { const b = new Blob([JSON.stringify(S.items,null,1)], {type:'application/json'}); const u = URL.createObjectURL(b);
       const x = document.createElement('a'); x.href = u; x.download = `uchikaji-${dayKey(Date.now())}.json`; x.click(); setTimeout(() => URL.revokeObjectURL(u), 2000); break; }
@@ -5246,6 +5314,7 @@ renameKid();
 if (!S.url){ migrateCatalog2(); migrateCatalog3(); migrateCatalog4(); migrateCatalog5(); }
 render();
 if (S.url) sync();
+if (pushOK() && isStandalone()) pushHere().then(() => { if (tab === 'settings') render(); }).catch(() => {});
 setTimeout(() => iconNotice(false), 1800);
 </script>
 </body>
