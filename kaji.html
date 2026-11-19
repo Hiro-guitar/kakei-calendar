@@ -236,7 +236,7 @@ img[data-fk]:not([src]){visibility:hidden}
 
 .fz{display:flex;align-items:center;justify-content:center;width:56px;height:56px}.fz img{width:56px;height:56px;object-fit:contain}.fz .lk{font-size:22px;color:#c8b898;font-weight:800}
 .wt3{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:720/860;background:#7a3a2a;margin-top:6px}.wt3 img{width:100%;height:100%;object-fit:cover;display:block}.wt3 img:not([src]){visibility:hidden}.wt3.loading::after{content:'ツリーを用意しているよ…';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff3dc;font-size:13px;font-weight:800}
-.kuji{text-align:center;padding:6px 4px 10px}.kuji.xk .gdrum{background:linear-gradient(135deg,#3f9a5a,#2a6a3e)}.kuji.xk .gface{background:repeating-linear-gradient(90deg,#c8302c 0 10px,#fbf6ec 10px 20px)}.kuji.xk .kjsign{background:#2f7a4a;box-shadow:0 3px 0 #1f5a34}.kuji.xk .kjsign::after{content:' 12/25まで';font-size:11px;opacity:.85}.kjsign{display:inline-block;background:#c8352e;color:#fff8e8;font-weight:900;padding:6px 18px;border-radius:999px;box-shadow:0 3px 0 #9a2a22;font-size:15px}
+.kuji{text-align:center;padding:6px 4px 10px}.kjseg{margin:0 auto 12px;max-width:260px}.kuji.xk .gdrum{background:linear-gradient(135deg,#3f9a5a,#2a6a3e)}.kuji.xk .gface{background:repeating-linear-gradient(90deg,#c8302c 0 10px,#fbf6ec 10px 20px)}.kuji.xk .kjsign{background:#2f7a4a;box-shadow:0 3px 0 #1f5a34}.kuji.xk .kjsign::after{content:' 12/25まで';font-size:11px;opacity:.85}.kjsign{display:inline-block;background:#c8352e;color:#fff8e8;font-weight:900;padding:6px 18px;border-radius:999px;box-shadow:0 3px 0 #9a2a22;font-size:15px}
 .gara{position:relative;width:200px;height:170px;margin:14px auto 4px}.gdrum{position:absolute;left:40px;top:10px;width:120px;height:104px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:linear-gradient(135deg,#e8503a,#b8302a);transition:transform .2s}
 .gface{position:absolute;inset:16px 26px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:repeating-linear-gradient(90deg,#c89a5a 0 10px,#b8864a 10px 20px)}
 .gleg{position:absolute;top:60px;width:12px;height:100px;background:#8a5a32;border-radius:6px}.gleg.l{left:58px;transform:rotate(12deg)}.gleg.r{left:130px;transform:rotate(-12deg)}
@@ -4654,11 +4654,13 @@ const kujiOwned = () => new Set(all('kuji').map(k => k.key));
 const ICON_KUJI = `<svg viewBox="0 0 24 24"><path d="M5 14 L8 6 H16 L19 14 L16 20 H8Z" fill="#c8352e"/><path d="M8 6 H16 L19 14 H5Z" fill="#e8503a"/><circle cx="12" cy="13" r="2" fill="#f2c14e"/><path d="M19 13 L22 10" stroke="#8a5a32" stroke-width="2" stroke-linecap="round"/><circle cx="20" cy="21" r="2" fill="#f2c14e"/></svg>`;
 // 12/25までは「クリスマスふくびき」：クリスマスの家具が先に当たる（全部当たったら、いつもの家具）
 const xmasKuji = () => xmasOn(0) && !inNY(Date.now());
-function kujiPool(m){ const own = kujiOwned(), of = slots => m.FURN_ITEMS.filter(it => slots.includes(it.slot) && !own.has(it.key)).map(it => it.key).sort();
-  if (xmasKuji()){ const x = of(m.XKUJI_SLOTS); if (x.length) return x; } return of(m.KUJI_SLOTS); }
+let kujiMode = 'x'; // クリスマスの期間は、どちらのふくびきか選べる
+function kujiPool(m, mode = xmasKuji() ? kujiMode : 'n'){ const own = kujiOwned(), of = slots => m.FURN_ITEMS.filter(it => slots.includes(it.slot) && !own.has(it.key)).map(it => it.key).sort();
+  return mode === 'x' ? of(m.XKUJI_SLOTS) : of(m.KUJI_SLOTS); }
 function kujiSheet(){ rmod().then(m => { const left = kujiLeft(), c = kujiCount() % KUJI_PER, pool = kujiPool(m);
   const dots = Array.from({ length:KUJI_PER }, (_, i) => `<i class="${i < c ? 'on' : ''}"></i>`).join('');
-  openSheet(`<div class="kuji ${xmasKuji() && m.FURN_ITEMS.some(it => m.XKUJI_SLOTS.includes(it.slot) && !kujiOwned().has(it.key)) ? 'xk' : ''}"><div class="kjsign">${xmasKuji() ? 'クリスマスふくびき' : 'ふくびき'}</div>
+  const xm = xmasKuji() && kujiMode === 'x';
+  openSheet(`<div class="kuji ${xm ? 'xk' : ''}">${xmasKuji() ? `<div class="seg kjseg"><button class="${xm ? 'on' : ''}" data-act="kujimode" data-v="x">クリスマス</button><button class="${xm ? '' : 'on'}" data-act="kujimode" data-v="n">いつもの</button></div>` : ''}<div class="kjsign">${xm ? 'クリスマスふくびき' : 'ふくびき'}</div>
     <div class="gara"><div class="gdrum"><div class="gface"></div></div><div class="gleg l"></div><div class="gleg r"></div><div class="ghandle"></div><div class="gball"></div><div class="gtray"></div></div>
     ${pool.length ? (left ? `<p class="kjmsg"><b>${left}</b>回まわせるよ</p>` : `<p class="kjmsg">つぎのくじまで あと<b>${KUJI_PER - c}</b>回</p>`) : `<p class="kjmsg">ぜんぶ当たったよ！</p>`}
     <div class="kjdots">${dots}</div>
@@ -5067,6 +5069,7 @@ document.addEventListener('click', e => {
     case 'eend': roomEdit(false); break;
     case 'kuji': menuClose && menuClose(); kujiSheet(); break;
     case 'kujidraw': kujiDraw(); break;
+    case 'kujimode': kujiMode = el.dataset.v; kujiSheet(); break;
     case 'furnadd': { if (!ROOM) break; const k = el.dataset.key, r = ROOM.autoPlace(k); if (!r){ toast('置ける場所がないみたい'); break; } const st = settings(), L = (st.layout || ROOM.layoutOf().filter(x => x.id !== r.id)).concat([r]); put({ ...st, layout:L }); closeSheet(); roomEdit(true); toast('なぞって好きな場所に動かしてね'); break; }
     case 'iconcopy': { const u = setupURL(), done = () => { toast('コピーしたよ'); el.textContent = 'コピーしたよ ✓'; };
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(u).then(done).catch(() => prompt('このURLをコピーしてね', u)); else prompt('このURLをコピーしてね', u); if (S.url) sync(); break; }
