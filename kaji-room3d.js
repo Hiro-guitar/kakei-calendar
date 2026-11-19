@@ -620,6 +620,9 @@ function nyNanakusa(){ const g = new THREE.Group(); addM(g, new THREE.CylinderGe
   const greens = ['#5aac4a', '#7cc05a', '#3f8a3a', '#9ad06a']; for (let i = 0; i < 26; i++){ const a = i * 2.4, r = Math.sqrt(i / 26) * .3; addM(g, new THREE.SphereGeometry(.07, 10, 8), M(greens[i % 4], { roughness:.7 }), Math.cos(a) * r, .17 + (i % 3) * .02, Math.sin(a) * r, 0, a, 0, 1.4, .5, .8); }
   for (const [x, z] of [[.12, .05], [-.1, -.08]]) addM(g, new THREE.SphereGeometry(.06, 12, 10), M('#fbf6ea', { roughness:.5 }), x, .2, z); blobIn(g, 0, 0, 1.1, 1.1, .3); return g; }
 
+/* 動く家具（金魚など）：部屋に置かれている間だけ毎フレーム動かす */
+const TICK = []; function ticker(o, f){ o.userData.tick = f; o.userData.born = performance.now(); TICK.push(o); }
+function tickAll(now){ for (let i = TICK.length - 1; i >= 0; i--){ const o = TICK[i]; let p = o; while (p.parent) p = p.parent; if (p !== scene){ if (now - o.userData.born > 4000) TICK.splice(i, 1); continue; } o.userData.tick(now / 1000); } }
 /* ===== ふくびきで当たる家具（つくりこみ版） ===== */
 const kjCache = {};
 const woodT = (c1 = '#b07a48', c2 = '#8a5a32', rep = [1, 1]) => kjCache['w' + c1 + c2 + rep] || (kjCache['w' + c1 + c2 + rep] = canvasTex(256, 256, (g, w, h) => { g.fillStyle = c1; g.fillRect(0, 0, w, h); for (let i = 0; i < 70; i++){ g.strokeStyle = `rgba(70,40,20,${.05 + Math.random() * .12})`; g.lineWidth = .6 + Math.random() * 1.6; const y = Math.random() * h; g.beginPath(); g.moveTo(0, y); for (let x = 0; x <= w; x += 16) g.lineTo(x, y + Math.sin(x * .03 + i) * 3); g.stroke(); } g.fillStyle = c2; g.globalAlpha = .18; for (let i = 0; i < 4; i++){ g.beginPath(); g.ellipse(Math.random() * w, Math.random() * h, 8, 3, 0, 0, 7); g.fill(); } g.globalAlpha = 1; }, rep));
@@ -700,7 +703,11 @@ function kjFishbowl(){ const g = new THREE.Group(); const wd = WOOD('#9a6236', '
   addM(g, new THREE.SphereGeometry(.19, 24, 18, 0, Math.PI * 2, Math.PI * .32, Math.PI * .68), new THREE.MeshStandardMaterial({ color:'#5ab0e0', transparent:true, opacity:.35, roughness:.1 }), 0, by); addM(g, new THREE.CircleGeometry(.16, 32), new THREE.MeshStandardMaterial({ color:'#a8dcf4', transparent:true, opacity:.55 }), 0, by + .1, 0, -Math.PI / 2);
   for (let i = 0; i < 26; i++){ const a = i * 2.4, r = Math.sqrt(i / 26) * .12; addM(g, new THREE.SphereGeometry(.014, 6, 5), M(['#e8d8b0', '#a8b8c8', '#d8a080'][i % 3]), Math.cos(a) * r, by - .16, Math.sin(a) * r); }
   for (let k = 0; k < 3; k++) stem(g, [KV(-.06 + k * .02, by - .16, -.04), KV(-.07 + k * .03, by - .05, -.05), KV(-.05 + k * .02, by + .04, -.03)], .006, M('#4a9a4a'));
-  for (const [x, y, z, ry] of [[.05, by - .02, .02, .5], [-.04, by + .03, .05, 2.6]]){ const f = new THREE.Group(); f.position.set(x, y, z); f.rotation.y = ry; g.add(f); const fm = M('#f2602a', { roughness:.35 }); addM(f, new THREE.SphereGeometry(.03, 14, 10), fm, 0, 0, 0, 0, 0, 0, 1.4, 1, .7); addM(f, new THREE.ConeGeometry(.035, .05, 8, 1, true), M('#f2905a', { transparent:true, opacity:.85, side:THREE.DoubleSide }), -.06, 0, 0, 0, 0, Math.PI / 2, 1, 1, .3); addM(f, new THREE.SphereGeometry(.006, 6, 4), M('#1a1a1a'), .03, .008, .018); }
+  const fishes = []; for (const [c, r0, y0, sp, ph] of [['#f2602a', .09, by - .03, .7, 0], ['#f6a03a', .06, by + .03, -.95, 2]]){ const f = new THREE.Group(); g.add(f); const fm = M(c, { roughness:.35 }); addM(f, new THREE.SphereGeometry(.03, 14, 10), fm, 0, 0, 0, 0, 0, 0, 1.4, 1, .7);
+    const tail = new THREE.Group(); tail.position.x = -.04; f.add(tail); addM(tail, new THREE.ConeGeometry(.035, .05, 8, 1, true), M('#f2905a', { transparent:true, opacity:.85, side:THREE.DoubleSide }), -.02, 0, 0, 0, 0, Math.PI / 2, 1, 1, .3);
+    for (const s2 of [-1, 1]) addM(f, new THREE.SphereGeometry(.006, 6, 4), M('#1a1a1a'), .03, .008, s2 * .018); fishes.push({ f, tail, r0, y0, sp, ph }); }
+  // 金魚はゆっくり円をえがいて泳ぐ。しっぽもふりふり
+  ticker(g, t => fishes.forEach(({ f, tail, r0, y0, sp, ph }) => { const a = t * sp + ph, r = r0 + Math.sin(t * .7 + ph) * .015; f.position.set(Math.cos(a) * r, y0 + Math.sin(t * 1.3 + ph) * .012, Math.sin(a) * r); f.rotation.y = -a - Math.sign(sp) * Math.PI / 2; tail.rotation.y = Math.sin(t * 9 + ph) * .5; }));
   addM(g, new THREE.SphereGeometry(.2, 40, 28), new THREE.MeshPhysicalMaterial({ color:'#ffffff', roughness:.02, transmission:.92, thickness:.05, ior:1.4, transparent:true, opacity:.4, side:THREE.DoubleSide }), 0, by); addM(g, new THREE.TorusGeometry(.11, .012, 8, 32), new THREE.MeshPhysicalMaterial({ color:'#ffffff', roughness:.05, transmission:.9, transparent:true, opacity:.5 }), 0, by + .17, 0, Math.PI / 2); return g; }
 function kjRecord(){ const g = new THREE.Group(); const wd = WOOD('#8a4a22', '#5a2a10', { roughness:.35 }); addM(g, RB(.52, .13, .42, .025), wd, 0, .065); addM(g, RB(.5, .01, .4, .004), M('#2a2a2a', { roughness:.5 }), 0, .132);
   const vinyl = canvasTex(256, 256, (c, w, h) => { c.fillStyle = '#141414'; c.fillRect(0, 0, w, h); for (let r = 40; r < 126; r += 1.6){ c.strokeStyle = `rgba(255,255,255,${.03 + (r % 7) * .006})`; c.beginPath(); c.arc(w / 2, h / 2, r, 0, 7); c.stroke(); } c.fillStyle = '#d8303a'; c.beginPath(); c.arc(w / 2, h / 2, 38, 0, 7); c.fill(); c.fillStyle = '#f6e8c0'; c.font = 'bold 12px serif'; c.textAlign = 'center'; c.fillText('♪', w / 2, h / 2 - 12); c.fillStyle = '#1a1a1a'; c.beginPath(); c.arc(w / 2, h / 2, 4, 0, 7); c.fill(); }, [1, 1]);
@@ -759,13 +766,15 @@ function kjHato(){ const g = new THREE.Group(); const wd = WOOD('#7a4a26', '#4a2
   const brass = M('#c8a050', { metalness:.6, roughness:.3 }); addM(g, new THREE.CylinderGeometry(.003, .003, .24, 4), brass, 0, .23, .1); addM(g, new THREE.CircleGeometry(.04, 24), brass, 0, .12, .1);
   for (const x of [-.08, .08]){ addM(g, new THREE.CylinderGeometry(.002, .002, .3, 4), brass, x, .2, .07); const pc = new THREE.Group(); pc.position.set(x, .05, .07); g.add(pc); for (let k = 0; k < 5; k++) addM(pc, new THREE.ConeGeometry(.022 - k * .003, .03, 8), M('#8a5a2a', { metalness:.3, roughness:.5 }), 0, -k * .018, 0, Math.PI); } return g; }
 
+// 部屋のほかの家具とつりあう大きさに
+function kjScale(o, k){ const g = new THREE.Group(); o.scale.setScalar(k); g.add(o); return g; }
 const BUILD = {
   wallpaper:k => swatch('abcd'[k], true), flooring:k => swatch('abcd'[k], false),
   topper:k => treeTopper('abc'[k]), treelights:k => treeLights('abc'[k]), garland:k => treeGarland('abc'[k]),
   fireplace:k => fireplace(['stone', 'brick', 'white'][k]), stockings:k => stockings(['felt', 'knit', 'plaid'][k]), mantel:k => mantelTop('abc'[k]), wall:k => k === 3 ? nyShimekazari() : k === 4 ? nyKakejiku() : wallDeco('abc'[k]),
   curtain:k => curtains('abcd'[k]), wintop:k => winTop('abc'[k]), sill:k => k === 3 ? nySillKagami() : sillDeco('abc'[k]), outside:k => k === 3 ? nySunrise() : outsideDeco('abc'[k]), table:k => k === 3 ? nyKotatsu() : tableSpot('abc'[k]), toys:k => k === 3 ? nyToys() : toys('abc'[k]),
   rug:k => k === 3 ? nyRug() : rugItem('abc'[k]), treebase:k => k === 3 ? nyMousen() : treeBase('abc'[k]), shelf:k => shelfSpot('abc'[k]), sofa:k => k === 3 ? nyZabuton() : sofaSpot('abc'[k]), lamp:k => k === 3 ? nyAndon() : k === 4 ? nyKadomatsu() : lampSpot('abc'[k]), special:k => k === 1 ? nyNanakusa() : sparkle(),
-  plant:k => [kjMonstera, kjCactus, kjPachira, kjPothos, kjOlive, kjSucculent][k](), zakka:k => [kjBlocks, kjGlobe, kjBooks, kjRadio, kjFishbowl, kjRecord, kjCatCushion][k](), seat:k => [kjBeanbag, kjStool, kjCushions][k](), wall2:k => [kjMirror, kjFlags, kjPhotos, kjSwag, kjMugShelf, kjHato][k](),
+  plant:k => kjScale([kjMonstera, kjCactus, kjPachira, kjPothos, kjOlive, kjSucculent][k](), 1.35), zakka:k => kjScale([kjBlocks, kjGlobe, kjBooks, kjRadio, kjFishbowl, kjRecord, kjCatCushion][k](), [1.6, 1.5, 1.5, 1.5, 1.7, 1.5, 1.4][k]), seat:k => kjScale([kjBeanbag, kjStool, kjCushions][k](), 1.25), wall2:k => kjScale([kjMirror, kjFlags, kjPhotos, kjSwag, kjMugShelf, kjHato][k](), 1.25),
 };
 function buildFurn(key){ const it = FURN_BY[key]; if (!it) return null; const g = BUILD[it.slot](it.k); g.userData.key = key; return g; }
 // 置き場所：[x, y, z, 向き]
@@ -908,6 +917,7 @@ function frame(now){
   if (document.hidden || stopped || now - last < 33) return; last = now;
   for (let k = appear.length - 1; k >= 0; k--){ const a = appear[k], t = Math.min(1, (now - a.t0) / 420), s = t < 1 ? 1 + 1.7 * Math.pow(t - 1, 3) + .7 * Math.pow(t - 1, 2) : 1; const bs = a.o.userData.base || 1; a.o.scale.setScalar(Math.max(.001, s * bs)); if (t >= 1){ a.o.scale.setScalar(bs); appear.splice(k, 1); shadowsDirty = true; } }
   giftRing.rotation.y = tree.rotation.y;
+  tickAll(now);
   if (advBox.visible){ const p = (now % 2600) / 2600, j = p < .22 ? Math.sin(p / .22 * Math.PI) : 0; advBox.position.y = .1 * j; advBox.scale.set(1 + .06 * j, 1 - .06 * j * (p < .05 ? -1 : 1), 1 + .06 * j); }
   if (!drag && Math.abs(spin) > .0004){ tree.rotation.y += spin; spin *= .93; shadowsDirty = true; if (Math.abs(spin) <= .0004 && opts.onRot) opts.onRot(tree.rotation.y); }
   // 回したときの振り子：回転の加速で横にふれ、速さで外へ広がる
