@@ -8,8 +8,9 @@
 <meta name="apple-mobile-web-app-title" content="さんにんのおうち">
 <meta name="theme-color" content="#faf6ef">
 <title>さんにんのおうち</title>
-<link rel="apple-touch-icon" href="kaji-icon-xmas.png">
-<link rel="icon" href="kaji-icon-xmas.png">
+<link rel="apple-touch-icon" href="kaji-icon-xmas.png" id="aticon">
+<link rel="icon" href="kaji-icon-xmas.png" id="faicon">
+<script>/* 12/26〜1/7（朝4時区切り）はお正月のアイコン */ (() => { const d = new Date(Date.now() - 4 * 36e5), v = (d.getMonth() + 1) * 100 + d.getDate(); window.ICON_FILE = v >= 1226 || v <= 107 ? 'kaji-icon-ny.png' : 'kaji-icon-xmas.png'; for (const id of ['aticon', 'faicon']) document.getElementById(id).href = window.ICON_FILE; })();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
@@ -187,6 +188,9 @@ body.dragmode{user-select:none;-webkit-user-select:none}
 .ad.big .num{font-size:20px;height:36px;min-width:52px}
 .p0{background:repeating-linear-gradient(45deg,#e0473b 0 7px,#fff4ea 7px 14px)}
 /* おしょうがつボックス：紅白と金、青海波 */
+.abox.nybox::before{background:linear-gradient(#3a3a48,#2a2a36)}.abox.nybox::after{background:#e7b84a;height:8px;top:-2px;clip-path:none;left:-14px;right:-14px;border-radius:2px}
+.abox.nybox .astar.sun{width:84px;height:56px;margin-left:-42px;top:-92px;filter:drop-shadow(0 0 10px rgba(255,140,80,.7))}.abox.nybox .asign{color:#2f4a7a}.abox.nybox .ad .num{color:#2f4a7a}
+.aopen.nyopen{background:radial-gradient(circle at 50% 30%,#fff6e8,#f6e2c8)}.aopen.nyopen .tag{background:#c8302c;color:#fff8e8}
 .abox.nybox{background:linear-gradient(#2f4a7a,#24395f);box-shadow:inset 0 0 0 4px #c8352e,inset 0 0 0 7px #e7b84a,0 6px 0 #1a2a48,0 10px 18px rgba(20,30,60,.25)}
 .ny0{background:radial-gradient(circle at 50% 120%,transparent 30%,#fbf6ea 31% 36%,transparent 37% 50%,#fbf6ea 51% 56%,transparent 57%) 0 0/22px 14px,#c8352e}
 .ny1{background:repeating-linear-gradient(90deg,#d8303a 0 8px,#fbf6ea 8px 16px)}
@@ -676,7 +680,7 @@ const WD = ['日','月','火','水','木','金','土'];
 let S = (() => { try { return JSON.parse(localStorage.getItem(LS)) } catch(e) { return null } })()
   || { items:{}, me:null, url:'', key:'', lastSync:0, queue:[], seeded:false };
 /* アイコンを追加し直したとき用：コピーしたURLの #setup= から同期の設定とだれの端末かを引きつぐ（まだ設定がない端末だけ） */
-const ICON_VER = 'xmas2026';
+const ICON_VER = window.ICON_FILE === 'kaji-icon-ny.png' ? 'ny2027' : 'xmas2026';
 { const m = /#setup=([^&]+)/.exec(location.hash); if (m){ try { const c = JSON.parse(decodeURIComponent(escape(atob(m[1])))); if (!S.url && c.u){ S.url = c.u; S.key = c.k || ''; S.lastSync = 0; } if (!S.me && c.m) S.me = c.m; localStorage.setItem(LS, JSON.stringify(S)); localStorage.setItem('kaji_iconver', ICON_VER); } catch (e) {} } }
 let tab = 'today', weekOff = 0, selDay = null, reviewOpen = false, syncState = 'local';
 
@@ -4673,12 +4677,17 @@ function kujiDraw(){ rmod().then(m => { if (!kujiLeft()) return; const pool = ku
 const ICON_ADV = `<svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="12" rx="2" fill="#d8403a"/><rect x="2" y="6" width="20" height="5" rx="1.5" fill="#e8584a"/><rect x="10.6" y="6" width="2.8" height="15" fill="#f2c14e"/><path d="M12 6 C 9 1 5 3 8 6 M12 6 C 15 1 19 3 16 6" stroke="#f2c14e" stroke-width="1.8" fill="none"/></svg>`;
 const ICON_MY = `<svg viewBox="0 0 24 24"><path d="M3 12 L12 4 L21 12" stroke="#a8703e" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="5.5" y="11" width="13" height="10" rx="1.5" fill="#f2c14e"/><rect x="10" y="15" width="4" height="6" fill="#c8862a"/><circle cx="18" cy="6.5" r="1.6" fill="#d8403a"/></svg>`;
 function advChips(){ if (ROOM_FAIL) return ''; const b = advBadge();
-  return `<span class="xside">${advToday() >= 0 && (advToday() < ADV_N || advLeft() > 0) ? `<button class="xbtn" data-act="advent" aria-label="アドベントカレンダー">${ICON_ADV}<small>アドベント</small>${b ? `<span class="bdg">${b}</span>` : ''}</button>` : ''}<button class="xbtn" data-act="kuji" aria-label="ふくびき">${ICON_KUJI}<small>ふくびき</small>${kujiLeft() ? `<span class="bdg">${kujiLeft()}</span>` : ''}</button><button class="xbtn" data-act="moyou" aria-label="もようがえ">${ICON_MY}<small>もようがえ</small></button></span>`; }
+  return `<span class="xside">${advToday() >= 0 && (advToday() < ADV_N || advLeft() > 0) ? `<button class="xbtn" data-act="advent" aria-label="${nyNow() ? 'おしょうがつボックス' : 'アドベントカレンダー'}">${nyNow() ? ICON_ADV_NY : ICON_ADV}<small>${nyNow() ? 'おしょうがつ' : 'アドベント'}</small>${b ? `<span class="bdg">${b}</span>` : ''}</button>` : ''}<button class="xbtn" data-act="kuji" aria-label="ふくびき">${ICON_KUJI}<small>ふくびき</small>${kujiLeft() ? `<span class="bdg">${kujiLeft()}</span>` : ''}</button><button class="xbtn" data-act="moyou" aria-label="もようがえ">${ICON_MY}<small>もようがえ</small></button></span>`; }
 let RMOD = null; const rmod = () => RMOD ? Promise.resolve(RMOD) : import('./kaji-room3d.js').then(m => (RMOD = m));
 const fimg = k => `<img data-fk="${k}" alt="">`;
 function fillFurn(){ if (!ROOM) return; const els = [...document.querySelectorAll('img[data-fk]:not([src])')]; let i = 0;
   const step = () => { const t0 = performance.now(); while (i < els.length && performance.now() - t0 < 30){ const e = els[i++]; if (!e.isConnected) continue; try { e.src = ROOM.thumbFurn(e.dataset.fk); } catch (x) { console.warn(x); } } if (i < els.length) requestAnimationFrame(step); }; requestAnimationFrame(step); }
 const md = d => `${d.getMonth() + 1}/${d.getDate()}`;
+// 年末年始：日の出に梅、紅白の水引の箱、松の枝
+const nyNow = () => inNY(Date.now());
+const SUN_SVG = `<svg viewBox="0 0 60 40" class="astar sun"><circle cx="30" cy="30" r="17" fill="#e8402e"/><circle cx="30" cy="30" r="17" fill="url(#sung)" opacity=".5"/><defs><radialGradient id="sung"><stop offset="0" stop-color="#ffd38a"/><stop offset="1" stop-color="#e8402e" stop-opacity="0"/></radialGradient></defs>${[0, 1, 2, 3, 4].map(i => { const a = i / 5 * Math.PI * 2, x = 10 + Math.cos(a) * 5, y = 12 + Math.sin(a) * 5; return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="#f49aac"/>`; }).join('')}<circle cx="10" cy="12" r="2.4" fill="#fff3c0"/>${[0, 1, 2, 3, 4].map(i => { const a = i / 5 * Math.PI * 2, x = 50 + Math.cos(a) * 4, y = 14 + Math.sin(a) * 4; return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.2" fill="#fbf6ec"/>`; }).join('')}<circle cx="50" cy="14" r="2" fill="#f2c14e"/></svg>`;
+const ICON_ADV_NY = `<svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="12" rx="2" fill="#fbf6ec"/><rect x="3" y="9" width="9" height="12" rx="2" fill="#d8303a"/><rect x="11" y="9" width="2" height="12" fill="#e7b84a"/><rect x="2" y="6" width="20" height="4.5" rx="1.5" fill="#2f4a7a"/><path d="M12 6 C 9 2 5 3 7 6 M12 6 C 15 2 19 3 17 6" stroke="#e7b84a" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="12" cy="6" r="1.4" fill="#e7b84a"/></svg>`;
+const PINE_SVG = `<svg viewBox="0 0 46 46" class="holly HL"><path d="M6 40 C 14 30 22 24 40 8" stroke="#6a4a2a" stroke-width="2.4" fill="none"/>${[[14, 30], [22, 22], [32, 14]].map(([x, y]) => [0, 1, 2, 3, 4, 5, 6].map(k => { const a = -Math.PI * .95 + k * .3; return `<path d="M${x} ${y} l ${(Math.cos(a) * 9).toFixed(1)} ${(Math.sin(a) * 9).toFixed(1)}" stroke="#2f7a46" stroke-width="2" stroke-linecap="round"/>`; }).join('')).join('')}<circle cx="38" cy="30" r="4" fill="#f49aac"/><circle cx="38" cy="30" r="1.6" fill="#fff3c0"/></svg>`;
 const STAR_SVG = `<svg viewBox="0 0 40 40" class="astar"><path d="M20 2 L25 14 L38 15 L28 24 L31 37 L20 30 L9 37 L12 24 L2 15 L15 14Z" fill="#f6c84a" stroke="#c8902a" stroke-width="1.6" stroke-linejoin="round"/><path d="M20 7 L23 15 L31 16" stroke="#fff4c0" stroke-width="2" fill="none" stroke-linecap="round" opacity=".8"/></svg>`;
 function advSheet(){ rmod().then(m => { const o = advOpened(), t = advToday(), ny = t >= ADV_XMAS;
   // 12/26からは「おしょうがつボックス」。開けわすれたクリスマスのとびらも、まだあれば先に並べる
@@ -4688,9 +4697,9 @@ function advSheet(){ rmod().then(m => { const o = advOpened(), t = advToday(), n
     if (o.has(i)) return `<div class="ad open ${cls2}">${inner}<div class="leaf ${pat}"><span class="num">${d.getDate()}</span></div></div>`;
     if (i <= t) return `<div class="ad can ${cls2}" data-i="${i}">${inner}<button class="leaf ${pat}" data-act="advopen" data-i="${i}" aria-label="${md(d)}のとびら"><span class="num">${d.getDate()}</span></button></div>`;
     return `<div class="ad lock ${cls2}"><div class="leaf ${pat}"><span class="num">${d.getDate()}</span></div></div>`; }).join('');
-  openSheet(`<div class="abox ${ny ? 'nybox' : ''}">${STAR_SVG}<div class="asign">${ny ? 'おしょうがつボックス' : 'アドベントボックス'}<small>きょうは なにが入ってるかな？</small></div>${(() => { const n = m.ADVENT.filter((_, i) => i <= t && !o.has(i)).length; return n > 1 ? `<button class="abtn-all" data-act="advall">まとめてあける（${n}こ）</button>` : ''; })()}<div class="agrid">${doors}</div></div>`); setTimeout(fillFurn, 30); }); }
+  openSheet(`<div class="abox ${ny ? 'nybox' : ''}">${ny ? SUN_SVG : STAR_SVG}<div class="asign">${ny ? 'おしょうがつボックス' : 'アドベントボックス'}<small>きょうは なにが入ってるかな？</small></div>${(() => { const n = m.ADVENT.filter((_, i) => i <= t && !o.has(i)).length; return n > 1 ? `<button class="abtn-all" data-act="advall">まとめてあける（${n}こ）</button>` : ''; })()}<div class="agrid">${doors}</div></div>`); setTimeout(fillFurn, 30); }); }
 function confetti(n = 46){ const cols = ['#e0473b', '#f2c14e', '#3d8a55', '#ffffff', '#f4a6bc', '#7cc0e4']; for (let i = 0; i < n; i++){ const e = document.createElement('span'); e.className = 'aconf';
-    const kind = i % 4; e.textContent = kind === 0 ? '❄' : kind === 1 ? '★' : ''; if (kind > 1){ e.style.width = '7px'; e.style.height = '11px'; e.style.borderRadius = '2px'; e.style.background = cols[i % cols.length]; } else e.style.color = kind === 0 ? '#ffffff' : cols[i % 3 + 1];
+    const ny = nyNow(), kind = i % 4; e.textContent = kind === 0 ? (ny ? '✿' : '❄') : kind === 1 ? (ny ? '◆' : '★') : ''; if (ny && kind === 0) e.style.color = i % 8 ? '#f49aac' : '#e8402e'; if (kind > 1){ e.style.width = '7px'; e.style.height = '11px'; e.style.borderRadius = '2px'; e.style.background = cols[i % cols.length]; } else e.style.color = kind === 0 ? '#ffffff' : cols[i % 3 + 1];
     e.style.left = (Math.random() * 100) + 'vw'; e.style.setProperty('--dx', ((Math.random() - .5) * 120) + 'px'); e.style.setProperty('--r', ((Math.random() - .5) * 900) + 'deg'); e.style.animationDuration = (1.8 + Math.random() * 1.6) + 's'; e.style.animationDelay = (Math.random() * .5) + 's'; if (kind === 0) e.style.textShadow = '0 0 3px rgba(120,160,220,.9)';
     document.body.appendChild(e); setTimeout(() => e.remove(), 4200); } }
 function advOpen(i){ const O = advOpened(), L = (Array.isArray(i) ? i : [i]).filter(j => advCan(j) && !O.has(j)); if (!L.length) return; rmod().then(m => { const keys = L.flatMap(j => m.ADVENT[j]);
@@ -4701,8 +4710,8 @@ function advOpen(i){ const O = advOpened(), L = (Array.isArray(i) ? i : [i]).fil
     keys.forEach(k => { const slot = m.FURN_BY[k].slot; if (layout && (m.FLOOR_SLOTS.includes(slot) || m.WALL_SLOTS.includes(slot))){ const j = layout.findIndex(r => r.key && r.key.startsWith(slot + '_')); if (j >= 0) layout[j] = { ...layout[j], key:k }; else { const r = ROOM.autoPlace(k); if (r) layout.push(r); } } else room[slot] = k; });
     put({ ...st, adv, room, ...(layout ? { layout } : {}) });
     const HOLLY = `<svg viewBox="0 0 46 46" class="holly HL"><path d="M6 20 C 10 12 16 14 18 6 C 20 12 26 12 24 20 C 30 18 32 24 26 28 C 18 30 12 28 6 20Z" fill="#3d8a55"/><path d="M14 30 C 16 36 22 34 24 40 C 26 34 32 34 30 28 C 36 26 34 20 28 22" fill="#2f7346"/><circle cx="22" cy="24" r="3.6" fill="#d8303a"/><circle cx="27" cy="26" r="3.2" fill="#e0473b"/><circle cx="24" cy="29" r="3" fill="#c8252e"/></svg>`;
-    const snow = Array.from({ length:16 }, (_, k) => `<span class="sn" style="left:${(k * 37) % 100}%;--dx:${(k % 5 - 2) * 12}px;animation-duration:${5 + (k % 4)}s;animation-delay:-${(k * 0.7) % 5}s;font-size:${8 + (k % 3) * 3}px">❄</span>`).join('');
-    openSheet(`<div class="aopen">${snow}${HOLLY.replace('HL', 'l')}${HOLLY.replace('HL', 'r')}<span class="tag">${L.length > 1 ? `${L.length}日分のプレゼント` : `${md(advDay(L[0]))} のプレゼント`}</span><div class="stage"><div class="item ${keys.length > 2 ? 'many' : keys.length > 1 ? 'two' : ''}">${keys.map(fimg).join('')}</div><div class="gbox"><i></i><b></b></div></div><div class="nm">${keys.length > 3 ? `${esc(m.FURN_BY[keys[0]].name)} ほか ${keys.length - 1}こ` : keys.map(k => m.FURN_BY[k].name).join('と')}</div><div class="msg">おへやに飾ったよ</div><button class="btn go" style="margin-top:14px;padding:10px 24px" data-act="advent">ボックスにもどる</button></div>`);
+    const nyo = L[0] >= ADV_XMAS, snow = Array.from({ length:16 }, (_, k) => `<span class="sn" style="left:${(k * 37) % 100}%;--dx:${(k % 5 - 2) * 12}px;animation-duration:${5 + (k % 4)}s;animation-delay:-${(k * 0.7) % 5}s;font-size:${8 + (k % 3) * 3}px;${nyo ? `color:${k % 2 ? '#f49aac' : '#fbe0e6'}` : ''}">${nyo ? '✿' : '❄'}</span>`).join('');
+    openSheet(`<div class="aopen ${nyo ? 'nyopen' : ''}">${snow}${(nyo ? PINE_SVG : HOLLY).replace('HL', 'l')}${(nyo ? PINE_SVG : HOLLY).replace('HL', 'r')}<span class="tag">${L.length > 1 ? `${L.length}日分のプレゼント` : `${md(advDay(L[0]))} のプレゼント`}</span><div class="stage"><div class="item ${keys.length > 2 ? 'many' : keys.length > 1 ? 'two' : ''}">${keys.map(fimg).join('')}</div><div class="gbox"><i></i><b></b></div></div><div class="nm">${keys.length > 3 ? `${esc(m.FURN_BY[keys[0]].name)} ほか ${keys.length - 1}こ` : keys.map(k => m.FURN_BY[k].name).join('と')}</div><div class="msg">おへやに飾ったよ</div><button class="btn go" style="margin-top:14px;padding:10px 24px" data-act="advent">ボックスにもどる</button></div>`);
     fillFurn(); setTimeout(() => chime('thanks'), 800); }, cell || L.length > 1 ? 750 : 0); }); }
 function unlockedFurn(m){ const o = advOpened(), u = new Map(); m.ADVENT.forEach((keys, i) => keys.forEach(k => u.set(k, i))); const kj = kujiOwned(); return { has:k => (m.TREE_PARTS.includes(m.FURN_BY[k].slot) && k.endsWith('_a')) || o.has(u.get(k)) || kj.has(k), kuji:k => kj.has(k), day:k => advDay(u.get(k)) }; }
 function moyouSheet(){ rmod().then(m => { const U = unlockedFurn(m), room = settings().room || {};
@@ -5226,7 +5235,7 @@ const isStandalone = () => navigator.standalone || (window.matchMedia && matchMe
 function setupURL(){ const c = { u:S.url, k:S.key, m:S.me }; return location.origin + location.pathname + '#setup=' + btoa(unescape(encodeURIComponent(JSON.stringify(c)))); }
 function iconNotice(force){ let v = ''; try { v = localStorage.getItem('kaji_iconver') || ''; } catch (e) {}
   if (!force){ if (v === ICON_VER || !S.me) { try { if (!S.me) localStorage.setItem('kaji_iconver', ICON_VER); } catch (e) {} return; } if (!isStandalone()) return; try { if (+localStorage.getItem('kaji_iconsnooze') > Date.now()) return; } catch (e) {} }
-  openSheet(`<div class="iconnew"><img src="kaji-icon-xmas.png" alt=""><b>アイコンが新しくなったよ</b>
+  openSheet(`<div class="iconnew"><img src="${window.ICON_FILE}" alt=""><b>アイコンが新しくなったよ</b>
     <ol><li>下のボタンでURLをコピー</li><li>ホーム画面の今のアイコンを長押しして削除</li><li>Safariにはりつけて開き、<span class="sh">共有</span>から「ホーム画面に追加」</li></ol>
     <p class="muted">記録や同期の設定は、そのまま引きつがれるよ</p>
     <button class="btn go" style="width:100%;padding:13px" data-act="iconcopy">URLをコピー</button>
