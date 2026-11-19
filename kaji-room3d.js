@@ -819,34 +819,60 @@ function xkBoot(){ const g = new THREE.Group(); const red = M('#c8302c', { rough
   for (const [k, x, y, z, r] of [['gift', -.02, .52, -.05, .2], ['candy', .07, .55, 0, .1], ['c15', -.08, .55, .02, -.2]]){ const o = makeDeco(k, .2); o.position.set(x, y, z); o.rotation.y = r; g.add(o); } return g; }
 /* ===== クリスマスのオルゴール：さわるたびに次の曲、鳴っているときにさわると止まる（曲はどれも作者没後かなり経った古い曲） ===== */
 const MB_SONGS = [
-  ['ジングルベル', 150, 0, 'E1 E1 E2 E1 E1 E2 E1 G1 C1.5 D.5 E4 F1 F1 F1.5 F.5 F1 E1 E1 E.5 E.5 E1 D1 D1 E1 D2 G2 E1 E1 E2 E1 E1 E2 E1 G1 C1.5 D.5 E4 F1 F1 F1 F1 F1 E1 E1 E.5 E.5 G1 G1 F1 D1 C4'],
-  ['きよしこの夜', 84, 0, 'G1.5 A.5 G1 E3 G1.5 A.5 G1 E3 d2 d1 B3 c2 c1 G3 A2 A1 c1.5 B.5 A1 G1.5 A.5 G1 E3 A2 A1 c1.5 B.5 A1 G1.5 A.5 G1 E3 d2 d1 f1.5 d.5 B1 c3 e3 c1.5 G.5 E1 G1.5 F.5 D1 C6'],
-  ['もろびとこぞりて', 116, 0, 'c2 B1.5 A.5 G3 F1 E2 D2 C3 G1 A3 A1 B3 B1 c3 c1 c1 B1 A1 G1 G1.5 F.5 E1 c1 c1 B1 A1 G1 G1.5 F.5 E1 E1 E1 E1 E1 E.5 F.5 G3 F.5 E.5 D1 D1 D1 D.5 E.5 F3 E.5 D.5 C1 c2 A1 G1.5 F.5 E1 F1 E2 D2 C4'],
-  ['ひいらぎかざろう', 132, 0, 'G1.5 F.5 E1 D1 C1 D1 E1 C1 D.5 E.5 F.5 D.5 E1.5 D.5 C1 b1 C2 G1.5 F.5 E1 D1 C1 D1 E1 C1 D.5 E.5 F.5 D.5 E1.5 D.5 C1 b1 C2 D1.5 E.5 F1 D1 E1.5 F.5 G1 D1 E.5 #F.5 G1 A.5 B.5 c1 B1 A1 G2 G1.5 F.5 E1 D1 C1 D1 E1 C1 A.5 A.5 A.5 A.5 G1.5 F.5 E1 D1 C2'],
-  ['おめでとうクリスマス', 132, 0, 'G1 c1 c.5 d.5 c.5 B.5 A1 A1 A1 d1 d.5 e.5 d.5 c.5 B1 G1 G1 e1 e.5 f.5 e.5 d.5 c1 A1 G.5 G.5 A1 d1 B1 c3']
+  ['ジングルベル', 150, 4, 'E1 E1 E2 E1 E1 E2 E1 G1 C1.5 D.5 E4 F1 F1 F1.5 F.5 F1 E1 E1 E.5 E.5 E1 D1 D1 E1 D2 G2 E1 E1 E2 E1 E1 E2 E1 G1 C1.5 D.5 E4 F1 F1 F1 F1 F1 E1 E1 E.5 E.5 G1 G1 F1 D1 C4', 'C4 C4 C4 C4 F4 C4 D74 G74 C4 C4 C4 C4 F4 C4 G74 C4'],
+  ['きよしこの夜', 96, 3, 'G1.5 A.5 G1 E3 G1.5 A.5 G1 E3 d2 d1 B3 c2 c1 G3 A2 A1 c1.5 B.5 A1 G1.5 A.5 G1 E3 A2 A1 c1.5 B.5 A1 G1.5 A.5 G1 E3 d2 d1 f1.5 d.5 B1 c3 e3 c1.5 G.5 E1 G1.5 F.5 D1 C6', 'C3 C3 C3 C3 G73 G73 C3 C3 F3 F3 C3 C3 F3 F3 C3 C3 G73 G73 C3 C3 C3 G73 C3 C3'],
+  ['もろびとこぞりて', 116, 4, 'c2 B1.5 A.5 G3 F1 E2 D2 C3 G1 A3 A1 B3 B1 c3 c1 c1 B1 A1 G1 G1.5 F.5 E1 c1 c1 B1 A1 G1 G1.5 F.5 E1 E1 E1 E1 E1 E.5 F.5 G3 F.5 E.5 D1 D1 D1 D.5 E.5 F3 E.5 D.5 C1 c2 A1 G1.5 F.5 E1 F1 E2 D2 C4', 'C2 G2 C3 F1 C2 G2 C3 G1 F4 G4 C3 C4 G73 C1 C4 G73 C1 C8 G71 G78 C3 F1 C2 F2 C2 G72 C4'],
+  ['ひいらぎかざろう', 132, 4, 'G1.5 F.5 E1 D1 C1 D1 E1 C1 D.5 E.5 F.5 D.5 E1.5 D.5 C1 b1 C2 G1.5 F.5 E1 D1 C1 D1 E1 C1 D.5 E.5 F.5 D.5 E1.5 D.5 C1 b1 C2 D1.5 E.5 F1 D1 E1.5 F.5 G1 D1 E.5 #F.5 G1 A.5 B.5 c1 B1 A1 G2 G1.5 F.5 E1 D1 C1 D1 E1 C1 A.5 A.5 A.5 A.5 G1.5 F.5 E1 D1 C2', 'C4 C4 G4 C2 G1 C1 C4 C4 G4 C2 G1 C1 G4 C2 G2 C2 D72 G4 C4 C4 F2 C2 G2 C2'],
+  ['おめでとうクリスマス', 132, 3, 'G1 c1 c.5 d.5 c.5 B.5 A1 A1 A1 d1 d.5 e.5 d.5 c.5 B1 G1 G1 e1 e.5 f.5 e.5 d.5 c1 A1 G.5 G.5 A1 d1 B1 c3', 'G1 C3 F3 D73 G3 E73 Am3 F1 G2 C3']
 ];
 const MB_NOTE = { C:60, D:62, E:64, F:65, G:67, A:69, B:71 };
 const mbParse = str => str.split(' ').map(t => { const m = /^(#?)([A-Ga-g])([\d.]+)$/.exec(t); const up = m[2] === m[2].toLowerCase(); let n = MB_NOTE[m[2].toUpperCase()] + (up ? 12 : 0) + (m[1] ? 1 : 0); if (m[2] === 'b') n = 59; return [n, +m[3]]; });
 const MB = { on:false, i:0, ctx:null, out:null, timer:0 };
 function mbStop(){ if (!MB.on) return; MB.on = false; clearTimeout(MB.timer); const o = MB.out; if (o){ try { o.gain.setTargetAtTime(0, MB.ctx.currentTime, .15); setTimeout(() => o.disconnect(), 900); } catch (e) {} } MB.out = null; }
+// 伴奏の和音：[ベース, [和音]]
+const MB_CH = { C:[48, [55, 60, 64]], F:[53, [57, 60, 65]], G:[43, [55, 59, 62]], G7:[43, [53, 59, 62]], D7:[50, [54, 57, 60]], E7:[52, [56, 59, 62]], Am:[45, [57, 60, 64]], Dm:[50, [57, 62, 65]] };
+let mbVerb = null;
+function mbReverb(ctx){ // 小さなホールの響き（ノイズを減衰させたインパルス）
+  if (mbVerb && mbVerb.context === ctx) return mbVerb;
+  const len = ctx.sampleRate * 2.4, buf = ctx.createBuffer(2, len, ctx.sampleRate);
+  for (let c = 0; c < 2; c++){ const d = buf.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
+  const cv = ctx.createConvolver(); cv.buffer = buf; return (mbVerb = cv);
+}
+function mbNote(ctx, out, t, n, vol, pan, lead){
+  const f = 440 * Math.pow(2, (n + 12 - 69) / 12), p = ctx.createStereoPanner ? ctx.createStereoPanner() : null, dst = p || out; if (p){ p.pan.value = pan; p.connect(out); }
+  // オルゴールの櫛の音：わずかにずらした2本の基音（うなり）＋高い倍音
+  const parts = lead ? [[1, .1, 1.8, -3], [1, .06, 1.8, 4], [3, .022, .4, 0], [5.2, .01, .2, 0], [8.1, .004, .1, 0]] : [[1, .1, 1.3, 0], [3, .014, .3, 0]];
+  for (const [mul, amp, dec, cents] of parts){
+    const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.value = f * mul; o.detune.value = cents;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(amp * vol, t + .005); g.gain.exponentialRampToValueAtTime(.0004, t + dec * (n > 84 ? .7 : 1));
+    o.connect(g); g.connect(dst); o.start(t); o.stop(t + dec + .05);
+  }
+}
 function musicBoxTap(){
   if (MB.on){ mbStop(); return; }
   try {
     const ctx = MB.ctx = MB.ctx || new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === 'suspended') ctx.resume();
-    const [name, bpm, tr, score] = MB_SONGS[MB.i % MB_SONGS.length]; MB.i++;
-    const out = MB.out = ctx.createGain(); out.gain.value = .9; out.connect(ctx.destination);
-    const beat = 60 / bpm; let t = ctx.currentTime + .08;
-    for (const [n, b] of mbParse(score)){
-      const f = 440 * Math.pow(2, (n + tr + 12 - 69) / 12);
-      // オルゴールらしい音：基音＋高い倍音を、ちいさく速く減衰させる
-      for (const [mul, amp, dec] of [[1, .12, 1.4], [3, .025, .35], [5.2, .012, .18]]){
-        const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.value = f * mul;
-        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(amp, t + .006); g.gain.exponentialRampToValueAtTime(.0005, t + dec);
-        o.connect(g); g.connect(out); o.start(t); o.stop(t + dec + .05);
+    const [name, bpm, meter, score, chords] = MB_SONGS[MB.i % MB_SONGS.length]; MB.i++;
+    const out = MB.out = ctx.createGain(); out.gain.value = 2.2; out.connect(ctx.destination);
+    const dry = ctx.createGain(), wet = ctx.createGain(), comp = ctx.createDynamicsCompressor(); dry.gain.value = 1; wet.gain.value = .32;
+    comp.threshold.value = -14; comp.ratio.value = 3; comp.connect(dry); dry.connect(out); const rv = mbReverb(ctx); comp.connect(rv); rv.connect(wet); wet.connect(out);
+    const beat = 60 / bpm, t0 = ctx.currentTime + .1; let t = t0, last = t0;
+    // メロディ（すこしだけ揺らして手回しっぽく）
+    for (const [n, b] of mbParse(score)){ mbNote(ctx, comp, t + (Math.random() - .5) * .012, n, 1, .15, true); last = t; t += b * beat; }
+    // 伴奏：拍の頭にベース、ほかの拍に和音をパラランと
+    let ct = t0;
+    for (const tok of chords.split(' ')){
+      const m = /^(Am|Dm|G7|D7|E7|[CFG])([\d.]+)$/.exec(tok), [bass, tri] = MB_CH[m[1]], len = +m[2];
+      for (let i = 0; i < len; i++){
+        const bt = ct + i * beat;
+        if (meter === 3 ? i % 3 === 0 : i % 2 === 0) mbNote(ctx, comp, bt, bass + (meter === 4 && i % 4 === 2 ? 7 : 0), .75, -.25);
+        else tri.forEach((x, j) => mbNote(ctx, comp, bt + j * .028, x, .42, -.1 + j * .1));
       }
-      t += b * beat;
+      ct += len * beat;
     }
-    MB.on = true; const end = (t - ctx.currentTime + 1.2) * 1000; MB.timer = setTimeout(() => { MB.on = false; MB.out = null; }, end);
+    // 終わりは和音をやさしく重ねる
+    MB_CH.C[1].concat([72]).forEach((x, j) => mbNote(ctx, comp, last + .05 + j * .07, x, .5, -.2 + j * .12, j === 3));
+    MB.on = true; const end = (t - ctx.currentTime + 2.6) * 1000; MB.timer = setTimeout(() => { MB.on = false; MB.out = null; }, end);
     if (window.kajiToast) window.kajiToast(`♪ ${name}`);
   } catch (e) { MB.on = false; }
 }
