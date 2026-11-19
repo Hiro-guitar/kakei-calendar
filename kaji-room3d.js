@@ -833,7 +833,8 @@ const MB_SONGS = [
 const MB_NOTE = { C:60, D:62, E:64, F:65, G:67, A:69, B:71 };
 const mbParse = str => str.split(' ').map(t => { if (t[0] === 'R') return [null, +t.slice(1)]; const m = /^(_?)(#?)([A-Ga-g])([\d.]+)$/.exec(t); const up = m[3] === m[3].toLowerCase(); let n = MB_NOTE[m[3].toUpperCase()] + (up ? 12 : 0) + (m[2] ? 1 : 0) - (m[1] ? 12 : 0); if (m[3] === 'b') n = 59; return [n, +m[4]]; });
 const MB = { on:false, i:0, ctx:null, out:null, timer:0 };
-function mbStop(){ if (!MB.on) return; MB.on = false; clearTimeout(MB.timer); const o = MB.out; if (o){ try { o.gain.setTargetAtTime(0, MB.ctx.currentTime, .15); const c = MB.comp; setTimeout(() => { o.disconnect(); if (c) c.disconnect(); }, 900); } catch (e) {} } MB.out = null; MB.comp = null; }
+const mbSessionOff = () => { try { if (navigator.audioSession) navigator.audioSession.type = 'auto'; } catch (e) {} };
+function mbStop(){ if (!MB.on) return; MB.on = false; setTimeout(mbSessionOff, 1000); clearTimeout(MB.timer); const o = MB.out; if (o){ try { o.gain.setTargetAtTime(0, MB.ctx.currentTime, .15); const c = MB.comp; setTimeout(() => { o.disconnect(); if (c) c.disconnect(); }, 900); } catch (e) {} } MB.out = null; MB.comp = null; }
 // 伴奏の和音：[ベース, [和音]]
 const MB_CH = { C:[48, [55, 60, 64]], F:[53, [57, 60, 65]], G:[43, [55, 59, 62]], G7:[43, [53, 59, 62]], D7:[50, [54, 57, 60]], E7:[52, [56, 59, 62]], Am:[45, [57, 60, 64]], Dm:[50, [57, 62, 65]] };
 let mbIR = null;
@@ -852,10 +853,15 @@ function mbNote(ctx, out, t, n, vol, pan, lead){
     o.connect(g); g.connect(dst); o.start(t); o.stop(t + dec + .05);
   }
 }
+// iPhoneは「指をはなした」タイミングでしか音を出す許可をくれないので、最初のタッチで音の準備をしておく
+function mbCtx(){ if (!MB.ctx){ MB.ctx = new (window.AudioContext || window.webkitAudioContext)(); } if (MB.ctx.state !== 'running') { try { MB.ctx.resume(); } catch (e) {} } return MB.ctx; }
+function mbUnlock(){ try { const c = mbCtx(), b = c.createBuffer(1, 1, 22050), s = c.createBufferSource(); s.buffer = b; s.connect(c.destination); s.start(0); } catch (e) {} }
+for (const ev of ['touchend', 'pointerup', 'click']) document.addEventListener(ev, mbUnlock, { once:true, capture:true });
 function musicBoxTap(){
   if (MB.on){ mbStop(); return; }
   try {
-    const ctx = MB.ctx = MB.ctx || new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === 'suspended') ctx.resume();
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {} // マナーモードでもオルゴールは鳴らす
+    const ctx = mbCtx();
     const [name, bpm, meter, score, chords] = MB_SONGS[MB.i % MB_SONGS.length]; MB.i++;
     const out = MB.out = ctx.createGain(), lim = ctx.createDynamicsCompressor(); out.gain.value = 2; lim.threshold.value = -4; lim.knee.value = 2; lim.ratio.value = 20; lim.attack.value = .002; lim.release.value = .15; out.connect(lim); lim.connect(ctx.destination); /* 音割れしないように最後にリミッター */
     const dry = ctx.createGain(), wet = ctx.createGain(), comp = ctx.createDynamicsCompressor(); dry.gain.value = 1; wet.gain.value = .32;
@@ -874,7 +880,7 @@ function musicBoxTap(){
       }
       ct += len * beat;
     }
-    MB.on = true; const end = (t - ctx.currentTime + 2.6) * 1000; MB.timer = setTimeout(() => { MB.on = false; MB.out = null; }, end);
+    MB.on = true; const end = (t - ctx.currentTime + 2.6) * 1000; MB.timer = setTimeout(() => { MB.on = false; MB.out = null; mbSessionOff(); }, end);
     if (window.kajiToast) window.kajiToast(`♪ ${name}`);
   } catch (e) { MB.on = false; }
 }
@@ -949,14 +955,20 @@ function partBox(g, opt = {}){ g.updateMatrixWorld(true); const box = new THREE.
 // ツリーは、まわりのプレゼント置き場（いくつ置いてあっても）まで含めて場所をとる
 function instBox(o){ if (o.rec.key === 'tree'){ const b = partBox(tree); const c = treeRoot.position, R0 = 1.02; b.expandByPoint(new THREE.Vector3(c.x - R0, 0, c.z - R0)); b.expandByPoint(new THREE.Vector3(c.x + R0, .9, c.z + R0)); return b; } return partBox(o.g); }
 function recDefault(key){ const it = FURN_BY[key]; if (!it) return null; const a = ANCHOR[it.slot]; if (WALL_SLOTS.includes(it.slot)) return { key, wall:'back', u:a[0], y:a[1] }; return { key, x:a[0], z:a[2], r:a[3] || 0 }; }
+/* 暖炉の上（棚板）には小さな家具を置ける。のせた家具は rec.on に暖炉のid、lx/lz に棚の上での位置を持つ */
+const hostTop = o => o && o.rec && o.rec.key.startsWith('fireplace_') ? { y:FPH + .12, x0:-.74, x1:.74, z0:.0, z1:.42 } : null;
+const riders = h => Object.values(inst).filter(p => p.rec.on && p.rec.on === h.rec.id);
+function canRide(o){ if (hostTop(o) || isRug(o) || o.rec.key === 'tree' || o.rec.wall) return false; const s = o.rec.on ? null : instBox(o).getSize(new THREE.Vector3()); if (!s) return true; return Math.min(s.x, s.z) <= .5 && Math.max(s.x, s.z) <= 1.1 && s.y <= 1.2; }
 function placeInst(o){ const r = o.rec;
+  if (r.on && !r.wall && r.key !== 'tree'){ const h = inst[r.on], t = hostTop(h); if (t){ h.g.updateMatrixWorld(true); const p = h.g.localToWorld(new THREE.Vector3(r.lx || 0, t.y, r.lz || 0)); o.g.position.copy(p); o.g.rotation.y = h.g.rotation.y + (r.r || 0); r.x = +p.x.toFixed(3); r.z = +p.z.toFixed(3); return; } }
   if (r.key === 'tree'){ treeRoot.position.set(r.x, 0, r.z); return; }
   if (r.wall){ const W = r.wall; if (W === 'back'){ o.g.position.set(r.u, r.y, bz + .05); o.g.rotation.y = 0; } else { const s2 = W === 'left' ? -1 : 1; o.g.position.set(s2 * (RW / 2 - .05), r.y, r.u); o.g.rotation.y = -s2 * Math.PI / 2; } return; }
-  o.g.position.set(r.x, 0, r.z); o.g.rotation.y = r.r || 0; }
+  o.g.position.set(r.x, 0, r.z); o.g.rotation.y = r.r || 0; if (hostTop(o)) for (const p of riders(o)) placeInst(p); }
 function syncLayout(layout){ const want = new Map(); (layout || []).forEach(r => { if (r && r.id) want.set(r.id, r); });
   for (const [id, o] of Object.entries(inst)) if (id !== 'tree' && (!want.has(id) || want.get(id).key !== o.rec.key)){ scene.remove(o.g); disposeG(o.g); delete inst[id]; }
   for (const [id, r] of want){ if (r.key === 'tree'){ inst.tree = inst.tree || { g:treeRoot, rec:{ id:'tree', key:'tree', x:-1.15, z:-1.65 } }; inst.tree.rec = { ...r }; placeInst(inst.tree); continue; }
     if (!FURN_BY[r.key]) continue; let o = inst[id]; if (!o){ const g = buildFurn(r.key); g.userData.inst = id; scene.add(g); o = inst[id] = { g, rec:{ ...r } }; } o.rec = { ...r }; placeInst(o); }
+  for (const o of Object.values(inst)) if (o.rec.on) placeInst(o);
   if (!inst.tree) inst.tree = { g:treeRoot, rec:{ id:'tree', key:'tree', x:treeRoot.position.x, z:treeRoot.position.z } }; }
 function layoutOf(){ return Object.values(inst).map(o => ({ ...o.rec })); }
 function legacyLayout(sel){ const L = [{ id:'tree', key:'tree', x:-1.15, z:-1.65 }]; for (const slot of [...FLOOR_SLOTS, ...WALL_SLOTS]){ const k = sel[slot]; if (k && k !== 'none' && FURN_BY[k]) L.push({ id:slot + '_1', ...recDefault(k) }); } return L; }
@@ -974,9 +986,19 @@ function boxOK(o){ const b = instBox(o); if (o.rec.wall){ const W = o.rec.wall; 
     if (W === 'back'){ if (b.min.x < -RW / 2 + .05 || b.max.x > RW / 2 - .05) return false; if (b.max.x > WX - WW / 2 - .12 && b.min.x < WX + WW / 2 + .12 && b.max.y > WY - WH / 2 - .25) return false; }
     else if (b.min.z < bz + .05 || b.max.z > ZMAX) return false;
     for (const p of Object.values(inst)) if (p !== o && p.rec.wall === W && b.intersectsBox(instBox(p).expandByScalar(-.02))) return false; return true; }
-  if (b.min.x < -RW / 2 - .08 || b.max.x > RW / 2 + .08 || b.min.z < bz - .16 || b.max.z > ZMAX) return false;
   const shrink = x => x.expandByScalar(-.06);
-  for (const p of Object.values(inst)){ if (p === o || p.rec.wall) continue; if (isRug(o) !== isRug(p)) continue; const pb = instBox(p); if (shrink(b.clone()).intersectsBox(shrink(pb))) return false; } return true; }
+  if (o.rec.on){ const h = inst[o.rec.on], t = hostTop(h); if (!t) return false; h.g.updateMatrixWorld(true);
+    for (const x of [b.min.x, b.max.x]) for (const z of [b.min.z, b.max.z]){ const l = h.g.worldToLocal(new THREE.Vector3(x, t.y, z)); if (l.x < t.x0 - .06 || l.x > t.x1 + .06 || l.z < t.z0 - .12 || l.z > t.z1 + .12) return false; }
+    for (const p of riders(h)) if (p !== o && shrink(b.clone()).intersectsBox(shrink(instBox(p)))) return false; return true; }
+  if (b.min.x < -RW / 2 - .08 || b.max.x > RW / 2 + .08 || b.min.z < bz - .16 || b.max.z > ZMAX) return false;
+  for (const p of Object.values(inst)){ if (p === o || p.rec.wall || p.rec.on) continue; if (isRug(o) !== isRug(p)) continue; const pb = instBox(p); if (shrink(b.clone()).intersectsBox(shrink(pb))) return false; } return true; }
+// おけない場所で指をはなしたら、いちばん近くのおける場所へずらす
+function findNear(o){ if (o.rec.wall || o.rec.on) return false; const b0 = instBox(o), x0 = o.rec.x, z0 = o.rec.z, shrink = x => x.expandByScalar(-.06);
+  const others = Object.values(inst).filter(p => p !== o && !p.rec.wall && !p.rec.on && isRug(p) === isRug(o) && !riders(o).includes(p)).map(p => shrink(instBox(p)));
+  const cand = []; for (let dx = -3; dx <= 3.001; dx += GRID) for (let dz = -3; dz <= 3.001; dz += GRID) cand.push([dx, dz]); cand.sort((a, c) => Math.hypot(a[0], a[1]) - Math.hypot(c[0], c[1]));
+  for (const [dx, dz] of cand){ const b = b0.clone().translate(new THREE.Vector3(dx, 0, dz)); if (b.min.x < -RW / 2 - .08 || b.max.x > RW / 2 + .08 || b.min.z < bz - .16 || b.max.z > ZMAX) continue;
+    const sb = shrink(b.clone()); if (others.some(p => sb.intersectsBox(p))) continue; o.rec = { ...o.rec, x:+(x0 + dx).toFixed(3), z:+(z0 + dz).toFixed(3) }; placeInst(o); return true; }
+  return false; }
 function autoPlace(key){ const id = key.split('_')[0] + '_' + Math.random().toString(36).slice(2, 7), it = FURN_BY[key]; if (!it) return null; const g = buildFurn(key); g.userData.inst = id; scene.add(g);
   const o = inst[id] = { g, rec:{ id, ...recDefault(key) } }; placeInst(o); if (boxOK(o)) return { ...o.rec };
   if (o.rec.wall){ for (const W of ['back', 'left', 'right']) for (let y = 1.6; y < 3.4; y += .2) for (let u = -2; u <= 2; u += .2){ o.rec = { id, key, wall:W, u:+u.toFixed(2), y:+y.toFixed(2) }; placeInst(o); if (boxOK(o)) return { ...o.rec }; } }
@@ -997,21 +1019,28 @@ const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 function hitPlane(e, plane){ const r = cv.getBoundingClientRect(); v2.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); ray.setFromCamera(v2, camera); const p = new THREE.Vector3(); return ray.ray.intersectPlane(plane, p) ? p : null; }
 function wallHit(e){ const cands = [['back', new THREE.Plane(new THREE.Vector3(0, 0, 1), -bz)], ['left', new THREE.Plane(new THREE.Vector3(1, 0, 0), RW / 2)], ['right', new THREE.Plane(new THREE.Vector3(-1, 0, 0), RW / 2)]]; let best = null;
   for (const [W, pl] of cands){ const p = hitPlane(e, pl); if (!p) continue; const ok = W === 'back' ? Math.abs(p.x) <= RW / 2 : p.z >= bz && p.z <= ZMAX; if (!ok) continue; const d = p.distanceTo(camera.position); if (!best || d < best.d) best = { W, p, d }; } return best; }
-function editDown(e){ const o = pickInst(e); sel = o; mv = o ? { o, start:{ ...o.rec }, moved:false, x0:e.clientX, y0:e.clientY } : null;
-  if (o && !o.rec.wall){ const p = hitPlane(e, floorPlane); mv.off = p ? [p.x - o.rec.x, p.z - o.rec.z] : [0, 0]; }
+function editDown(e){ const o = pickInst(e); sel = o; mv = o ? { o, start:{ ...o.rec }, moved:false, x0:e.clientX, y0:e.clientY, ride:canRide(o), rstart:o.rec.on ? riders(inst[o.rec.on] || o).map(p => p) : [] } : null;
+  if (o && o.rec.on){ mv.off = [0, 0]; }
+  else if (o && !o.rec.wall){ const p = hitPlane(e, floorPlane); mv.off = p ? [p.x - o.rec.x, p.z - o.rec.z] : [0, 0]; }
   if (o && o.rec.wall){ const w = wallHit(e); mv.off = w ? (w.W === 'back' ? [w.p.x - o.rec.u, w.p.y - o.rec.y] : [w.p.z - o.rec.u, w.p.y - o.rec.y]) : [0, 0]; }
   markSel(false); opts.onSelect && opts.onSelect(o ? { id:o.rec.id, key:o.rec.key, wall:!!o.rec.wall } : null); }
 function editMove(e){ if (!mv) return; if (!mv.moved && Math.hypot(e.clientX - mv.x0, e.clientY - mv.y0) < 6) return; mv.moved = true; const o = mv.o;
   if (o.rec.wall){ const w = wallHit(e); if (!w) return; const u = (w.W === 'back' ? w.p.x : w.p.z) - (w.W === o.rec.wall ? mv.off[0] : 0), y = w.p.y - mv.off[1]; o.rec = { ...o.rec, wall:w.W, u:+(Math.round(u / .1) * .1).toFixed(2), y:+(Math.round(y / .1) * .1).toFixed(2) }; }
-  else { const p = hitPlane(e, floorPlane); if (!p) return; o.rec = { ...o.rec, x:+(Math.round((p.x - mv.off[0]) / GRID) * GRID).toFixed(3), z:+(bz + Math.round((p.z - mv.off[1] - bz) / GRID) * GRID).toFixed(3) }; }
+  else { let rode = false;
+    if (mv.ride) for (const h of Object.values(inst)){ const t = hostTop(h); if (!t || h === o) continue; const hp = hitPlane(e, new THREE.Plane(new THREE.Vector3(0, 1, 0), -t.y)); if (!hp) continue; h.g.updateMatrixWorld(true); const l = h.g.worldToLocal(hp.clone());
+      if (l.x < t.x0 - .1 || l.x > t.x1 + .1 || l.z < t.z0 - .2 || l.z > t.z1 + .35) continue; const cl = (v, a, b2) => Math.max(a, Math.min(b2, v));
+      o.rec = { ...o.rec, on:h.rec.id, lx:+(Math.round(cl(l.x, t.x0, t.x1) / .05) * .05).toFixed(2), lz:+(Math.round(cl(l.z, t.z0, t.z1) / .05) * .05).toFixed(2) }; rode = true; break; }
+    if (rode){ placeInst(o); mv.bad = !boxOK(o); markSel(mv.bad); shadowsDirty = true; return; }
+    if (o.rec.on){ const { on, lx, lz, ...rest } = o.rec; o.rec = rest; mv.off = [0, 0]; }
+    const p = hitPlane(e, floorPlane); if (!p) return; o.rec = { ...o.rec, x:+(Math.round((p.x - mv.off[0]) / GRID) * GRID).toFixed(3), z:+(bz + Math.round((p.z - mv.off[1] - bz) / GRID) * GRID).toFixed(3) }; }
   placeInst(o); if (o.rec.key === 'tree') treeRoot.updateMatrixWorld(true); mv.bad = !boxOK(o); markSel(mv.bad); shadowsDirty = true; }
-function editUp(){ if (!mv) return; const o = mv.o; if (mv.moved){ if (mv.bad){ o.rec = { ...mv.start }; placeInst(o); } else commit(); setRoomLights(); } markSel(false); mv = null; }
+function editUp(){ if (!mv) return; const o = mv.o; if (mv.moved){ if (mv.bad && !o.rec.on && !o.rec.wall && o.rec.key !== 'tree' && findNear(o)) mv.bad = false; if (mv.bad){ o.rec = { ...mv.start }; placeInst(o); } else commit(); setRoomLights(); } markSel(false); mv = null; }
 function setRoomLights(){ const fpI = Object.values(inst).find(o => o.rec.key.startsWith('fireplace_')); if (fpI) fireLight.position.copy(fpI.g.localToWorld(new THREE.Vector3(0, .55, .8))); const lpI = Object.values(inst).find(o => o.rec.key.startsWith('lamp_')); if (lpI && lpI.g.userData.lamp) lampLight.position.copy(lpI.g.localToWorld(new THREE.Vector3(...lpI.g.userData.lamp))); shadowsDirty = true; }
 function commit(){ opts.onLayout && opts.onLayout(layoutOf()); }
-function editRotate(){ if (!sel || sel.rec.wall || sel.rec.key === 'tree') return; const b0 = instBox(sel), c0 = b0.getCenter(new THREE.Vector3()), prev = { ...sel.rec };
+function editRotate(){ if (!sel || sel.rec.wall || sel.rec.key === 'tree') return; if (sel.rec.on){ const prev = { ...sel.rec }; sel.rec = { ...sel.rec, r:(sel.rec.r || 0) + Math.PI / 2 }; placeInst(sel); if (!boxOK(sel)){ sel.rec = prev; placeInst(sel); markSel(false); return false; } markSel(false); commit(); return true; } const b0 = instBox(sel), c0 = b0.getCenter(new THREE.Vector3()), prev = { ...sel.rec };
   sel.rec = { ...sel.rec, r:((sel.rec.r || 0) + Math.PI / 2) }; placeInst(sel); const c1 = instBox(sel).getCenter(new THREE.Vector3()); sel.rec.x = +(Math.round((sel.rec.x + c0.x - c1.x) / GRID) * GRID).toFixed(3); sel.rec.z = +(bz + Math.round((sel.rec.z + c0.z - c1.z - bz) / GRID) * GRID).toFixed(3); placeInst(sel);
-  if (!boxOK(sel)){ sel.rec = prev; placeInst(sel); markSel(false); return false; } markSel(false); commit(); setRoomLights(); return true; }
-function editRemove(){ if (!sel || sel.rec.key === 'tree') return; const id = sel.rec.id; scene.remove(sel.g); disposeG(sel.g); delete inst[id]; sel = null; markSel(false); commit(); setRoom(lastSel, layoutOf()); opts.onSelect && opts.onSelect(null); }
+  if (!boxOK(sel) && !findNear(sel)){ sel.rec = prev; placeInst(sel); markSel(false); return false; } markSel(false); commit(); setRoomLights(); return true; }
+function editRemove(){ if (!sel || sel.rec.key === 'tree') return; const id = sel.rec.id; if (hostTop(sel)) for (const p of riders(sel)){ const { on, lx, lz, ...rest } = p.rec; p.rec = rest; placeInst(p); if (!boxOK(p)) findNear(p); } scene.remove(sel.g); disposeG(sel.g); delete inst[id]; sel = null; markSel(false); commit(); setRoom(lastSel, layoutOf()); opts.onSelect && opts.onSelect(null); }
 function setEdit(on){ editOn = !!on; sel = null; mv = null; markSel(false); }
 let lastSel = {};
 let lampOn = false, kamaOn = false, lampOff = false, nightNow = false;
