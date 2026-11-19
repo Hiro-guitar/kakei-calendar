@@ -1138,11 +1138,15 @@ function sync(list, giftList){ lastList = list; lastGifts = giftList;
 const ray = new THREE.Raycaster(), v2 = new THREE.Vector2();
 // ツリーを指で回す（タップとドラッグを区別）
 let drag = null, spin = 0; const cv = renderer.domElement; cv.style.touchAction = 'none';
-cv.addEventListener('pointerdown', e => { if (zoomed){ opts.onZoomTap && opts.onZoomTap(); return; } if (editOn){ cv.setPointerCapture(e.pointerId); editDown(e); return; } drag = { x:e.clientX, y:e.clientY, last:e.clientX, t:performance.now(), moved:false, onTree:false }; spin = 0; cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointerdown', e => { if (zoomed){ opts.onZoomTap && opts.onZoomTap(); return; } if (editOn){ cv.setPointerCapture(e.pointerId); editDown(e); return; } drag = { x:e.clientX, y:e.clientY, last:e.clientX, t:performance.now(), moved:false, onTree:false }; spin = 0; cv.setPointerCapture(e.pointerId);
+  // 長押し（指を動かさずに0.45秒）で、その家具をつかんだまま もようがえ に入る
+  clearTimeout(lpTimer); const d0 = drag, pt = { clientX:e.clientX, clientY:e.clientY };
+  lpTimer = setTimeout(() => { if (drag !== d0 || d0.moved || editOn || zoomed || !opts.onLongPress) return; if (!pickInst(pt)) return; drag = null; opts.onLongPress(); if (!editOn) return; editDown(pt); }, 450); });
+let lpTimer = 0;
 cv.addEventListener('pointermove', e => { if (editOn){ editMove(e); return; } if (!drag) return; const dx = e.clientX - drag.last; if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 7) drag.moved = true;
   if (drag.moved){ const now = performance.now(), k = 2 * Math.PI / Math.max(260, cv.clientWidth * .9); tree.rotation.y += dx * k; spin = dx * k / Math.max(8, now - drag.t) * 16; drag.t = now; shadowsDirty = true; } drag.last = e.clientX; });
-cv.addEventListener('pointerup', e => { if (editOn){ editUp(); return; } const d = drag; drag = null; if (d && d.moved){ opts.onSpin && opts.onSpin(); opts.onRot && opts.onRot(tree.rotation.y); return; } if (d) tapAt(e); });
-cv.addEventListener('pointercancel', () => { drag = null; if (editOn) editUp(); });
+cv.addEventListener('pointerup', e => { clearTimeout(lpTimer); if (editOn){ editUp(); return; } const d = drag; drag = null; if (d && d.moved){ opts.onSpin && opts.onSpin(); opts.onRot && opts.onRot(tree.rotation.y); return; } if (d) tapAt(e); });
+cv.addEventListener('pointercancel', () => { clearTimeout(lpTimer); drag = null; if (editOn) editUp(); });
 function furnTap(g){ let lamp = null; g.traverse(m => { if (!lamp && m.userData.lamp) lamp = m; });
   if (lamp){ lampOff = !lampOff; lampLight.intensity = lampOn && !lampOff ? (nightNow ? 3.2 : 1.6) : 0; lamp.traverse(m => { if (m.userData.glow) m.visible = !lampOff; if (m.material && m.material.emissive && m.material.userData.em0 == null) m.material.userData.em0 = m.material.emissiveIntensity; if (m.material && m.material.userData.em0 != null) m.material.emissiveIntensity = lampOff ? 0 : m.material.userData.em0; }); shadowsDirty = true; return; } // あかりをつけたり消したり
   let key = null; g.traverse(m => { if (!key && m.userData.key) key = m.userData.key; }); const slot = key && FURN_BY[key] ? FURN_BY[key].slot : '';
