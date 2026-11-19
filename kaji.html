@@ -167,7 +167,7 @@ body.dragmode{user-select:none;-webkit-user-select:none}
 #grppop .gadd{width:100%;margin-top:8px;padding:9px;border-radius:14px;border:2px dashed #e2d2ae;color:#a8864a;font-weight:800;font-size:13px}
 .ipick{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.ipick button{aspect-ratio:1;border-radius:14px;background:#fff;box-shadow:inset 0 0 0 1.5px #ece2cc;display:flex;align-items:center;justify-content:center}.ipick button svg{width:80%;height:80%}.ipick button.on{box-shadow:inset 0 0 0 3px #e8a83a;background:#fff4dc}
 .gpick{display:flex;flex-wrap:wrap;gap:6px}.gpick button{display:flex;align-items:center;gap:4px;padding:4px 10px 4px 4px;border-radius:999px;background:#fff;box-shadow:inset 0 0 0 1.5px #ece2cc;font-size:12px;font-weight:800;color:var(--navy)}.gpick button svg{width:22px;height:22px}.gpick button.on{box-shadow:inset 0 0 0 2.5px #e8a83a;background:#fff4dc}
-.gset{margin-bottom:10px}.gsh{display:flex;align-items:center;gap:8px;padding-bottom:6px;border-bottom:1.5px solid #f0e6d0;margin-bottom:4px}.gsh b{flex:1;font-size:15px;color:var(--navy)}.gsh b small{color:#b8a888;font-size:12px}
+.gset{margin-bottom:10px}.gset.fold .gsh{border-bottom:0;padding-bottom:0;margin-bottom:0}.gfold{display:flex;align-items:center;gap:4px;color:#8a9aa6;font-size:12.5px;font-weight:700;padding:6px 4px;white-space:nowrap}.gfold i{display:inline-block;font-style:normal;transition:transform .2s}.gset:not(.fold) .gfold i{transform:rotate(90deg)}.gsh{display:flex;align-items:center;gap:8px;padding-bottom:6px;border-bottom:1.5px solid #f0e6d0;margin-bottom:4px}.gsh b{flex:1;font-size:15px;color:var(--navy)}.gsh b small{color:#b8a888;font-size:12px}
 .gsi{width:30px;height:30px;flex:none;display:flex;align-items:center;justify-content:center}.gsi svg{width:28px;height:28px}.gsi.sm svg{width:24px;height:24px}
 
 .iconnew{display:flex;flex-direction:column;align-items:center;text-align:center;padding:6px 4px}.iconnew img{width:96px;height:96px;border-radius:22px;box-shadow:0 6px 16px rgba(40,60,40,.25);margin-bottom:10px}.iconnew b{font-size:18px;color:var(--navy)}.iconnew ol{text-align:left;margin:12px 0 6px;padding-left:22px;font-size:14px;line-height:1.7;color:var(--navy)}.iconnew .sh{display:inline-block;padding:0 6px;border-radius:6px;background:#efe6d2;font-size:12px}.iconnew p{margin:4px 0 14px;font-size:12px}
@@ -296,7 +296,7 @@ body.onebar main{padding-top:calc(env(safe-area-inset-top) + 14px);padding-botto
 body.onebar.xfullmode main{padding:0}
 #syncwarn{position:fixed;top:calc(env(safe-area-inset-top) + 8px);right:10px;z-index:40;padding:5px 12px;border-radius:999px;background:#fff1ee;color:#c8352e;font-size:11px;font-weight:800;box-shadow:var(--sh-lift);display:none}
 body.syncerr #syncwarn{display:block}
-#appbar{position:fixed;left:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:6;display:flex;gap:2px;padding:0 10px 0 0;border-radius:26px;background:var(--cream);box-shadow:var(--sh-lift)}
+#appbar{position:fixed;left:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:6;transform:translate3d(0,0,0);-webkit-transform:translate3d(0,0,0);will-change:transform;-webkit-backface-visibility:hidden;display:flex;gap:2px;padding:0 10px 0 0;border-radius:26px;background:var(--cream);box-shadow:var(--sh-lift)}
 #appbar .qmenu::after{display:none}
 #appbar .qmenu{width:72px}
 .qmenu.home .qi{background:linear-gradient(160deg,#8ccfb6,#5aa98c);box-shadow:0 3px 0 #3f8a6e,0 6px 10px rgba(40,110,80,.22)}
@@ -4939,21 +4939,24 @@ function paperPicker(cur){ return `<div class="ppick">${PAPERS.filter(p => paper
 function noteRow(n){
   const c = n.choreId && S.items[n.choreId], mine = n.by === S.me;
   return `<div class="letter ${n.by} p-${paperOf(n.paper || 'air').k}"><div class="lto">${esc(nm(other(n.by)))}へ</div><div class="txt">${esc(n.text)}</div>
-    <div class="m"><span>${dayKey(n.at).slice(5).replace('-','/')}${c ? `・${esc(c.name)}` : ''}</span><span style="flex:1"></span><span class="lfrom">${esc(nm(n.by))}より</span></div>
+    <div class="m"><span>${md(new Date(n.at))} ${new Date(n.at).getHours()}:${String(new Date(n.at).getMinutes()).padStart(2, '0')}${c ? `・${esc(c.name)}` : ''}</span><span style="flex:1"></span><span class="lfrom">${esc(nm(n.by))}より</span></div>
     <div class="lbtn">${mine ? `<span class="lread ${n.status === 'done' ? 'ok' : ''}">${n.status === 'done' ? `よんでくれたよ ✓${n.readAt ? `<small>${md(new Date(n.readAt))} ${new Date(n.readAt).getHours()}:${String(new Date(n.readAt).getMinutes()).padStart(2, '0')}</small>` : ''}` : 'まだとどいたばかり'}</span>`
       : n.status === 'done' ? `<button class="btn small ghost" data-act="reopen" data-id="${n.id}">もどす</button>` : `<button class="btn small ghost" data-act="closenote" data-id="${n.id}">よんだ ✓</button>`}${mine ? `<button class="btn small ghost" data-act="delnote" data-id="${n.id}">すてる</button>` : ''}</div></div>`;
 }
 
+/* 設定の家事リストはグループごとにたたむ（開いているグループだけ覚えておく） */
+const GOPEN = new Set((() => { try { return JSON.parse(localStorage.getItem('kaji_gopen') || '[]'); } catch (e) { return []; } })());
 function viewSettings(){
   const n = settings().names;
   let html = `<h2>家事リスト</h2>`;
   const gs = groupsSorted();
   html += gs.map((g, gi) => { const cs = choresIn(g.id);
-    return `<div class="panel gset"><div class="gsh"><span class="gsi">${QI[g.icon] || ''}</span><b data-act="gedit" data-g="${g.id}">${esc(g.name)} <small>✎</small></b><div class="ord"><button data-act="gmv" data-g="${g.id}" data-d="-1" ${gi === 0 ? 'disabled' : ''}>▲</button><button data-act="gmv" data-g="${g.id}" data-d="1" ${gi === gs.length - 1 ? 'disabled' : ''}>▼</button></div></div>`
-      + cs.map((c, i) => `<div class="list-item"><span class="gsi sm">${QI[choreIcon(c)] || ''}</span>
+    const op = GOPEN.has(g.id);
+    return `<div class="panel gset ${op ? '' : 'fold'}"><div class="gsh"><span class="gsi" data-act="gfold" data-g="${g.id}">${QI[g.icon] || ''}</span><b data-act="gedit" data-g="${g.id}">${esc(g.name)} <small>✎</small></b><button class="gfold" data-act="gfold" data-g="${g.id}">${cs.length}件 <i>▸</i></button><div class="ord"><button data-act="gmv" data-g="${g.id}" data-d="-1" ${gi === 0 ? 'disabled' : ''}>▲</button><button data-act="gmv" data-g="${g.id}" data-d="1" ${gi === gs.length - 1 ? 'disabled' : ''}>▼</button></div></div>`
+      + (op ? cs.map((c, i) => `<div class="list-item"><span class="gsi sm">${QI[choreIcon(c)] || ''}</span>
     <div class="n" data-act="edit" data-id="${c.id}"><div>${esc(c.name)}</div></div>
     <div class="ord"><button data-act="mv" data-id="${c.id}" data-d="-1" ${i===0?'disabled':''}>▲</button><button data-act="mv" data-id="${c.id}" data-d="1" ${i===cs.length-1?'disabled':''}>▼</button></div></div>`).join('')
-      + `<button class="btn small ghost" style="margin-top:8px" data-act="edit" data-id="" data-g="${g.id}">＋ ${esc(g.name)}に家事を追加</button></div>`; }).join('');
+      + `<button class="btn small ghost" style="margin-top:8px" data-act="edit" data-id="" data-g="${g.id}">＋ ${esc(g.name)}に家事を追加</button>` : '') + `</div>`; }).join('');
   html += `<button class="btn go wide" style="margin:4px 0 8px" data-act="gedit" data-g="">＋ グループを作る</button>`;
 
   html += `<h2>家族の名前</h2><div class="panel">
@@ -5230,6 +5233,7 @@ document.addEventListener('click', e => {
     case 'gicon': { const n = $('g_name'); if (n) gdraft.name = n.value; gdraft.icon = el.dataset.v; renderGroup(); break; }
     case 'gsave': { const n = $('g_name'); gdraft.name = (n ? n.value : gdraft.name).trim(); if (!gdraft.name){ toast('名前を入れてね'); return; } const d = { ...gdraft }; delete d._new; put(d); gdraft = null; closeSheet(); toast('ほぞんしたよ'); break; }
     case 'gdel': { if (!el.dataset.sure){ el.dataset.sure = '1'; el.textContent = 'もう一度押すと削除するよ'; return; } const gid = gdraft.id; choresSorted().filter(c => c.group === gid).forEach(c => put({ ...c, group:'grp_hoka' })); remove(S.items[gid]); gdraft = null; closeSheet(); toast('削除したよ'); break; }
+    case 'gfold': { const g = el.dataset.g; GOPEN.has(g) ? GOPEN.delete(g) : GOPEN.add(g); try { localStorage.setItem('kaji_gopen', JSON.stringify([...GOPEN])); } catch (e) {} render(); break; }
     case 'gmv': { const gs = groupsSorted(), i = gs.findIndex(g => g.id === el.dataset.g), j = i + Number(el.dataset.d); if (j < 0 || j >= gs.length) return; [gs[i], gs[j]] = [gs[j], gs[i]];
       gs.forEach((g, k) => { if (g.order !== k){ g.order = k; g.updatedAt = Date.now(); S.items[g.id] = g; S.queue = S.queue.filter(q => q.id !== g.id); S.queue.push(g); } }); save(); render(); push(); break; }
     case 'cicon': captureEdit(); draft.icon = el.dataset.v; renderEdit(); break;

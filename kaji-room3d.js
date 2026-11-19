@@ -1043,9 +1043,9 @@ function thumbFurn(key){ if (thCache[key]) return thCache[key];
 const hemi = new THREE.HemisphereLight('#fff1dc', '#b98a6a', 1.1); scene.add(hemi);
 const key = new THREE.DirectionalLight('#ffe2bd', 2.2); key.position.set(-3, 8, 5); key.castShadow = true; key.shadow.mapSize.set(1024, 1024); key.shadow.radius = 4; key.shadow.bias = -.0005; key.shadow.normalBias = .02;
 Object.assign(key.shadow.camera, { left:-3.5, right:3.5, top:4.5, bottom:-2, near:1, far:20 }); scene.add(key);
-const treeLight = new THREE.PointLight('#ffd890', 1.2, 3.2); treeLight.position.set(.4, 1.8, 1); treeRoot.add(treeLight);
+const treeLight = new THREE.PointLight('#ffd890', .7, 5.5); treeLight.position.set(.2, 2.1, 2.8); /* 近すぎると葉の一部だけ白く光るので、少し離してやわらかく当てる */ treeRoot.add(treeLight);
 let isNight = new Date().getHours() >= 18 || new Date().getHours() < 6;
-function applyTime(){ hemi.intensity = isNight ? .75 : 1.1; key.intensity = isNight ? 1.2 : 2.2; key.color.set(isNight ? '#ffd2a0' : '#ffe2bd'); treeLight.intensity = isNight ? 2.4 : 1.2; winLight.intensity = isNight ? 1.8 : 1.0;
+function applyTime(){ hemi.intensity = isNight ? .75 : 1.1; key.intensity = isNight ? 1.2 : 2.2; key.color.set(isNight ? '#ffd2a0' : '#ffe2bd'); treeLight.intensity = isNight ? 1.4 : .7; winLight.intensity = isNight ? 1.8 : 1.0;
   sky.material.color.set(isNight ? '#ffffff' : '#a8c8ff'); outLight.intensity = isNight ? .25 : 1.4; snowMat.color.set(isNight ? '#8e9cd0' : '#f4f8ff'); pineM.color.set(isNight ? '#1e3a3a' : '#2e5a48'); snowPts.material.opacity = isNight ? 1 : .8; fireLight.intensity = flames.length ? (isNight ? 5.5 : 3.5) : 0; nightNow = isNight; lampLight.intensity = lampOn && !lampOff ? (isNight ? 3.2 : 1.6) : 0; kamaLight.intensity = kamaOn ? 1.4 : 0; shadowsDirty = true; }
 
 /* ---------- 初期状態 ---------- */
