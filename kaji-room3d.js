@@ -820,13 +820,18 @@ function xkBoot(){ const g = new THREE.Group(); const red = M('#c8302c', { rough
 /* ===== クリスマスのオルゴール：さわるたびに次の曲、鳴っているときにさわると止まる（曲はどれも作者没後かなり経った古い曲） ===== */
 const MB_SONGS = [
   ['ジングルベル', 150, 4, 'E1 E1 E2 E1 E1 E2 E1 G1 C1.5 D.5 E4 F1 F1 F1.5 F.5 F1 E1 E1 E.5 E.5 E1 D1 D1 E1 D2 G2 E1 E1 E2 E1 E1 E2 E1 G1 C1.5 D.5 E4 F1 F1 F1 F1 F1 E1 E1 E.5 E.5 G1 G1 F1 D1 C4', 'C4 C4 C4 C4 F4 C4 D74 G74 C4 C4 C4 C4 F4 C4 G74 C4'],
-  ['きよしこの夜', 96, 3, 'G1.5 A.5 G1 E3 G1.5 A.5 G1 E3 d2 d1 B3 c2 c1 G3 A2 A1 c1.5 B.5 A1 G1.5 A.5 G1 E3 A2 A1 c1.5 B.5 A1 G1.5 A.5 G1 E3 d2 d1 f1.5 d.5 B1 c3 e3 c1.5 G.5 E1 G1.5 F.5 D1 C6', 'C3 C3 C3 C3 G73 G73 C3 C3 F3 F3 C3 C3 F3 F3 C3 C3 G73 G73 C3 C3 C3 G73 C3 C3'],
-  ['もろびとこぞりて', 116, 4, 'c2 B1.5 A.5 G3 F1 E2 D2 C3 G1 A3 A1 B3 B1 c3 c1 c1 B1 A1 G1 G1.5 F.5 E1 c1 c1 B1 A1 G1 G1.5 F.5 E1 E1 E1 E1 E1 E.5 F.5 G3 F.5 E.5 D1 D1 D1 D.5 E.5 F3 E.5 D.5 C1 c2 A1 G1.5 F.5 E1 F1 E2 D2 C4', 'C2 G2 C3 F1 C2 G2 C3 G1 F4 G4 C3 C4 G73 C1 C4 G73 C1 C8 G71 G78 C3 F1 C2 F2 C2 G72 C4'],
+  ['きらきら星', 116, 4, 'C1 C1 G1 G1 A1 A1 G2 F1 F1 E1 E1 D1 D1 C2 G1 G1 F1 F1 E1 E1 D2 G1 G1 F1 F1 E1 E1 D2 C1 C1 G1 G1 A1 A1 G2 F1 F1 E1 E1 D1 D1 C2', 'C4 F2 C2 F2 C2 G2 C2 C2 F2 C2 G2 C2 F2 C2 G2 C4 F2 C2 F2 C2 G2 C2'],
   ['ひいらぎかざろう', 132, 4, 'G1.5 F.5 E1 D1 C1 D1 E1 C1 D.5 E.5 F.5 D.5 E1.5 D.5 C1 b1 C2 G1.5 F.5 E1 D1 C1 D1 E1 C1 D.5 E.5 F.5 D.5 E1.5 D.5 C1 b1 C2 D1.5 E.5 F1 D1 E1.5 F.5 G1 D1 E.5 #F.5 G1 A.5 B.5 c1 B1 A1 G2 G1.5 F.5 E1 D1 C1 D1 E1 C1 A.5 A.5 A.5 A.5 G1.5 F.5 E1 D1 C2', 'C4 C4 G4 C2 G1 C1 C4 C4 G4 C2 G1 C1 G4 C2 G2 C2 D72 G4 C4 C4 F2 C2 G2 C2'],
+  ['もみの木', 100, 3, 'G1 c.75 c.25 c1.5 d.5 e.75 e.25 e1.5 e.5 d.75 e.25 f1 B1 d1 c1 G1 c.75 c.25 c1.5 d.5 e.75 e.25 e1.5 e.5 d.75 e.25 f1 B1 d1 c2', 'G1 C3 C3 G73 C3 C3 C3 G73 C3'],
+  ['もろびとこぞりて', 116, 4, 'c2 B1.5 A.5 G3 F1 E2 D2 C3 G1 A3 A1 B3 B1 c3 R2 c1 c1 B1 A1 G1 G1.5 F.5 E1 c1 c1 B1 A1 G1 G1.5 F.5 E1 E1 E1 E1 E1 E.5 F.5 G3 F.5 E.5 D1 D1 D1 D.5 E.5 F3 E.5 D.5 C1 c2 A1 G1.5 F.5 E1 F1 E2 D2 C4', 'C2 G2 C3 F1 C2 G2 C3 G1 F4 G4 C3 R2 C4 G73 C1 C4 G73 C1 C8 G71 G78 C3 F1 C2 F2 C2 G72 C4'],
+  ['まきびとひつじを', 120, 3, 'E.5 D.5 C1.5 D.5 E.5 F.5 G2 A.5 B.5 c1 B1 A1 G2 A.5 B.5 c1 B1 A1 G1 A1 B1 c1 G1 F1 E2 E.5 D.5 C1.5 D.5 E.5 F.5 G2 A.5 B.5 c1 B1 A1 G2 A.5 B.5 c1 B1 A1 G1 A1 B1 c1 G1 F1 E2 E.5 D.5 C1.5 D.5 E.5 F.5 G2 c.5 B.5 A2 A1 G2 c1 B1 A1 G1 c1 G1 F1 E3', 'C1 C3 C3 F3 C3 F3 C3 F1 G72 C2 C1 C3 C3 F3 C3 F3 C3 F1 G72 C2 C1 C3 C3 F3 C3 G73 F1 G72 C3'],
+  ['荒野のはてに', 120, 4, 'E1 E1 E1 G1 G1.5 F.5 E2 E1 D1 E1 G1 E1.5 D.5 C2 E1 E1 E1 G1 G1.5 F.5 E2 E1 D1 E1 G1 E1.5 D.5 C2 G2 A.5 G.5 F.5 E.5 F2 G.5 F.5 E.5 D.5 E2 F.5 E.5 D.5 C.5 D1.5 _G.5 _G2 C1 D1 E1 F1 E2 D2 C4 G2 A.5 G.5 F.5 E.5 F2 G.5 F.5 E.5 D.5 E2 F.5 E.5 D.5 C.5 D1.5 _G.5 _G2 C1 D1 E1 F1 E2 D2 C4', 'C4 G72 C2 C4 G72 C2 C4 G72 C2 C4 G72 C2 C4 F4 C4 G4 C1 G1 C1 F1 C2 G72 C4 C4 F4 C4 G4 C1 G1 C1 F1 C2 G72 C4'],
+  ['神の御子は', 100, 4, 'C1 C2 _G1 C1 D2 _G2 E1 D1 E1 F1 E2 D1 C1 C2 _B1 _A1 _B1 C1 D1 E1 _B2 _A1.5 _G.5 _G4 G2 F1 E1 F2 E2 D1 E1 C1 D1 _B1.5 _A.5 _G2 C1 C1 _B1 C1 D2 C1 _G1 E1 E1 D1 E1 F2 E1 D1 E1 F1 E1 D1 C1 _B1 C1 F1 E2 D1.5 C.5 C3', 'C1 C4 G4 C2 F2 C2 G72 Am2 E72 G4 G4 G4 C4 F2 C2 G72 C2 G4 C4 G72 C2 C4 F2 G2 C2 F1 G1 C1 G1 C1 F1 C2 G72 C3'],
+  ['きよしこの夜', 96, 3, 'G1.5 A.5 G1 E3 G1.5 A.5 G1 E3 d2 d1 B3 c2 c1 G3 A2 A1 c1.5 B.5 A1 G1.5 A.5 G1 E3 A2 A1 c1.5 B.5 A1 G1.5 A.5 G1 E3 d2 d1 f1.5 d.5 B1 c3 e3 c1.5 G.5 E1 G1.5 F.5 D1 C6', 'C3 C3 C3 C3 G73 G73 C3 C3 F3 F3 C3 C3 F3 F3 C3 C3 G73 G73 C3 C3 C3 G73 C3 C3'],
   ['おめでとうクリスマス', 132, 3, 'G1 c1 c.5 d.5 c.5 B.5 A1 A1 A1 d1 d.5 e.5 d.5 c.5 B1 G1 G1 e1 e.5 f.5 e.5 d.5 c1 A1 G.5 G.5 A1 d1 B1 c3', 'G1 C3 F3 D73 G3 E73 Am3 F1 G2 C3']
 ];
 const MB_NOTE = { C:60, D:62, E:64, F:65, G:67, A:69, B:71 };
-const mbParse = str => str.split(' ').map(t => { const m = /^(#?)([A-Ga-g])([\d.]+)$/.exec(t); const up = m[2] === m[2].toLowerCase(); let n = MB_NOTE[m[2].toUpperCase()] + (up ? 12 : 0) + (m[1] ? 1 : 0); if (m[2] === 'b') n = 59; return [n, +m[3]]; });
+const mbParse = str => str.split(' ').map(t => { if (t[0] === 'R') return [null, +t.slice(1)]; const m = /^(_?)(#?)([A-Ga-g])([\d.]+)$/.exec(t); const up = m[3] === m[3].toLowerCase(); let n = MB_NOTE[m[3].toUpperCase()] + (up ? 12 : 0) + (m[2] ? 1 : 0) - (m[1] ? 12 : 0); if (m[3] === 'b') n = 59; return [n, +m[4]]; });
 const MB = { on:false, i:0, ctx:null, out:null, timer:0 };
 function mbStop(){ if (!MB.on) return; MB.on = false; clearTimeout(MB.timer); const o = MB.out; if (o){ try { o.gain.setTargetAtTime(0, MB.ctx.currentTime, .15); setTimeout(() => o.disconnect(), 900); } catch (e) {} } MB.out = null; }
 // 伴奏の和音：[ベース, [和音]]
@@ -858,11 +863,11 @@ function musicBoxTap(){
     comp.threshold.value = -14; comp.ratio.value = 3; comp.connect(dry); dry.connect(out); const rv = mbReverb(ctx); comp.connect(rv); rv.connect(wet); wet.connect(out);
     const beat = 60 / bpm, t0 = ctx.currentTime + .1; let t = t0, last = t0;
     // メロディ（すこしだけ揺らして手回しっぽく）
-    for (const [n, b] of mbParse(score)){ mbNote(ctx, comp, t + (Math.random() - .5) * .012, n, 1, .15, true); last = t; t += b * beat; }
+    for (const [n, b] of mbParse(score)){ if (n !== null) mbNote(ctx, comp, t + (Math.random() - .5) * .012, n, 1, .15, true); last = t; t += b * beat; }
     // 伴奏：拍の頭にベース、ほかの拍に和音をパラランと
     let ct = t0;
     for (const tok of chords.split(' ')){
-      const m = /^(Am|Dm|G7|D7|E7|[CFG])([\d.]+)$/.exec(tok), [bass, tri] = MB_CH[m[1]], len = +m[2];
+      if (tok[0] === 'R'){ ct += +tok.slice(1) * beat; continue; } const m = /^(Am|Dm|G7|D7|E7|[CFG])([\d.]+)$/.exec(tok), [bass, tri] = MB_CH[m[1]], len = +m[2];
       for (let i = 0; i < len; i++){
         const bt = ct + i * beat;
         if (meter === 3 ? i % 3 === 0 : i % 2 === 0) mbNote(ctx, comp, bt, bass + (meter === 4 && i % 4 === 2 ? 7 : 0), .75, -.25);
@@ -870,8 +875,6 @@ function musicBoxTap(){
       }
       ct += len * beat;
     }
-    // 終わりは和音をやさしく重ねる
-    MB_CH.C[1].concat([72]).forEach((x, j) => mbNote(ctx, comp, last + .05 + j * .07, x, .5, -.2 + j * .12, j === 3));
     MB.on = true; const end = (t - ctx.currentTime + 2.6) * 1000; MB.timer = setTimeout(() => { MB.on = false; MB.out = null; }, end);
     if (window.kajiToast) window.kajiToast(`♪ ${name}`);
   } catch (e) { MB.on = false; }
