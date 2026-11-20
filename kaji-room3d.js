@@ -21,7 +21,7 @@ const NAMES = {
   plant:['モンステラ', 'サボテン', 'パキラ', 'ポトスのつり鉢', 'オリーブの木', '多肉植物の寄せ植え'], zakka:['つみき', '地球儀', '本の山', 'ラジオ', '金魚鉢', 'レコードプレーヤー', 'ねこのクッション'],
   xzakka:['そり', '汽車の置物', 'トナカイの置物', '大きなくるみ割り人形', 'おかしの家', 'サンタのブーツ', 'クリスマスのオルゴール', '大きなランタン', 'ポインセチアの大鉢', '天使の置物', 'プレゼントの山', '白いミニツリー'],
   xwall:['ヒイラギのガーランド', 'くつしたのガーランド', 'クリスマスカードのかざり', 'ベルのかざり', '松ぼっくりのリース'],
-  garden:['雪のランタン', '小鳥のえさ台', '薪の山', '雪のくま', '電飾の小さなもみの木', '赤いポスト', '雪のベンチ', '街灯'], xgarden:['光るトナカイ', 'イルミネーションのアーチ', '雪だるまの家族'],
+  garden:['雪のランタン', '小鳥のえさ台', '薪の山', '雪のくま', '電飾の小さなもみの木', '赤いポスト', '雪のベンチ', '街灯'], xgarden:['光るトナカイ', 'イルミネーションのアーチ', '雪だるまの家族', '庭のクリスマスツリー'],
   seat:['ビーズクッション', 'まるいスツール', 'クッションの山'], wall2:['まるい鏡', '旗のガーランド', '写真フレーム', 'ドライフラワーのスワッグ', 'マグの棚', 'はと時計'],
 };
 export const FURN_ITEMS = [], FURN_BY = {};
@@ -32,7 +32,7 @@ export const FLOOR_SLOTS = ['fireplace', 'shelf', 'sofa', 'lamp', 'table', 'toys
 // ふくびきで当たる家具（XKUJI はクリスマスふくびき：12/25までの期間限定）
 export const KUJI_SLOTS = ['plant', 'zakka', 'seat', 'wall2', 'garden'], XKUJI_SLOTS = ['xzakka', 'xwall', 'xgarden'];
 // 庭のもの：窓の外の庭に自由に置ける。はじめから持っているもの・アドベントで届くもの・ふくびきで当たるもの
-export const GARDEN_SLOTS = ['garden', 'xgarden'], START_FURN = ['garden_a', 'garden_b'];
+export const GARDEN_SLOTS = ['garden', 'xgarden'], START_FURN = ['garden_a', 'garden_b', 'xgarden_d'];
 export const TREE_PARTS = ['wallpaper', 'flooring', 'topper', 'treelights', 'garland']; // 1つめは最初から持っている
 export const ADVENT = Array.from({ length:50 }, () => []); // 11/19〜12/25がクリスマス、12/26〜1/7が年末年始
 FIRST.forEach((s, i) => ADVENT[i].push(s + '_a')); { const rest = [...FIRST.map(s => s + '_b'), 'wallpaper_b', 'topper_b', 'flooring_b', 'garland_b', 'treelights_b', ...FIRST.map(s => s + '_c'), 'wallpaper_c', 'topper_c', 'flooring_c', 'garland_c', 'treelights_c']; rest.forEach((k, i) => ADVENT[15 + Math.floor(i * 21 / rest.length)].push(k)); } ADVENT[36].push('special_a');
@@ -276,7 +276,7 @@ function pine(x, z, h, lit){ const t = new THREE.Group(); t.position.set(WX + x,
   if (lit){ const cols = ['#ff5a4a', '#ffd84a', '#5ad0ff', '#7aff8a', '#ff8ad8']; t.userData.bulbs = []; for (let i = 0; i < 46; i++){ const a = i * 2.4, yy = .15 + (i / 46) * .78, rr = h * (.42 - (yy - .15) * .38) * .95; const b = new THREE.Mesh(new THREE.SphereGeometry(.022, 6, 4), new THREE.MeshBasicMaterial({ color:cols[i % 5] })); b.position.set(Math.cos(a) * rr, yy * h, Math.sin(a) * rr); t.add(b); t.userData.bulbs.push(b); } litTrees.push(t); }
   return t; }
 const litTrees = [];
-for (const [x, z, h, lit] of [[-1.8, -1.6, 1.2], [2.0, -2.0, 1.1], [-1.7, -4.0, 1.3, 1], [-3.0, -2.4, 1.7], [3.1, -2.8, 1.8], [-3.6, -4.2, 2.0], [3.8, -4.4, 2.0], [-5.6, -4.6, 1.6], [5.8, -4.8, 1.7]]) pine(x, z, h, lit);
+for (const [x, z, h, lit] of [[-3.0, -2.4, 1.7], [3.1, -2.8, 1.8], [-3.6, -4.2, 2.0], [3.8, -4.4, 2.0], [-5.6, -4.6, 1.6], [5.8, -4.8, 1.7]]) pine(x, z, h, lit);
 // 町なみ（家・教会・広場のツリー・街灯）
 const roofSnow = std('#f6f8ff', { roughness:.9 });
 // はるか下の町の灯り（家は見えないほど小さく、窓と街灯のつぶが道すじに沿って広がる）
@@ -1158,6 +1158,21 @@ function gdArch(){ const g = new THREE.Group(), R = .62, gm = std('#2f6a46', { r
   const bw = new THREE.Group(); bw.position.set(0, R + .02, .06); g.add(bw); const red = M('#c8302c', { roughness:.5 }); for (const s of [-1, 1]) addM(bw, new THREE.SphereGeometry(.06, 12, 8), red, s * .06, 0, 0, 0, 0, s * .4, 1.3, .7, .5); addM(bw, new THREE.SphereGeometry(.03, 10, 8), red, 0, 0, .01);
   for (const s of [-1, 1]) addM(bw, RB(.03, .14, .01, .004), red, s * .03, -.08, 0, 0, 0, s * .25);
   for (const s of [-1, 1]) addM(g, new THREE.SphereGeometry(.1, 12, 8), snowMat, s * R, .01, 0, 0, 0, 0, 1.2, .35, 1.2); return g; }
+function gdXTree(){ const g = new THREE.Group(), pm = std('#1f5a3e', { roughness:.85 }), pts = [], H = 1.75, n = 6;
+  addM(g, new THREE.CylinderGeometry(.07, .09, .3, 10), M('#5a3a28', { map:barkTexR }), 0, .15, 0);
+  for (let k = 0; k < n; k++){ const f = k / n, r = .58 - f * .46, hh = .48 - f * .1, y = .32 + f * (H - .55); const cone = new THREE.ConeGeometry(r, hh, 22, 3), P = cone.attributes.position;
+    for (let i = 0; i < P.count; i++){ const x = P.getX(i), z = P.getZ(i), yy = P.getY(i); if (yy < -hh / 2 + .01){ const a = Math.atan2(z, x), w = 1 + Math.sin(a * 11) * .08; P.setX(i, x * w); P.setZ(i, z * w); P.setY(i, yy - Math.abs(Math.sin(a * 11)) * .04); } } cone.computeVertexNormals(); addM(g, cone, pm, 0, y, 0);
+    addM(g, new THREE.ConeGeometry(r * .78, hh * .3, 22), snowMat, 0, y + hh * .2, 0, 0, k, 0, 1, 1, 1);
+    for (let i = 0; i < 9 + (n - k) * 2; i++){ const a = i * 2.39996 + k, rr = r * .86; pts.push([Math.cos(a) * rr, y - hh * .4 + (i % 3) * .05, Math.sin(a) * rr]); } }
+  bulbsIn(g, pts, .024);
+  const cols = ['#c8302c', '#f2c14e', '#3a6ab8', '#e8e8f0', '#c8302c', '#2f8a5a'];
+  for (let i = 0; i < 26; i++){ const t = i / 26, y = .35 + t * (H - .7), r = (.56 - t * .42) * .9, a = i * 1.7; addM(g, new THREE.SphereGeometry(.04 - t * .012, 12, 8), M(cols[i % cols.length], { metalness:.5, roughness:.25 }), Math.cos(a) * r, y, Math.sin(a) * r); }
+  const sp = []; for (let i = 0; i <= 80; i++){ const t = i / 80, y = .3 + t * (H - .6), r = (.58 - t * .46) * .84 + .02, a = t * Math.PI * 2 * 3.2; sp.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r)); }
+  addM(g, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(sp), 200, .014, 6), M('#f2c14e', { metalness:.6, roughness:.3 }), 0, 0, 0);
+  const st = new THREE.Shape(); for (let i = 0; i < 10; i++){ const a = Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? .055 : .13; i ? st.lineTo(Math.cos(a) * r, Math.sin(a) * r) : st.moveTo(Math.cos(a) * r, Math.sin(a) * r); }
+  addM(g, new THREE.ExtrudeGeometry(st, { depth:.03, bevelEnabled:true, bevelSize:.008, bevelThickness:.008, bevelSegments:1 }), GLOWM('#ffd25a'), 0, 1.6, -.015); glowIn(g, '#ffe08a', .7, .9, 0, 1.6, .02);
+  for (const [x, z, w, c, rb] of [[.3, .26, .18, '#c8302c', '#f2c14e'], [-.28, .3, .15, '#3a6ab8', '#ffffff'], [.02, .42, .13, '#2f8a5a', '#c8302c']]){ addM(g, RB(w, w * .8, w, .02), M(c, { roughness:.5 }), x, w * .4, z, 0, x * 2, 0); addM(g, RB(w + .01, w * .8 + .01, .03, .005), M(rb), x, w * .4, z, 0, x * 2, 0); }
+  addM(g, new THREE.SphereGeometry(.5, 20, 10), snowMat, 0, 0, 0, 0, 0, 0, 1, .1, 1); return g; }
 function gdSnowFamily(){ const g = new THREE.Group();
   const one = (x, z, s, c, ry) => { const m = new THREE.Group(); m.position.set(x, 0, z); m.scale.setScalar(s); m.rotation.y = ry; g.add(m);
     for (const [r, y] of [[.2, .17], [.145, .46], [.1, .68]]) addM(m, new THREE.SphereGeometry(r, 20, 14), snowMat, 0, y, 0); for (const sx of [-1, 1]) addM(m, new THREE.SphereGeometry(.012, 8, 6), M('#2a2a2e'), sx * .035, .71, .09);
@@ -1172,7 +1187,7 @@ const BUILD = {
   curtain:k => curtains('abcd'[k]), wintop:k => winTop('abc'[k]), sill:k => k === 3 ? nySillKagami() : sillDeco('abc'[k]), outside:k => k === 3 ? nySunrise() : outsideDeco('abc'[k]), table:k => k === 3 ? nyKotatsu() : tableSpot('abc'[k]), toys:k => k === 3 ? nyToys() : toys('abc'[k]),
   rug:k => k === 3 ? nyRug() : rugItem('abc'[k]), treebase:k => k === 3 ? nyMousen() : treeBase('abc'[k]), shelf:k => shelfSpot('abc'[k]), sofa:k => k === 3 ? nyZabuton() : sofaSpot('abc'[k]), lamp:k => k === 3 ? nyAndon() : k === 4 ? nyKadomatsu() : lampSpot('abc'[k]), special:k => k === 1 ? nyNanakusa() : sparkle(),
   plant:k => kjScale([kjMonstera, kjCactus, kjPachira, kjPothos, kjOlive, kjSucculent][k](), 1.35), zakka:k => kjScale([kjBlocks, kjGlobe, kjBooks, kjRadio, kjFishbowl, kjRecord, kjCatCushion][k](), [1.6, 1.5, 1.5, 1.5, 1.7, 1.5, 1.4][k]), seat:k => kjScale([kjBeanbag, kjStool, kjCushions][k](), 1.25), wall2:k => kjScale([kjMirror, kjFlags, kjPhotos, kjSwag, kjMugShelf, kjHato][k](), 1.25),
-  xzakka:k => [xkSled, xkTrain, xkReindeer, xkNutcracker, xkGingerHouse, xkBoot, xkMusicBox, xkLantern, xkPoinsettia, xkAngel, xkGiftPile, xkWhiteTree][k](), garden:k => kjScale([gdLantern, gdFeeder, gdWoodpile, gdSnowBear, gdLitPine, gdMailbox, gdBench, gdStreetLamp][k](), .85), xgarden:k => kjScale([gdReindeer, gdArch, gdSnowFamily][k](), .85),
+  xzakka:k => [xkSled, xkTrain, xkReindeer, xkNutcracker, xkGingerHouse, xkBoot, xkMusicBox, xkLantern, xkPoinsettia, xkAngel, xkGiftPile, xkWhiteTree][k](), garden:k => kjScale([gdLantern, gdFeeder, gdWoodpile, gdSnowBear, gdLitPine, gdMailbox, gdBench, gdStreetLamp][k](), .85), xgarden:k => kjScale([gdReindeer, gdArch, gdSnowFamily, gdXTree][k](), .85),
   xwall:k => kjScale([xkHollyGarland, xkStockingGarland, xkCards, xkBells, xkPineWreath][k](), 1.1),
 };
 function buildFurn(key){ const it = FURN_BY[key]; if (!it) return null; const g = BUILD[it.slot](it.k); g.userData.key = key; return g; }
@@ -1196,7 +1211,7 @@ const inst = {}; // id → { g, rec }
 const isYardKey = k => !!(FURN_BY[k] && GARDEN_SLOTS.includes(FURN_BY[k].slot)), isYard = o => !!(o && o.rec && o.rec.yard);
 const YB = { x0:WX - 1.65, x1:WX + 1.4, z0:OUT_Z - 4.05, z1:OUT_Z - 1.6 }, YY = .6;
 const yardY = (x, z) => Math.max(.55, terH(x - WX, OUT_Z - z)) - .02;
-const YOBS = [[-1.8, -1.6, .38], [2.0, -2.0, .36], [-1.7, -4.0, .42], [-3.0, -2.4, .5], [3.1, -2.8, .5]].map(([x, z, r]) => new THREE.Box3(new THREE.Vector3(WX + x - r, 0, OUT_Z + z - r), new THREE.Vector3(WX + x + r, 3, OUT_Z + z + r)));
+const YOBS = [[-3.0, -2.4, .5], [3.1, -2.8, .5]].map(([x, z, r]) => new THREE.Box3(new THREE.Vector3(WX + x - r, 0, OUT_Z + z - r), new THREE.Vector3(WX + x + r, 3, OUT_Z + z + r)));
 const parentFor = k => isYardKey(k) ? outside : scene;
 function partBox(g, opt = {}){ g.updateMatrixWorld(true); const box = new THREE.Box3(); g.traverse(m => { if (!m.isMesh || !m.visible) return; if (m.material && (m.material.map === blobTex || m.material.blending === THREE.AdditiveBlending)) return; if (m.userData.thumbTree || m.userData.selMark) return; if (opt.noGift && m.parent && m.parent.userData.gift) return; box.expandByObject(m); }); return box; }
 // ツリーは、まわりのプレゼント置き場（いくつ置いてあっても）まで含めて場所をとる
