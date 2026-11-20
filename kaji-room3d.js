@@ -251,14 +251,12 @@ const ridges = [[ridgeTex(7, '#33416e', '#a9b4d8', 'rgba(120,130,180,.5)'), OUT_
 const snowSparkle = canvasTex(512, 512, (g, w, h) => { g.fillStyle = '#ffffff'; g.fillRect(0, 0, w, h); for (let i = 0; i < 9000; i++){ const v = 228 + OR() * 27 | 0; g.fillStyle = `rgb(${v - 8},${v - 4},${v})`; g.fillRect(OR() * w, OR() * h, 2, 2); } for (let i = 0; i < 260; i++){ g.fillStyle = '#ffffff'; g.fillRect(OR() * w, OR() * h, 1.5, 1.5); } }, [6, 6]);
 const snowMat = std('#f4f8ff', { roughness:.92, map:snowSparkle });
 // 地形：別荘の建つ高台 → 急な斜面 → はるか下の町（函館山から見おろす夜景のイメージ）。dz は壁からの距離
-const CITY_Y = -15, landW = dz => dz < 16 ? 40 : dz < 26 ? 13 - (dz - 16) * .35 : dz < 40 ? 9.5 - (dz - 26) * .3 : 5.3 + (dz - 40) * 1.1;
+const CITY_Y = -15;
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const terH = (x, dz) => { let y = .6 + (CITY_Y - .6) * smooth(4.2, 15, dz); y += (Math.sin(x * .9) * .05 + Math.sin(dz * 1.3 + x * .4) * .06) * (1 - smooth(4.2, 15, dz) * .5);
-  if (dz > 15) y -= smooth(landW(dz) - 1.2, landW(dz), Math.abs(x)) * 1.6; if (dz > 84) y += smooth(84, 98, dz) * (7 + Math.sin(x * .25) * 3 + Math.sin(x * .6 + 1) * 1.2); return y; };
+  if (dz > 15) y += Math.sin(x * .35 + dz * .2) * .25 + Math.sin(x * .13 - dz * .17) * .4; if (dz > 84) y += smooth(84, 98, dz) * (7 + Math.sin(x * .25) * 3 + Math.sin(x * .6 + 1) * 1.2); return y; };
 const gGeo = new THREE.PlaneGeometry(110, 100, 220, 200); { const P = gGeo.attributes.position; for (let i = 0; i < P.count; i++){ const x = P.getX(i), dz = 50 + P.getY(i); P.setZ(i, terH(x, dz)); } gGeo.computeVertexNormals(); }
 const ground = new THREE.Mesh(gGeo, snowMat); ground.rotation.x = -Math.PI / 2; ground.position.set(WX, 0, OUT_Z - 50); ground.receiveShadow = true; outside.add(ground);
-// 海（町の両側）
-const sea = new THREE.Mesh(new THREE.PlaneGeometry(110, 90), std('#0b1630', { roughness:.25, metalness:.4 })); sea.rotation.x = -Math.PI / 2; sea.position.set(WX, CITY_Y - .9, OUT_Z - 55); outside.add(sea);
 for (const [x, z, r] of [[-1.2, -2.0, .7], [1.4, -2.6, .6], [-2.4, -3.3, 1.0], [2.6, -3.5, 1.0]]){ const m = new THREE.Mesh(new THREE.SphereGeometry(r, 28, 14), snowMat); m.scale.y = .28; m.position.set(WX + x, .58, OUT_Z + z); m.receiveShadow = true; outside.add(m); }
 // もみの木（ぎざぎざの枝の段＋つもった雪）
 const pineM = std('#245040', { roughness:.88 }), pineM2 = std('#1d4535', { roughness:.9 }), trunkM = std('#5a3a28');
@@ -280,22 +278,31 @@ const roofSnow = std('#f6f8ff', { roughness:.9 });
 const village = new THREE.Group(); village.visible = false; outside.add(village); const vLights = [], puffs = [];
 { const dotTex = canvasTex(64, 64, (g, w) => { const r = g.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(.2, 'rgba(255,255,255,.9)'); r.addColorStop(.45, 'rgba(255,255,255,.25)'); r.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = r; g.fillRect(0, 0, w, w); });
   const pts = (arr, color, size, op) => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(arr.flat()), 3)); const p = new THREE.Points(g, new THREE.PointsMaterial({ color, size, map:dotTex, transparent:true, opacity:op, depthWrite:false, blending:THREE.AdditiveBlending })); village.add(p); vLights.push(p); return p; };
-  const inLand = (x, dz) => dz > 15.5 && dz < 76 && Math.abs(x) < landW(dz) - .5;
-  const warm = [], white = [], street = [], color = [], ang = .35, ca = Math.cos(ang), sa = Math.sin(ang);
-  // 道（ななめの碁盤の目）に沿った街灯
-  for (let gx = -40; gx <= 40; gx += 1.6) for (let t = 0; t < 90; t += .32){ for (const [u, v] of [[gx, t], [t - 45, gx + 45]]){ const x = u * ca - v * sa * .2, dz = 16 + v * ca * .65 + u * sa * .3; if (!inLand(x, dz) || OR() < .4) continue; street.push([WX + x + (OR() - .5) * .08, CITY_Y + .1, OUT_Z - dz]); } }
-  // 家々の窓あかり（道のまわりにかたまって）
-  for (let i = 0; i < 6000; i++){ const dz = 16 + Math.pow(OR(), .9) * 60, x = (OR() - .5) * 2 * landW(dz); if (!inLand(x, dz)) continue; const dense = 1 - Math.min(1, Math.abs(dz - 30) / 40); if (OR() > .45 + dense * .5) continue;
-    (OR() < .78 ? warm : white).push([WX + x, CITY_Y + .06 + OR() * .1, OUT_Z - dz]); }
+  // 川（灯りのない、くねった帯）
+  const riverX = dz => Math.sin(dz * .11 + .8) * 7 + Math.sin(dz * .27) * 2.2 - 2;
+  const inCity = (x, dz) => { if (dz < 16.5 || dz > 82) return false; const half = 9 + (dz - 16) * .55 + Math.sin(dz * .4) * 2 + Math.sin(x * .3) * 1.5; if (Math.abs(x) > half) return false; return Math.abs(x - riverX(dz)) > .55 + Math.sin(dz * .7) * .15; };
+  const hY = (x, dz) => terH(x, dz) + .06;
+  const warm = [], white = [], street = [], color = [], bridges = [];
+  // くねくね曲がる道（ランダムに曲がりながらのびる）に沿った街灯
+  for (let r = 0; r < 46; r++){ let x = (OR() - .5) * 34, dz = 17 + OR() * 60, h = OR() * 6.28; const len = 6 + OR() * 22;
+    for (let d = 0; d < len; d += .28){ h += (OR() - .5) * .35 + Math.sin(d * .3 + r) * .03; x += Math.cos(h) * .28; dz += Math.sin(h) * .28 * .8; if (!inCity(x, dz)){ if (Math.abs(x - riverX(dz)) < .7 && dz > 16.5){ bridges.push([WX + x, hY(x, dz) + .05, OUT_Z - dz]); continue; } h += 1.4; continue; }
+      if (OR() < .75) street.push([WX + x + (OR() - .5) * .05, hY(x, dz) + .04, OUT_Z - dz]);
+      // 道ばたの家々
+      if (OR() < .9) for (let k = 0; k < 2; k++){ const a = h + (k ? 1.57 : -1.57), o = .15 + OR() * .5, px = x + Math.cos(a) * o, pz = dz + Math.sin(a) * o; if (inCity(px, pz)) (OR() < .8 ? warm : white).push([WX + px, hY(px, pz), OUT_Z - pz]); } } }
+  // 住宅のかたまり（密度ばらばら）と、明るい中心街
+  for (let c = 0; c < 26; c++){ const cx = (OR() - .5) * 36, cz = 18 + OR() * 58, rad = 1 + OR() * 3.5, n = 60 + OR() * 260, core = c < 3;
+    for (let i = 0; i < n * (core ? 2.2 : 1); i++){ const a = OR() * 6.28, rr = Math.pow(OR(), core ? .8 : .6) * rad, x = cx + Math.cos(a) * rr * (1 + OR() * .3), dz = cz + Math.sin(a) * rr * .7; if (!inCity(x, dz)) continue; (OR() < (core ? .45 : .82) ? warm : white).push([WX + x, hY(x, dz) + (core ? OR() * .25 : 0), OUT_Z - dz]); } }
+  // まばらな灯り（郊外）
+  for (let i = 0; i < 1400; i++){ const x = (OR() - .5) * 60, dz = 17 + OR() * 66; if (!inCity(x, dz) && Math.abs(x - riverX(dz)) < 1) continue; if (OR() < .55) warm.push([WX + x, hY(x, dz), OUT_Z - dz]); }
   // クリスマスの広場（色とりどり）と大きなツリー
-  for (let i = 0; i < 120; i++){ const a = OR() * 6.28, r = Math.sqrt(OR()) * 1.4; color.push([WX + .6 + Math.cos(a) * r, CITY_Y + .1, OUT_Z - 27 + Math.sin(a) * r]); }
-  const tree = []; for (let i = 0; i < 60; i++){ const t = i / 60, a = t * 30; tree.push([WX + .6 + Math.cos(a) * (1 - t) * .35, CITY_Y + .2 + t * 1.3, OUT_Z - 27 + Math.sin(a) * (1 - t) * .35]); }
-  pts(street, '#ffc070', .34, .9); pts(warm, '#ff9a3a', .3, .9); pts(white, '#fff0d8', .26, .85); pts(color, '#ff6a8a', .4, .95); pts(tree, '#8affb0', .32, 1);
-  const star = pts([[WX + .6, CITY_Y + 1.6, OUT_Z - 27]], '#ffe070', 1.1, 1);
-  // 港の船の灯り
-  const boats = []; for (let i = 0; i < 26; i++){ const dz = 20 + OR() * 50, s0 = OR() < .5 ? -1 : 1, x = s0 * (landW(dz) + 1 + OR() * 10); boats.push([WX + x, CITY_Y - .85, OUT_Z - dz]); } pts(boats, '#bfe0ff', .45, .9);
-  // 海にうつる町の灯り（ゆらめく縦の光）
-  const refl = []; for (let i = 0; i < 260; i++){ const dz = 18 + OR() * 50, s0 = OR() < .5 ? -1 : 1, x = s0 * (landW(dz) + .3 + OR() * 1.2); if (dz > 76) continue; for (let k = 0; k < 3; k++) refl.push([WX + x + (OR() - .5) * .1, CITY_Y - .88, OUT_Z - dz + k * .25]); } pts(refl, '#ff9a40', .3, .45);
+  for (let i = 0; i < 120; i++){ const a = OR() * 6.28, r = Math.sqrt(OR()) * 1.4; color.push([WX + .6 + Math.cos(a) * r, hY(.6, 27) + .05, OUT_Z - 27 + Math.sin(a) * r]); }
+  const tree = []; for (let i = 0; i < 60; i++){ const t = i / 60, a = t * 30; tree.push([WX + .6 + Math.cos(a) * (1 - t) * .35, hY(.6, 27) + .15 + t * 1.3, OUT_Z - 27 + Math.sin(a) * (1 - t) * .35]); }
+  pts(street, '#ffc070', .34, .9); pts(warm, '#ff9a3a', .3, .9); pts(white, '#fff0d8', .26, .85); pts(color, '#ff6a8a', .4, .95); pts(tree, '#8affb0', .32, 1); pts(bridges, '#fff4c8', .4, 1);
+  const star = pts([[WX + .6, hY(.6, 27) + 1.55, OUT_Z - 27]], '#ffe070', 1.1, 1);
+  // 川の水面（暗い帯）と、うつりこむ灯り
+  { const pos = [], refl = []; for (let dz = 16; dz < 84; dz += .5){ const x = riverX(dz), w = .26 + (dz - 16) * .002; pos.push(WX + x - w, hY(x, dz) - .02, OUT_Z - dz, WX + x + w, hY(x, dz) - .02, OUT_Z - dz); if (OR() < .5) refl.push([WX + x + (OR() - .5) * .6, hY(x, dz), OUT_Z - dz]); }
+    const idx = []; for (let i = 0; i < pos.length / 6 - 1; i++){ const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
+    village.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color:'#2a3460', transparent:true, opacity:.55, side:THREE.DoubleSide }))); pts(refl, '#ffa050', .22, .45); }
   // 斜面の森
   const FN = 320, fi = new THREE.InstancedMesh(new THREE.ConeGeometry(.16, .5, 7), std('#1f4438', { roughness:.9 }), FN), fs = new THREE.InstancedMesh(new THREE.ConeGeometry(.1, .18, 7), std('#eef2ff'), FN), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), ps = new THREE.Vector3(), sc = new THREE.Vector3(); let f = 0;
   for (let i = 0; i < 3000 && f < FN; i++){ const x = (OR() - .5) * 46, dz = 4.5 + OR() * 10; const y = terH(x, dz), s0 = .8 + OR() * 1.0;
