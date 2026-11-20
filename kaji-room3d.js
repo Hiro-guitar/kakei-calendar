@@ -74,9 +74,10 @@ const target = new THREE.Vector3(0, 1.5, -.6);
 function placeCamera(){
   const aspect = VW() / VH(), fov = THREE.MathUtils.degToRad(camera.fov);
   const halfW = 4.6 / 2 + .3, distW = halfW / (Math.tan(fov / 2) * aspect);
-  const dist = distW, pitch = THREE.MathUtils.degToRad(43);
+  // 横向き（横長の画面）では幅に合わせると近づきすぎるので、高さでも部屋がおさまる距離をとる
+  const distH = 4.6 / Math.tan(fov / 2), dist = Math.max(distW, distH), pitch = THREE.MathUtils.degToRad(43);
   camera.position.set(0, target.y + Math.sin(pitch) * dist, target.z + Math.cos(pitch) * dist);
-  camera.aspect = aspect; camera.lookAt(target); const off = (opts.shiftY || 0) * VH(); camera.setViewOffset(VW(), VH(), 0, off, VW(), VH()); camera.updateProjectionMatrix();
+  camera.aspect = aspect; camera.lookAt(target); const off = ((opts.shiftY || 0) + (aspect > 1 ? .1 : 0)) * VH(); /* 横向きは下のボタンにかくれないよう少し上へ */ camera.setViewOffset(VW(), VH(), 0, off, VW(), VH()); camera.updateProjectionMatrix();
 }
 placeCamera();
 
