@@ -906,8 +906,9 @@ function mbNote(ctx, out, t, n, vol, pan, lead){
 function mbCtx(){ if (!MB.ctx){ MB.ctx = new (window.AudioContext || window.webkitAudioContext)(); } if (MB.ctx.state !== 'running') { try { MB.ctx.resume(); } catch (e) {} } return MB.ctx; }
 function mbUnlock(){ try { const c = mbCtx(), b = c.createBuffer(1, 1, 22050), s = c.createBufferSource(); s.buffer = b; s.connect(c.destination); s.start(0); } catch (e) {} }
 for (const ev of ['touchend', 'pointerup', 'click']) document.addEventListener(ev, mbUnlock, { once:true, capture:true });
-function musicBoxTap(){
-  if (MB.on){ mbStop(); return; }
+function musicBoxTap(){ if (MB.on){ mbStop(); return; } mbPlay(); }
+// 1曲おわったら少し間をあけて次の曲へ（さわって止めるまで順番に流れる）
+function mbPlay(){
   try {
     try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {} // マナーモードでもオルゴールは鳴らす
     const ctx = mbCtx();
@@ -929,7 +930,7 @@ function musicBoxTap(){
       }
       ct += len * beat;
     }
-    MB.on = true; const end = (t - ctx.currentTime + 2.6) * 1000; MB.timer = setTimeout(() => { MB.on = false; MB.out = null; mbSessionOff(); }, end);
+    MB.on = true; const end = (t - ctx.currentTime + 1.8) * 1000; MB.timer = setTimeout(() => { if (!MB.on) return; const o = MB.out; setTimeout(() => { try { o.disconnect(); } catch (e) {} }, 4000); mbPlay(); }, end);
     if (window.kajiToast) window.kajiToast(`♪ ${name}`);
   } catch (e) { MB.on = false; }
 }
