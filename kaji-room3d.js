@@ -262,7 +262,7 @@ const terH = (x, dz) => { let y = .6 + (CITY_Y - .6) * smooth(4.2, 15, dz); y +=
   if (dz > 15) y += Math.sin(x * .35 + dz * .2) * .25 + Math.sin(x * .13 - dz * .17) * .4; if (dz > 84) y += smooth(84, 98, dz) * (7 + Math.sin(x * .25) * 3 + Math.sin(x * .6 + 1) * 1.2); return y; };
 const gGeo = new THREE.PlaneGeometry(110, 100, 220, 200); { const P = gGeo.attributes.position; for (let i = 0; i < P.count; i++){ const x = P.getX(i), dz = 50 + P.getY(i); P.setZ(i, terH(x, dz)); } gGeo.computeVertexNormals(); }
 const ground = new THREE.Mesh(gGeo, snowMat); ground.rotation.x = -Math.PI / 2; ground.position.set(WX, 0, OUT_Z - 50); ground.receiveShadow = true; outside.add(ground);
-for (const [x, z, r] of [[-1.2, -2.0, .7], [1.4, -2.6, .6], [-2.4, -3.3, 1.0], [2.6, -3.5, 1.0]]){ const m = new THREE.Mesh(new THREE.SphereGeometry(r, 28, 14), snowMat); m.scale.y = .28; m.position.set(WX + x, .58, OUT_Z + z); m.receiveShadow = true; outside.add(m); }
+for (const [x, z, r] of [[-2.6, -3.3, 1.0], [2.8, -3.5, 1.0]]){ const m = new THREE.Mesh(new THREE.SphereGeometry(r, 28, 14), snowMat); m.scale.y = .28; m.position.set(WX + x, .58, OUT_Z + z); m.receiveShadow = true; outside.add(m); }
 // もみの木（ぎざぎざの枝の段＋つもった雪）
 const pineM = std('#245040', { roughness:.88 }), pineM2 = std('#1d4535', { roughness:.9 }), trunkM = std('#5a3a28');
 function jagCone(r, h, seed){ const g = new THREE.ConeGeometry(r, h, 18, 2, true); const P = g.attributes.position; let q = seed; const R = () => (q = (q * 16807) % 2147483647) / 2147483647;
