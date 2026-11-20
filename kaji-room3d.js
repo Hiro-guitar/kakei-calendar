@@ -327,12 +327,6 @@ function outsideTick(now){ const t = now / 1000;
   { const a = snowGeo.attributes.position; for (let i = 0; i < snowN; i++){ let y = a.getY(i) - .01 - (i % 3) * .003; if (y < .6) y = 5.6; a.setY(i, y); a.setX(i, a.getX(i) + Math.sin(t * 1.1 + i) * .0016); } a.needsUpdate = true; }
   { const a = nearGeo.attributes.position; for (let i = 0; i < nearN; i++){ let y = a.getY(i) - .016; if (y < .7) y = 4.2; a.setY(i, y); a.setX(i, a.getX(i) + Math.sin(t * .9 + i * 1.7) * .0026); } a.needsUpdate = true; }
   for (const lt of litTrees) lt.userData.bulbs.forEach((b, i) => { b.visible = Math.sin(t * 2.2 + i * 1.7) > -.6; }); if (village.visible) vLights.forEach((p, i) => { p.material.opacity = .78 + Math.sin(t * 3.1 + i * 1.7) * .17; }); }
-{ const sm = new THREE.Group(); sm.position.set(WX + 1.0, .6, OUT_Z - 3.75); sm.scale.setScalar(.85); sm.rotation.y = -.4; outside.add(sm); const w = std('#fbfdff', { roughness:.9 });
-  for (const [r, y] of [[.22, .18], [.16, .5], [.11, .74]]){ const b = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), w); b.position.y = y; b.castShadow = true; sm.add(b); }
-  for (const x of [-.04, .04]){ const e = new THREE.Mesh(new THREE.SphereGeometry(.014, 8, 6), std('#2a2a2a')); e.position.set(x, .77, .1); sm.add(e); }
-  const n = new THREE.Mesh(new THREE.ConeGeometry(.02, .1, 8), std('#f08a3a')); n.rotation.x = Math.PI / 2; n.position.set(0, .73, .14); sm.add(n);
-  const sc = new THREE.Mesh(new THREE.TorusGeometry(.13, .03, 8, 20), std('#d0402e')); sc.rotation.x = Math.PI / 2; sc.position.y = .63; sm.add(sc);
-  const hat = new THREE.Mesh(new THREE.CylinderGeometry(.08, .09, .12, 14), std('#3a3a48')); hat.position.y = .88; sm.add(hat); const br = new THREE.Mesh(new THREE.CylinderGeometry(.13, .13, .015, 16), std('#3a3a48')); br.position.y = .82; sm.add(br); sm.rotation.y = -.35; }
 /* イブ（12/24、朝4時区切り）だけ、窓の外の夜空をサンタのそりがときどき横切る */
 const isEve = () => { if (window.KAJI_EVE) return true; const d = new Date(Date.now() - 4 * 36e5); return d.getMonth() === 11 && d.getDate() === 24; };
 const SL = buildSleigh(), sleigh = SL.root; sleigh.visible = false; sleigh.scale.setScalar(1.6); outside.add(sleigh);
@@ -1260,7 +1254,7 @@ function zoomTo(id){ const o = placed.find(x => x.userData.id === id) || gifts.f
   const dir = camera.position.clone().sub(p).normalize(), far = o.userData.gift ? 2.6 : 2.0; zoom = { t0:performance.now(), fromP:camera.position.clone(), fromL:camLook(), toP:p.clone().addScaledVector(dir, far), toL:p.clone().add(new THREE.Vector3(0, -far * .17, 0)), dur:650 }; zoomed = true; }
 // 窓をのぞく：窓をさわると、窓の前まで寄って外をながめる。どこかをさわると戻る
 let peek = false;
-function peekWindow(){ if (zoomed || view) return; peek = true; village.visible = true; const px = WX, toP = new THREE.Vector3(px, 2.6, OUT_Z - 2.4), toL = new THREE.Vector3(px, -11.5, OUT_Z - 27);
+function peekWindow(){ if (zoomed || view) return; peek = true; village.visible = true; const px = WX, toP = new THREE.Vector3(px - .25, 2.7, OUT_Z - .3), toL = new THREE.Vector3(px, -11.5, OUT_Z - 27);
   zoom = { t0:performance.now(), fromP:camera.position.clone(), fromL:camLook(), toP, toL, dur:800, fromF:camera.fov, toF:Math.min(78, 52 / Math.min(1, camera.aspect + .25)) }; zoomed = true; if (window.kajiToast) setTimeout(() => window.kajiToast('どこかをさわるともどるよ'), 900); }
 function zoomOut(){ if (!zoomed) return; zoomed = false; const wasPeek = peek; peek = false; if (wasPeek) setTimeout(() => { if (!peek) village.visible = false; }, 600); const keepP = camera.position.clone(), keepL = camLook(), keepF = camera.fov; camera.fov = 32; placeCamera(); const toP = camera.position.clone(); camera.position.copy(keepP); camera.lookAt(keepL); zoom = { t0:performance.now(), fromP:keepP, fromL:keepL, toP, toL:target.clone(), dur:550, end:true, ...(wasPeek ? { fromF:keepF, toF:32 } : {}) }; if (wasPeek){ camera.fov = keepF; camera.updateProjectionMatrix(); } }
 function stepZoom(now){ if (!zoom) return; const t = Math.min(1, (now - zoom.t0) / zoom.dur), k = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
