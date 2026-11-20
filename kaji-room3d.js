@@ -242,6 +242,40 @@ snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3)); const s
   const n = new THREE.Mesh(new THREE.ConeGeometry(.02, .1, 8), std('#f08a3a')); n.rotation.x = Math.PI / 2; n.position.set(0, .73, .14); sm.add(n);
   const sc = new THREE.Mesh(new THREE.TorusGeometry(.13, .03, 8, 20), std('#d0402e')); sc.rotation.x = Math.PI / 2; sc.position.y = .63; sm.add(sc);
   const hat = new THREE.Mesh(new THREE.CylinderGeometry(.08, .09, .12, 14), std('#3a3a48')); hat.position.y = .88; sm.add(hat); const br = new THREE.Mesh(new THREE.CylinderGeometry(.13, .13, .015, 16), std('#3a3a48')); br.position.y = .82; sm.add(br); sm.rotation.y = -.35; }
+/* イブ（12/24、朝4時区切り）だけ、窓の外の夜空をサンタのそりがときどき横切る */
+const isEve = () => { if (window.KAJI_EVE) return true; const d = new Date(Date.now() - 4 * 36e5); return d.getMonth() === 11 && d.getDate() === 24; };
+const sleigh = new THREE.Group(); sleigh.visible = false; outside.add(sleigh);
+{ const red = std('#d0402e', { roughness:.5 }), gold = std('#e8b84a', { roughness:.35, metalness:.5 }), brown = std('#8a5a32', { roughness:.8 }), dark = std('#4a2e1c'), white = std('#fbf6ee'), skin = std('#ffd9c0');
+  // そり
+  const body = new THREE.Mesh(new RoundedBoxGeometry(.5, .2, .26, 3, .07), red); body.position.y = .16; sleigh.add(body);
+  const back = new THREE.Mesh(new RoundedBoxGeometry(.12, .3, .26, 3, .05), red); back.position.set(-.2, .26, 0); sleigh.add(back);
+  for (const z of [-.11, .11]){ const run = new THREE.Mesh(new THREE.TorusGeometry(.26, .016, 6, 20, Math.PI * .55), gold); run.rotation.z = Math.PI * 1.08; run.position.set(.02, .27, z); sleigh.add(run); const bar = new THREE.Mesh(new THREE.CylinderGeometry(.014, .014, .54, 6), gold); bar.rotation.z = Math.PI / 2; bar.position.set(0, .03, z); sleigh.add(bar); }
+  const sack = new THREE.Mesh(new THREE.SphereGeometry(.12, 14, 10), brown); sack.scale.set(1, 1.2, 1); sack.position.set(-.16, .38, 0); sleigh.add(sack);
+  // サンタ
+  const coat = new THREE.Mesh(new THREE.SphereGeometry(.1, 14, 10), red); coat.scale.y = 1.2; coat.position.set(.04, .34, 0); sleigh.add(coat);
+  const face = new THREE.Mesh(new THREE.SphereGeometry(.06, 14, 10), skin); face.position.set(.06, .48, 0); sleigh.add(face);
+  const beard = new THREE.Mesh(new THREE.SphereGeometry(.06, 12, 8), white); beard.scale.set(.8, 1, 1); beard.position.set(.09, .44, 0); sleigh.add(beard);
+  const hat = new THREE.Mesh(new THREE.ConeGeometry(.06, .13, 12), red); hat.position.set(.05, .57, 0); hat.rotation.z = -.4; sleigh.add(hat);
+  const pom = new THREE.Mesh(new THREE.SphereGeometry(.022, 8, 6), white); pom.position.set(.1, .62, 0); sleigh.add(pom);
+  // トナカイ（2頭）とつな
+  for (const [x, i] of [[.62, 0], [1.02, 1]]){ const r = new THREE.Group(); r.position.set(x, .14, 0); r.userData.i = i; sleigh.add(r); sleigh.userData.deer = (sleigh.userData.deer || []).concat(r);
+    const b = new THREE.Mesh(new THREE.SphereGeometry(.1, 14, 10), brown); b.scale.set(1.5, .9, .8); r.add(b);
+    const h = new THREE.Mesh(new THREE.SphereGeometry(.065, 12, 10), brown); h.position.set(.15, .12, 0); r.add(h);
+    const n = new THREE.Mesh(new THREE.SphereGeometry(.022, 8, 6), i ? std('#e83a2e', { emissive:'#e83a2e', emissiveIntensity:.8 }) : dark); n.position.set(.21, .11, 0); r.add(n);
+    for (const z of [-.03, .03]){ const a = new THREE.Mesh(new THREE.CylinderGeometry(.006, .008, .1, 5), dark); a.position.set(.13, .21, z); a.rotation.z = .3; r.add(a); }
+    for (const [lx, lz] of [[-.08, -.04], [-.08, .04], [.08, -.04], [.08, .04]]){ const l = new THREE.Mesh(new THREE.CylinderGeometry(.012, .01, .12, 5), brown); l.position.set(lx, -.09, lz); l.rotation.z = lx > 0 ? -.6 : .6; r.add(l); } }
+  const rein = new THREE.Mesh(new THREE.CylinderGeometry(.005, .005, .9, 4), gold); rein.rotation.z = Math.PI / 2 - .05; rein.position.set(.6, .3, 0); sleigh.add(rein);
+  sleigh.scale.setScalar(.9); }
+// そりのうしろのキラキラ
+const trailN = 40, trailGeo = new THREE.BufferGeometry(), trailPos = new Float32Array(trailN * 3).fill(-99); trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
+const trail = new THREE.Points(trailGeo, new THREE.PointsMaterial({ color:'#ffe9a8', size:.09, transparent:true, opacity:.95, map:glowTex, depthWrite:false, blending:THREE.AdditiveBlending })); trail.visible = false; outside.add(trail);
+let trailI = 0, sleighBell = 0;
+const sleighTick = () => { const now = performance.now(), on = isEve(); trail.visible = on; if (!on){ sleigh.visible = false; return; }
+  const P = 16000, p = (now % P) / P, k = window.KAJI_SLEIGH_K != null ? window.KAJI_SLEIGH_K : p / .45; if (k > 1){ sleigh.visible = false; return; } sleigh.visible = true;
+  const x = WX - 3.4 + k * 6.8, y = 2.05 + Math.sin(k * Math.PI) * .45, z = OUT_Z - 3.9; sleigh.position.set(x, y, z); sleigh.rotation.z = Math.cos(k * Math.PI) * .18;
+  for (const d of sleigh.userData.deer) d.position.y = .14 + Math.sin(now / 120 + d.userData.i * 1.4) * .04;
+  trailPos[trailI * 3] = x - .25 + (Math.random() - .5) * .1; trailPos[trailI * 3 + 1] = y + .1 + (Math.random() - .5) * .1; trailPos[trailI * 3 + 2] = z; trailI = (trailI + 1) % trailN; trailGeo.attributes.position.needsUpdate = true;
+  if (peek && now - sleighBell > P * .8 && k > .3 && k < .5){ sleighBell = now; try { const c = window.kajiAudio && window.kajiAudio(); if (c) [1568, 1976, 2349, 1976, 1568].forEach((f, i) => { const o = c.createOscillator(), g = c.createGain(), t = c.currentTime + i * .11; o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05, t + .005); g.gain.exponentialRampToValueAtTime(.0005, t + .5); o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + .55); }); } catch (e) {} } };
 const winLight = new THREE.PointLight('#9fc4ff', 1.5, 4); winLight.position.set(WX, 2.4, bz + .6); scene.add(winLight);
 const outLight = new THREE.DirectionalLight('#bcd4ff', 1.2); outLight.position.set(WX - 2, 6, OUT_Z + 2); outLight.target.position.set(WX, .6, OUT_Z - 2.5); scene.add(outLight, outLight.target);
 
@@ -684,6 +718,7 @@ function stepAnims(now){ for (let i = ANIMS.length - 1; i >= 0; i--){ const a = 
 const decay = (k, n = 3) => Math.sin(k * Math.PI * n) * (1 - k);
 function sway(o, amp = .12, dur = 1400, axis = 'z'){ const r0 = o.rotation[axis]; animate(dur, k => { o.rotation[axis] = r0 + amp * decay(k, 4); }); }
 const TICK = []; function ticker(o, f){ o.userData.tick = f; o.userData.born = performance.now(); TICK.push(o); }
+ticker(sleigh, sleighTick);
 function tickAll(now){ for (let i = TICK.length - 1; i >= 0; i--){ const o = TICK[i]; let p = o; while (p.parent) p = p.parent; if (p !== scene){ if (now - o.userData.born > 4000) TICK.splice(i, 1); continue; } o.userData.tick(now / 1000); } }
 /* ===== ふくびきで当たる家具（つくりこみ版） ===== */
 const kjCache = {};
