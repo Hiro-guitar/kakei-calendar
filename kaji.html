@@ -693,6 +693,7 @@ const $ = id => document.getElementById(id);
 
 function put(item){
   try { const ev = pushEvent(S.items[item.id], item); if (ev) sendPush(ev); } catch (e) {}
+  try { if (item.id === 'settings') layMemo(S.items.settings, item); } catch (e) {}
   item.updatedAt = Date.now();
   S.items[item.id] = item;
   S.queue = S.queue.filter(q => q.id !== item.id);
@@ -700,6 +701,12 @@ function put(item){
   save(); render(); push();
 }
 const remove = item => put({ ...item, deleted:true });
+/* その日のもようがえを日ごとに覚えておく（週の写真をその日のお部屋で撮るため）。kind:'lay' id:'lay_YYYY-MM-DD' */
+const laySig = st => JSON.stringify([(st && st.room) || {}, (st && st.layout) || null]);
+function layMemo(prev, st){ if (prev && laySig(prev) === laySig(st)) return; const day = dayKey(Date.now()), id = 'lay_' + day, old = S.items[id];
+  if (old && !old.deleted && laySig(old) === laySig(st)) return; put({ id, kind:'lay', day, room:st.room || {}, layout:st.layout || null, at:Date.now() }); }
+function layFor(day){ const L = all('lay').filter(l => l.layout || l.room).sort((a, b) => a.day < b.day ? -1 : 1); if (!L.length) return settings();
+  let pick = null; for (const l of L) if (l.day <= day) pick = l; return pick || L[0]; }
 
 /* ========== 通知（Web Push） ==========
    通知サーバーのURLは設定（同期データ）にだけ持つ。端末ごとの受け取り設定は kind:'pushsub' として同期し、
@@ -4825,9 +4832,9 @@ function treeSave(t){ try { localStorage.setItem('kaji_tree', JSON.stringify(t))
 /* 週の画面：その日のツリーを3Dで写真に（同じ中身ならとっておいた写真を使う） */
 const WT3 = {};
 function fillWeekTree(){ const box = document.querySelector('.wt3[data-day]'); if (!box) return; const day = box.dataset.day, img = box.querySelector('img');
-  const dl = logsOn(day).slice().sort((a, b) => a.at - b.at), sigk = day + '|' + dl.map(l => l.id + (l.thanks ? '+' : '')).join(',') + '|' + JSON.stringify(settings().room || {});
+  const dl = logsOn(day).slice().sort((a, b) => a.at - b.at), lay = layFor(day), sigk = day + '|' + dl.map(l => l.id + (l.thanks ? '+' : '')).join(',') + '|' + laySig(lay);
   if (WT3[sigk]){ img.src = WT3[sigk]; return; } box.classList.add('loading');
-  ensureRoom().then(r => { if (!r || !box.isConnected) return; r.setRoom(settings().room || {}, settings().layout); setTimeout(() => { try { const u = r.snapshot(dl.map(orn3d), dl.filter(l => l.thanks).map(l => ({ id:l.id })), 720, 860, inNY(new Date(day + 'T12:00').getTime())); WT3[sigk] = u; if (box.isConnected){ img.src = u; box.classList.remove('loading'); } } catch (e) { console.warn(e); } }, 60); }); }
+  ensureRoom().then(r => { if (!r || !box.isConnected) return; r.setRoom(lay.room || {}, lay.layout); setTimeout(() => { try { const u = r.snapshot(dl.map(orn3d), dl.filter(l => l.thanks).map(l => ({ id:l.id })), 720, 860, inNY(new Date(day + 'T12:00').getTime())); r.setRoom(settings().room || {}, settings().layout); WT3[sigk] = u; if (box.isConnected){ img.src = u; box.classList.remove('loading'); } } catch (e) { console.warn(e); } }, 60); }); }
 function syncRoom(){
   const el = $('room3d'), on = document.body.classList.contains('xfullmode') && !ROOM_FAIL;
   el.style.display = on ? '' : 'none'; if (ROOM) ROOM.pause(!on); if (!on) return;
@@ -5319,6 +5326,7 @@ renameKid();
 if (!S.url){ migrateCatalog2(); migrateCatalog3(); migrateCatalog4(); migrateCatalog5(); }
 render();
 if (S.url) sync();
+setTimeout(() => { try { if (S.items.settings && !all('lay').length) layMemo(null, settings()); } catch (e) {} }, 4000);
 if (pushOK() && isStandalone()) pushHere().then(() => { if (tab === 'settings') render(); }).catch(() => {});
 setTimeout(() => iconNotice(false), 1800);
 </script>
