@@ -164,6 +164,7 @@ body.dragmode{user-select:none;-webkit-user-select:none}
 .qbar,.qbar *, #grppop, #grppop *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .qbar,.qbar *,#grppop,#grppop *,#menupop *,#appbar *{-webkit-tap-highlight-color:transparent}
 .qb.dragging{box-shadow:none!important;opacity:1}.qb.dragging .qi{box-shadow:0 12px 22px rgba(80,50,10,.3)}
+body{font-variant-emoji:text}svg.ico{width:1.05em;height:1.05em;vertical-align:-.16em;display:inline-block}
 #grppop .gtime{display:flex;align-items:center;gap:8px;padding:0 4px 8px;font-size:12px;font-weight:800;color:#8a7a5a}#grppop .gtin{position:relative;padding:5px 12px;border-radius:999px;background:#f6eedc;color:var(--navy)}#grppop .gtin.set{background:#e8a83a;color:#fff}#grppop .gtin input{position:absolute;inset:0;opacity:0;width:100%;height:100%;font-size:16px}#grppop .gtnow{font-size:11px;color:#8a9aa6;text-decoration:underline}
 #grppop .gwho{display:flex;gap:6px;padding:0 2px 8px}#grppop .gwho button{flex:1;padding:6px 0;border-radius:999px;background:#f6eedc;font-size:12px;font-weight:800;color:#8a7a5a}#grppop .gwho button.on{background:var(--navy);color:#fff}#grppop .gwho button.on.w-y{background:var(--y)}#grppop .gwho button.on.w-h{background:var(--h)}#grppop .gwho button.on.w-both{background:#e8a83a}
 #grppop .gempty{padding:10px;text-align:center;font-size:12px;color:#a8946a}
@@ -727,14 +728,14 @@ function pushEvent(prev, it){
       if (it.by === S.me || it.by === 'any') return { cat:'chore', title:it.both ? `${me}が${q(it.name)}をふたりでやったよ` : `${me}が${q(it.name)}をやったよ`, body:'' };
       return { cat:'chore', title:`${me}が${q(it.name)}を記録したよ`, body:`${nm(it.by)}がやった家事として入れたよ` };
     }
-    if (prev && !prev.thanks && it.thanks && it.by !== S.me) return { cat:'thanks', title:'♥ ありがとうが届いたよ', body:`${q(it.name)}に、${me}から` };
+    if (prev && !prev.thanks && it.thanks && it.by !== S.me) return { cat:'thanks', title:'ありがとうが届いたよ', body:`${q(it.name)}に、${me}から` };
     if (prev && !prev.both && it.both && it.by !== S.me) return { cat:'chore', title:`${me}も${q(it.name)}をいっしょにやったよ`, body:'' };
   }
   if (it.kind === 'note'){
-    if (!prev && it.by === S.me) return { cat:'note', title:`✉ ${me}からおてがみが届いたよ`, body:String(it.text || '').slice(0, 120) };
+    if (!prev && it.by === S.me) return { cat:'note', title:`${me}からおてがみが届いたよ`, body:String(it.text || '').slice(0, 120) };
     if (prev && prev.status !== 'done' && it.status === 'done' && it.by !== S.me) return { cat:'read', title:`${me}がおてがみを読んでくれたよ ✓`, body:String(it.text || '').slice(0, 60) };
   }
-  if (it.kind === 'bouquet' && !prev && it.from === S.me) return { cat:'gift', title:`💐 ${me}から花束が届いたよ`, body:it.name ? q(it.name) : '' };
+  if (it.kind === 'bouquet' && !prev && it.from === S.me) return { cat:'gift', title:`${me}から花束が届いたよ`, body:it.name ? q(it.name) : '' };
   return null;
 }
 function sendPush(ev){
@@ -1013,7 +1014,7 @@ function grpOpen(gid, btn, edit, keepWho){ const g = S.items[gid]; if (!g) retur
   m.classList.toggle('editing', E);
   m.innerHTML = E
     ? `<div class="gh"><span>${esc(g.name)}<small>　へんしゅう中</small></span><button class="gdone" data-act="gedmode" data-g="${gid}" data-v="0">おわる</button></div><div class="ghint">✎を押すと直せるよ。長押しして動かすと並べかえ</div><div class="gl">${rows}</div><button class="gadd" data-act="rownew" data-g="${gid}">＋ 新しい行を足す</button><button class="gadd sub" data-act="gedit" data-g="${gid}">グループの名前・アイコンを変える</button>`
-    : `<div class="gh"><span>${esc(g.name)}</span><button class="ged" data-act="gedmode" data-g="${gid}" data-v="1">✎ へんしゅう</button></div><div class="gwho">${[[S.me, nm(S.me)], [other(S.me), nm(other(S.me))], ['both', 'ふたりで']].map(([v, l]) => `<button class="${grpWho === v ? 'on' : ''} w-${v}" data-act="gwho" data-v="${v}">${esc(l)}</button>`).join('')}</div><div class="gtime"><span>🕐 やった時間</span><label class="gtin ${grpAt ? 'set' : ''}"><b>${grpAt ? grpAt : 'いま'}</b><input type="time" id="gtimein" value="${grpAt || hmNow()}"></label>${grpAt ? '<button class="gtnow" data-act="gtnow">いまにもどす</button>' : ''}</div><div class="gl">${rows}${free}${!rows && !free ? '<div class="gempty">まだ家事がないよ</div>' : ''}</div>${!rows ? `<button class="gadd" data-act="rownew" data-g="${gid}">＋ 家事を足す</button>` : ''}`;
+    : `<div class="gh"><span>${esc(g.name)}</span><button class="ged" data-act="gedmode" data-g="${gid}" data-v="1">✎ へんしゅう</button></div><div class="gwho">${[[S.me, nm(S.me)], [other(S.me), nm(other(S.me))], ['both', 'ふたりで']].map(([v, l]) => `<button class="${grpWho === v ? 'on' : ''} w-${v}" data-act="gwho" data-v="${v}">${esc(l)}</button>`).join('')}</div><div class="gtime"><span>${ICO.clock} やった時間</span><label class="gtin ${grpAt ? 'set' : ''}"><b>${grpAt ? grpAt : 'いま'}</b><input type="time" id="gtimein" value="${grpAt || hmNow()}"></label>${grpAt ? '<button class="gtnow" data-act="gtnow">いまにもどす</button>' : ''}</div><div class="gl">${rows}${free}${!rows && !free ? '<div class="gempty">まだ家事がないよ</div>' : ''}</div>${!rows ? `<button class="gadd" data-act="rownew" data-g="${gid}">＋ 家事を足す</button>` : ''}`;
   const r = btn.getBoundingClientRect(), W = Math.min(320, innerWidth - 20), cx = r.left + r.width / 2, L = Math.min(Math.max(10, cx - W / 2), innerWidth - W - 10);
   m.style.width = W + 'px'; m.style.left = L + 'px'; m.style.bottom = (innerHeight - r.top + 12) + 'px'; m.style.setProperty('--tail', (cx - L - 9) + 'px'); m.dataset.g = gid; requestAnimationFrame(() => m.classList.add('open')); }
 /* かんたん追加：行にボタンを足す／新しい行を足す */
@@ -1101,7 +1102,7 @@ function burst(el, kind){
   for (let i = 0; i < n; i++){
     const s = document.createElement('span'), a = Math.random() * Math.PI * 2, d = 28 + Math.random() * 30;
     s.className = 'spark ' + (kind === 'heart' ? 'heart' : (i % 2 ? 'star' : 'leaf'));
-    if (kind === 'heart') s.textContent = '♥';
+    if (kind === 'heart') s.innerHTML = ICO.heart;
     s.style.left = cx + 'px'; s.style.top = cy + 'px';
     s.style.setProperty('--dx', Math.cos(a) * d + 'px'); s.style.setProperty('--dy', (Math.sin(a) * d - (kind === 'heart' ? 34 : 0)) + 'px');
     document.body.appendChild(s); setTimeout(() => s.remove(), 760);
@@ -4668,8 +4669,8 @@ function choreCard(c, todays){
   if (done){
     meta = `<span>✓ ${hm(last.at)} ${esc(whoText(last))}</span>`;
     if (!last.both && last.by !== S.me) meta += `<button class="join" data-act="join" data-id="${last.id}">＋一緒にやった</button>`;
-    if (canThank(last)) meta += `<button class="thanks ${last.thanks?'on':''}" data-act="thanks" data-id="${last.id}">${last.thanks?'♥ ありがとう済':'♡ ありがとう'}</button>`;
-    else if (last.thanks) meta += `<span class="thanks on">♥ ありがとうが届いてる</span>`;
+    if (canThank(last)) meta += `<button class="thanks ${last.thanks?'on':''}" data-act="thanks" data-id="${last.id}">${last.thanks?`${ICO.heart} ありがとう済`:`${ICO.heartO} ありがとう`}</button>`;
+    else if (last.thanks) meta += `<span class="thanks on">${ICO.heart} ありがとうが届いてる</span>`;
   }
   const ck = done ? (last.by === S.me
       ? `<button class="check on ${cls(last)} ${last.id===popId?'pop':''}" data-act="uncheck" data-id="${last.id}" aria-label="取り消す">✓</button>`
@@ -4687,8 +4688,8 @@ function recordList(logs){
   return `<h2>今日の記録</h2><div class="panel reclist">` + L.map(l => { const c = l.choreId && S.items[l.choreId], ic = QI[c ? choreIcon(c) : choreIcon({ name:l.name })];
     let act = '';
     if (l.by !== S.me && l.rec === S.me) act = `<button class="btn small ghost" data-act="undo" data-id="${l.id}">取消</button>`;
-    else if (canThank(l)){ act = `<button class="thanks ${l.thanks ? 'on' : ''}" data-act="thanks" data-id="${l.id}">${l.thanks ? '♥' : '♡'}</button>`; if (!l.both) act = `<button class="join" data-act="join" data-id="${l.id}">＋一緒に</button>` + act; }
-    else act = l.thanks ? '<span class="thanks on">♥</span>' : `<button class="btn small ghost" data-act="undo" data-id="${l.id}">取消</button>`;
+    else if (canThank(l)){ act = `<button class="thanks ${l.thanks ? 'on' : ''}" data-act="thanks" data-id="${l.id}">${l.thanks ? ICO.heart : ICO.heartO}</button>`; if (!l.both) act = `<button class="join" data-act="join" data-id="${l.id}">＋一緒に</button>` + act; }
+    else act = l.thanks ? `<span class="thanks on">${ICO.heart}</span>` : `<button class="btn small ghost" data-act="undo" data-id="${l.id}">取消</button>`;
     return `<div class="recrow"><span class="t">${hm(l.at)}</span><span class="ric">${ic}</span><span class="n">${esc(l.name)}<small><span class="dot ${cls(l)}"></span>${esc(whoText(l))}</small></span>${act}</div>`; }).join('') + `</div>`;
 }
 function viewToday(){
@@ -4715,14 +4716,14 @@ function viewToday(){
   const extra = TODO_MODE ? logs.filter(l => !l.choreId || !dueIds.has(l.choreId)) : [];
   if (extra.length){
     html += `<h2>ほかにやったこと</h2><div class="panel">` + extra.map(l => `<div class="minirow"><span class="t">${hm(l.at)}</span><span class="dot ${cls(l)}"></span><span class="n">${esc(l.name)}</span>
-      ${canThank(l)?`<button class="thanks ${l.thanks?'on':''}" data-act="thanks" data-id="${l.id}">${l.thanks?'♥':'♡'}</button>`:''}${(l.by===S.me||l.rec===S.me)&&!l.thanks?`<button class="btn small ghost" data-act="undo" data-id="${l.id}">取消</button>`:(l.by===S.me&&l.thanks?'<span class="thanks on">♥</span>':'')}</div>`).join('') + `</div>`;
+      ${canThank(l)?`<button class="thanks ${l.thanks?'on':''}" data-act="thanks" data-id="${l.id}">${l.thanks?ICO.heart:ICO.heartO}</button>`:''}${(l.by===S.me||l.rec===S.me)&&!l.thanks?`<button class="btn small ghost" data-act="undo" data-id="${l.id}">取消</button>`:(l.by===S.me&&l.thanks?`<span class="thanks on">${ICO.heart}</span>`:'')}</div>`).join('') + `</div>`;
   }
   if (!XM) return html;
   // ツリーを画面いっぱいに。リストは下から引き出すシートへ
   LIST_HTML = html;
   const vw = Math.min(innerWidth, 660), Hpx = innerHeight, k = 360 / vw, Hs = Math.round(Hpx * k), pad = Math.round(222 * k), topUi = Math.round(196 * k);
   const cur = currentSlot(), curLeft = cur ? due.filter(c => (c.slot || 'any') === cur && !logs.some(l => l.choreId === c.id)).length : 0, curLabel = cur ? SLOTS.find(x => x[0] === cur)[1] : '';
-  return `<div class="xfull ${ROOM_FAIL ? '' : 'r3'}"><div class="xfull-svg">${ROOM_FAIL ? treeSVG(wl, 'full', { H:Hs, pad, maxTh:Hs - pad - topUi }) : ''}</div><div class="xfull-top"><div class="xchips" style="margin:0 0 20px"><button class="listhandle" data-act="listopen"><i></i><span>${appDate().getMonth() + 1}/${appDate().getDate()}（${WD[appDate().getDay()]}）の記録</span><small>${logs.length}件</small>${logs.some(l => l.by !== S.me && !l.both && !l.thanks) ? '<span class="lhheart">♡</span>' : ''}</button>${advChips()}</div></div></div>`;
+  return `<div class="xfull ${ROOM_FAIL ? '' : 'r3'}"><div class="xfull-svg">${ROOM_FAIL ? treeSVG(wl, 'full', { H:Hs, pad, maxTh:Hs - pad - topUi }) : ''}</div><div class="xfull-top"><div class="xchips" style="margin:0 0 20px"><button class="listhandle" data-act="listopen"><i></i><span>${appDate().getMonth() + 1}/${appDate().getDate()}（${WD[appDate().getDay()]}）の記録</span><small>${logs.length}件</small>${logs.some(l => l.by !== S.me && !l.both && !l.thanks) ? `<span class="lhheart">${ICO.heartO}</span>` : ''}</button>${advChips()}</div></div></div>`;
 }
 let LIST_HTML = '', LISTOPEN = false;
 /* ===== アドベント（11/19〜12/25、毎日ひとつ家具が届く。家事とは関係なし） ===== */
@@ -4758,6 +4759,14 @@ function kujiDraw(){ rmod().then(m => { if (!kujiLeft()) return; const pool = ku
     openSheet(`<div class="kuji result"><div class="kjsign">あたり！</div><div class="kjprize">${fimg(key)}</div><b class="kjname">${esc(it.name)}</b><p class="odesc">${esc(FURN_DESC[key] || '')}</p>
       <div class="kjbtns"><button class="btn" data-act="furnadd" data-key="${key}">おへやに置く</button>${kujiLeft() && kujiPool(m).length ? `<button class="btn ghost" data-act="kuji">もう一回</button>` : ''}</div></div>`); setTimeout(() => ensureRoom().then(fillFurn), 30); }, 1900); }); }
 const ICON_ADV = `<svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="12" rx="2" fill="#d8403a"/><rect x="2" y="6" width="20" height="5" rx="1.5" fill="#e8584a"/><rect x="10.6" y="6" width="2.8" height="15" fill="#f2c14e"/><path d="M12 6 C 9 1 5 3 8 6 M12 6 C 15 1 19 3 16 6" stroke="#f2c14e" stroke-width="1.8" fill="none"/></svg>`;
+/* 絵文字はつかわず、アプリ用の小さなアイコン（iPhoneの絵文字は安っぽく見えるため） */
+const ICO = {
+  heart:`<svg class="ico" viewBox="0 0 16 16"><path d="M8 14 C 2.6 10.2 1 7.6 1 5.4 C 1 3.2 2.7 1.8 4.6 1.8 C 6 1.8 7.2 2.6 8 3.8 C 8.8 2.6 10 1.8 11.4 1.8 C 13.3 1.8 15 3.2 15 5.4 C 15 7.6 13.4 10.2 8 14Z" fill="#e8586a"/><path d="M4 4.4 Q 4.8 3.4 6 3.6" stroke="#fff" stroke-width="1" fill="none" stroke-linecap="round" opacity=".7"/></svg>`,
+  heartO:`<svg class="ico" viewBox="0 0 16 16"><path d="M8 13.4 C 3 9.8 1.8 7.4 1.8 5.4 C 1.8 3.6 3.1 2.6 4.6 2.6 C 5.9 2.6 7 3.4 8 4.9 C 9 3.4 10.1 2.6 11.4 2.6 C 12.9 2.6 14.2 3.6 14.2 5.4 C 14.2 7.4 13 9.8 8 13.4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
+  clock:`<svg class="ico" viewBox="0 0 16 16"><circle cx="8" cy="8.6" r="6.2" fill="#fff" stroke="#a8703e" stroke-width="1.6"/><path d="M8 5.4 V 8.8 L 10.4 10.2" stroke="#5a463a" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="3.6" cy="3" r="1.4" fill="#e8a83a"/><circle cx="12.4" cy="3" r="1.4" fill="#e8a83a"/></svg>`,
+  lock:`<svg class="ico" viewBox="0 0 16 16"><path d="M5 7 V 5.2 C 5 3.4 6.3 2.2 8 2.2 C 9.7 2.2 11 3.4 11 5.2 V 7" stroke="#a89a80" stroke-width="1.8" fill="none"/><rect x="3.4" y="6.8" width="9.2" height="7.4" rx="2" fill="#c8b890"/><circle cx="8" cy="10.2" r="1.2" fill="#8a7a5a"/></svg>`,
+  mail:`<svg class="ico" viewBox="0 0 16 16"><rect x="1.6" y="3.4" width="12.8" height="9.4" rx="2" fill="#fff"/><path d="M2.4 4.4 L 8 8.8 L 13.6 4.4" stroke="#e8586a" stroke-width="1.4" fill="none" stroke-linejoin="round"/></svg>`
+};
 const ICON_VIEW = `<svg viewBox="0 0 24 24"><path d="M12 2.2 L 21.4 9.4 H 2.6Z" fill="#c8604a" stroke="#a8483a" stroke-width=".8" stroke-linejoin="round"/><circle cx="12" cy="7" r="1.3" fill="#ffe9a8"/><rect x="3.6" y="9.4" width="16.8" height="12.4" rx="1" fill="#a8703e"/><rect x="5" y="10.6" width="6.4" height="4.8" fill="#f8c8cc"/><rect x="12.6" y="10.6" width="6.4" height="4.8" fill="#cfe9dc"/><rect x="5" y="16.4" width="14" height="4.2" fill="#fbe9c8"/><rect x="6.2" y="11.6" width="2" height="1.8" rx=".3" fill="#bfe4ff"/><path d="M14.6 15.4 v -2.6 h 2.4 v 2.6" fill="#f6cc3a"/><circle cx="15.8" cy="12.4" r=".9" fill="#f6cc3a"/><rect x="6.2" y="18.6" width="4.4" height="2" rx=".7" fill="#5aa98c"/><rect x="6.2" y="17.6" width="1" height="3" rx=".4" fill="#5aa98c"/><rect x="9.6" y="17.6" width="1" height="3" rx=".4" fill="#5aa98c"/><path d="M15.6 20.6 l 1.6 -3.4 l 1.6 3.4Z" fill="#3f8a5a"/><rect x="3.6" y="15.4" width="16.8" height="1" fill="#a8703e"/><rect x="11.4" y="10.4" width="1.2" height="5.2" fill="#a8703e"/></svg>`;
 const ICON_MY = `<svg viewBox="0 0 24 24"><path d="M3 12 L12 4 L21 12" stroke="#a8703e" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="5.5" y="11" width="13" height="10" rx="1.5" fill="#f2c14e"/><rect x="10" y="15" width="4" height="6" fill="#c8862a"/><circle cx="18" cy="6.5" r="1.6" fill="#d8403a"/></svg>`;
 function advChips(){ if (ROOM_FAIL) return ''; const b = advBadge();
@@ -4783,7 +4792,7 @@ function advSheet(){ rmod().then(m => { const o = advOpened(), t = advToday(), n
     return `<div class="ad lock ${cls2}"><div class="leaf ${pat}"><span class="num">${d.getDate()}</span></div></div>`; }).join('');
   openSheet(`<div class="abox ${ny ? 'nybox' : ''}">${ny ? SUN_SVG : STAR_SVG}<div class="asign">${ny ? 'おしょうがつボックス' : 'アドベントボックス'}<small>きょうは なにが入ってるかな？</small></div>${(() => { const n = m.ADVENT.filter((_, i) => i <= t && !o.has(i)).length; return n > 1 ? `<button class="abtn-all" data-act="advall">まとめてあける（${n}こ）</button>` : ''; })()}<div class="agrid">${doors}</div></div>`); setTimeout(fillFurn, 30); }); }
 function confetti(n = 46){ const cols = ['#e0473b', '#f2c14e', '#3d8a55', '#ffffff', '#f4a6bc', '#7cc0e4']; for (let i = 0; i < n; i++){ const e = document.createElement('span'); e.className = 'aconf';
-    const ny = nyNow(), kind = i % 4; e.textContent = kind === 0 ? (ny ? '✿' : '❄') : kind === 1 ? (ny ? '◆' : '★') : ''; if (ny && kind === 0) e.style.color = i % 8 ? '#f49aac' : '#e8402e'; if (kind > 1){ e.style.width = '7px'; e.style.height = '11px'; e.style.borderRadius = '2px'; e.style.background = cols[i % cols.length]; } else e.style.color = kind === 0 ? '#ffffff' : cols[i % 3 + 1];
+    const ny = nyNow(), kind = i % 4; e.textContent = kind === 0 ? (ny ? '✿' : '❄\uFE0E') : kind === 1 ? (ny ? '◆' : '★') : ''; if (ny && kind === 0) e.style.color = i % 8 ? '#f49aac' : '#e8402e'; if (kind > 1){ e.style.width = '7px'; e.style.height = '11px'; e.style.borderRadius = '2px'; e.style.background = cols[i % cols.length]; } else e.style.color = kind === 0 ? '#ffffff' : cols[i % 3 + 1];
     e.style.left = (Math.random() * 100) + 'vw'; e.style.setProperty('--dx', ((Math.random() - .5) * 120) + 'px'); e.style.setProperty('--r', ((Math.random() - .5) * 900) + 'deg'); e.style.animationDuration = (1.8 + Math.random() * 1.6) + 's'; e.style.animationDelay = (Math.random() * .5) + 's'; if (kind === 0) e.style.textShadow = '0 0 3px rgba(120,160,220,.9)';
     document.body.appendChild(e); setTimeout(() => e.remove(), 4200); } }
 function advOpen(i){ const O = advOpened(), L = (Array.isArray(i) ? i : [i]).filter(j => advCan(j) && !O.has(j)); if (!L.length) return; rmod().then(m => { const keys = L.flatMap(j => m.ADVENT[j]);
@@ -4802,15 +4811,15 @@ function moyouSheet(){ rmod().then(m => { const U = unlockedFurn(m), room = sett
   const layout = settings().layout || (ROOM ? ROOM.layoutOf() : []), cntK = k => layout.filter(r => r.key === k).length;
   const secs = m.FURN_SLOTS.map(([slot, label]) => { const items = m.FURN_ITEMS.filter(it => it.slot === slot);
     if (m.FLOOR_SLOTS.includes(slot) || m.WALL_SLOTS.includes(slot)){
-      const tiles = items.map(it => U.has(it.key) ? `<button class="myt ${cntK(it.key) ? 'on' : ''}" data-act="furnadd" data-key="${it.key}">${fimg(it.key)}${esc(it.name)}${cntK(it.key) ? `<span class="myc">${cntK(it.key)}</span>` : ''}<span class="myadd">＋ おく</span></button>` : `<div class="myt lock"><span class="lk">🔒</span>？？？</div>`);
+      const tiles = items.map(it => U.has(it.key) ? `<button class="myt ${cntK(it.key) ? 'on' : ''}" data-act="furnadd" data-key="${it.key}">${fimg(it.key)}${esc(it.name)}${cntK(it.key) ? `<span class="myc">${cntK(it.key)}</span>` : ''}<span class="myadd">＋ おく</span></button>` : `<div class="myt lock"><span class="lk">${ICO.lock}</span>？？？</div>`);
       return `<div class="mysec"><h3>${label}</h3><div class="myrow">${tiles.join('')}</div></div>`; }
     const tp = m.TREE_PARTS.includes(slot), cur = tp ? (room[slot] === undefined ? slot + '_a' : room[slot] === 'none' ? '' : room[slot]) : (room[slot] || '');
     const needFp = (slot === 'stockings' || slot === 'mantel') && !room.fireplace;
     const tiles = (slot === 'wallpaper' || slot === 'flooring' ? [] : [`<button class="myt ${!cur ? 'on' : ''}" data-act="furn" data-slot="${slot}" data-key=""><span class="lk">—</span>なし</button>`]).concat(items.map(it => U.has(it.key)
       ? `<button class="myt ${cur === it.key ? 'on' : ''}" data-act="furn" data-slot="${slot}" data-key="${it.key}">${fimg(it.key)}${esc(it.name)}</button>`
-      : `<div class="myt lock"><span class="lk">🔒</span>？？？</div>`));
+      : `<div class="myt lock"><span class="lk">${ICO.lock}</span>？？？</div>`));
     return `<div class="mysec"><h3>${label}${needFp ? '<small style="font-weight:400;color:#a8946a">　暖炉があると飾れるよ</small>' : ''}</h3><div class="myrow">${tiles.join('')}</div></div>`; }).join('');
-  openSheet(`<div class="advhd"><b>もようがえ</b></div><div class="row" style="gap:8px;margin:0 0 14px"><button class="btn go" style="flex:1;padding:13px" data-act="roomedit">家具を動かす・しまう</button><button class="btn" style="flex:1;padding:13px" data-act="roomview">👀 お部屋をながめる</button></div>${secs}`); setTimeout(fillFurn, 30); }); }
+  openSheet(`<div class="advhd"><b>もようがえ</b></div><div class="row" style="gap:8px;margin:0 0 14px"><button class="btn go" style="flex:1;padding:13px" data-act="roomedit">家具を動かす・しまう</button><button class="btn" style="flex:1;padding:13px" data-act="roomview">お部屋をながめる</button></div>${secs}`); setTimeout(fillFurn, 30); }); }
 /* 家具を動かすモード */
 let roomEditing = false, roomSel = null;
 function roomEdit(on, selId){ if (!ROOM) return; roomEditing = !!on; document.body.classList.toggle('roomedit', roomEditing); ROOM.setEdit(roomEditing); ROOM.setAdvBox(!roomEditing && advLeft() > 0); roomSel = null; renderEditbar(); if (!roomEditing) render(); }
@@ -4861,7 +4870,7 @@ function syncRoom(){
 }
 let ROOM_P = null;
 function ensureRoom(){ if (ROOM) return Promise.resolve(ROOM); if (ROOM_FAIL) return Promise.resolve(null); if (ROOM_P) return ROOM_P; const el = $('room3d'); ROOM_LOADING = true;
-  return ROOM_P = import('./kaji-room3d.js').then(m => { RMOD = m; ROOM = m.mountRoom(el, { shiftY:.01, onLongPress:() => { if (roomEditing) return; roomEdit(true); try { navigator.vibrate && navigator.vibrate(12); } catch (e) {} }, onLayout:L => { const st = settings(); put({ ...st, layout:L }); }, onSelect:info => { roomSel = info; renderEditbar(); }, rot:treeMem().rot, onRot:r => { const t = treeMem(); t.rot = r; treeSave(t); }, onTap:(id, gift) => { if (id === 'advbox'){ chime('bell'); setTimeout(advSheet, 250); return; } if (!gift) return; chime('do'); setTimeout(() => ornSheet(id, gift), 250); }, onZoomTap:() => closeSheet(), onTree:() => chime('do'), onSpin:() => { try { localStorage.setItem('kaji_spun', '1'); } catch (e) {} } }); try { if (!localStorage.getItem('kaji_spun')) setTimeout(() => toast('ツリーは指でくるっと回せるよ'), 1500); else if (advBadge() && !localStorage.getItem('kaji_advhint')){ localStorage.setItem('kaji_advhint', '1'); setTimeout(() => toast('🎁 アドベントのとびらがあいてるよ'), 1500); } } catch (e) {} ROOM_LOADING = false; return ROOM; })
+  return ROOM_P = import('./kaji-room3d.js').then(m => { RMOD = m; ROOM = m.mountRoom(el, { shiftY:.01, onLongPress:() => { if (roomEditing) return; roomEdit(true); try { navigator.vibrate && navigator.vibrate(12); } catch (e) {} }, onLayout:L => { const st = settings(); put({ ...st, layout:L }); }, onSelect:info => { roomSel = info; renderEditbar(); }, rot:treeMem().rot, onRot:r => { const t = treeMem(); t.rot = r; treeSave(t); }, onTap:(id, gift) => { if (id === 'advbox'){ chime('bell'); setTimeout(advSheet, 250); return; } if (!gift) return; chime('do'); setTimeout(() => ornSheet(id, gift), 250); }, onZoomTap:() => closeSheet(), onTree:() => chime('do'), onSpin:() => { try { localStorage.setItem('kaji_spun', '1'); } catch (e) {} } }); try { if (!localStorage.getItem('kaji_spun')) setTimeout(() => toast('ツリーは指でくるっと回せるよ'), 1500); else if (advBadge() && !localStorage.getItem('kaji_advhint')){ localStorage.setItem('kaji_advhint', '1'); setTimeout(() => toast('アドベントのとびらがあいてるよ'), 1500); } } catch (e) {} ROOM_LOADING = false; return ROOM; })
     .catch(e => { console.warn(e); ROOM_FAIL = true; ROOM_LOADING = false; render(); return null; });
 }
 /* オーナメントの説明 */
@@ -4874,7 +4883,7 @@ const giftName = id => { try { return ROOM ? ROOM.giftType(id).n : 'ありがと
 const giftPic = id => { try { if (ROOM) return `<img src="${ROOM.thumbGift(id)}" alt="" style="width:130px;height:130px;object-fit:contain">`; } catch (e) {} return `<svg viewBox="-12 -16 34 30" width="120" height="106">${giftSVG(0, 10, 16, 12, 6, '#e85050', '#fff0c0', 'dot', 'og1')}</svg>`; };
 function ornSheet(id, gift){ const l = S.items[id]; if (!l) return; const k = ornamentOf(l), mine = l.by === S.me && !l.both, when = `${dayKey(l.at).slice(5).replace('-','/')} ${hm(l.at)}`;
   openSheet(`<div class="ornsheet">${gift ? giftPic(l.id) : ornIcon(k, 120)}<b>${gift ? esc(giftName(l.id)) : ORN[k].n}</b>${gift ? '<div class="muted" style="margin-top:-2px">ありがとうのプレゼント</div>' : ''}${gift ? '' : `<p class="odesc">${esc(ornDesc(k))}</p>`}<div class="muted">${when}　${esc(whoText(l))}が「${esc(l.name)}」</div>
-    ${mine || !canThank(l) ? (l.thanks ? '<div class="thanks on" style="margin-top:12px">♥ ありがとうが届いてる</div>' : '') : `<button class="btn ${l.thanks ? 'ghost' : 'go'}" style="margin-top:14px;padding:12px 22px" data-act="othanks" data-id="${l.id}">${l.thanks ? '♥ ありがとう、とどいてるよ' : '♡ ありがとう'}</button>`}</div>`); }
+    ${mine || !canThank(l) ? (l.thanks ? `<div class="thanks on" style="margin-top:12px">${ICO.heart} ありがとうが届いてる</div>` : '') : `<button class="btn ${l.thanks ? 'ghost' : 'go'}" style="margin-top:14px;padding:12px 22px" data-act="othanks" data-id="${l.id}">${l.thanks ? `${ICO.heart} ありがとう、とどいてるよ` : `${ICO.heartO} ありがとう`}</button>`}</div>`); }
 
 function viewWeek(){
   const ws = weekStart(weekOff);
@@ -4901,7 +4910,7 @@ function viewWeek(){
   if (k){
     const logs = logsOn(k);
     html += `<h2>${k.slice(5).replace('-','/')} の家事</h2><div class="panel">${timeline(logs, k===tk)}`;
-    html += logs.length ? logs.map(l => `<div class="minirow"><span class="t">${hm(l.at)}</span><span class="dot ${cls(l)}"></span><span class="n">${esc(l.name)}${l.thanks?' <span style="color:#d0546b">♥</span>':''}</span></div>`).join('') : `<div class="empty">記録なし</div>`;
+    html += logs.length ? logs.map(l => `<div class="minirow"><span class="t">${hm(l.at)}</span><span class="dot ${cls(l)}"></span><span class="n">${esc(l.name)}${l.thanks?` <span style="color:#d0546b">${ICO.heart}</span>`:''}</span></div>`).join('') : `<div class="empty">記録なし</div>`;
     html += `</div>`;
   } else {
     html += ``;
@@ -4920,7 +4929,7 @@ function viewReview(){
   html += open.length ? `<div class="letters">${open.map(n => noteRow(n)).join('')}</div>` : `<div class="panel"><div class="empty">ポストはからっぽ</div></div>`;
   const pk = paperNow();
   html += `<div class="ptitle">便箋をえらぶ</div>${paperPicker(pk)}<div class="letter compose p-${pk}" id="composeL" data-paper="${pk}"><div class="lto">${esc(to)}へ</div><textarea class="t" id="newnote" placeholder="あとで話したいこと、つたえたいこと"></textarea>
-    <div class="row" style="margin-top:8px;justify-content:flex-end"><button class="btn small go" data-act="addnote">✉ おくる</button></div></div>`;
+    <div class="row" style="margin-top:8px;justify-content:flex-end"><button class="btn small go" data-act="addnote">${ICO.mail} おくる</button></div></div>`;
   if (closed.length) html += `<h2>よんだおてがみ</h2><div class="letters done">` + closed.slice(0, 20).map(n => noteRow(n)).join('') + `</div>`;
   if (!xmasOn(0)) html += bouquetSection();
   return html;
@@ -4985,7 +4994,7 @@ function viewSettings(){
   html += `<h2>家族の名前</h2><div class="panel">
     <div class="row"><span class="dot h"></span><input class="t" id="name_h" value="${esc(n.h)}"></div>
     <div class="row" style="margin-top:8px"><span class="dot y"></span><input class="t" id="name_y" value="${esc(n.y)}"></div>
-    <div class="row" style="margin-top:8px"><span class="muted" style="width:12px;text-align:center">♡</span><input class="t" id="name_k" value="${esc(n.k || '')}" placeholder="こどもの名前"></div>
+    <div class="row" style="margin-top:8px"><span class="muted" style="width:12px;text-align:center"></span><input class="t" id="name_k" value="${esc(n.k || '')}" placeholder="こどもの名前"></div>
     <div class="row" style="margin-top:10px;justify-content:flex-end"><button class="btn small" data-act="savenames">保存</button></div></div>`;
 
   html += `<h2>この端末を使う人</h2><div class="panel"><div class="seg">
@@ -5160,7 +5169,7 @@ document.addEventListener('click', e => {
     case 'orn': { const l = S.items[id]; if (!l) break; const g = el.querySelector('.sw'); if (g){ g.classList.remove('tap'); void g.getBBox(); g.classList.add('tap'); }
       const k = ornamentOf(l), mine = l.by === S.me && !l.both, gift = !!el.dataset.gift, when = `${dayKey(l.at).slice(5).replace('-','/')} ${hm(l.at)}`;
       setTimeout(() => openSheet(`<div class="ornsheet">${gift ? giftPic(l.id) : ornIcon(k, 120)}<b>${gift ? esc(giftName(l.id)) : ORN[k].n}</b>${gift ? '<div class="muted" style="margin-top:-2px">ありがとうのプレゼント</div>' : ''}${gift ? '' : `<p class="odesc">${esc(ornDesc(k))}</p>`}<div class="muted">${when}　${esc(whoText(l))}が「${esc(l.name)}」</div>
-        ${mine || !canThank(l) ? (l.thanks ? '<div class="thanks on" style="margin-top:12px">♥ ありがとうが届いてる</div>' : '') : `<button class="btn ${l.thanks ? 'ghost' : 'go'}" style="margin-top:14px;padding:12px 22px" data-act="othanks" data-id="${l.id}">${l.thanks ? '♥ ありがとう、とどいてるよ' : '♡ ありがとう'}</button>`}</div>`), 220); break; }
+        ${mine || !canThank(l) ? (l.thanks ? `<div class="thanks on" style="margin-top:12px">${ICO.heart} ありがとうが届いてる</div>` : '') : `<button class="btn ${l.thanks ? 'ghost' : 'go'}" style="margin-top:14px;padding:12px 22px" data-act="othanks" data-id="${l.id}">${l.thanks ? `${ICO.heart} ありがとう、とどいてるよ` : `${ICO.heartO} ありがとう`}</button>`}</div>`), 220); break; }
     case 'othanks': { if (!L) break; if (!L.thanks) burst(el, 'heart'); toggleThanks(L); closeSheet(); break; }
     case 'advent': advSheet(); break;
     case 'roomedit': closeSheet(); roomEdit(true); break;
