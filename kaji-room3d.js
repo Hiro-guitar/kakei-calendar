@@ -90,9 +90,25 @@ function cutaway(p){ const hide = p ? { left:p.x < -RW / 2 + .02, right:p.x > RW
   sideWalls[0].visible = wainS[0].visible = !hide.left; sideWalls[1].visible = wainS[1].visible = !hide.right;
   back.visible = wainB.visible = win.visible = outside.visible = !hide.back; for (const k of ['curtain', 'wintop', 'sill', 'outside']) if (mounted[k]) mounted[k].visible = !hide.back;
   for (const o of Object.values(inst)) if (o.rec.wall) o.g.visible = !hide[o.rec.wall];
-  const fr = !!p && p.z < FRONT - .02; frontWall.visible = wainF.visible = fr; }
+  const fr = !!p && p.z < FRONT - .02; frontWall.visible = wainF.visible = fr; if (fr) ensureDoor(); if (doorG){ doorG.visible = fr; doorG.userData.wreath.visible = !nyMode; } }
+/* 手前の壁の入り口（木のドア・真ちゅうのノブ・リース・玄関マット）。はじめて手前を向いたときに作る */
+let doorG = null;
+function ensureDoor(){ if (doorG) return; const g = doorG = new THREE.Group(); const DW = .92, DH = 2.15, DX = 1.1, z = FRONT;
+  const wood = M('#a8703e', { roughness:.55 }), dark = M('#7a4b2a', { roughness:.6 }), brass = M('#d9b45a', { roughness:.3, metalness:.7 });
+  // 枠
+  for (const [w, h, x, y] of [[DW + .24, .12, 0, DH + .06], [.12, DH + .12, -DW / 2 - .06, DH / 2], [.12, DH + .12, DW / 2 + .06, DH / 2]]) addM(g, RB(w, h, .18, .02), dark, DX + x, y, z - .09);
+  // 扉と4枚のパネル
+  addM(g, RB(DW, DH, .07, .02), wood, DX, DH / 2, z - .12);
+  for (const [x, y, h] of [[-.2, 1.55, .78], [.2, 1.55, .78], [-.2, .55, .78], [.2, .55, .78]]) addM(g, RB(.3, h, .03, .02), M('#b8804a', { roughness:.5 }), DX + x, y, z - .17);
+  // ノブと鍵穴
+  addM(g, new THREE.SphereGeometry(.045, 16, 12), brass, DX - DW / 2 + .12, 1.02, z - .2); addM(g, RB(.05, .16, .02, .01), brass, DX - DW / 2 + .12, 1.02, z - .16);
+  // ドアのリース（クリスマスの間）
+  const wr = wallDeco('a'); wr.scale.setScalar(.55); wr.rotation.y = Math.PI; wr.position.set(DX, 1.72, z - .18); g.add(wr); g.userData.wreath = wr;
+  // 玄関マット
+  addM(g, RB(.9, .03, .55, .015), M('#8a5a32', { roughness:1 }), DX, .015, z - .55); addM(g, RB(.78, .032, .43, .012), M('#c8302c', { roughness:1 }), DX, .017, z - .55);
+  g.traverse(o => { if (o.isMesh){ o.castShadow = true; o.receiveShadow = true; } }); scene.add(g); }
 function setView(on){ vptr.clear(); if (on){ placeCamera(); const t = target.clone(), off = camera.position.clone().sub(t), dist = off.length();
-    view = { t, dist, d0:dist, yaw:0, pitch:Math.asin(off.y / dist), y0:Math.asin(off.y / dist) }; viewApply(); } else { view = null; cutaway(null); placeCamera(); shadowsDirty = true; } }
+    view = { t, dist, d0:dist, yaw:0, pitch:Math.asin(off.y / dist), y0:Math.asin(off.y / dist) }; viewApply(); } else { view = null; cutaway(null); if (doorG) doorG.visible = false; placeCamera(); shadowsDirty = true; } }
 function viewReset(){ if (!view) return; Object.assign(view, { yaw:0, pitch:view.y0, dist:view.d0 }); viewApply(); }
 function viewDown(e){ cv.setPointerCapture(e.pointerId); vptr.set(e.pointerId, { x:e.clientX, y:e.clientY, x0:e.clientX, y0:e.clientY, t:performance.now() }); view.pinch = null; }
 function viewMove(e){ const q = vptr.get(e.pointerId); if (!q) return;
@@ -1218,5 +1234,5 @@ function setSeason(ny){ ny = !!ny; if (ny === nyMode) return; nyMode = ny; if (n
   firBase.forEach(m => m.visible = !ny); for (const k of TREE_PARTS) if (mounted[k]) mounted[k].visible = !ny; if (mochi) mochi.group.visible = ny;
   slots.length = 0; (ny ? MOCHI_SLOTS : TREE_SLOTS).forEach(p => slots.push(p)); const L = lastList, G = lastGifts; clearAll(); sig = ''; if (L) sync(L, G || []); shadowsDirty = true; }
 const _mochi = (n = 14, sc = 1.6) => { const mb = makeMochibana(7); mb.group.scale.setScalar(sc); mb.branches.slice(0, n * 2).forEach((cv, i) => { if (i % 2) return; const o = mb.makers[(i / 2) % mb.makers.length](); o.scale.setScalar(1.25); mb.hang(o, cv.getPointAt(.55 + (i % 5) * .07), .05 + (i % 3) * .025); }); mb.group.traverse(m => { if (m.isMesh) m.castShadow = true; }); tree.visible = false; treeRoot.add(mb.group); shadowsDirty = true; };
-return { setView, viewReset, viewing:() => !!view, setSeason, _mochi, thumbGift, giftType:id => GIFT_TYPES[giftSeed(id) % GIFT_TYPES.length], setAdvBox, zoomTo, zoomOut, zoomed:() => zoomed, _dbg, _proj, sync, setRoom, snapshot, setEdit, editRotate, editRemove, autoPlace, layoutOf, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize(){ renderer.setSize(VW(), VH()); placeCamera(); } };
+return { setView, viewReset, viewing:() => !!view, _view:(y, p, d) => { if (!view) return; view.yaw = y; view.pitch = p; if (d) view.dist = d; viewApply(); }, setSeason, _mochi, thumbGift, giftType:id => GIFT_TYPES[giftSeed(id) % GIFT_TYPES.length], setAdvBox, zoomTo, zoomOut, zoomed:() => zoomed, _dbg, _proj, sync, setRoom, snapshot, setEdit, editRotate, editRemove, autoPlace, layoutOf, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize(){ renderer.setSize(VW(), VH()); placeCamera(); } };
 }
