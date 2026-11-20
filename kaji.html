@@ -164,6 +164,7 @@ body.dragmode{user-select:none;-webkit-user-select:none}
 .qbar,.qbar *, #grppop, #grppop *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .qbar,.qbar *,#grppop,#grppop *,#menupop *,#appbar *{-webkit-tap-highlight-color:transparent}
 .qb.dragging{box-shadow:none!important;opacity:1}.qb.dragging .qi{box-shadow:0 12px 22px rgba(80,50,10,.3)}
+#grppop .gtime{display:flex;align-items:center;gap:8px;padding:0 4px 8px;font-size:12px;font-weight:800;color:#8a7a5a}#grppop .gtin{position:relative;padding:5px 12px;border-radius:999px;background:#f6eedc;color:var(--navy)}#grppop .gtin.set{background:#e8a83a;color:#fff}#grppop .gtin input{position:absolute;inset:0;opacity:0;width:100%;height:100%;font-size:16px}#grppop .gtnow{font-size:11px;color:#8a9aa6;text-decoration:underline}
 #grppop .gwho{display:flex;gap:6px;padding:0 2px 8px}#grppop .gwho button{flex:1;padding:6px 0;border-radius:999px;background:#f6eedc;font-size:12px;font-weight:800;color:#8a7a5a}#grppop .gwho button.on{background:var(--navy);color:#fff}#grppop .gwho button.on.w-y{background:var(--y)}#grppop .gwho button.on.w-h{background:var(--h)}#grppop .gwho button.on.w-both{background:#e8a83a}
 #grppop .gempty{padding:10px;text-align:center;font-size:12px;color:#a8946a}
 #grppop .gadd{width:100%;margin-top:8px;padding:9px;border-radius:14px;border:2px dashed #e2d2ae;color:#a8864a;font-weight:800;font-size:13px}
@@ -994,8 +995,11 @@ function qbarHTML(){
     + `<button class="qb qadd" data-act="gedit" data-g=""><span class="qi">${QI.plus}</span><span class="ql">グループ</span></button></div>`;
 }
 /* グループの吹き出し */
-let grpEdit = false, grpWho = null;
-function grpOpen(gid, btn, edit, keepWho){ const g = S.items[gid]; if (!g) return; grpEdit = !!edit; if (!keepWho) grpWho = S.me; let m = $('grppop'); if (!m){ m = document.createElement('div'); m.id = 'grppop'; document.body.appendChild(m); }
+let grpEdit = false, grpWho = null, grpAt = null; // grpAt：'HH:MM'（null＝いま）
+const hmNow = () => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+// えらんだ時刻を、きょう（朝4時区切り）のその時刻に。未来になるときは前の日のこと
+function atFromHM(hm){ if (!hm) return Date.now(); const [H, Mi] = hm.split(':').map(Number), d = appDate(); const t = new Date(d.getFullYear(), d.getMonth(), d.getDate(), H, Mi, 0).getTime() + (H < 4 ? 864e5 : 0); return t > Date.now() + 60e3 ? t - 864e5 : t; }
+function grpOpen(gid, btn, edit, keepWho){ const g = S.items[gid]; if (!g) return; grpEdit = !!edit; if (!keepWho){ grpWho = S.me; grpAt = null; } let m = $('grppop'); if (!m){ m = document.createElement('div'); m.id = 'grppop'; document.body.appendChild(m); }
   btn = btn || document.querySelector(`[data-act=qgrp][data-g="${gid}"]`); if (!btn) return;
   const logs = logsOn(dayKey(Date.now())), cs = choresIn(gid), E = grpEdit;
   const cnt = c => logs.filter(l => l.choreId === c.id).length, rowsM = new Map();
@@ -1009,7 +1013,7 @@ function grpOpen(gid, btn, edit, keepWho){ const g = S.items[gid]; if (!g) retur
   m.classList.toggle('editing', E);
   m.innerHTML = E
     ? `<div class="gh"><span>${esc(g.name)}<small>　へんしゅう中</small></span><button class="gdone" data-act="gedmode" data-g="${gid}" data-v="0">おわる</button></div><div class="ghint">✎を押すと直せるよ。長押しして動かすと並べかえ</div><div class="gl">${rows}</div><button class="gadd" data-act="rownew" data-g="${gid}">＋ 新しい行を足す</button><button class="gadd sub" data-act="gedit" data-g="${gid}">グループの名前・アイコンを変える</button>`
-    : `<div class="gh"><span>${esc(g.name)}</span><button class="ged" data-act="gedmode" data-g="${gid}" data-v="1">✎ へんしゅう</button></div><div class="gwho">${[[S.me, nm(S.me)], [other(S.me), nm(other(S.me))], ['both', 'ふたりで']].map(([v, l]) => `<button class="${grpWho === v ? 'on' : ''} w-${v}" data-act="gwho" data-v="${v}">${esc(l)}</button>`).join('')}</div><div class="gl">${rows}${free}${!rows && !free ? '<div class="gempty">まだ家事がないよ</div>' : ''}</div>${!rows ? `<button class="gadd" data-act="rownew" data-g="${gid}">＋ 家事を足す</button>` : ''}`;
+    : `<div class="gh"><span>${esc(g.name)}</span><button class="ged" data-act="gedmode" data-g="${gid}" data-v="1">✎ へんしゅう</button></div><div class="gwho">${[[S.me, nm(S.me)], [other(S.me), nm(other(S.me))], ['both', 'ふたりで']].map(([v, l]) => `<button class="${grpWho === v ? 'on' : ''} w-${v}" data-act="gwho" data-v="${v}">${esc(l)}</button>`).join('')}</div><div class="gtime"><span>🕐 やった時間</span><label class="gtin ${grpAt ? 'set' : ''}"><b>${grpAt ? grpAt : 'いま'}</b><input type="time" id="gtimein" value="${grpAt || hmNow()}"></label>${grpAt ? '<button class="gtnow" data-act="gtnow">いまにもどす</button>' : ''}</div><div class="gl">${rows}${free}${!rows && !free ? '<div class="gempty">まだ家事がないよ</div>' : ''}</div>${!rows ? `<button class="gadd" data-act="rownew" data-g="${gid}">＋ 家事を足す</button>` : ''}`;
   const r = btn.getBoundingClientRect(), W = Math.min(320, innerWidth - 20), cx = r.left + r.width / 2, L = Math.min(Math.max(10, cx - W / 2), innerWidth - W - 10);
   m.style.width = W + 'px'; m.style.left = L + 'px'; m.style.bottom = (innerHeight - r.top + 12) + 'px'; m.style.setProperty('--tail', (cx - L - 9) + 'px'); m.dataset.g = gid; requestAnimationFrame(() => m.classList.add('open')); }
 /* かんたん追加：行にボタンを足す／新しい行を足す */
@@ -1107,12 +1111,12 @@ const cls = l => l.both ? 'both' : l.by;
 const bg = l => l.both ? 'linear-gradient(90deg,var(--h) 50%,var(--y) 50%)' : `var(--${l.by})`;
 const whoText = l => l.both ? 'ふたりで' : nm(l.by);
 const involves = (l,k) => l.by === k || !!l.both;
-function doChore(c, both, who){
+function doChore(c, both, who, at){
   if (!S.me) return;
-  const lg = { id:uid(), kind:'log', choreId:c.id, name:c.name, by:who || S.me, rec:S.me, both:!!both, at:Date.now(), thanks:false, ...ornSlot() };
+  const lg = { id:uid(), kind:'log', choreId:c.id, name:c.name, by:who || S.me, rec:S.me, both:!!both, at:at || Date.now(), thanks:false, ...ornSlot() };
   const isNew = isNewFind(lg);
   popId = lg.id; chime('do'); put(lg); setTimeout(() => { popId = null; }, 600);
-  if (isNew) newFlower(lg); else toast(both ? `「${c.name}」ふたりでやった！` : who && who !== S.me ? `「${c.name}」${nm(who)}の分を記録したよ` : `「${c.name}」やった！`);
+  if (isNew) newFlower(lg); else toast((both ? `「${c.name}」ふたりでやった！` : who && who !== S.me ? `「${c.name}」${nm(who)}の分を記録したよ` : `「${c.name}」やった！`) + (at ? `（${new Date(at).getHours()}:${String(new Date(at).getMinutes()).padStart(2, '0')}）` : ''));
 }
 let freeBoth = false;
 function doFree(name){
@@ -5225,8 +5229,8 @@ document.addEventListener('click', e => {
     case 'zk': sheetZukan(el.dataset.k); break;
     case 'talk': talkIdx++; lastTyped = ''; render(); break;
     case 'qdo': { const c = S.items[id]; if (!c) break; // 何度でも記録できる。うっかり2回押しただけ（2秒以内）は1回にする
-      const recent = all('log').some(l => l.choreId === id && l.rec === S.me && Date.now() - l.at < 2000); if (recent) break;
-      const qi = el.querySelector('.qi'); if (qi){ qi.classList.remove('hit'); void qi.offsetWidth; qi.classList.add('hit'); } burst(el, 'star'); doChore(c, grpWho === 'both', grpWho === 'both' ? S.me : grpWho); break; } // 続けて入れられるように、開いたまま
+      const recent = all('log').some(l => l.choreId === id && l.rec === S.me && Date.now() - (l.updatedAt || l.at) < 2000); if (recent) break;
+      const qi = el.querySelector('.qi'); if (qi){ qi.classList.remove('hit'); void qi.offsetWidth; qi.classList.add('hit'); } burst(el, 'star'); doChore(c, grpWho === 'both', grpWho === 'both' ? S.me : grpWho, grpAt ? atFromHM(grpAt) : 0); break; } // 続けて入れられるように、開いたまま
     case 'qfree': grpClose(); sheetFree(); break;
     case 'qgrp': { const g = el.dataset.g, cs = choresIn(g), m = $('grppop');
       if (m && m.classList.contains('open') && m.dataset.g === g){ grpClose(); break; }
@@ -5239,6 +5243,7 @@ document.addEventListener('click', e => {
       redit.ids.forEach(id => { const c = S.items[id]; if (!c) return; const [r0, a] = rowAct(c); const name = (c.name.startsWith(r0) ? row + c.name.slice(r0.length) : c.name).slice(0, 12); put({ ...c, row, act:a, icon:redit.icon, name }); });
       closeSheet(); redit = null; toast('ほぞんしたよ'); setTimeout(() => grpOpen(g, null, true), 250); break; }
     case 'redel': { if (!el.dataset.sure){ el.dataset.sure = '1'; el.textContent = 'もう一度押すと削除するよ'; return; } const g = redit.gid; redit.ids.forEach(id => S.items[id] && remove(S.items[id])); closeSheet(); redit = null; toast('削除したよ'); setTimeout(() => grpOpen(g, null, true), 250); break; }
+    case 'gtnow': grpAt = null; grpOpen($('grppop').dataset.g, null, false, true); break;
     case 'gwho': grpWho = el.dataset.v; grpOpen($('grppop').dataset.g, null, false, true); break;
     case 'gedmode': grpOpen(el.dataset.g, null, el.dataset.v === '1'); break;
     case 'rowadd': grpClose(); sheetRowAdd(el.dataset.id); break;
@@ -5311,7 +5316,7 @@ document.addEventListener('click', e => {
   }
 });
 $('scrim').addEventListener('click', closeSheet);
-document.addEventListener('change', e => { if (e.target.id === 'freeboth') freeBoth = e.target.checked; });
+document.addEventListener('change', e => { if (e.target.id === 'freeboth') freeBoth = e.target.checked; if (e.target.id === 'gtimein'){ grpAt = e.target.value || null; const m = $('grppop'); if (m && m.dataset.g) grpOpen(m.dataset.g, null, false, true); } });
 $('mechip').addEventListener('click', () => { tab = 'settings'; render(); });
 $('fab').addEventListener('click', sheetFree);
 // ピンチやダブルタップで拡大しない（iPhoneのSafariは viewport の指定を無視するので、ジェスチャーも止める）
