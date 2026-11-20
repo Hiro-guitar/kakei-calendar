@@ -109,11 +109,17 @@ function ensureDoor(){ if (doorG) return; const g = doorG = new THREE.Group(); c
   g.traverse(o => { if (o.isMesh){ o.castShadow = true; o.receiveShadow = true; } }); scene.add(g); }
 function setView(on){ vptr.clear(); if (on){ placeCamera(); const t = target.clone(), off = camera.position.clone().sub(t), dist = off.length();
     view = { t, dist, d0:dist, yaw:0, pitch:Math.asin(off.y / dist), y0:Math.asin(off.y / dist) }; viewApply(); } else { view = null; cutaway(null); if (doorG) doorG.visible = false; placeCamera(); shadowsDirty = true; } }
-function viewReset(){ if (!view) return; Object.assign(view, { yaw:0, pitch:view.y0, dist:view.d0 }); viewApply(); }
+function viewReset(){ if (!view) return; Object.assign(view, { yaw:0, pitch:view.y0, dist:view.d0 }); view.t.copy(target); viewApply(); }
 function viewDown(e){ cv.setPointerCapture(e.pointerId); vptr.set(e.pointerId, { x:e.clientX, y:e.clientY, x0:e.clientX, y0:e.clientY, t:performance.now() }); view.pinch = null; }
 function viewMove(e){ const q = vptr.get(e.pointerId); if (!q) return;
-  if (vptr.size >= 2){ const [a, b] = [...vptr.values()]; const d0 = Math.hypot(a.x - b.x, a.y - b.y); q.x = e.clientX; q.y = e.clientY; const d1 = Math.hypot(a.x - b.x, a.y - b.y);
-    if (d0 > 10){ view.dist = Math.max(1.2, Math.min(view.d0 * 1.2, view.dist * d0 / d1)); viewApply(); } return; }
+  if (vptr.size >= 2){ const [a, b] = [...vptr.values()]; const d0 = Math.hypot(a.x - b.x, a.y - b.y), m0x = (a.x + b.x) / 2, m0y = (a.y + b.y) / 2; q.x = e.clientX; q.y = e.clientY;
+    const d1 = Math.hypot(a.x - b.x, a.y - b.y), m1x = (a.x + b.x) / 2, m1y = (a.y + b.y) / 2;
+    if (d0 > 10) view.dist = Math.max(1.2, Math.min(view.d0 * 1.2, view.dist * d0 / d1));
+    // 2本指をそろえて動かすと、見ている中心が床の上をすべる（部屋の隅に寄れる）
+    const s2 = view.dist * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 2 / Math.max(1, cv.clientHeight), dx = (m1x - m0x) * s2, dy = (m1y - m0y) * s2;
+    const right = new THREE.Vector3(Math.cos(view.yaw), 0, -Math.sin(view.yaw)), fwd = new THREE.Vector3(-Math.sin(view.yaw), 0, -Math.cos(view.yaw));
+    view.t.addScaledVector(right, -dx).addScaledVector(fwd, dy / Math.max(.35, Math.sin(view.pitch) + .2) * .6);
+    view.t.x = Math.max(-RW / 2 + .2, Math.min(RW / 2 - .2, view.t.x)); view.t.z = Math.max(bz + .2, Math.min(FRONT - .2, view.t.z)); viewApply(); return; }
   const dx = e.clientX - q.x, dy = e.clientY - q.y; q.x = e.clientX; q.y = e.clientY; const k = Math.PI / Math.max(700, cv.clientWidth * 2.2);
   view.yaw = view.yaw - dx * k; view.pitch = Math.max(.04, Math.min(1.4, view.pitch + dy * k)); viewApply(); }
 function viewUp(e){ const q = vptr.get(e.pointerId); vptr.delete(e.pointerId); if (q && vptr.size === 0 && Math.hypot(e.clientX - q.x0, e.clientY - q.y0) < 7 && performance.now() - q.t < 400) tapAt(e); }
