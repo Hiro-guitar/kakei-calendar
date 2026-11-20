@@ -327,8 +327,8 @@ function outsideTick(now){ const t = now / 1000;
   { const a = snowGeo.attributes.position; for (let i = 0; i < snowN; i++){ let y = a.getY(i) - .01 - (i % 3) * .003; if (y < .6) y = 5.6; a.setY(i, y); a.setX(i, a.getX(i) + Math.sin(t * 1.1 + i) * .0016); } a.needsUpdate = true; }
   { const a = nearGeo.attributes.position; for (let i = 0; i < nearN; i++){ let y = a.getY(i) - .016; if (y < .7) y = 4.2; a.setY(i, y); a.setX(i, a.getX(i) + Math.sin(t * .9 + i * 1.7) * .0026); } a.needsUpdate = true; }
   for (const lt of litTrees) lt.userData.bulbs.forEach((b, i) => { b.visible = Math.sin(t * 2.2 + i * 1.7) > -.6; }); if (village.visible) vLights.forEach((p, i) => { p.material.opacity = .78 + Math.sin(t * 3.1 + i * 1.7) * .17; }); }
-/* イブ（12/24、朝4時区切り）だけ、窓の外の夜空をサンタのそりがときどき横切る */
-const isEve = () => { if (window.KAJI_EVE) return true; const d = new Date(Date.now() - 4 * 36e5); return d.getMonth() === 11 && d.getDate() === 24; };
+/* クリスマスの時期（12/25まで、朝4時区切り）は、窓の外の夜空をサンタのそりがときどき横切る */
+const isEve = () => { if (window.KAJI_EVE) return true; const d = new Date(Date.now() - 4 * 36e5), m = d.getMonth(); return (m === 10 && d.getDate() >= 19) || (m === 11 && d.getDate() <= 25); };
 const SL = buildSleigh(), sleigh = SL.root; sleigh.visible = false; sleigh.scale.setScalar(1.6); outside.add(sleigh);
 // そりのうしろのキラキラ
 const trailN = 40, trailGeo = new THREE.BufferGeometry(), trailPos = new Float32Array(trailN * 3).fill(-99); trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
