@@ -899,7 +899,7 @@ function mbNote(ctx, out, t, n, vol, pan, lead){
   for (const [mul, amp, dec, cents] of parts){
     const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.value = f * mul; o.detune.value = cents;
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(amp * vol, t + .005); g.gain.exponentialRampToValueAtTime(.0004, t + dec * (n > 84 ? .7 : 1));
-    o.connect(g); g.connect(dst); o.start(t); o.stop(t + dec + .05);
+    o.connect(g); g.connect(dst); o.start(t); o.stop(t + dec + .05); (MB.osc || (MB.osc = [])).push(o);
   }
 }
 // iPhoneは「指をはなした」タイミングでしか音を出す許可をくれないので、最初のタッチで音の準備をしておく
@@ -912,6 +912,7 @@ for (const ev of ['touchend', 'pointerup', 'click']) document.addEventListener(e
 function musicBoxTap(){ if (MB.on && MB.ctx && MB.ctx.state === 'running'){ mbStop(); return; } if (MB.on) mbStop(); mbCtx(true); mbUnlock(); mbPlay(); }
 // 1曲おわったら少し間をあけて次の曲へ（さわって止めるまで順番に流れる）
 function mbPlay(){
+  MB.osc = (MB.osc || []).filter(o => o._t > (MB.ctx ? MB.ctx.currentTime : 0));
   try {
     const ctx = mbCtx();
     const [name, bpm, meter, score, chords] = MB_SONGS[MB.i % MB_SONGS.length]; MB.i++;
@@ -936,7 +937,11 @@ function mbPlay(){
     if (window.kajiToast) window.kajiToast(`♪ ${name}`);
   } catch (e) { MB.on = false; }
 }
-document.addEventListener('visibilitychange', () => { if (document.hidden) mbStop(); });
+// アプリを閉じるときは、ゆっくり消さずにその場で全部止める（途中で音が止められると「プー」と鳴り続けることがあるため）
+function mbKill(){ clearTimeout(MB.timer); const was = MB.on; MB.on = false; for (const o of MB.osc || []){ try { o.stop(0); } catch (e) {} try { o.disconnect(); } catch (e) {} } MB.osc = [];
+  for (const n of [MB.out, MB.comp]) if (n){ try { if (n.gain) n.gain.value = 0; n.disconnect(); } catch (e) {} } MB.out = MB.comp = null; if (was && MB.ctx){ try { MB.ctx.suspend(); } catch (e) {} } }
+document.addEventListener('visibilitychange', () => { if (document.hidden) mbKill(); });
+addEventListener('pagehide', mbKill);
 function xkMusicBox(){ const g = new THREE.Group(); const wd = WOOD('#8a4a22', '#5a2a10', { roughness:.3 }); addM(g, RB(.42, .2, .3, .02), wd, 0, .1); addM(g, RB(.44, .02, .32, .008), M('#e7b84a', { metalness:.6, roughness:.3 }), 0, .2);
   const lid = new THREE.Group(); lid.position.set(0, .21, -.15); lid.rotation.x = -1.2; g.add(lid); addM(lid, RB(.42, .03, .3, .01), wd, 0, 0, .15); addM(lid, new THREE.PlaneGeometry(.36, .24), new THREE.MeshStandardMaterial({ color:'#eef4f8', metalness:.6, roughness:.08 }), 0, -.016, .15, Math.PI / 2);
   const stage = new THREE.Group(); stage.position.set(0, .21, .02); g.add(stage); addM(stage, new THREE.CylinderGeometry(.09, .09, .02, 28), M('#c8302c', { roughness:.6 }), 0, .01); const tr = makeDeco('c15', .2); tr.position.y = .02; stage.add(tr); const sm = makeDeco('snowman', .1); sm.position.set(.06, .02, .02); stage.add(sm);
