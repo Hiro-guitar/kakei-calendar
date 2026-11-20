@@ -703,6 +703,8 @@ function put(item){
   save(); render(); push();
 }
 const remove = item => put({ ...item, deleted:true });
+/* ありがとうは「相手がやって、相手が記録した」家事にだけ。自分が相手の分を記入したものには出さない */
+const canThank = l => !!l && l.by !== S.me && (l.rec || l.by) !== S.me;
 /* その日のもようがえを日ごとに覚えておく（週の写真をその日のお部屋で撮るため）。kind:'lay' id:'lay_YYYY-MM-DD' */
 const laySig = st => JSON.stringify([(st && st.room) || {}, (st && st.layout) || null]);
 function layMemo(prev, st){ if (prev && laySig(prev) === laySig(st)) return; const day = dayKey(Date.now()), id = 'lay_' + day, old = S.items[id];
@@ -4662,7 +4664,7 @@ function choreCard(c, todays){
   if (done){
     meta = `<span>✓ ${hm(last.at)} ${esc(whoText(last))}</span>`;
     if (!last.both && last.by !== S.me) meta += `<button class="join" data-act="join" data-id="${last.id}">＋一緒にやった</button>`;
-    if (last.by !== S.me) meta += `<button class="thanks ${last.thanks?'on':''}" data-act="thanks" data-id="${last.id}">${last.thanks?'♥ ありがとう済':'♡ ありがとう'}</button>`;
+    if (canThank(last)) meta += `<button class="thanks ${last.thanks?'on':''}" data-act="thanks" data-id="${last.id}">${last.thanks?'♥ ありがとう済':'♡ ありがとう'}</button>`;
     else if (last.thanks) meta += `<span class="thanks on">♥ ありがとうが届いてる</span>`;
   }
   const ck = done ? (last.by === S.me
@@ -4681,7 +4683,7 @@ function recordList(logs){
   return `<h2>今日の記録</h2><div class="panel reclist">` + L.map(l => { const c = l.choreId && S.items[l.choreId], ic = QI[c ? choreIcon(c) : choreIcon({ name:l.name })];
     let act = '';
     if (l.by !== S.me && l.rec === S.me) act = `<button class="btn small ghost" data-act="undo" data-id="${l.id}">取消</button>`;
-    else if (l.by !== S.me){ act = `<button class="thanks ${l.thanks ? 'on' : ''}" data-act="thanks" data-id="${l.id}">${l.thanks ? '♥' : '♡'}</button>`; if (!l.both) act = `<button class="join" data-act="join" data-id="${l.id}">＋一緒に</button>` + act; }
+    else if (canThank(l)){ act = `<button class="thanks ${l.thanks ? 'on' : ''}" data-act="thanks" data-id="${l.id}">${l.thanks ? '♥' : '♡'}</button>`; if (!l.both) act = `<button class="join" data-act="join" data-id="${l.id}">＋一緒に</button>` + act; }
     else act = l.thanks ? '<span class="thanks on">♥</span>' : `<button class="btn small ghost" data-act="undo" data-id="${l.id}">取消</button>`;
     return `<div class="recrow"><span class="t">${hm(l.at)}</span><span class="ric">${ic}</span><span class="n">${esc(l.name)}<small><span class="dot ${cls(l)}"></span>${esc(whoText(l))}</small></span>${act}</div>`; }).join('') + `</div>`;
 }
@@ -4709,7 +4711,7 @@ function viewToday(){
   const extra = TODO_MODE ? logs.filter(l => !l.choreId || !dueIds.has(l.choreId)) : [];
   if (extra.length){
     html += `<h2>ほかにやったこと</h2><div class="panel">` + extra.map(l => `<div class="minirow"><span class="t">${hm(l.at)}</span><span class="dot ${cls(l)}"></span><span class="n">${esc(l.name)}</span>
-      ${l.by!==S.me?`<button class="thanks ${l.thanks?'on':''}" data-act="thanks" data-id="${l.id}">${l.thanks?'♥':'♡'}</button>`:''}${(l.by===S.me||l.rec===S.me)&&!l.thanks?`<button class="btn small ghost" data-act="undo" data-id="${l.id}">取消</button>`:(l.by===S.me&&l.thanks?'<span class="thanks on">♥</span>':'')}</div>`).join('') + `</div>`;
+      ${canThank(l)?`<button class="thanks ${l.thanks?'on':''}" data-act="thanks" data-id="${l.id}">${l.thanks?'♥':'♡'}</button>`:''}${(l.by===S.me||l.rec===S.me)&&!l.thanks?`<button class="btn small ghost" data-act="undo" data-id="${l.id}">取消</button>`:(l.by===S.me&&l.thanks?'<span class="thanks on">♥</span>':'')}</div>`).join('') + `</div>`;
   }
   if (!XM) return html;
   // ツリーを画面いっぱいに。リストは下から引き出すシートへ
@@ -4868,7 +4870,7 @@ const giftName = id => { try { return ROOM ? ROOM.giftType(id).n : 'ありがと
 const giftPic = id => { try { if (ROOM) return `<img src="${ROOM.thumbGift(id)}" alt="" style="width:130px;height:130px;object-fit:contain">`; } catch (e) {} return `<svg viewBox="-12 -16 34 30" width="120" height="106">${giftSVG(0, 10, 16, 12, 6, '#e85050', '#fff0c0', 'dot', 'og1')}</svg>`; };
 function ornSheet(id, gift){ const l = S.items[id]; if (!l) return; const k = ornamentOf(l), mine = l.by === S.me && !l.both, when = `${dayKey(l.at).slice(5).replace('-','/')} ${hm(l.at)}`;
   openSheet(`<div class="ornsheet">${gift ? giftPic(l.id) : ornIcon(k, 120)}<b>${gift ? esc(giftName(l.id)) : ORN[k].n}</b>${gift ? '<div class="muted" style="margin-top:-2px">ありがとうのプレゼント</div>' : ''}${gift ? '' : `<p class="odesc">${esc(ornDesc(k))}</p>`}<div class="muted">${when}　${esc(whoText(l))}が「${esc(l.name)}」</div>
-    ${mine ? (l.thanks ? '<div class="thanks on" style="margin-top:12px">♥ ありがとうが届いてる</div>' : '') : `<button class="btn ${l.thanks ? 'ghost' : 'go'}" style="margin-top:14px;padding:12px 22px" data-act="othanks" data-id="${l.id}">${l.thanks ? '♥ ありがとう、とどいてるよ' : '♡ ありがとう'}</button>`}</div>`); }
+    ${mine || !canThank(l) ? (l.thanks ? '<div class="thanks on" style="margin-top:12px">♥ ありがとうが届いてる</div>' : '') : `<button class="btn ${l.thanks ? 'ghost' : 'go'}" style="margin-top:14px;padding:12px 22px" data-act="othanks" data-id="${l.id}">${l.thanks ? '♥ ありがとう、とどいてるよ' : '♡ ありがとう'}</button>`}</div>`); }
 
 function viewWeek(){
   const ws = weekStart(weekOff);
@@ -5154,7 +5156,7 @@ document.addEventListener('click', e => {
     case 'orn': { const l = S.items[id]; if (!l) break; const g = el.querySelector('.sw'); if (g){ g.classList.remove('tap'); void g.getBBox(); g.classList.add('tap'); }
       const k = ornamentOf(l), mine = l.by === S.me && !l.both, gift = !!el.dataset.gift, when = `${dayKey(l.at).slice(5).replace('-','/')} ${hm(l.at)}`;
       setTimeout(() => openSheet(`<div class="ornsheet">${gift ? giftPic(l.id) : ornIcon(k, 120)}<b>${gift ? esc(giftName(l.id)) : ORN[k].n}</b>${gift ? '<div class="muted" style="margin-top:-2px">ありがとうのプレゼント</div>' : ''}${gift ? '' : `<p class="odesc">${esc(ornDesc(k))}</p>`}<div class="muted">${when}　${esc(whoText(l))}が「${esc(l.name)}」</div>
-        ${mine ? (l.thanks ? '<div class="thanks on" style="margin-top:12px">♥ ありがとうが届いてる</div>' : '') : `<button class="btn ${l.thanks ? 'ghost' : 'go'}" style="margin-top:14px;padding:12px 22px" data-act="othanks" data-id="${l.id}">${l.thanks ? '♥ ありがとう、とどいてるよ' : '♡ ありがとう'}</button>`}</div>`), 220); break; }
+        ${mine || !canThank(l) ? (l.thanks ? '<div class="thanks on" style="margin-top:12px">♥ ありがとうが届いてる</div>' : '') : `<button class="btn ${l.thanks ? 'ghost' : 'go'}" style="margin-top:14px;padding:12px 22px" data-act="othanks" data-id="${l.id}">${l.thanks ? '♥ ありがとう、とどいてるよ' : '♡ ありがとう'}</button>`}</div>`), 220); break; }
     case 'othanks': { if (!L) break; if (!L.thanks) burst(el, 'heart'); toggleThanks(L); closeSheet(); break; }
     case 'advent': advSheet(); break;
     case 'roomedit': closeSheet(); roomEdit(true); break;
