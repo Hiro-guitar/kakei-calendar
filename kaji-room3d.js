@@ -82,20 +82,24 @@ function placeCamera(){
 placeCamera();
 /* ---------- ながめるモード：なぞって見回す・2本指で寄る（部屋の中から出ないように） ---------- */
 let view = null; const vptr = new Map();
-function viewApply(){ if (!view) return; const { yaw, pitch } = view, t = view.t; let d = view.dist, p = new THREE.Vector3();
-  for (let i = 0; i < 60; i++){ p.set(t.x + Math.sin(yaw) * Math.cos(pitch) * d, t.y + Math.sin(pitch) * d, t.z + Math.cos(yaw) * Math.cos(pitch) * d);
-    // 部屋の中（奥行きの範囲）では横の壁の内側に、手前の外ではすこし外まで。上は壁より高くてもOK（上からのぞける）
-    const xm = p.z < FRONT ? RW / 2 - .2 : RW / 2 + 1.2; if (Math.abs(p.x) < xm && p.y > .25 && p.z > bz + .3) break; d *= .95; }
-  camera.position.copy(p); camera.aspect = VW() / VH(); camera.lookAt(t); camera.clearViewOffset(); camera.updateProjectionMatrix(); shadowsDirty = true; }
+function viewApply(){ if (!view) return; const { yaw, pitch } = view, t = view.t, d = view.dist, p = new THREE.Vector3();
+  p.set(t.x + Math.sin(yaw) * Math.cos(pitch) * d, Math.max(.3, t.y + Math.sin(pitch) * d), t.z + Math.cos(yaw) * Math.cos(pitch) * d);
+  camera.position.copy(p); camera.aspect = VW() / VH(); camera.lookAt(t); camera.clearViewOffset(); camera.updateProjectionMatrix(); cutaway(p); shadowsDirty = true; }
+// どうぶつの森みたいに、カメラと部屋のあいだにある壁は透かす（その壁にかけた物も）
+function cutaway(p){ const hide = p ? { left:p.x < -RW / 2 + .02, right:p.x > RW / 2 - .02, back:p.z < bz + .02 } : {};
+  sideWalls[0].visible = wainS[0].visible = !hide.left; sideWalls[1].visible = wainS[1].visible = !hide.right;
+  back.visible = wainB.visible = win.visible = outside.visible = !hide.back; for (const k of ['curtain', 'wintop', 'sill', 'outside']) if (mounted[k]) mounted[k].visible = !hide.back;
+  for (const o of Object.values(inst)) if (o.rec.wall) o.g.visible = !hide[o.rec.wall];
+  const fr = !!p && p.z < FRONT - .02; frontWall.visible = wainF.visible = fr; }
 function setView(on){ vptr.clear(); if (on){ placeCamera(); const t = target.clone(), off = camera.position.clone().sub(t), dist = off.length();
-    view = { t, dist, d0:dist, yaw:0, pitch:Math.asin(off.y / dist), y0:Math.asin(off.y / dist) }; viewApply(); } else { view = null; placeCamera(); shadowsDirty = true; } }
+    view = { t, dist, d0:dist, yaw:0, pitch:Math.asin(off.y / dist), y0:Math.asin(off.y / dist) }; viewApply(); } else { view = null; cutaway(null); placeCamera(); shadowsDirty = true; } }
 function viewReset(){ if (!view) return; Object.assign(view, { yaw:0, pitch:view.y0, dist:view.d0 }); viewApply(); }
 function viewDown(e){ cv.setPointerCapture(e.pointerId); vptr.set(e.pointerId, { x:e.clientX, y:e.clientY, x0:e.clientX, y0:e.clientY, t:performance.now() }); view.pinch = null; }
 function viewMove(e){ const q = vptr.get(e.pointerId); if (!q) return;
   if (vptr.size >= 2){ const [a, b] = [...vptr.values()]; const d0 = Math.hypot(a.x - b.x, a.y - b.y); q.x = e.clientX; q.y = e.clientY; const d1 = Math.hypot(a.x - b.x, a.y - b.y);
-    if (d0 > 10){ view.dist = Math.max(1.6, Math.min(view.d0 * 1.15, view.dist * d0 / d1)); viewApply(); } return; }
+    if (d0 > 10){ view.dist = Math.max(1.2, Math.min(view.d0 * 1.2, view.dist * d0 / d1)); viewApply(); } return; }
   const dx = e.clientX - q.x, dy = e.clientY - q.y; q.x = e.clientX; q.y = e.clientY; const k = Math.PI / Math.max(700, cv.clientWidth * 2.2);
-  view.yaw = Math.max(-1.25, Math.min(1.25, view.yaw - dx * k)); view.pitch = Math.max(.04, Math.min(1.4, view.pitch + dy * k)); viewApply(); }
+  view.yaw = view.yaw - dx * k; view.pitch = Math.max(.04, Math.min(1.4, view.pitch + dy * k)); viewApply(); }
 function viewUp(e){ const q = vptr.get(e.pointerId); vptr.delete(e.pointerId); if (q && vptr.size === 0 && Math.hypot(e.clientX - q.x0, e.clientY - q.y0) < 7 && performance.now() - q.t < 400) tapAt(e); }
 
 /* ---------- 便利関数 ---------- */
@@ -173,9 +177,13 @@ function applyWain(kind){ const W = WAIN[kind]; wainParts.forEach(m => m.visible
 function wainscot(len, place){ const g = new THREE.Group(); const w = new THREE.Mesh(new RoundedBoxGeometry(len, 1.05, .08, 2, .02), wainMat); w.position.set(0, .525, .04); w.receiveShadow = true; g.add(w); wainParts.push(w);
   const n = Math.round(len / .76); for (let i = 0; i < n; i++){ const p = new THREE.Mesh(new RoundedBoxGeometry(.62, .62, .03, 2, .02), panelMat); p.position.set(-len / 2 + (i + .5) * len / n, .55, .09); g.add(p); wainParts.push(p); }
   const rail = new THREE.Mesh(new RoundedBoxGeometry(len, .07, .14, 2, .025), railMat); rail.position.set(0, 1.07, .07); g.add(rail); wainParts.push(rail);
-  const base = new THREE.Mesh(new RoundedBoxGeometry(len, .14, .12, 2, .03), baseMat); base.position.set(0, .07, .06); base.receiveShadow = true; g.add(base); place(g); scene.add(g); }
-wainscot(RW, g => g.position.set(0, 0, bz));
-for (const s of [-1, 1]) wainscot(RD, g => { g.position.set(s * RW / 2, 0, RZ); g.rotation.y = -s * Math.PI / 2; });
+  const base = new THREE.Mesh(new RoundedBoxGeometry(len, .14, .12, 2, .03), baseMat); base.position.set(0, .07, .06); base.receiveShadow = true; g.add(base); place(g); scene.add(g); return g; }
+const wainB = wainscot(RW, g => g.position.set(0, 0, bz));
+const wainS = [-1, 1].map(s => wainscot(RD, g => { g.position.set(s * RW / 2, 0, RZ); g.rotation.y = -s * Math.PI / 2; }));
+// 手前の壁：ながめるモードで手前を向いたときだけ出す
+const frontWall = new THREE.Mesh(new THREE.PlaneGeometry(RW, RH), std('#ead2cc', { map:(() => { const t = wallTex.clone(); t.needsUpdate = true; t.repeat.set(5, 4); return t; })() }));
+frontWall.rotation.y = Math.PI; frontWall.position.set(0, RH / 2, FRONT); frontWall.receiveShadow = true; frontWall.visible = false; scene.add(frontWall);
+const wainF = wainscot(RW, g => { g.position.set(0, 0, FRONT); g.rotation.y = Math.PI; }); wainF.visible = false;
 wainParts.forEach(m => m.visible = !!WAIN.a); baseMat.color.set(BASE.a);
 
 // 窓（壁にあいた穴）と、その向こうの雪の外
@@ -189,6 +197,7 @@ const glassPane = new THREE.Mesh(new THREE.PlaneGeometry(WW, WH), new THREE.Mesh
 // 外：空・雪の地面・木
 let wallKind = 'a', floorKind = 'a';
 function applyWall(kind){ kind = kind || 'a'; if (kind === wallKind) return; wallKind = kind; applyWain(kind); const t = wallTexOf(kind), bt = t.clone(); bt.needsUpdate = true; bt.repeat.set(5 / RW, 4 / RH); back.material.map.dispose(); back.material.map = bt; back.material.needsUpdate = true;
+  { const ft = t.clone(); ft.needsUpdate = true; ft.repeat.set(5, 4); frontWall.material.map.dispose(); frontWall.material.map = ft; frontWall.material.color.set('#ead8d0'); frontWall.material.needsUpdate = true; }
   sideWalls.forEach(sw => { const st = t.clone(); st.needsUpdate = true; st.repeat.set(5 * RD / RW, 4); sw.material.map.dispose(); sw.material.map = st; sw.material.color.set('#ead8d0'); sw.material.needsUpdate = true; }); }
 function applyFloor(kind){ kind = kind || 'a'; if (kind === floorKind) return; floorKind = kind; floor.material.map.dispose(); floor.material.map = floorTexOf(kind); floor.material.needsUpdate = true; }
 const OUT_Z = bz - .02, outside = new THREE.Group(); scene.add(outside);
