@@ -904,7 +904,7 @@ function mbNote(ctx, out, t, n, vol, pan, lead){
 }
 // iPhoneは「指をはなした」タイミングでしか音を出す許可をくれないので、最初のタッチで音の準備をしておく
 // iPhoneは電話・通知・画面ロックのあと音の準備が「中断」のまま戻らないことがある。さわった瞬間（同期）に作り直して確実に鳴らす
-function mbCtx(fresh){ const AC = window.AudioContext || window.webkitAudioContext;
+function mbCtx(fresh){ if (window.kajiAudio) return (MB.ctx = window.kajiAudio(fresh)); const AC = window.AudioContext || window.webkitAudioContext;
   if (MB.ctx && fresh && MB.ctx.state !== 'running'){ try { MB.ctx.close(); } catch (e) {} MB.ctx = null; }
   if (!MB.ctx) MB.ctx = new AC(); if (MB.ctx.state !== 'running'){ try { MB.ctx.resume(); } catch (e) {} } return MB.ctx; }
 function mbUnlock(){ try { const c = mbCtx(), b = c.createBuffer(1, 1, 22050), s = c.createBufferSource(); s.buffer = b; s.connect(c.destination); s.start(0); } catch (e) {} }
@@ -913,7 +913,6 @@ function musicBoxTap(){ if (MB.on && MB.ctx && MB.ctx.state === 'running'){ mbSt
 // 1曲おわったら少し間をあけて次の曲へ（さわって止めるまで順番に流れる）
 function mbPlay(){
   try {
-    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {} // マナーモードでもオルゴールは鳴らす
     const ctx = mbCtx();
     const [name, bpm, meter, score, chords] = MB_SONGS[MB.i % MB_SONGS.length]; MB.i++;
     const out = MB.out = ctx.createGain(), lim = ctx.createDynamicsCompressor(); out.gain.value = 1; lim.threshold.value = -4; lim.knee.value = 2; lim.ratio.value = 20; lim.attack.value = .002; lim.release.value = .15; out.connect(lim); lim.connect(ctx.destination); /* 音割れしないように最後にリミッター */

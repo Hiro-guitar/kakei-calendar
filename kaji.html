@@ -845,6 +845,10 @@ function typeTalk(){
   typeT = setInterval(() => { i += 1; el.textContent = full.slice(0, i); if (i >= full.length) clearInterval(typeT); }, 38);
 }
 let actx;
+/* アプリの音（チャイムもオルゴールも）はひとつの音の準備を共有する。止まっていたら、さわったときに作り直す */
+window.kajiAudio = fresh => { const AC = window.AudioContext || window.webkitAudioContext;
+  if (actx && fresh && actx.state !== 'running' && actx.state !== 'suspended'){ try { actx.close(); } catch (e) {} actx = null; }
+  if (!actx) actx = new AC(); if (actx.state !== 'running'){ try { actx.resume(); } catch (e) {} } return actx; };
 /* ===== 下のクイックバー：家事ごとのマークをタップするだけで「やった」 ===== */
 const QI = (() => {
   const c = (b, inner) => `<svg viewBox="0 0 40 40">${inner}</svg>`;
@@ -1077,7 +1081,7 @@ window.kajiToast = m => toast(m);
 function chime(kind){
   if (S.sound === false) return;
   try {
-    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    window.kajiAudio(true);
     const notes = kind === 'thanks' ? [988, 1319] : kind === 'undo' ? [587, 440] : kind === 'bell' ? [1319, 1047] : [784, 1175];
     notes.forEach((f, i) => { const o = actx.createOscillator(), g = actx.createGain(); o.type = 'sine'; o.frequency.value = f;
       const t = actx.currentTime + i * 0.09; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.13, t + 0.012); g.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
