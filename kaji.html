@@ -174,6 +174,7 @@ body{font-variant-emoji:text}svg.ico{width:1.05em;height:1.05em;vertical-align:-
 .gset{margin-bottom:10px}.gset.fold .gsh{border-bottom:0;padding-bottom:0;margin-bottom:0}.gfold{display:flex;align-items:center;gap:4px;color:#8a9aa6;font-size:12.5px;font-weight:700;padding:6px 4px;white-space:nowrap}.gfold i{display:inline-block;font-style:normal;transition:transform .2s}.gset:not(.fold) .gfold i{transform:rotate(90deg)}.gsh{display:flex;align-items:center;gap:8px;padding-bottom:6px;border-bottom:1.5px solid #f0e6d0;margin-bottom:4px}.gsh b{flex:1;font-size:15px;color:var(--navy)}.gsh b small{color:#b8a888;font-size:12px}
 .gsi{width:30px;height:30px;flex:none;display:flex;align-items:center;justify-content:center}.gsi svg{width:28px;height:28px}.gsi.sm svg{width:24px;height:24px}
 
+.gnew .gicons{display:flex;gap:6px;margin-bottom:8px}.gnew .gicons .fz{width:76px;height:76px;display:block}.gnew .gicons .fz img{width:100%;height:100%;object-fit:contain}
 .iconnew{display:flex;flex-direction:column;align-items:center;text-align:center;padding:6px 4px}.iconnew img{width:96px;height:96px;border-radius:22px;box-shadow:0 6px 16px rgba(40,60,40,.25);margin-bottom:10px}.iconnew b{font-size:18px;color:var(--navy)}.iconnew ol{text-align:left;margin:12px 0 6px;padding-left:22px;font-size:14px;line-height:1.7;color:var(--navy)}.iconnew .sh{display:inline-block;padding:0 6px;border-radius:6px;background:#efe6d2;font-size:12px}.iconnew p{margin:4px 0 14px;font-size:12px}
 /* アドベントボックス（木のおうちに、柄ちがいの小さなとびら） */
 .abox{position:relative;margin:66px 4px 4px;padding:16px 12px 14px;border-radius:10px 10px 18px 18px;background:linear-gradient(#b4402f,#9a3226);box-shadow:inset 0 0 0 4px #c9583f,inset 0 0 0 7px #7e2a20,0 6px 0 #6a2219,0 10px 18px rgba(80,30,10,.25)}
@@ -5188,6 +5189,7 @@ document.addEventListener('click', e => {
     case 'iconcopy': { const u = setupURL(), done = () => { toast('コピーしたよ'); el.textContent = 'コピーしたよ ✓'; };
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(u).then(done).catch(() => prompt('このURLをコピーしてね', u)); else prompt('このURLをコピーしてね', u); if (S.url) sync(); break; }
     case 'iconlater': try { localStorage.setItem('kaji_iconsnooze', String(Date.now() + 864e5)); } catch (e) {} closeSheet(); break;
+    case 'gardengo': closeSheet(); setTimeout(() => { if (ROOM && ROOM.peekGarden) ROOM.peekGarden(); }, 350); break;
     case 'icondone': try { localStorage.setItem('kaji_iconver', ICON_VER); } catch (e) {} closeSheet(); break;
     case 'menu': { const m = $('menupop'); if (m && m.classList.contains('open')) menuClose(); else menuOpen(); break; }
     case 'mymenu': menuClose(); if (tab !== 'today'){ tab = 'today'; render(); } setTimeout(moyouSheet, 300); break;
@@ -5351,6 +5353,15 @@ function iconNotice(force){ let v = ''; try { v = localStorage.getItem('kaji_ico
     <p class="muted">記録や同期の設定は、そのまま引きつがれるよ</p>
     <button class="btn go" style="width:100%;padding:13px" data-act="iconcopy">URLをコピー</button>
     <div style="display:flex;gap:8px;width:100%;margin-top:8px"><button class="btn ghost" style="flex:1;white-space:nowrap;padding:11px 0" data-act="iconlater">あとで</button><button class="btn ghost" style="flex:1;white-space:nowrap;padding:11px 0" data-act="icondone">もう追加した</button></div></div>`); }
+/* 庭のお知らせ（はじめて開いたときに1回だけ） */
+function gardenNotice(tries = 0){ try { if (localStorage.getItem('kaji_garden_seen')) return; } catch (e) { return; } if (!S.me) return;
+  if ($('sheet').classList.contains('open') || roomEditing || tab !== 'today'){ if (tries < 40) setTimeout(() => gardenNotice(tries + 1), 4000); return; }
+  ensureRoom().then(R => { if (!R || $('sheet').classList.contains('open')) { if (R && tries < 40) setTimeout(() => gardenNotice(tries + 1), 4000); return; } try { localStorage.setItem('kaji_garden_seen', '1'); } catch (e) {}
+    openSheet(`<div class="iconnew gnew"><div class="gicons">${['garden_a', 'xgarden_d', 'garden_b'].map(k => `<span class="fz">${fimg(k)}</span>`).join('')}</div><b>窓の外に庭ができたよ</b>
+      <ol><li>窓をさわると、庭と夜景をのぞける</li><li>もようがえの「庭のもの」から庭に家具を置ける</li><li>のぞいて家具を長押しすると、なぞって動かせる</li></ol>
+      <p class="muted">庭の家具は、アドベントやふくびきでも増えていくよ</p>
+      <button class="btn go" style="width:100%;padding:13px" data-act="gardengo">庭をのぞいてみる</button>
+      <button class="btn ghost" style="width:100%;padding:11px 0;margin-top:8px" data-act="close">とじる</button></div>`); fillFurn(); }); }
 /* ========== 起動 ========== */
 if (!S.url) seedIfEmpty();
 renameKid();
@@ -5360,6 +5371,7 @@ if (S.url) sync();
 setTimeout(() => { try { if (S.items.settings && !all('lay').length) layMemo(null, settings()); } catch (e) {} }, 4000);
 if (pushOK() && isStandalone()) pushHere().then(() => { if (tab === 'settings') render(); }).catch(() => {});
 setTimeout(() => iconNotice(false), 1800);
+setTimeout(() => gardenNotice(), 3200);
 </script>
 </body>
 </html>
