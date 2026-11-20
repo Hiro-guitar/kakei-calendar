@@ -882,7 +882,7 @@ const MB_SONGS = [
 const MB_NOTE = { C:60, D:62, E:64, F:65, G:67, A:69, B:71 };
 const mbParse = str => str.split(' ').map(t => { if (t[0] === 'R') return [null, +t.slice(1)]; const m = /^(_?)(#?)([A-Ga-g])([\d.]+)$/.exec(t); const up = m[3] === m[3].toLowerCase(); let n = MB_NOTE[m[3].toUpperCase()] + (up ? 12 : 0) + (m[2] ? 1 : 0) - (m[1] ? 12 : 0); if (m[3] === 'b') n = 59; return [n, +m[4]]; });
 const MB = { on:false, i:0, ctx:null, out:null, timer:0 };
-const mbSessionOff = () => { try { if (navigator.audioSession) navigator.audioSession.type = 'auto'; } catch (e) {} };
+const mbSessionOff = () => {}; // 音の種類を途中で切りかえると、iPhoneで次に鳴らなくなることがあるので切りかえない
 function mbStop(){ if (!MB.on) return; MB.on = false; setTimeout(mbSessionOff, 1000); clearTimeout(MB.timer); const o = MB.out; if (o){ try { o.gain.setTargetAtTime(0, MB.ctx.currentTime, .15); const c = MB.comp; setTimeout(() => { o.disconnect(); if (c) c.disconnect(); }, 900); } catch (e) {} } MB.out = null; MB.comp = null; }
 // 伴奏の和音：[ベース, [和音]]
 const MB_CH = { C:[48, [55, 60, 64]], F:[53, [57, 60, 65]], G:[43, [55, 59, 62]], G7:[43, [53, 59, 62]], D7:[50, [54, 57, 60]], E7:[52, [56, 59, 62]], Am:[45, [57, 60, 64]], Dm:[50, [57, 62, 65]] };
@@ -903,10 +903,13 @@ function mbNote(ctx, out, t, n, vol, pan, lead){
   }
 }
 // iPhoneは「指をはなした」タイミングでしか音を出す許可をくれないので、最初のタッチで音の準備をしておく
-function mbCtx(){ if (!MB.ctx){ MB.ctx = new (window.AudioContext || window.webkitAudioContext)(); } if (MB.ctx.state !== 'running') { try { MB.ctx.resume(); } catch (e) {} } return MB.ctx; }
+// iPhoneは電話・通知・画面ロックのあと音の準備が「中断」のまま戻らないことがある。さわった瞬間（同期）に作り直して確実に鳴らす
+function mbCtx(fresh){ const AC = window.AudioContext || window.webkitAudioContext;
+  if (MB.ctx && fresh && MB.ctx.state !== 'running'){ try { MB.ctx.close(); } catch (e) {} MB.ctx = null; }
+  if (!MB.ctx) MB.ctx = new AC(); if (MB.ctx.state !== 'running'){ try { MB.ctx.resume(); } catch (e) {} } return MB.ctx; }
 function mbUnlock(){ try { const c = mbCtx(), b = c.createBuffer(1, 1, 22050), s = c.createBufferSource(); s.buffer = b; s.connect(c.destination); s.start(0); } catch (e) {} }
-for (const ev of ['touchend', 'pointerup', 'click']) document.addEventListener(ev, mbUnlock, { once:true, capture:true });
-function musicBoxTap(){ if (MB.on){ mbStop(); return; } mbPlay(); }
+for (const ev of ['touchend', 'pointerup', 'click']) document.addEventListener(ev, () => { if (!MB.ctx || MB.ctx.state !== 'running') mbUnlock(); }, { capture:true });
+function musicBoxTap(){ if (MB.on && MB.ctx && MB.ctx.state === 'running'){ mbStop(); return; } if (MB.on) mbStop(); mbCtx(true); mbUnlock(); mbPlay(); }
 // 1曲おわったら少し間をあけて次の曲へ（さわって止めるまで順番に流れる）
 function mbPlay(){
   try {
