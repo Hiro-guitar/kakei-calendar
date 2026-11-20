@@ -236,6 +236,12 @@ for (const [x, z, h] of [[-.55, -3.1, .9], [-.25, -3.9, 1.1], [.6, -3.5, .8], [.
   const tr = new THREE.Mesh(new THREE.CylinderGeometry(.05, .07, .3, 8), std('#5a3a28')); tr.position.y = .1; t.add(tr); }
 const snowN = 140, snowGeo = new THREE.BufferGeometry(), snowPos = new Float32Array(snowN * 3); for (let i = 0; i < snowN; i++){ snowPos[i * 3] = WX + (Math.random() - .5) * 4; snowPos[i * 3 + 1] = .6 + Math.random() * 4; snowPos[i * 3 + 2] = OUT_Z - .3 - Math.random() * 3.5; }
 snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3)); const snowPts = new THREE.Points(snowGeo, new THREE.PointsMaterial({ color:'#ffffff', size:.05, transparent:true, opacity:.9, map:glowTex, depthWrite:false })); outside.add(snowPts);
+{ const sm = new THREE.Group(); sm.position.set(WX + .4, .6, OUT_Z - 3.4); sm.scale.setScalar(1.35); outside.add(sm); const w = std('#fbfdff', { roughness:.9 });
+  for (const [r, y] of [[.22, .18], [.16, .5], [.11, .74]]){ const b = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), w); b.position.y = y; b.castShadow = true; sm.add(b); }
+  for (const x of [-.04, .04]){ const e = new THREE.Mesh(new THREE.SphereGeometry(.014, 8, 6), std('#2a2a2a')); e.position.set(x, .77, .1); sm.add(e); }
+  const n = new THREE.Mesh(new THREE.ConeGeometry(.02, .1, 8), std('#f08a3a')); n.rotation.x = Math.PI / 2; n.position.set(0, .73, .14); sm.add(n);
+  const sc = new THREE.Mesh(new THREE.TorusGeometry(.13, .03, 8, 20), std('#d0402e')); sc.rotation.x = Math.PI / 2; sc.position.y = .63; sm.add(sc);
+  const hat = new THREE.Mesh(new THREE.CylinderGeometry(.08, .09, .12, 14), std('#3a3a48')); hat.position.y = .88; sm.add(hat); const br = new THREE.Mesh(new THREE.CylinderGeometry(.13, .13, .015, 16), std('#3a3a48')); br.position.y = .82; sm.add(br); sm.rotation.y = -.35; }
 const winLight = new THREE.PointLight('#9fc4ff', 1.5, 4); winLight.position.set(WX, 2.4, bz + .6); scene.add(winLight);
 const outLight = new THREE.DirectionalLight('#bcd4ff', 1.2); outLight.position.set(WX - 2, 6, OUT_Z + 2); outLight.target.position.set(WX, .6, OUT_Z - 2.5); scene.add(outLight, outLight.target);
 
@@ -1147,7 +1153,11 @@ let zoom = null, zoomed = false; const zLook = new THREE.Vector3();
 function camLook(){ const d = new THREE.Vector3(); camera.getWorldDirection(d); return camera.position.clone().addScaledVector(d, camera.position.distanceTo(target)); }
 function zoomTo(id){ const o = placed.find(x => x.userData.id === id) || gifts.find(x => x.userData.id === id); if (!o) return; const p = new THREE.Vector3(); (o.children[0] || o).getWorldPosition(p);
   const dir = camera.position.clone().sub(p).normalize(), far = o.userData.gift ? 2.6 : 2.0; zoom = { t0:performance.now(), fromP:camera.position.clone(), fromL:camLook(), toP:p.clone().addScaledVector(dir, far), toL:p.clone().add(new THREE.Vector3(0, -far * .17, 0)), dur:650 }; zoomed = true; }
-function zoomOut(){ if (!zoomed) return; zoomed = false; const keepP = camera.position.clone(), keepL = camLook(); placeCamera(); const toP = camera.position.clone(); camera.position.copy(keepP); camera.lookAt(keepL); zoom = { t0:performance.now(), fromP:keepP, fromL:keepL, toP, toL:target.clone(), dur:550, end:true }; }
+// 窓をのぞく：窓をさわると、窓の前まで寄って外をながめる。どこかをさわると戻る
+let peek = false;
+function peekWindow(){ if (zoomed || view) return; peek = true; const px = WX + WW / 4, toP = new THREE.Vector3(px, WY + .05, bz + 2.5), toL = new THREE.Vector3(px + .1, WY - .35, OUT_Z - 3.5);
+  zoom = { t0:performance.now(), fromP:camera.position.clone(), fromL:camLook(), toP, toL, dur:800 }; zoomed = true; if (window.kajiToast) setTimeout(() => window.kajiToast('どこかをさわるともどるよ'), 900); }
+function zoomOut(){ if (!zoomed) return; zoomed = false; peek = false; const keepP = camera.position.clone(), keepL = camLook(); placeCamera(); const toP = camera.position.clone(); camera.position.copy(keepP); camera.lookAt(keepL); zoom = { t0:performance.now(), fromP:keepP, fromL:keepL, toP, toL:target.clone(), dur:550, end:true }; }
 function stepZoom(now){ if (!zoom) return; const t = Math.min(1, (now - zoom.t0) / zoom.dur), k = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   camera.position.lerpVectors(zoom.fromP, zoom.toP, k); zLook.lerpVectors(zoom.fromL, zoom.toL, k); camera.lookAt(zLook); if (t >= 1){ if (zoom.end) placeCamera(); zoom = null; } }
 function frame(now){
@@ -1195,7 +1205,7 @@ function sync(list, giftList){ lastList = list; lastGifts = giftList;
 const ray = new THREE.Raycaster(), v2 = new THREE.Vector2();
 // ツリーを指で回す（タップとドラッグを区別）
 let drag = null, spin = 0; const cv = renderer.domElement; cv.style.touchAction = 'none';
-cv.addEventListener('pointerdown', e => { if (view){ viewDown(e); return; } if (zoomed){ opts.onZoomTap && opts.onZoomTap(); return; } if (editOn){ cv.setPointerCapture(e.pointerId); editDown(e); return; } drag = { x:e.clientX, y:e.clientY, last:e.clientX, t:performance.now(), moved:false, onTree:false }; spin = 0; cv.setPointerCapture(e.pointerId);
+cv.addEventListener('pointerdown', e => { if (view){ viewDown(e); return; } if (zoomed){ if (peek){ zoomOut(); return; } opts.onZoomTap && opts.onZoomTap(); return; } if (editOn){ cv.setPointerCapture(e.pointerId); editDown(e); return; } drag = { x:e.clientX, y:e.clientY, last:e.clientX, t:performance.now(), moved:false, onTree:false }; spin = 0; cv.setPointerCapture(e.pointerId);
   // 長押し（指を動かさずに0.45秒）で、その家具をつかんだまま もようがえ に入る
   clearTimeout(lpTimer); const d0 = drag, pt = { clientX:e.clientX, clientY:e.clientY };
   lpTimer = setTimeout(() => { if (drag !== d0 || d0.moved || editOn || zoomed || !opts.onLongPress) return; if (!pickInst(pt)) return; drag = null; opts.onLongPress(); if (!editOn) return; editDown(pt); }, 450); });
@@ -1214,6 +1224,8 @@ function furnTap(g){ let lamp = null; g.traverse(m => { if (!lamp && m.userData.
   const s0 = g.scale.clone(); animate(700, k => { const d = decay(k, 2); g.scale.set(s0.x * (1 + .06 * d), s0.y * (1 - .12 * d), s0.z * (1 + .06 * d)); }); }
 function tapAt(e){ const r = renderer.domElement.getBoundingClientRect(); v2.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); ray.setFromCamera(v2, camera);
   const hit = ray.intersectObjects([...placed, ...gifts, ...(advBox.visible ? [advBox] : [])], true)[0];
+  // 窓をさわると外をのぞく（ツリーや家具が手前にないとき）
+  if (!hit && win.visible){ const wh = ray.intersectObject(win, true)[0]; if (wh){ const blk = ray.intersectObjects([treeRoot, ...Object.values(inst).filter(o => o.rec.key !== 'tree').map(o => o.g)], true)[0]; if (!blk || blk.distance > wh.distance){ peekWindow(); return; } } }
   // 家具をさわると、ちょっと動く（ツリーより手前にあるときだけ）
   if (!hit){ const fs = [...Object.values(inst).filter(o => o.rec.key !== 'tree').map(o => o.g), ...Object.values(mounted).filter(m => m && m.visible && m.parent !== tree)], fh = ray.intersectObjects(fs, true)[0], th = ray.intersectObject(treeRoot, true)[0];
     if (fh && (!th || fh.distance < th.distance)){ let o = fh.object; while (o.parent && !fs.includes(o)) o = o.parent; furnTap(o); return; } }
