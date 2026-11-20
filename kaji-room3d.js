@@ -4,6 +4,7 @@ import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
 import { RoomEnvironment } from './vendor/three/RoomEnvironment.js';
 import { makeOrnament, makeDeco } from './kaji-orn3d.js';
 import { makeMochibana } from './kaji-mochi3d.js';
+import { buildTown, buildSleigh } from './kaji-out3d.js';
 
 /* ---------- 家具の一覧（アドベントで手に入る） ---------- */
 export const FURN_SLOTS = [['wallpaper', '壁紙'], ['flooring', '床'], ['topper', 'ツリーのてっぺん'], ['treelights', 'ツリーの電球'], ['garland', 'ツリーのモール'], ['fireplace', '暖炉'], ['stockings', 'くつした'], ['mantel', '暖炉の上のかざり'], ['wall', '壁かざり'], ['curtain', 'カーテン'], ['wintop', '窓の上のかざり'], ['sill', '窓辺のかざり'], ['outside', '窓の外'],
@@ -265,33 +266,17 @@ function pine(x, z, h, lit){ const t = new THREE.Group(); t.position.set(WX + x,
   if (lit){ const cols = ['#ff5a4a', '#ffd84a', '#5ad0ff', '#7aff8a', '#ff8ad8']; t.userData.bulbs = []; for (let i = 0; i < 46; i++){ const a = i * 2.4, yy = .15 + (i / 46) * .78, rr = h * (.42 - (yy - .15) * .38) * .95; const b = new THREE.Mesh(new THREE.SphereGeometry(.022, 6, 4), new THREE.MeshBasicMaterial({ color:cols[i % 5] })); b.position.set(Math.cos(a) * rr, yy * h, Math.sin(a) * rr); t.add(b); t.userData.bulbs.push(b); } litTrees.push(t); }
   return t; }
 const litTrees = [];
-for (const [x, z, h, lit] of [[-1.7, -2.0, 1.2], [2.0, -2.6, 1.1], [-1.35, -3.3, 1.5, 1], [-2.9, -3.4, 1.7], [3.0, -3.9, 1.9], [-2.3, -5.3, 1.9], [3.5, -5.4, 2.0], [-3.9, -4.8, 2.0], [1.0, -9.0, 2.2], [-.8, -9.3, 2.0], [2.6, -8.9, 2.3], [-2.9, -8.7, 2.3], [4.5, -7.4, 2.4], [-4.7, -6.8, 2.2]]) pine(x, z, h, lit);
-// 遠くの家なみ（雪の屋根・あかりの灯る窓・えんとつのけむり）
-const houseMats = ['#c86a52', '#e6d6b8', '#7a8aa8', '#a8c0a0', '#d8b86a'].map(c => std(c, { roughness:.85 })), roofSnow = std('#f6f8ff', { roughness:.9 }), winOn = new THREE.MeshBasicMaterial({ color:'#ffcf7a' }), winDay = std('#7a8ab0', { roughness:.3 }), houseWins = [], smokes = [];
-function house(x, z, w, d, hgt, mi, ry){ const g = new THREE.Group(); g.position.set(WX + x, .58, OUT_Z + z); g.rotation.y = ry; outside.add(g);
-  const b = new THREE.Mesh(new THREE.BoxGeometry(w, hgt, d), houseMats[mi]); b.position.y = hgt / 2; b.castShadow = true; b.receiveShadow = true; g.add(b);
-  const rs = new THREE.Shape(); rs.moveTo(-w / 2 - .08, 0); rs.lineTo(0, hgt * .62); rs.lineTo(w / 2 + .08, 0); rs.lineTo(-w / 2 - .08, 0);
-  const roof = new THREE.Mesh(new THREE.ExtrudeGeometry(rs, { depth:d + .16, bevelEnabled:false }), roofSnow); roof.position.set(0, hgt, -d / 2 - .08); g.add(roof);
-  const eave = new THREE.Mesh(new THREE.BoxGeometry(w + .2, .05, d + .2), std('#5a3a2a')); eave.position.y = hgt; g.add(eave);
-  const ch = new THREE.Mesh(new THREE.BoxGeometry(.12, .3, .12), std('#8a5a48')); ch.position.set(w * .22, hgt + hgt * .42, -d * .15); g.add(ch); const chs = new THREE.Mesh(new THREE.BoxGeometry(.15, .05, .15), roofSnow); chs.position.set(w * .22, hgt + hgt * .42 + .17, -d * .15); g.add(chs);
-  smokes.push({ x:WX + x + Math.cos(ry) * w * .22, y:.58 + hgt * 1.42 + .2, z:OUT_Z + z - Math.sin(ry) * w * .22 });
-  const nW = Math.max(1, Math.round(w / .32)); for (let i = 0; i < nW; i++){ const m = new THREE.Mesh(new THREE.PlaneGeometry(.13, .16), winOn); m.position.set(-w / 2 + (i + .5) * w / nW, hgt * .55, d / 2 + .005); g.add(m); houseWins.push(m); }
-  const door = new THREE.Mesh(new THREE.PlaneGeometry(.14, .26), std('#5a3a2a')); door.position.set(w * .3, .13, d / 2 + .006); g.add(door); return g; }
-for (const [x, z, w, d, h, m, r] of [[-2.4, -6.0, .9, .7, .62, 0, .25], [-.9, -6.4, .75, .6, .55, 1, -.1], [1.2, -6.2, 1.0, .7, .7, 2, -.3], [2.9, -6.6, .8, .6, .58, 3, .2], [.2, -8.4, .9, .7, .6, 4, 0], [-3.4, -8.0, .8, .6, .55, 2, .4], [3.6, -8.6, .9, .7, .62, 0, -.2]]) house(x, z, w, d, h, m, r);
+for (const [x, z, h, lit] of [[-1.8, -2.0, 1.2], [2.0, -2.5, 1.1], [-1.2, -3.0, 1.3, 1], [-3.0, -3.0, 1.7], [3.2, -3.2, 1.8], [-4.4, -5.0, 2.0], [4.5, -5.2, 2.0], [1.2, -9.8, 2.2], [-1.0, -9.9, 2.0], [2.8, -9.5, 2.3], [-2.7, -9.4, 2.3], [4.7, -8.2, 2.4], [-4.9, -7.6, 2.2], [-2.0, -8.8, 2.0]]) pine(x, z, h, lit);
+// 町なみ（家・教会・広場のツリー・街灯）
+const roofSnow = std('#f6f8ff', { roughness:.9 });
+const townG = new THREE.Group(); townG.visible = false; /* 重いので、窓をのぞいているときだけ出す */ outside.add(townG); const town = buildTown(townG, { glowTex, x:WX, y:.58, z:OUT_Z - 3.5 });
 // えんとつのけむり
 const smokeTex = canvasTex(64, 64, (g, w) => { const r = g.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2); r.addColorStop(0, 'rgba(230,234,245,.7)'); r.addColorStop(1, 'rgba(230,234,245,0)'); g.fillStyle = r; g.fillRect(0, 0, w, w); });
-const puffs = []; for (const s0 of smokes) for (let i = 0; i < 6; i++){ const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:smokeTex, transparent:true, depthWrite:false, opacity:.5 })); sp.userData = { s0, ph:i / 6 }; outside.add(sp); puffs.push(sp); }
+townG.updateMatrixWorld(true); const puffs = []; for (const s0l of town.smokes){ const s0 = townG.localToWorld(s0l.clone()); for (let i = 0; i < 6; i++){ const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:smokeTex, transparent:true, depthWrite:false, opacity:.5 })); sp.userData = { s0, ph:i / 6 }; sp.visible = false; outside.add(sp); puffs.push(sp); } }
 // 手前の木の柵（雪がのっている）
 { const fenceM = std('#8a6a4e', { roughness:.85 }); const fz = OUT_Z - 1.15;
   for (const z of [0]){ for (let i = 0; i < 26; i++){ const x = WX - 3.2 + i * .26 + (OR() - .5) * .02; const pk = new THREE.Mesh(new RoundedBoxGeometry(.07, .52, .04, 2, .015), fenceM); pk.position.set(x, .58 + .26, fz + z); pk.rotation.z = (OR() - .5) * .06; outside.add(pk); const cap = new THREE.Mesh(new THREE.SphereGeometry(.045, 8, 6), roofSnow); cap.scale.set(1, .5, .9); cap.position.set(x, .58 + .53, fz + z); outside.add(cap); }
     for (const y of [.2, .4]){ const rail = new THREE.Mesh(new RoundedBoxGeometry(6.8, .05, .035, 2, .012), fenceM); rail.position.set(WX, .58 + y, fz - .03); outside.add(rail); const sn = new THREE.Mesh(new RoundedBoxGeometry(6.8, .03, .05, 2, .012), roofSnow); sn.position.set(WX, .58 + y + .035, fz - .03); outside.add(sn); } } }
-// 街灯（あたたかいあかり）
-const lampG = new THREE.Group(); lampG.position.set(WX - 1.15, .58, OUT_Z - 1.9); outside.add(lampG);
-{ const iron = std('#2a2e38', { roughness:.5, metalness:.5 }); const post = new THREE.Mesh(new THREE.CylinderGeometry(.03, .045, 1.9, 10), iron); post.position.y = .95; lampG.add(post); const base = new THREE.Mesh(new THREE.CylinderGeometry(.08, .1, .12, 10), iron); base.position.y = .06; lampG.add(base);
-  const cage = new THREE.Mesh(new THREE.CylinderGeometry(.11, .07, .22, 6, 1, true), iron); cage.position.y = 2.0; lampG.add(cage); const capL = new THREE.Mesh(new THREE.ConeGeometry(.15, .12, 6), iron); capL.position.y = 2.17; lampG.add(capL); const snowCap = new THREE.Mesh(new THREE.ConeGeometry(.13, .06, 12), roofSnow); snowCap.position.y = 2.24; lampG.add(snowCap);
-  const bulb = new THREE.Mesh(new THREE.SphereGeometry(.06, 12, 8), new THREE.MeshBasicMaterial({ color:'#ffe2a8' })); bulb.position.y = 2.0; lampG.add(bulb); lampG.userData.bulb = bulb;
-  const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:'#ffcf8a', transparent:true, opacity:.8, depthWrite:false, blending:THREE.AdditiveBlending })); gl.scale.setScalar(1.1); gl.position.y = 2.0; lampG.add(gl); lampG.userData.glow = gl; }
-const streetLight = new THREE.PointLight('#ffc888', 2.2, 3.6, 1.6); streetLight.position.set(WX - 1.15, 2.4, OUT_Z - 1.9); outside.add(streetLight);
 // 雪の上の足あと
 { const fpM = new THREE.MeshBasicMaterial({ color:'#9aa8c8', transparent:true, opacity:.45, depthWrite:false }); for (let i = 0; i < 16; i++){ const t = i / 16, x = WX - 2.6 + t * 4.4 + Math.sin(t * 5) * .2, z = OUT_Z - 2.6 - Math.sin(t * 3) * .5; for (const sd of [-1, 1]){ if ((i + (sd > 0 ? 1 : 0)) % 2) continue; const f = new THREE.Mesh(new THREE.CircleGeometry(.04, 10), fpM); f.scale.set(.7, 1.3, 1); f.rotation.x = -Math.PI / 2; f.rotation.z = -1.2; f.position.set(x, .66, z + sd * .05); outside.add(f); } } }
 // 降る雪（遠く・近くの2層）
@@ -302,12 +287,12 @@ nearGeo.setAttribute('position', new THREE.BufferAttribute(nearPos, 3)); const n
 // 窓の外側の桟につもった雪
 { const ls = new THREE.Mesh(new RoundedBoxGeometry(WW - .02, .07, .16, 3, .03), roofSnow); ls.position.set(WX, WY - WH / 2 + .03, bz - .24); outside.add(ls); }
 function outsideTime(night){ sky.material.map = night ? skyNightTex : skyDayTex; sky.material.needsUpdate = true; ridges[0].material.color.set(night ? '#ffffff' : '#c8d4ee'); ridges[1].material.color.set(night ? '#ffffff' : '#d8e0f2');
-  for (const m of houseWins) m.material = night ? winOn : winDay; streetLight.intensity = night ? 2.2 : 0; lampG.userData.glow.visible = night; lampG.userData.bulb.material.color.set(night ? '#ffe2a8' : '#d8d0c0'); }
+  town.setNight(night); }
 function outsideTick(now){ const t = now / 1000;
   { const a = snowGeo.attributes.position; for (let i = 0; i < snowN; i++){ let y = a.getY(i) - .01 - (i % 3) * .003; if (y < .6) y = 5.6; a.setY(i, y); a.setX(i, a.getX(i) + Math.sin(t * 1.1 + i) * .0016); } a.needsUpdate = true; }
   { const a = nearGeo.attributes.position; for (let i = 0; i < nearN; i++){ let y = a.getY(i) - .016; if (y < .7) y = 4.2; a.setY(i, y); a.setX(i, a.getX(i) + Math.sin(t * .9 + i * 1.7) * .0026); } a.needsUpdate = true; }
   for (const p of puffs){ const k = ((t * .12 + p.userData.ph) % 1), s0 = p.userData.s0; p.position.set(s0.x + k * .35 + Math.sin(t + k * 6) * .04, s0.y + k * 1.1, s0.z); p.scale.setScalar(.12 + k * .45); p.material.opacity = .55 * (1 - k); }
-  for (const lt of litTrees) lt.userData.bulbs.forEach((b, i) => { b.visible = Math.sin(t * 2.2 + i * 1.7) > -.6; }); }
+  for (const lt of litTrees) lt.userData.bulbs.forEach((b, i) => { b.visible = Math.sin(t * 2.2 + i * 1.7) > -.6; }); town.bulbs.forEach((b, i) => { b.visible = Math.sin(t * 1.6 + i * 2.3) > -.75; }); }
 { const sm = new THREE.Group(); sm.position.set(WX + .62, .6, OUT_Z - 2.6); sm.scale.setScalar(1.0); outside.add(sm); const w = std('#fbfdff', { roughness:.9 });
   for (const [r, y] of [[.22, .18], [.16, .5], [.11, .74]]){ const b = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), w); b.position.y = y; b.castShadow = true; sm.add(b); }
   for (const x of [-.04, .04]){ const e = new THREE.Mesh(new THREE.SphereGeometry(.014, 8, 6), std('#2a2a2a')); e.position.set(x, .77, .1); sm.add(e); }
@@ -316,28 +301,7 @@ function outsideTick(now){ const t = now / 1000;
   const hat = new THREE.Mesh(new THREE.CylinderGeometry(.08, .09, .12, 14), std('#3a3a48')); hat.position.y = .88; sm.add(hat); const br = new THREE.Mesh(new THREE.CylinderGeometry(.13, .13, .015, 16), std('#3a3a48')); br.position.y = .82; sm.add(br); sm.rotation.y = -.35; }
 /* イブ（12/24、朝4時区切り）だけ、窓の外の夜空をサンタのそりがときどき横切る */
 const isEve = () => { if (window.KAJI_EVE) return true; const d = new Date(Date.now() - 4 * 36e5); return d.getMonth() === 11 && d.getDate() === 24; };
-const sleigh = new THREE.Group(); sleigh.visible = false; outside.add(sleigh);
-{ const red = std('#d0402e', { roughness:.5 }), gold = std('#e8b84a', { roughness:.35, metalness:.5 }), brown = std('#8a5a32', { roughness:.8 }), dark = std('#4a2e1c'), white = std('#fbf6ee'), skin = std('#ffd9c0');
-  // そり
-  const body = new THREE.Mesh(new RoundedBoxGeometry(.5, .2, .26, 3, .07), red); body.position.y = .16; sleigh.add(body);
-  const back = new THREE.Mesh(new RoundedBoxGeometry(.12, .3, .26, 3, .05), red); back.position.set(-.2, .26, 0); sleigh.add(back);
-  for (const z of [-.11, .11]){ const run = new THREE.Mesh(new THREE.TorusGeometry(.26, .016, 6, 20, Math.PI * .55), gold); run.rotation.z = Math.PI * 1.08; run.position.set(.02, .27, z); sleigh.add(run); const bar = new THREE.Mesh(new THREE.CylinderGeometry(.014, .014, .54, 6), gold); bar.rotation.z = Math.PI / 2; bar.position.set(0, .03, z); sleigh.add(bar); }
-  const sack = new THREE.Mesh(new THREE.SphereGeometry(.12, 14, 10), brown); sack.scale.set(1, 1.2, 1); sack.position.set(-.16, .38, 0); sleigh.add(sack);
-  // サンタ
-  const coat = new THREE.Mesh(new THREE.SphereGeometry(.1, 14, 10), red); coat.scale.y = 1.2; coat.position.set(.04, .34, 0); sleigh.add(coat);
-  const face = new THREE.Mesh(new THREE.SphereGeometry(.06, 14, 10), skin); face.position.set(.06, .48, 0); sleigh.add(face);
-  const beard = new THREE.Mesh(new THREE.SphereGeometry(.06, 12, 8), white); beard.scale.set(.8, 1, 1); beard.position.set(.09, .44, 0); sleigh.add(beard);
-  const hat = new THREE.Mesh(new THREE.ConeGeometry(.06, .13, 12), red); hat.position.set(.05, .57, 0); hat.rotation.z = -.4; sleigh.add(hat);
-  const pom = new THREE.Mesh(new THREE.SphereGeometry(.022, 8, 6), white); pom.position.set(.1, .62, 0); sleigh.add(pom);
-  // トナカイ（2頭）とつな
-  for (const [x, i] of [[.62, 0], [1.02, 1]]){ const r = new THREE.Group(); r.position.set(x, .14, 0); r.userData.i = i; sleigh.add(r); sleigh.userData.deer = (sleigh.userData.deer || []).concat(r);
-    const b = new THREE.Mesh(new THREE.SphereGeometry(.1, 14, 10), brown); b.scale.set(1.5, .9, .8); r.add(b);
-    const h = new THREE.Mesh(new THREE.SphereGeometry(.065, 12, 10), brown); h.position.set(.15, .12, 0); r.add(h);
-    const n = new THREE.Mesh(new THREE.SphereGeometry(.022, 8, 6), i ? std('#e83a2e', { emissive:'#e83a2e', emissiveIntensity:.8 }) : dark); n.position.set(.21, .11, 0); r.add(n);
-    for (const z of [-.03, .03]){ const a = new THREE.Mesh(new THREE.CylinderGeometry(.006, .008, .1, 5), dark); a.position.set(.13, .21, z); a.rotation.z = .3; r.add(a); }
-    for (const [lx, lz] of [[-.08, -.04], [-.08, .04], [.08, -.04], [.08, .04]]){ const l = new THREE.Mesh(new THREE.CylinderGeometry(.012, .01, .12, 5), brown); l.position.set(lx, -.09, lz); l.rotation.z = lx > 0 ? -.6 : .6; r.add(l); } }
-  const rein = new THREE.Mesh(new THREE.CylinderGeometry(.005, .005, .9, 4), gold); rein.rotation.z = Math.PI / 2 - .05; rein.position.set(.6, .3, 0); sleigh.add(rein);
-  sleigh.scale.setScalar(.9); }
+const SL = buildSleigh(), sleigh = SL.root; sleigh.visible = false; sleigh.scale.setScalar(1.1); outside.add(sleigh);
 // そりのうしろのキラキラ
 const trailN = 40, trailGeo = new THREE.BufferGeometry(), trailPos = new Float32Array(trailN * 3).fill(-99); trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
 const trail = new THREE.Points(trailGeo, new THREE.PointsMaterial({ color:'#ffe9a8', size:.09, transparent:true, opacity:.95, map:glowTex, depthWrite:false, blending:THREE.AdditiveBlending })); trail.visible = false; outside.add(trail);
@@ -345,7 +309,7 @@ let trailI = 0, sleighBell = 0;
 const sleighTick = () => { const now = performance.now(), on = isEve(); trail.visible = on; if (!on){ sleigh.visible = false; return; }
   const P = 16000, p = (now % P) / P, k = window.KAJI_SLEIGH_K != null ? window.KAJI_SLEIGH_K : p / .45; if (k > 1){ sleigh.visible = false; return; } sleigh.visible = true;
   const x = WX - 3.4 + k * 6.8, y = 2.05 + Math.sin(k * Math.PI) * .45, z = OUT_Z - 3.9; sleigh.position.set(x, y, z); sleigh.rotation.z = Math.cos(k * Math.PI) * .18;
-  for (const d of sleigh.userData.deer) d.position.y = .14 + Math.sin(now / 120 + d.userData.i * 1.4) * .04;
+  SL.animate(now);
   trailPos[trailI * 3] = x - .25 + (Math.random() - .5) * .1; trailPos[trailI * 3 + 1] = y + .1 + (Math.random() - .5) * .1; trailPos[trailI * 3 + 2] = z; trailI = (trailI + 1) % trailN; trailGeo.attributes.position.needsUpdate = true;
   if (peek && now - sleighBell > P * .8 && k > .3 && k < .5){ sleighBell = now; try { const c = window.kajiAudio && window.kajiAudio(); if (c) [1568, 1976, 2349, 1976, 1568].forEach((f, i) => { const o = c.createOscillator(), g = c.createGain(), t = c.currentTime + i * .11; o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05, t + .005); g.gain.exponentialRampToValueAtTime(.0005, t + .5); o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + .55); }); } catch (e) {} } };
 const winLight = new THREE.PointLight('#9fc4ff', 1.5, 4); winLight.position.set(WX, 2.4, bz + .6); scene.add(winLight);
@@ -1262,9 +1226,9 @@ function zoomTo(id){ const o = placed.find(x => x.userData.id === id) || gifts.f
   const dir = camera.position.clone().sub(p).normalize(), far = o.userData.gift ? 2.6 : 2.0; zoom = { t0:performance.now(), fromP:camera.position.clone(), fromL:camLook(), toP:p.clone().addScaledVector(dir, far), toL:p.clone().add(new THREE.Vector3(0, -far * .17, 0)), dur:650 }; zoomed = true; }
 // 窓をのぞく：窓をさわると、窓の前まで寄って外をながめる。どこかをさわると戻る
 let peek = false;
-function peekWindow(){ if (zoomed || view) return; peek = true; const px = WX, toP = new THREE.Vector3(px, WY + .35, bz - .1), toL = new THREE.Vector3(px, .95, OUT_Z - 6);
+function peekWindow(){ if (zoomed || view) return; peek = true; townG.visible = true; puffs.forEach(p => p.visible = true); const px = WX, toP = new THREE.Vector3(px, WY + .35, bz - .1), toL = new THREE.Vector3(px, .95, OUT_Z - 6);
   zoom = { t0:performance.now(), fromP:camera.position.clone(), fromL:camLook(), toP, toL, dur:800, fromF:camera.fov, toF:Math.min(78, 52 / Math.min(1, camera.aspect + .25)) }; zoomed = true; if (window.kajiToast) setTimeout(() => window.kajiToast('どこかをさわるともどるよ'), 900); }
-function zoomOut(){ if (!zoomed) return; zoomed = false; const wasPeek = peek; peek = false; const keepP = camera.position.clone(), keepL = camLook(), keepF = camera.fov; camera.fov = 32; placeCamera(); const toP = camera.position.clone(); camera.position.copy(keepP); camera.lookAt(keepL); zoom = { t0:performance.now(), fromP:keepP, fromL:keepL, toP, toL:target.clone(), dur:550, end:true, ...(wasPeek ? { fromF:keepF, toF:32 } : {}) }; if (wasPeek){ camera.fov = keepF; camera.updateProjectionMatrix(); } }
+function zoomOut(){ if (!zoomed) return; zoomed = false; const wasPeek = peek; peek = false; if (wasPeek) setTimeout(() => { if (!peek){ townG.visible = false; puffs.forEach(p => p.visible = false); } }, 600); const keepP = camera.position.clone(), keepL = camLook(), keepF = camera.fov; camera.fov = 32; placeCamera(); const toP = camera.position.clone(); camera.position.copy(keepP); camera.lookAt(keepL); zoom = { t0:performance.now(), fromP:keepP, fromL:keepL, toP, toL:target.clone(), dur:550, end:true, ...(wasPeek ? { fromF:keepF, toF:32 } : {}) }; if (wasPeek){ camera.fov = keepF; camera.updateProjectionMatrix(); } }
 function stepZoom(now){ if (!zoom) return; const t = Math.min(1, (now - zoom.t0) / zoom.dur), k = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   camera.position.lerpVectors(zoom.fromP, zoom.toP, k); zLook.lerpVectors(zoom.fromL, zoom.toL, k); camera.lookAt(zLook); if (zoom.toF){ camera.fov = zoom.fromF + (zoom.toF - zoom.fromF) * k; camera.updateProjectionMatrix(); } if (t >= 1){ if (zoom.end) placeCamera(); zoom = null; } }
 function frame(now){
