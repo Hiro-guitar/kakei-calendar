@@ -80,6 +80,23 @@ function placeCamera(){
   camera.aspect = aspect; camera.lookAt(target); const off = ((opts.shiftY || 0) + (aspect > 1 ? .1 : 0)) * VH(); /* 横向きは下のボタンにかくれないよう少し上へ */ camera.setViewOffset(VW(), VH(), 0, off, VW(), VH()); camera.updateProjectionMatrix();
 }
 placeCamera();
+/* ---------- ながめるモード：なぞって見回す・2本指で寄る（部屋の中から出ないように） ---------- */
+let view = null; const vptr = new Map();
+function viewApply(){ if (!view) return; const { yaw, pitch } = view, t = view.t; let d = view.dist, p = new THREE.Vector3();
+  for (let i = 0; i < 60; i++){ p.set(t.x + Math.sin(yaw) * Math.cos(pitch) * d, t.y + Math.sin(pitch) * d, t.z + Math.cos(yaw) * Math.cos(pitch) * d);
+    // 部屋の中（奥行きの範囲）では横の壁の内側に、手前の外ではすこし外まで。上は壁より高くてもOK（上からのぞける）
+    const xm = p.z < FRONT ? RW / 2 - .2 : RW / 2 + 1.2; if (Math.abs(p.x) < xm && p.y > .25 && p.z > bz + .3) break; d *= .95; }
+  camera.position.copy(p); camera.aspect = VW() / VH(); camera.lookAt(t); camera.clearViewOffset(); camera.updateProjectionMatrix(); shadowsDirty = true; }
+function setView(on){ vptr.clear(); if (on){ placeCamera(); const t = target.clone(), off = camera.position.clone().sub(t), dist = off.length();
+    view = { t, dist, d0:dist, yaw:0, pitch:Math.asin(off.y / dist), y0:Math.asin(off.y / dist) }; viewApply(); } else { view = null; placeCamera(); shadowsDirty = true; } }
+function viewReset(){ if (!view) return; Object.assign(view, { yaw:0, pitch:view.y0, dist:view.d0 }); viewApply(); }
+function viewDown(e){ cv.setPointerCapture(e.pointerId); vptr.set(e.pointerId, { x:e.clientX, y:e.clientY, x0:e.clientX, y0:e.clientY, t:performance.now() }); view.pinch = null; }
+function viewMove(e){ const q = vptr.get(e.pointerId); if (!q) return;
+  if (vptr.size >= 2){ const [a, b] = [...vptr.values()]; const d0 = Math.hypot(a.x - b.x, a.y - b.y); q.x = e.clientX; q.y = e.clientY; const d1 = Math.hypot(a.x - b.x, a.y - b.y);
+    if (d0 > 10){ view.dist = Math.max(1.6, Math.min(view.d0 * 1.15, view.dist * d0 / d1)); viewApply(); } return; }
+  const dx = e.clientX - q.x, dy = e.clientY - q.y; q.x = e.clientX; q.y = e.clientY; const k = Math.PI / Math.max(700, cv.clientWidth * 2.2);
+  view.yaw = Math.max(-1.25, Math.min(1.25, view.yaw - dx * k)); view.pitch = Math.max(.04, Math.min(1.4, view.pitch + dy * k)); viewApply(); }
+function viewUp(e){ const q = vptr.get(e.pointerId); vptr.delete(e.pointerId); if (q && vptr.size === 0 && Math.hypot(e.clientX - q.x0, e.clientY - q.y0) < 7 && performance.now() - q.t < 400) tapAt(e); }
 
 /* ---------- 便利関数 ---------- */
 const rnd = (() => { let s = 20261118; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
@@ -1117,7 +1134,7 @@ function frame(now){
   if (!el.classList.contains('ready')) setTimeout(() => el.classList.add('ready'), 60);
 }
 requestAnimationFrame(frame);
-addEventListener('resize', () => { renderer.setSize(VW(), VH()); placeCamera(); });
+addEventListener('resize', () => { renderer.setSize(VW(), VH()); placeCamera(); if (view) viewApply(); });
 renderer.domElement.addEventListener('webglcontextlost', e => e.preventDefault());
 /* 種類 → 3Dの形 */
 const TYPE = { ball:(c, map) => () => ball(c, map ? .35 : .25, map ? .3 : .6, map), bell:() => bell, candy:() => candy, star:() => miniStar };
@@ -1139,15 +1156,15 @@ function sync(list, giftList){ lastList = list; lastGifts = giftList;
 const ray = new THREE.Raycaster(), v2 = new THREE.Vector2();
 // ツリーを指で回す（タップとドラッグを区別）
 let drag = null, spin = 0; const cv = renderer.domElement; cv.style.touchAction = 'none';
-cv.addEventListener('pointerdown', e => { if (zoomed){ opts.onZoomTap && opts.onZoomTap(); return; } if (editOn){ cv.setPointerCapture(e.pointerId); editDown(e); return; } drag = { x:e.clientX, y:e.clientY, last:e.clientX, t:performance.now(), moved:false, onTree:false }; spin = 0; cv.setPointerCapture(e.pointerId);
+cv.addEventListener('pointerdown', e => { if (view){ viewDown(e); return; } if (zoomed){ opts.onZoomTap && opts.onZoomTap(); return; } if (editOn){ cv.setPointerCapture(e.pointerId); editDown(e); return; } drag = { x:e.clientX, y:e.clientY, last:e.clientX, t:performance.now(), moved:false, onTree:false }; spin = 0; cv.setPointerCapture(e.pointerId);
   // 長押し（指を動かさずに0.45秒）で、その家具をつかんだまま もようがえ に入る
   clearTimeout(lpTimer); const d0 = drag, pt = { clientX:e.clientX, clientY:e.clientY };
   lpTimer = setTimeout(() => { if (drag !== d0 || d0.moved || editOn || zoomed || !opts.onLongPress) return; if (!pickInst(pt)) return; drag = null; opts.onLongPress(); if (!editOn) return; editDown(pt); }, 450); });
 let lpTimer = 0;
-cv.addEventListener('pointermove', e => { if (editOn){ editMove(e); return; } if (!drag) return; const dx = e.clientX - drag.last; if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 7) drag.moved = true;
+cv.addEventListener('pointermove', e => { if (view){ viewMove(e); return; } if (editOn){ editMove(e); return; } if (!drag) return; const dx = e.clientX - drag.last; if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 7) drag.moved = true;
   if (drag.moved){ const now = performance.now(), k = 2 * Math.PI / Math.max(260, cv.clientWidth * .9); tree.rotation.y += dx * k; spin = dx * k / Math.max(8, now - drag.t) * 16; drag.t = now; shadowsDirty = true; } drag.last = e.clientX; });
-cv.addEventListener('pointerup', e => { clearTimeout(lpTimer); if (editOn){ editUp(); return; } const d = drag; drag = null; if (d && d.moved){ opts.onSpin && opts.onSpin(); opts.onRot && opts.onRot(tree.rotation.y); return; } if (d) tapAt(e); });
-cv.addEventListener('pointercancel', () => { clearTimeout(lpTimer); drag = null; if (editOn) editUp(); });
+cv.addEventListener('pointerup', e => { if (view){ viewUp(e); return; } clearTimeout(lpTimer); if (editOn){ editUp(); return; } const d = drag; drag = null; if (d && d.moved){ opts.onSpin && opts.onSpin(); opts.onRot && opts.onRot(tree.rotation.y); return; } if (d) tapAt(e); });
+cv.addEventListener('pointercancel', e => { if (view){ vptr.delete(e.pointerId); return; } clearTimeout(lpTimer); drag = null; if (editOn) editUp(); });
 function furnTap(g){ let lamp = null; g.traverse(m => { if (!lamp && m.userData.lamp) lamp = m; });
   if (lamp){ lampOff = !lampOff; lampLight.intensity = lampOn && !lampOff ? (nightNow ? 3.2 : 1.6) : 0; lamp.traverse(m => { if (m.userData.glow) m.visible = !lampOff; if (m.material && m.material.emissive && m.material.userData.em0 == null) m.material.userData.em0 = m.material.emissiveIntensity; if (m.material && m.material.userData.em0 != null) m.material.emissiveIntensity = lampOff ? 0 : m.material.userData.em0; }); shadowsDirty = true; return; } // あかりをつけたり消したり
   let key = null; g.traverse(m => { if (!key && m.userData.key) key = m.userData.key; }); const slot = key && FURN_BY[key] ? FURN_BY[key].slot : '';
@@ -1192,5 +1209,5 @@ function setSeason(ny){ ny = !!ny; if (ny === nyMode) return; nyMode = ny; if (n
   firBase.forEach(m => m.visible = !ny); for (const k of TREE_PARTS) if (mounted[k]) mounted[k].visible = !ny; if (mochi) mochi.group.visible = ny;
   slots.length = 0; (ny ? MOCHI_SLOTS : TREE_SLOTS).forEach(p => slots.push(p)); const L = lastList, G = lastGifts; clearAll(); sig = ''; if (L) sync(L, G || []); shadowsDirty = true; }
 const _mochi = (n = 14, sc = 1.6) => { const mb = makeMochibana(7); mb.group.scale.setScalar(sc); mb.branches.slice(0, n * 2).forEach((cv, i) => { if (i % 2) return; const o = mb.makers[(i / 2) % mb.makers.length](); o.scale.setScalar(1.25); mb.hang(o, cv.getPointAt(.55 + (i % 5) * .07), .05 + (i % 3) * .025); }); mb.group.traverse(m => { if (m.isMesh) m.castShadow = true; }); tree.visible = false; treeRoot.add(mb.group); shadowsDirty = true; };
-return { setSeason, _mochi, thumbGift, giftType:id => GIFT_TYPES[giftSeed(id) % GIFT_TYPES.length], setAdvBox, zoomTo, zoomOut, zoomed:() => zoomed, _dbg, _proj, sync, setRoom, snapshot, setEdit, editRotate, editRemove, autoPlace, layoutOf, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize(){ renderer.setSize(VW(), VH()); placeCamera(); } };
+return { setView, viewReset, viewing:() => !!view, setSeason, _mochi, thumbGift, giftType:id => GIFT_TYPES[giftSeed(id) % GIFT_TYPES.length], setAdvBox, zoomTo, zoomOut, zoomed:() => zoomed, _dbg, _proj, sync, setRoom, snapshot, setEdit, editRotate, editRemove, autoPlace, layoutOf, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize(){ renderer.setSize(VW(), VH()); placeCamera(); } };
 }

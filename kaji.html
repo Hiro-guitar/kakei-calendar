@@ -123,9 +123,11 @@ body.xfullmode header{display:none}
 .xdate{font-weight:800;color:var(--navy)}
 .odesc{margin:6px 8px 8px;font-size:14px;line-height:1.7;color:#5a4a3a;text-align:left;align-self:stretch;background:#fbf4e6;border-radius:12px;padding:10px 14px}
 body.roomedit .qbar,body.roomedit .xfull-top,body.roomedit #appbar{display:none!important}
+body.roomview .qbar,body.roomview .xfull-top,body.roomview #appbar,body.roomview .xside{display:none!important}
+#viewbar{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:20;padding:12px;border-radius:24px;background:var(--cream);box-shadow:var(--sh-lift)}#viewbar .ebmsg{text-align:center}
 #editbar{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:20;padding:12px;border-radius:24px;background:var(--cream);box-shadow:var(--sh-lift)}
 #editbar .ebmsg{text-align:center;font-weight:800;font-size:13px;color:var(--navy);margin-bottom:10px}
-#editbar .ebbtn{display:flex;gap:8px}#editbar button{flex:1;padding:12px 0;border-radius:16px;background:#f6eedc;font-weight:900;color:var(--navy);box-shadow:0 2px 0 #e2d2ae}#editbar button:disabled{opacity:.4}#editbar button.go{background:var(--amber);color:#fff;box-shadow:0 2px 0 #c8862a}
+#editbar .ebbtn,#viewbar .ebbtn{display:flex;gap:8px}#viewbar button{flex:1;padding:12px 0;border-radius:16px;background:#f6eedc;font-weight:900;color:var(--navy);box-shadow:0 2px 0 #e2d2ae}#viewbar button.go{background:var(--amber);color:#fff;box-shadow:0 2px 0 #c8862a}#editbar button{flex:1;padding:12px 0;border-radius:16px;background:#f6eedc;font-weight:900;color:var(--navy);box-shadow:0 2px 0 #e2d2ae}#editbar button:disabled{opacity:.4}#editbar button.go{background:var(--amber);color:#fff;box-shadow:0 2px 0 #c8862a}
 .myt .myc{position:absolute;top:4px;right:6px;min-width:18px;height:18px;border-radius:9px;background:#e8a83a;color:#fff;font-size:11px;line-height:18px;font-weight:900}
 .myt .myadd{font-size:10px;color:#c8862a;font-weight:900}.myt{position:relative}
 #grppop{position:fixed;z-index:30;padding:12px 12px 10px;border-radius:22px;background:var(--cream);box-shadow:0 10px 30px rgba(60,40,10,.25);opacity:0;transform:translateY(10px) scale(.94);transform-origin:var(--tail,50%) 100%;pointer-events:none;transition:opacity .16s,transform .22s cubic-bezier(.3,1.5,.5,1)}
@@ -4797,10 +4799,13 @@ function moyouSheet(){ rmod().then(m => { const U = unlockedFurn(m), room = sett
       ? `<button class="myt ${cur === it.key ? 'on' : ''}" data-act="furn" data-slot="${slot}" data-key="${it.key}">${fimg(it.key)}${esc(it.name)}</button>`
       : `<div class="myt lock"><span class="lk">🔒</span>？？？</div>`));
     return `<div class="mysec"><h3>${label}${needFp ? '<small style="font-weight:400;color:#a8946a">　暖炉があると飾れるよ</small>' : ''}</h3><div class="myrow">${tiles.join('')}</div></div>`; }).join('');
-  openSheet(`<div class="advhd"><b>もようがえ</b></div><button class="btn go wide" style="margin:0 0 14px;padding:13px" data-act="roomedit">家具を動かす・しまう</button>${secs}`); setTimeout(fillFurn, 30); }); }
+  openSheet(`<div class="advhd"><b>もようがえ</b></div><div class="row" style="gap:8px;margin:0 0 14px"><button class="btn go" style="flex:1;padding:13px" data-act="roomedit">家具を動かす・しまう</button><button class="btn" style="flex:1;padding:13px" data-act="roomview">👀 お部屋をながめる</button></div>${secs}`); setTimeout(fillFurn, 30); }); }
 /* 家具を動かすモード */
 let roomEditing = false, roomSel = null;
 function roomEdit(on, selId){ if (!ROOM) return; roomEditing = !!on; document.body.classList.toggle('roomedit', roomEditing); ROOM.setEdit(roomEditing); ROOM.setAdvBox(!roomEditing && advLeft() > 0); roomSel = null; renderEditbar(); if (!roomEditing) render(); }
+function roomView(on){ if (!ROOM) return; if (on && roomEditing) roomEdit(false); ROOM.setView(!!on); document.body.classList.toggle('roomview', !!on); ROOM.setAdvBox(!on && advLeft() > 0);
+  let b = $('viewbar'); if (!b){ b = document.createElement('div'); b.id = 'viewbar'; document.body.appendChild(b); }
+  b.style.display = on ? '' : 'none'; if (on) b.innerHTML = `<div class="ebmsg">なぞって見まわす・2本指でよる／はなれる</div><div class="ebbtn"><button data-act="vreset">もとの向き</button><button class="go" data-act="vend">おわる</button></div>`; }
 function renderEditbar(){ let b = $('editbar'); if (!b){ b = document.createElement('div'); b.id = 'editbar'; document.body.appendChild(b); } if (!roomEditing){ b.style.display = 'none'; return; } b.style.display = '';
   const s2 = roomSel, canRot = s2 && !s2.wall && s2.key !== 'tree', canRm = s2 && s2.key !== 'tree';
   b.innerHTML = `<div class="ebmsg">${s2 ? (s2.key === 'tree' ? 'ツリーをなぞって動かしてね' : s2.wall ? 'なぞって壁の上を動かしてね' : 'なぞって動かしてね') : '動かしたい家具をなぞってね'}</div><div class="ebbtn"><button data-act="erot" ${canRot ? '' : 'disabled'}>↻ まわす</button><button data-act="erm" ${canRm ? '' : 'disabled'}>しまう</button><button class="go" data-act="eend">おわる</button></div>`; }
@@ -5151,6 +5156,9 @@ document.addEventListener('click', e => {
     case 'erot': if (ROOM && ROOM.editRotate() === false) toast('ここでは回せないよ'); break;
     case 'erm': if (ROOM) ROOM.editRemove(); break;
     case 'eend': roomEdit(false); break;
+    case 'roomview': closeSheet(); roomView(true); break;
+    case 'vreset': ROOM && ROOM.viewReset(); break;
+    case 'vend': roomView(false); break;
     case 'kuji': menuClose && menuClose(); kujiSheet(); break;
     case 'kujidraw': kujiDraw(); break;
     case 'kujimode': kujiMode = el.dataset.v; kujiSheet(); break;
