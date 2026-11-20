@@ -276,6 +276,11 @@ function pine(x, z, h, lit){ const t = new THREE.Group(); t.position.set(WX + x,
   if (lit){ const cols = ['#ff5a4a', '#ffd84a', '#5ad0ff', '#7aff8a', '#ff8ad8']; t.userData.bulbs = []; for (let i = 0; i < 46; i++){ const a = i * 2.4, yy = .15 + (i / 46) * .78, rr = h * (.42 - (yy - .15) * .38) * .95; const b = new THREE.Mesh(new THREE.SphereGeometry(.022, 6, 4), new THREE.MeshBasicMaterial({ color:cols[i % 5] })); b.position.set(Math.cos(a) * rr, yy * h, Math.sin(a) * rr); t.add(b); t.userData.bulbs.push(b); } litTrees.push(t); }
   return t; }
 const litTrees = [];
+// 庭をまだ使わない人（テスト中）には、もとの庭の木と雪の吹きだまりを出す
+const oldTrees = new THREE.Group(); outside.add(oldTrees);
+{ const n0 = outside.children.length; for (const [x, z, h, lit] of [[-1.8, -1.6, 1.2], [2.0, -2.0, 1.1], [-1.7, -4.0, 1.3, 1]]) pine(x, z, h, lit);
+  for (const [x, z, r] of [[-1.2, -2.0, .7], [1.4, -2.6, .6]]){ const m = new THREE.Mesh(new THREE.SphereGeometry(r, 28, 14), snowMat); m.scale.y = .28; m.position.set(WX + x, .58, OUT_Z + z); m.receiveShadow = true; outside.add(m); }
+  outside.children.slice(n0).forEach(c => oldTrees.add(c)); }
 for (const [x, z, h, lit] of [[-3.0, -2.4, 1.7], [3.1, -2.8, 1.8], [-3.6, -4.2, 2.0], [3.8, -4.4, 2.0], [-5.6, -4.6, 1.6], [5.8, -4.8, 1.7]]) pine(x, z, h, lit);
 // 町なみ（家・教会・広場のツリー・街灯）
 const roofSnow = std('#f6f8ff', { roughness:.9 });
@@ -1212,6 +1217,7 @@ const isYardKey = k => !!(FURN_BY[k] && GARDEN_SLOTS.includes(FURN_BY[k].slot)),
 const YB = { x0:WX - 1.65, x1:WX + 1.4, z0:OUT_Z - 4.05, z1:OUT_Z - 1.6 }, YY = .6;
 const yardY = (x, z) => Math.max(.55, terH(x - WX, OUT_Z - z)) - .02;
 const YOBS = [[-3.0, -2.4, .5], [3.1, -2.8, .5]].map(([x, z, r]) => new THREE.Box3(new THREE.Vector3(WX + x - r, 0, OUT_Z + z - r), new THREE.Vector3(WX + x + r, 3, OUT_Z + z + r)));
+const GARDEN = () => !opts.garden || !!opts.garden(); let hiddenYard = [];
 const parentFor = k => isYardKey(k) ? outside : scene;
 function partBox(g, opt = {}){ g.updateMatrixWorld(true); const box = new THREE.Box3(); g.traverse(m => { if (!m.isMesh || !m.visible) return; if (m.material && (m.material.map === blobTex || m.material.blending === THREE.AdditiveBlending)) return; if (m.userData.thumbTree || m.userData.selMark) return; if (opt.noGift && m.parent && m.parent.userData.gift) return; box.expandByObject(m); }); return box; }
 // ツリーは、まわりのプレゼント置き場（いくつ置いてあっても）まで含めて場所をとる
@@ -1227,13 +1233,13 @@ function placeInst(o){ const r = o.rec;
   if (r.key === 'tree'){ treeRoot.position.set(r.x, 0, r.z); return; }
   if (r.wall){ const W = r.wall; if (W === 'back'){ o.g.position.set(r.u, r.y, bz + .05); o.g.rotation.y = 0; } else { const s2 = W === 'left' ? -1 : 1; o.g.position.set(s2 * (RW / 2 - .05), r.y, r.u); o.g.rotation.y = -s2 * Math.PI / 2; } return; }
   o.g.position.set(r.x, 0, r.z); o.g.rotation.y = r.r || 0; if (hostTop(o)) for (const p of riders(o)) placeInst(p); }
-function syncLayout(layout){ const want = new Map(); (layout || []).forEach(r => { if (r && r.id) want.set(r.id, r); });
+function syncLayout(layout){ const want = new Map(), gOn = GARDEN(); hiddenYard = []; oldTrees.visible = !gOn; (layout || []).forEach(r => { if (!r || !r.id) return; if (r.yard && !gOn){ hiddenYard.push({ ...r }); return; } want.set(r.id, r); });
   for (const [id, o] of Object.entries(inst)) if (id !== 'tree' && (!want.has(id) || want.get(id).key !== o.rec.key)){ (o.g.parent || scene).remove(o.g); disposeG(o.g); delete inst[id]; }
   for (const [id, r] of want){ if (r.key === 'tree'){ inst.tree = inst.tree || { g:treeRoot, rec:{ id:'tree', key:'tree', x:-1.15, z:-1.65 } }; inst.tree.rec = { ...r }; placeInst(inst.tree); continue; }
     if (!FURN_BY[r.key]) continue; let o = inst[id]; if (!o){ const g = buildFurn(r.key); g.userData.inst = id; parentFor(r.key).add(g); o = inst[id] = { g, rec:{ ...r } }; } o.rec = { ...r }; placeInst(o); }
   for (const o of Object.values(inst)) if (o.rec.on) placeInst(o);
   if (!inst.tree) inst.tree = { g:treeRoot, rec:{ id:'tree', key:'tree', x:treeRoot.position.x, z:treeRoot.position.z } }; }
-function layoutOf(){ return Object.values(inst).map(o => ({ ...o.rec })); }
+function layoutOf(){ return [...Object.values(inst).map(o => ({ ...o.rec })), ...hiddenYard.map(r => ({ ...r }))]; }
 function legacyLayout(sel){ const L = [{ id:'tree', key:'tree', x:-1.15, z:-1.65 }]; for (const slot of [...FLOOR_SLOTS, ...WALL_SLOTS]){ const k = sel[slot]; if (k && k !== 'none' && FURN_BY[k]) L.push({ id:slot + '_1', ...recDefault(k) }); } return L; }
 function setRoom(sel, layout){ sel = sel || {}; lastSel = sel; syncLayout(layout || legacyLayout(sel));
   for (const [slot] of FURN_SLOTS){ if (FLOOR_SLOTS.includes(slot) || WALL_SLOTS.includes(slot) || GARDEN_SLOTS.includes(slot)) continue; let k = sel[slot]; if (TREE_PARTS.includes(slot) && k === undefined) k = slot + '_a'; if (k === 'none') k = null; placeItem(slot, k); }
@@ -1267,7 +1273,7 @@ function findNear(o){ if (isYard(o)) return yardNear(o); if (o.rec.wall || o.rec
   for (const [dx, dz] of cand){ const b = b0.clone().translate(new THREE.Vector3(dx, 0, dz)); if (b.min.x < -RW / 2 - .08 || b.max.x > RW / 2 + .08 || b.min.z < bz - .16 || b.max.z > ZMAX) continue;
     const sb = shrink(b.clone()); if (others.some(p => sb.intersectsBox(p))) continue; o.rec = { ...o.rec, x:+(x0 + dx).toFixed(3), z:+(z0 + dz).toFixed(3) }; placeInst(o); return true; }
   return false; }
-function autoPlace(key){ const id = key.split('_')[0] + '_' + Math.random().toString(36).slice(2, 7), it = FURN_BY[key]; if (!it) return null; const g = buildFurn(key); g.userData.inst = id; parentFor(key).add(g);
+function autoPlace(key){ if (isYardKey(key) && !GARDEN()) return null; const id = key.split('_')[0] + '_' + Math.random().toString(36).slice(2, 7), it = FURN_BY[key]; if (!it) return null; const g = buildFurn(key); g.userData.inst = id; parentFor(key).add(g);
   const o = inst[id] = { g, rec:{ id, ...recDefault(key) } }; placeInst(o); if (boxOK(o)) return { ...o.rec };
   if (o.rec.yard){ if (yardNear(o)) return { ...o.rec }; g.parent.remove(g); delete inst[id]; return null; }
   if (o.rec.wall){ for (const W of ['back', 'left', 'right']) for (let y = 1.6; y < 3.4; y += .2) for (let u = -2; u <= 2; u += .2){ o.rec = { id, key, wall:W, u:+u.toFixed(2), y:+y.toFixed(2) }; placeInst(o); if (boxOK(o)) return { ...o.rec }; } }
@@ -1473,5 +1479,5 @@ function setSeason(ny){ ny = !!ny; if (ny === nyMode) return; nyMode = ny; if (n
   firBase.forEach(m => m.visible = !ny); for (const k of TREE_PARTS) if (mounted[k]) mounted[k].visible = !ny; if (mochi) mochi.group.visible = ny;
   slots.length = 0; (ny ? MOCHI_SLOTS : TREE_SLOTS).forEach(p => slots.push(p)); const L = lastList, G = lastGifts; clearAll(); sig = ''; if (L) sync(L, G || []); shadowsDirty = true; }
 const _mochi = (n = 14, sc = 1.6) => { const mb = makeMochibana(7); mb.group.scale.setScalar(sc); mb.branches.slice(0, n * 2).forEach((cv, i) => { if (i % 2) return; const o = mb.makers[(i / 2) % mb.makers.length](); o.scale.setScalar(1.25); mb.hang(o, cv.getPointAt(.55 + (i % 5) * .07), .05 + (i % 3) * .025); }); mb.group.traverse(m => { if (m.isMesh) m.castShadow = true; }); tree.visible = false; treeRoot.add(mb.group); shadowsDirty = true; };
-return { setView, viewReset, viewing:() => !!view, _view:(y, p, d) => { if (!view) return; view.yaw = y; view.pitch = p; if (d) view.dist = d; viewApply(); }, setSeason, _mochi, thumbGift, giftType:id => GIFT_TYPES[giftSeed(id) % GIFT_TYPES.length], setAdvBox, zoomTo, zoomOut, zoomed:() => zoomed, _dbg, _proj, sync, setRoom, snapshot, setEdit, editRotate, editRemove, autoPlace, peekGarden(){ if (view) return; if (zoomed && !peek){ zoomed = false; zoom = null; placeCamera(); } peekWindow(); }, peeking:() => peek, layoutOf, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize: refit };
+return { setView, viewReset, viewing:() => !!view, _view:(y, p, d) => { if (!view) return; view.yaw = y; view.pitch = p; if (d) view.dist = d; viewApply(); }, setSeason, _mochi, thumbGift, giftType:id => GIFT_TYPES[giftSeed(id) % GIFT_TYPES.length], setAdvBox, zoomTo, zoomOut, zoomed:() => zoomed, _dbg, _proj, sync, setRoom, snapshot, setEdit, editRotate, editRemove, autoPlace, peekGarden(){ if (view || !GARDEN()) return; if (zoomed && !peek){ zoomed = false; zoom = null; placeCamera(); } peekWindow(); }, peeking:() => peek, layoutOf, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize: refit };
 }
