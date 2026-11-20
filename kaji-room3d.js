@@ -1369,7 +1369,7 @@ function zoomTo(id){ const o = placed.find(x => x.userData.id === id) || gifts.f
   const dir = camera.position.clone().sub(p).normalize(), far = o.userData.gift ? 2.6 : 2.0; zoom = { t0:performance.now(), fromP:camera.position.clone(), fromL:camLook(), toP:p.clone().addScaledVector(dir, far), toL:p.clone().add(new THREE.Vector3(0, -far * .17, 0)), dur:650 }; zoomed = true; }
 // 窓をのぞく：窓をさわると、窓の前まで寄って外をながめる。どこかをさわると戻る
 let peek = false;
-function peekWindow(){ if (zoomed || view) return; peek = true; village.visible = true; const px = WX, toP = new THREE.Vector3(px - .2, 3.2, OUT_Z - .6), toL = new THREE.Vector3(px, -16, OUT_Z - 27);
+function peekWindow(){ if (zoomed || view || !GARDEN()) return; /* 窓をのぞく機能もテスト中（ひろきの端末だけ） */ peek = true; village.visible = true; const px = WX, toP = new THREE.Vector3(px - .2, 3.2, OUT_Z - .6), toL = new THREE.Vector3(px, -16, OUT_Z - 27);
   zoom = { t0:performance.now(), fromP:camera.position.clone(), fromL:camLook(), toP, toL, dur:800, fromF:camera.fov, toF:Math.min(78, 52 / Math.min(1, camera.aspect + .25)) }; zoomed = true; if (window.kajiToast && !editOn) setTimeout(() => { if (peek && !editOn) window.kajiToast('どこかをさわるともどるよ'); }, 900); }
 function zoomOut(){ if (!zoomed) return; zoomed = false; const wasPeek = peek; peek = false; if (wasPeek) setTimeout(() => { if (!peek) village.visible = false; }, 600); const keepP = camera.position.clone(), keepL = camLook(), keepF = camera.fov; camera.fov = 32; placeCamera(); const toP = camera.position.clone(); camera.position.copy(keepP); camera.lookAt(keepL); zoom = { t0:performance.now(), fromP:keepP, fromL:keepL, toP, toL:target.clone(), dur:550, end:true, ...(wasPeek ? { fromF:keepF, toF:32 } : {}) }; if (wasPeek){ camera.fov = keepF; camera.updateProjectionMatrix(); } }
 function stepZoom(now){ if (!zoom) return; const t = Math.min(1, (now - zoom.t0) / zoom.dur), k = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -1444,7 +1444,7 @@ function furnTap(g){ let lamp = null; g.traverse(m => { if (!lamp && m.userData.
 function tapAt(e){ const r = renderer.domElement.getBoundingClientRect(); v2.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); ray.setFromCamera(v2, camera);
   const hit = ray.intersectObjects([...placed, ...gifts, ...(advBox.visible ? [advBox] : [])], true)[0];
   // 窓をさわると外をのぞく（ツリーや家具が手前にないとき）
-  if (!hit && win.visible){ const wh = ray.intersectObject(win, true)[0]; if (wh){ const blk = ray.intersectObjects([treeRoot, ...Object.values(inst).filter(o => o.rec.key !== 'tree').map(o => o.g)], true)[0]; if (!blk || blk.distance > wh.distance){ peekWindow(); return; } } }
+  if (!hit && win.visible && GARDEN()){ const wh = ray.intersectObject(win, true)[0]; if (wh){ const blk = ray.intersectObjects([treeRoot, ...Object.values(inst).filter(o => o.rec.key !== 'tree').map(o => o.g)], true)[0]; if (!blk || blk.distance > wh.distance){ peekWindow(); return; } } }
   // 家具をさわると、ちょっと動く（ツリーより手前にあるときだけ）
   if (!hit){ const fs = [...Object.values(inst).filter(o => o.rec.key !== 'tree').map(o => o.g), ...Object.values(mounted).filter(m => m && m.visible && m.parent !== tree)], fh = ray.intersectObjects(fs, true)[0], th = ray.intersectObject(treeRoot, true)[0];
     if (fh && (!th || fh.distance < th.distance)){ let o = fh.object; while (o.parent && !fs.includes(o)) o = o.parent; furnTap(o); return; } }
