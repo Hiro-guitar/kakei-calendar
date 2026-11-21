@@ -365,15 +365,17 @@ const trailN = 120, trailGeo = new THREE.BufferGeometry(), trailPos = new Float3
 const trail = new THREE.Points(trailGeo, new THREE.PointsMaterial({ color:'#ffe9a8', size:.09, transparent:true, opacity:.95, map:glowTex, depthWrite:false, blending:THREE.AdditiveBlending })); trail.visible = false; outside.add(trail);
 let trailI = 0, sleighBell = 0;
 /* そりの飛ぶ道：手前を横切ってから町へ降りていき、町の上を低くぐるっと回って、遠くの空へ帰っていく（x, 高さ, 窓からの奥行き） */
-const SLP = new THREE.CatmullRomCurve3([[-16, 2.2, 8], [-6, .2, 11], [3, -2.6, 16], [8, -7.5, 24], [5, -10.6, 33], [-3, -11.2, 39], [-10, -11, 44], [-13, -10.8, 36], [-7, -11.2, 29], [2, -11, 31], [9, -10.6, 40], [7, -10, 50], [-1, -10.2, 57], [-9, -9.4, 52], [-6, -7, 66], [0, -2, 84], [6, 5, 110]].map(([x, y, d]) => new THREE.Vector3(WX + x, y, OUT_Z - d)), false, 'centripetal');
+const SLP = new THREE.CatmullRomCurve3([[-16, 2.2, 8], [-6, .4, 11], [3, -1.5, 15], [6, -5, 22], [4, -9, 30], [0, -12, 36], [8, -12.5, 44], [4, -12.5, 54], [-8, -12.5, 56], [-14, -12.5, 46], [-8, -12.5, 37], [2, -12.3, 38], [9, -12, 47], [3, -11, 60], [-4, -8, 72], [0, -3, 90], [6, 4, 115]].map(([x, y, d]) => new THREE.Vector3(WX + x, y, OUT_Z - d)), false, 'centripetal');
+let slJump = true; const slGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:'#ffd890', transparent:true, opacity:0, depthWrite:false, blending:THREE.AdditiveBlending })); slGlow.scale.setScalar(1.6); slGlow.position.set(.4, .5, 0); sleigh.add(slGlow);
 const SLT = 30000, SLPER = 46000, slTan = new THREE.Vector3(), slTan2 = new THREE.Vector3(); sleigh.rotation.order = 'YZX';
 const sleighTick = () => { const now = performance.now(), on = isEve(); trail.visible = on; if (!on){ sleigh.visible = false; return; }
-  const p = (now % SLPER) / SLPER, k = window.KAJI_SLEIGH_K != null ? window.KAJI_SLEIGH_K : p * SLPER / SLT; if (k > 1){ sleigh.visible = false; return; } sleigh.visible = true;
+  const p = (now % SLPER) / SLPER, k = window.KAJI_SLEIGH_K != null ? window.KAJI_SLEIGH_K : p * SLPER / SLT; if (k > 1){ sleigh.visible = false; slJump = true; return; } sleigh.visible = true;
   const pos = SLP.getPointAt(k); SLP.getTangentAt(k, slTan); SLP.getTangentAt(Math.min(1, k + .01), slTan2); const x = pos.x, y = pos.y, z = pos.z; sleigh.position.copy(pos);
   const hz = Math.hypot(slTan.x, slTan.z), yaw = Math.atan2(-slTan.z, slTan.x), turn = Math.atan2(slTan.x * slTan2.z - slTan.z * slTan2.x, slTan.x * slTan2.x + slTan.z * slTan2.z);
-  sleigh.rotation.y = yaw; sleigh.rotation.z = Math.atan2(slTan.y, hz) * .8; sleigh.rotation.x = THREE.MathUtils.clamp(-turn * 18, -.6, .6);
-  // 遠くへ行っても姿が見えるよう、離れるほど少し大きく（町の上では町よりずっと大きいサンタ）
-  const dist = camera.position.distanceTo(pos), sc = 1.6 * (1 + Math.max(0, Math.min(dist, 60) - 12) / 16); sleigh.scale.setScalar(sc); trail.material.size = .06 * sc;
+  // 向き・かたむきは急に変えず、なめらかに追いかける
+  const R = sleigh.rotation, ease = k < .002 || slJump ? 1 : .12; let dy = yaw - R.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); R.y += dy * ease; R.z += (Math.atan2(slTan.y, hz) * .8 - R.z) * ease; R.x += (THREE.MathUtils.clamp(-turn * 14, -.5, .5) - R.x) * ease * .7; slJump = false;
+  // 遠くへ行くと小さくなる（見失わないよう、ほんの少しだけ大きく＋光をまとう）
+  const dist = camera.position.distanceTo(pos), sc = 1.6 * (1 + Math.max(0, Math.min(dist, 70) - 12) / 70); sleigh.scale.setScalar(sc); trail.material.size = .05 * sc + dist * .004; slGlow.material.opacity = THREE.MathUtils.clamp((dist - 14) / 20, 0, .8) * (isNight ? 1 : .5);
   SL.animate(now);
   trailPos[trailI * 3] = x - slTan.x * .3 * sc + (Math.random() - .5) * .08 * sc; trailPos[trailI * 3 + 1] = y + .06 * sc + (Math.random() - .5) * .08 * sc; trailPos[trailI * 3 + 2] = z - slTan.z * .3 * sc; trailI = (trailI + 1) % trailN; trailGeo.attributes.position.needsUpdate = true;
   if (peek && now - sleighBell > SLPER * .8 && k > .05 && k < .2){ sleighBell = now; try { const c = window.kajiAudio && window.kajiAudio(); if (c) [1568, 1976, 2349, 1976, 1568].forEach((f, i) => { const o = c.createOscillator(), g = c.createGain(), t = c.currentTime + i * .11; o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05, t + .005); g.gain.exponentialRampToValueAtTime(.0005, t + .5); o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + .55); }); } catch (e) {} } };
@@ -1403,7 +1405,7 @@ function stepZoom(now){ if (!zoom) return; const t = Math.min(1, (now - zoom.t0)
   camera.position.lerpVectors(zoom.fromP, zoom.toP, k); zLook.lerpVectors(zoom.fromL, zoom.toL, k); camera.lookAt(zLook); if (zoom.toF){ camera.fov = zoom.fromF + (zoom.toF - zoom.fromF) * k; camera.updateProjectionMatrix(); } if (t >= 1){ if (zoom.end) placeCamera(); zoom = null; } }
 function frame(now){
   requestAnimationFrame(frame);
-  if (document.hidden || stopped || now - last < 33) return; last = now;
+  if (document.hidden || stopped || now - last < (peek ? 14 : 33)) return; last = now; /* のぞいている間はなめらかに（60fps） */
   for (let k = appear.length - 1; k >= 0; k--){ const a = appear[k], t = Math.min(1, (now - a.t0) / 420), s = t < 1 ? 1 + 1.7 * Math.pow(t - 1, 3) + .7 * Math.pow(t - 1, 2) : 1; const bs = a.o.userData.base || 1; a.o.scale.setScalar(Math.max(.001, s * bs)); if (t >= 1){ a.o.scale.setScalar(bs); appear.splice(k, 1); shadowsDirty = true; } }
   giftRing.rotation.y = tree.rotation.y;
   tickAll(now); stepAnims(now);
