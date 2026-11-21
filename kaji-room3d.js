@@ -293,24 +293,34 @@ let riverM = null; const village = new THREE.Group(); village.visible = false; o
   const inCity = (x, dz) => { if (dz < 16.5 || dz > 82) return false; const half = 9 + (dz - 16) * .55 + Math.sin(dz * .4) * 2 + Math.sin(x * .3) * 1.5; if (Math.abs(x) > half) return false; return Math.abs(x - riverX(dz)) > .55 + Math.sin(dz * .7) * .15; };
   const hY = (x, dz) => terH(x, dz) + .06;
   const warm = [], white = [], street = [], color = [], bridges = [];
-  // くねくね曲がる道（ランダムに曲がりながらのびる）に沿った街灯
-  for (let r = 0; r < 46; r++){ let x = (OR() - .5) * 34, dz = 17 + OR() * 60, h = OR() * 6.28; const len = 6 + OR() * 22;
-    for (let d = 0; d < len; d += .28){ h += (OR() - .5) * .35 + Math.sin(d * .3 + r) * .03; x += Math.cos(h) * .28; dz += Math.sin(h) * .28 * .8; if (!inCity(x, dz)){ if (Math.abs(x - riverX(dz)) < .7 && dz > 16.5){ bridges.push([WX + x, hY(x, dz) + .05, OUT_Z - dz]); continue; } h += 1.4; continue; }
-      if (OR() < .75) street.push([WX + x + (OR() - .5) * .05, hY(x, dz) + .04, OUT_Z - dz]);
-      // 道ばたの家々
-      if (OR() < .9) for (let k = 0; k < 2; k++){ const a = h + (k ? 1.57 : -1.57), o = .15 + OR() * .5, px = x + Math.cos(a) * o, pz = dz + Math.sin(a) * o; if (inCity(px, pz)) (OR() < .8 ? warm : white).push([WX + px, hY(px, pz), OUT_Z - pz]); } } }
-  // 住宅のかたまり（密度ばらばら）と、明るい中心街
-  for (let c = 0; c < 26; c++){ const cx = (OR() - .5) * 36, cz = 18 + OR() * 58, rad = 1 + OR() * 3.5, n = 60 + OR() * 260, core = c < 3;
-    for (let i = 0; i < n * (core ? 2.2 : 1); i++){ const a = OR() * 6.28, rr = Math.pow(OR(), core ? .8 : .6) * rad, x = cx + Math.cos(a) * rr * (1 + OR() * .3), dz = cz + Math.sin(a) * rr * .7; if (!inCity(x, dz)) continue; (OR() < (core ? .45 : .82) ? warm : white).push([WX + x, hY(x, dz) + (core ? OR() * .25 : 0), OUT_Z - dz]); } }
-  // まばらな灯り（郊外）
-  for (let i = 0; i < 1400; i++){ const x = (OR() - .5) * 60, dz = 17 + OR() * 66; if (!inCity(x, dz) && Math.abs(x - riverX(dz)) < 1) continue; if (OR() < .55) warm.push([WX + x, hY(x, dz), OUT_Z - dz]); }
+  // 町の広がり：中心街から外へ行くほどまばらに。幹線道路が放射状にのび、沿道とまわりの小さな町に家が集まる。公園や畑はぽっかり空く
+  const cores = [[-2, 46, 9, .8], [-16, 64, 6, .6], [14, 34, 4.5, .5], [9, 73, 5.5, .55], [-10, 28, 3, .4], [21, 60, 4.5, .45], [-25, 77, 5, .45], [26, 80, 4, .4]];
+  const voids = [[4.5, 34, 1.7], [-7, 47, 2.3], [11, 50, 2], [-2.5, 55, 1.5], [17, 42, 2.6], [-19, 38, 3]];
+  const arts = [], artNear = new Map(), akey = (x, dz) => ((x / 1.2) | 0) + ',' + ((dz / 1.2) | 0);
+  const addArt = (x, dz, h, len, wob) => { const line = []; for (let d = 0; d < len; d += .22){ h += Math.sin(d * .09 + wob) * .012 + (OR() - .5) * .02; x += Math.cos(h) * .22; dz += Math.sin(h) * .22; if (dz < 16.8 || dz > 83 || Math.abs(x) > 34) break; line.push([x, dz]); const k = akey(x, dz); if (!artNear.has(k)) artNear.set(k, []); artNear.get(k).push([x, dz]); } arts.push(line); };
+  for (let i = 0; i < 6; i++) addArt(-2, 46, i / 6 * 6.28 + OR() * .6, 60, OR() * 6);
+  addArt(-15, 60, -.3, 30, 2); addArt(14, 30, 2.2, 26, 4); addArt(-30, 70, -.1, 60, 1);
+  { const line = []; for (let dz = 17; dz < 83; dz += .22){ const x = riverX(dz) + 1.1; line.push([x, dz]); const k = akey(x, dz); if (!artNear.has(k)) artNear.set(k, []); artNear.get(k).push([x, dz]); } arts.push(line); }
+  const artDist = (x, dz) => { let m = 9; for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++){ const L = artNear.get((((x / 1.2) | 0) + a) + ',' + (((dz / 1.2) | 0) + b)); if (L) for (const [px, pz] of L){ const d = Math.hypot(px - x, pz - dz); if (d < m) m = d; } } return m; };
+  const dens = (x, dz) => { if (!inCity(x, dz)) return 0; for (const [vx, vz, r] of voids) if (Math.hypot(x - vx, (dz - vz) * 1.2) < r * (1 + Math.sin(x * 3 + dz) * .12)) return 0;
+    let d = 0; for (const [cx, cz, r, w] of cores){ const q = ((x - cx) ** 2 + ((dz - cz) * 1.3) ** 2) / (r * r); d = Math.max(d, w * Math.exp(-q * .55)); }
+    const ad = artDist(x, dz); d += .28 * Math.exp(-ad * ad * 4); return Math.min(1, d + .05 + .13 * Math.min(1, Math.max(0, (dz - 17) / 60))); };
+  // 幹線道路の街灯（オレンジの連なり）と橋
+  for (const line of arts) line.forEach(([x, dz], i) => { if (Math.abs(x - riverX(dz)) < .62){ if (i % 2 === 0) bridges.push([WX + x, hY(x, dz) + .05, OUT_Z - dz]); return; } if (!inCity(x, dz) && OR() < .7) return; if (i % 2 === 0) street.push([WX + x, hY(x, dz) + .04, OUT_Z - dz]); });
+  // 区画ごとに向きのちがう街路（中心ほど細かく、外は粗く）
+  for (const [cx, cz, r, w] of cores){ const ang = OR() * 1.2 - .6, ca = Math.cos(ang), sa = Math.sin(ang), R = r * 2.4, sp = .5 + (1 - w) * .25;
+    for (let u = -R; u <= R; u += sp) for (let v = -R; v <= R; v += .2) for (const sw of [0, 1]){ const a = sw ? u : v, b = sw ? v : u, x = cx + a * ca - b * sa, dz = cz + (a * sa + b * ca) / 1.3, dd = dens(x, dz); if (dd < .14 || OR() > dd * .75) continue;
+      if (OR() < .35) street.push([WX + x, hY(x, dz) + .03, OUT_Z - dz]);
+      for (const s of [-1, 1]) if (OR() < dd * .8){ const o = .1 + OR() * .14, px = x + (sw ? -sa : ca) * 0 + (sw ? ca : -sa) * o * s * 0 + (sw ? -1 : 0) * 0, nx = sw ? -sa : ca, nz = sw ? ca : sa; const hx = x - nz * o * s, hz = dz + nx * o * s / 1.3; if (!dens(hx, hz)) continue; (OR() < (dd > .7 ? .5 : .85) ? warm : white).push([WX + hx, hY(hx, hz) + (dd > .75 ? OR() * .3 : 0), OUT_Z - hz]); } } }
+  // 沿道と郊外の家（まばら）
+  for (let i = 0; i < 9000; i++){ const x = (OR() - .5) * 64, dz = 17 + OR() * 66, dd = dens(x, dz); if (!dd || OR() > dd * .45) continue; (OR() < .8 ? warm : white).push([WX + x, hY(x, dz), OUT_Z - dz]); }
   // クリスマスの広場（色とりどり）と大きなツリー
   for (let i = 0; i < 120; i++){ const a = OR() * 6.28, r = Math.sqrt(OR()) * 1.4; color.push([WX + .6 + Math.cos(a) * r, hY(.6, 27) + .05, OUT_Z - 27 + Math.sin(a) * r]); }
   const tree = []; for (let i = 0; i < 60; i++){ const t = i / 60, a = t * 30; tree.push([WX + .6 + Math.cos(a) * (1 - t) * .35, hY(.6, 27) + .15 + t * 1.3, OUT_Z - 27 + Math.sin(a) * (1 - t) * .35]); }
   pts(street, '#ffc070', .34, .9); pts(warm, '#ff9a3a', .3, .9); pts(white, '#fff0d8', .26, .85); pts(color, '#ff6a8a', .4, .95); pts(tree, '#8affb0', .32, 1); pts(bridges, '#fff4c8', .4, 1);
   const star = pts([[WX + .6, hY(.6, 27) + 1.55, OUT_Z - 27]], '#ffe070', 1.1, 1);
   // 昼にも見える家並み（灯りの位置に小さな家と雪のつもった屋根。夜は暗く沈む）
-  { const src = [...warm, ...white], hs = []; for (let i = 0; i < src.length && hs.length < 3200; i += 2) hs.push(src[i]);
+  { const src = [...warm, ...white], hs = []; const stp = Math.max(1, src.length / 3600); for (let i = 0; i < src.length; i += stp) hs.push(src[i | 0]);
     const N = hs.length, wallG = new THREE.BoxGeometry(1, 1, 1), roofG = new THREE.ConeGeometry(.74, 1, 4); roofG.rotateY(Math.PI / 4);
     const iw = new THREE.InstancedMesh(wallG, std('#ffffff', { roughness:.9 }), N), ir = new THREE.InstancedMesh(roofG, std('#ffffff', { roughness:.85 }), N), d = new THREE.Object3D(), c = new THREE.Color();
     const WC = ['#f3e6d0', '#e8d6bc', '#f7f1e6', '#d8c2a8', '#e4ded4', '#cfd6de', '#e9cfc0'], RC = ['#f4f6fb', '#f4f6fb', '#eef2fa', '#8a3a32', '#4a5a7a', '#6a4a3a', '#3f5a4c'];
