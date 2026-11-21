@@ -361,15 +361,22 @@ function outsideTick(now){ const t = now / 1000;
 const isEve = () => { if (window.KAJI_EVE) return true; const d = new Date(Date.now() - 4 * 36e5), m = d.getMonth(); return (m === 10 && d.getDate() >= 19) || (m === 11 && d.getDate() <= 25); };
 const SL = buildSleigh(), sleigh = SL.root; sleigh.visible = false; sleigh.scale.setScalar(1.6); outside.add(sleigh);
 // そりのうしろのキラキラ
-const trailN = 40, trailGeo = new THREE.BufferGeometry(), trailPos = new Float32Array(trailN * 3).fill(-99); trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
+const trailN = 120, trailGeo = new THREE.BufferGeometry(), trailPos = new Float32Array(trailN * 3).fill(-99); trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
 const trail = new THREE.Points(trailGeo, new THREE.PointsMaterial({ color:'#ffe9a8', size:.09, transparent:true, opacity:.95, map:glowTex, depthWrite:false, blending:THREE.AdditiveBlending })); trail.visible = false; outside.add(trail);
 let trailI = 0, sleighBell = 0;
+/* そりの飛ぶ道：手前を横切ってから町へ降りていき、町の上を低くぐるっと回って、遠くの空へ帰っていく（x, 高さ, 窓からの奥行き） */
+const SLP = new THREE.CatmullRomCurve3([[-16, 2.2, 8], [-6, .2, 11], [3, -2.6, 16], [8, -7.5, 24], [5, -10.6, 33], [-3, -11.2, 39], [-10, -11, 44], [-13, -10.8, 36], [-7, -11.2, 29], [2, -11, 31], [9, -10.6, 40], [7, -10, 50], [-1, -10.2, 57], [-9, -9.4, 52], [-6, -7, 66], [0, -2, 84], [6, 5, 110]].map(([x, y, d]) => new THREE.Vector3(WX + x, y, OUT_Z - d)), false, 'centripetal');
+const SLT = 30000, SLPER = 46000, slTan = new THREE.Vector3(), slTan2 = new THREE.Vector3(); sleigh.rotation.order = 'YZX';
 const sleighTick = () => { const now = performance.now(), on = isEve(); trail.visible = on; if (!on){ sleigh.visible = false; return; }
-  const P = 16000, p = (now % P) / P, k = window.KAJI_SLEIGH_K != null ? window.KAJI_SLEIGH_K : p / .45; if (k > 1){ sleigh.visible = false; return; } sleigh.visible = true;
-  const x = WX - 9 + k * 18, y = -1.1 + Math.sin(k * Math.PI) * 1.1, z = OUT_Z - 13; sleigh.position.set(x, y, z); sleigh.rotation.z = Math.cos(k * Math.PI) * .18;
+  const p = (now % SLPER) / SLPER, k = window.KAJI_SLEIGH_K != null ? window.KAJI_SLEIGH_K : p * SLPER / SLT; if (k > 1){ sleigh.visible = false; return; } sleigh.visible = true;
+  const pos = SLP.getPointAt(k); SLP.getTangentAt(k, slTan); SLP.getTangentAt(Math.min(1, k + .01), slTan2); const x = pos.x, y = pos.y, z = pos.z; sleigh.position.copy(pos);
+  const hz = Math.hypot(slTan.x, slTan.z), yaw = Math.atan2(-slTan.z, slTan.x), turn = Math.atan2(slTan.x * slTan2.z - slTan.z * slTan2.x, slTan.x * slTan2.x + slTan.z * slTan2.z);
+  sleigh.rotation.y = yaw; sleigh.rotation.z = Math.atan2(slTan.y, hz) * .8; sleigh.rotation.x = THREE.MathUtils.clamp(-turn * 18, -.6, .6);
+  // 遠くへ行っても姿が見えるよう、離れるほど少し大きく（町の上では町よりずっと大きいサンタ）
+  const dist = camera.position.distanceTo(pos), sc = 1.6 * (1 + Math.max(0, Math.min(dist, 60) - 12) / 16); sleigh.scale.setScalar(sc); trail.material.size = .06 * sc;
   SL.animate(now);
-  trailPos[trailI * 3] = x - .25 + (Math.random() - .5) * .1; trailPos[trailI * 3 + 1] = y + .1 + (Math.random() - .5) * .1; trailPos[trailI * 3 + 2] = z; trailI = (trailI + 1) % trailN; trailGeo.attributes.position.needsUpdate = true;
-  if (peek && now - sleighBell > P * .8 && k > .3 && k < .5){ sleighBell = now; try { const c = window.kajiAudio && window.kajiAudio(); if (c) [1568, 1976, 2349, 1976, 1568].forEach((f, i) => { const o = c.createOscillator(), g = c.createGain(), t = c.currentTime + i * .11; o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05, t + .005); g.gain.exponentialRampToValueAtTime(.0005, t + .5); o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + .55); }); } catch (e) {} } };
+  trailPos[trailI * 3] = x - slTan.x * .3 * sc + (Math.random() - .5) * .08 * sc; trailPos[trailI * 3 + 1] = y + .06 * sc + (Math.random() - .5) * .08 * sc; trailPos[trailI * 3 + 2] = z - slTan.z * .3 * sc; trailI = (trailI + 1) % trailN; trailGeo.attributes.position.needsUpdate = true;
+  if (peek && now - sleighBell > SLPER * .8 && k > .05 && k < .2){ sleighBell = now; try { const c = window.kajiAudio && window.kajiAudio(); if (c) [1568, 1976, 2349, 1976, 1568].forEach((f, i) => { const o = c.createOscillator(), g = c.createGain(), t = c.currentTime + i * .11; o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05, t + .005); g.gain.exponentialRampToValueAtTime(.0005, t + .5); o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + .55); }); } catch (e) {} } };
 const winLight = new THREE.PointLight('#9fc4ff', 1.5, 4); winLight.position.set(WX, 2.4, bz + .6); scene.add(winLight);
 const outLight = new THREE.DirectionalLight('#bcd4ff', 1.2); outLight.position.set(WX - 2, 6, OUT_Z + 2); outLight.target.position.set(WX, .6, OUT_Z - 2.5); scene.add(outLight, outLight.target);
 
