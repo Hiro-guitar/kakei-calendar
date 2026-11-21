@@ -366,14 +366,15 @@ const trail = new THREE.Points(trailGeo, new THREE.PointsMaterial({ color:'#ffe9
 let trailI = 0, sleighBell = 0;
 /* そりの飛ぶ道：手前を横切ってから町へ降りていき、町の上を低くぐるっと回って、最後は町の中へ降りていく（x, 高さ, 窓からの奥行き） */
 const SLP = new THREE.CatmullRomCurve3([[-16, 2.2, 8], [-6, .4, 11], [3, -1.5, 15], [6, -5, 22], [4, -9, 30], [0, -12, 36], [8, -12.5, 44], [4, -12.5, 54], [-8, -12.5, 56], [-14, -12.5, 46], [-8, -12.5, 37], [2, -12.3, 38], [9, -12, 47], [5, -12.3, 57], [-1, -12.8, 64], [-5, -13.3, 72], [-7, 'L', 82]].map(([x, y, d]) => new THREE.Vector3(WX + x, y === 'L' ? terH(x, d) + .15 : y, OUT_Z - d)), false, 'centripetal');
-let slJump = true; const slGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:'#ffd890', transparent:true, opacity:0, depthWrite:false, blending:THREE.AdditiveBlending })); slGlow.scale.setScalar(1.6); slGlow.position.set(.4, .5, 0); sleigh.add(slGlow);
+SLP.arcLengthDivisions = 4000; SLP.updateArcLengths(); /* 長い道なので細かく測って、速さのムラ（カクつき）をなくす */
+let slJump = true, slPrev = 0; const slGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:'#ffd890', transparent:true, opacity:0, depthWrite:false, blending:THREE.AdditiveBlending })); slGlow.scale.setScalar(1.6); slGlow.position.set(.4, .5, 0); sleigh.add(slGlow);
 const SLT = 34000, SLPER = 50000, slTan = new THREE.Vector3(), slTan2 = new THREE.Vector3(); sleigh.rotation.order = 'YZX';
 const sleighTick = () => { const now = performance.now(), on = isEve(); trail.visible = on; if (!on){ sleigh.visible = false; return; }
   const p = (now % SLPER) / SLPER, k = window.KAJI_SLEIGH_K != null ? window.KAJI_SLEIGH_K : p * SLPER / SLT; if (k > 1){ sleigh.visible = false; slJump = true; return; } sleigh.visible = true;
   const pos = SLP.getPointAt(k); SLP.getTangentAt(k, slTan); SLP.getTangentAt(Math.min(1, k + .01), slTan2); const x = pos.x, y = pos.y, z = pos.z; sleigh.position.copy(pos);
   const hz = Math.hypot(slTan.x, slTan.z), yaw = Math.atan2(-slTan.z, slTan.x), turn = Math.atan2(slTan.x * slTan2.z - slTan.z * slTan2.x, slTan.x * slTan2.x + slTan.z * slTan2.z);
   // 向き・かたむきは急に変えず、なめらかに追いかける
-  const R = sleigh.rotation, ease = k < .002 || slJump ? 1 : .12; let dy = yaw - R.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); R.y += dy * ease; R.z += (Math.atan2(slTan.y, hz) * .8 - R.z) * ease; R.x += (THREE.MathUtils.clamp(-turn * 14, -.5, .5) - R.x) * ease * .7; slJump = false;
+  const sdt = Math.min(.1, (now - (slPrev || now)) / 1000); slPrev = now; const R = sleigh.rotation, ease = k < .002 || slJump ? 1 : 1 - Math.exp(-sdt * 6); let dy = yaw - R.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); R.y += dy * ease; R.z += (Math.atan2(slTan.y, hz) * .8 - R.z) * ease; R.x += (THREE.MathUtils.clamp(-turn * 14, -.5, .5) - R.x) * ease * .7; slJump = false;
   // 遠くへ行くと小さくなる（見失わないよう、ほんの少しだけ大きく＋光をまとう）
   const dist = camera.position.distanceTo(pos), sc = 1.6; const land = Math.max(0, (k - .84) / .16), lf = land * land * (3 - 2 * land); sleigh.scale.setScalar(Math.max(.001, sc * (1 - lf))); slGlow.scale.setScalar(1.6 + lf * .8); trail.material.size = .05 * sc + dist * .004; slGlow.material.opacity = THREE.MathUtils.clamp((dist - 14) / 20, 0, .8) * (isNight ? 1 : .5) * (1 - Math.max(0, (k - .9) / .1));
   SL.animate(now);
@@ -1405,7 +1406,7 @@ function stepZoom(now){ if (!zoom) return; const t = Math.min(1, (now - zoom.t0)
   camera.position.lerpVectors(zoom.fromP, zoom.toP, k); zLook.lerpVectors(zoom.fromL, zoom.toL, k); camera.lookAt(zLook); if (zoom.toF){ camera.fov = zoom.fromF + (zoom.toF - zoom.fromF) * k; camera.updateProjectionMatrix(); } if (t >= 1){ if (zoom.end) placeCamera(); zoom = null; } }
 function frame(now){
   requestAnimationFrame(frame);
-  if (document.hidden || stopped || now - last < (peek ? 14 : 33)) return; last = now; /* のぞいている間はなめらかに（60fps） */
+  if (document.hidden || stopped || now - last < (peek ? 4 : 33)) return; last = now; /* のぞいている間はなめらかに（60fps） */
   for (let k = appear.length - 1; k >= 0; k--){ const a = appear[k], t = Math.min(1, (now - a.t0) / 420), s = t < 1 ? 1 + 1.7 * Math.pow(t - 1, 3) + .7 * Math.pow(t - 1, 2) : 1; const bs = a.o.userData.base || 1; a.o.scale.setScalar(Math.max(.001, s * bs)); if (t >= 1){ a.o.scale.setScalar(bs); appear.splice(k, 1); shadowsDirty = true; } }
   giftRing.rotation.y = tree.rotation.y;
   tickAll(now); stepAnims(now);
