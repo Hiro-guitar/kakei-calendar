@@ -285,7 +285,7 @@ for (const [x, z, h, lit] of [[-3.0, -2.4, 1.7], [3.1, -2.8, 1.8], [-3.6, -4.2, 
 // 町なみ（家・教会・広場のツリー・街灯）
 const roofSnow = std('#f6f8ff', { roughness:.9 });
 // はるか下の町の灯り（家は見えないほど小さく、窓と街灯のつぶが道すじに沿って広がる）
-const village = new THREE.Group(); village.visible = false; outside.add(village); const vLights = [], puffs = [];
+let riverM = null; const village = new THREE.Group(); village.visible = false; outside.add(village); const vLights = [], puffs = [];
 { const dotTex = canvasTex(64, 64, (g, w) => { const r = g.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(.2, 'rgba(255,255,255,.9)'); r.addColorStop(.45, 'rgba(255,255,255,.25)'); r.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = r; g.fillRect(0, 0, w, w); });
   const pts = (arr, color, size, op) => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(arr.flat()), 3)); const p = new THREE.Points(g, new THREE.PointsMaterial({ color, size, map:dotTex, transparent:true, opacity:op, depthWrite:false, blending:THREE.AdditiveBlending })); village.add(p); vLights.push(p); return p; };
   // 川（灯りのない、くねった帯）
@@ -309,10 +309,20 @@ const village = new THREE.Group(); village.visible = false; outside.add(village)
   const tree = []; for (let i = 0; i < 60; i++){ const t = i / 60, a = t * 30; tree.push([WX + .6 + Math.cos(a) * (1 - t) * .35, hY(.6, 27) + .15 + t * 1.3, OUT_Z - 27 + Math.sin(a) * (1 - t) * .35]); }
   pts(street, '#ffc070', .34, .9); pts(warm, '#ff9a3a', .3, .9); pts(white, '#fff0d8', .26, .85); pts(color, '#ff6a8a', .4, .95); pts(tree, '#8affb0', .32, 1); pts(bridges, '#fff4c8', .4, 1);
   const star = pts([[WX + .6, hY(.6, 27) + 1.55, OUT_Z - 27]], '#ffe070', 1.1, 1);
+  // 昼にも見える家並み（灯りの位置に小さな家と雪のつもった屋根。夜は暗く沈む）
+  { const src = [...warm, ...white], hs = []; for (let i = 0; i < src.length && hs.length < 3200; i += 2) hs.push(src[i]);
+    const N = hs.length, wallG = new THREE.BoxGeometry(1, 1, 1), roofG = new THREE.ConeGeometry(.74, 1, 4); roofG.rotateY(Math.PI / 4);
+    const iw = new THREE.InstancedMesh(wallG, std('#ffffff', { roughness:.9 }), N), ir = new THREE.InstancedMesh(roofG, std('#ffffff', { roughness:.85 }), N), d = new THREE.Object3D(), c = new THREE.Color();
+    const WC = ['#f3e6d0', '#e8d6bc', '#f7f1e6', '#d8c2a8', '#e4ded4', '#cfd6de', '#e9cfc0'], RC = ['#f4f6fb', '#f4f6fb', '#eef2fa', '#8a3a32', '#4a5a7a', '#6a4a3a', '#3f5a4c'];
+    hs.forEach(([wx, y0, wz], i) => { const x = wx - WX, dz = OUT_Z - wz, g = terH(x, dz), tall = y0 - hY(x, dz) > .05, w = .13 + OR() * .13, dd = w * (.8 + OR() * .5), h = tall ? .3 + OR() * .45 : w * (.7 + OR() * .7), ry = OR() * 3.14;
+      d.position.set(wx, g + h / 2, wz); d.rotation.set(0, ry, 0); d.scale.set(w, h, dd); d.updateMatrix(); iw.setMatrixAt(i, d.matrix); iw.setColorAt(i, c.set(WC[(OR() * WC.length) | 0]));
+      const rh = tall ? .02 : w * .5; d.position.set(wx, g + h + rh / 2, wz); d.scale.set(w * 1.02, rh, dd * 1.02); d.updateMatrix(); ir.setMatrixAt(i, d.matrix); ir.setColorAt(i, c.set(tall ? '#e8ecf4' : RC[(OR() * RC.length) | 0])); });
+    iw.userData.house = ir.userData.house = true; village.add(iw, ir);
+    const pt = new THREE.Mesh(new THREE.ConeGeometry(.35, 1.3, 10), std('#2a5a44', { roughness:.9 })); pt.position.set(WX + .6, terH(.6, 27) + .75, OUT_Z - 27); village.add(pt); }
   // 川の水面（暗い帯）と、うつりこむ灯り
   { const pos = [], refl = []; for (let dz = 16; dz < 84; dz += .5){ const x = riverX(dz), w = .26 + (dz - 16) * .002; pos.push(WX + x - w, hY(x, dz) - .02, OUT_Z - dz, WX + x + w, hY(x, dz) - .02, OUT_Z - dz); if (OR() < .5) refl.push([WX + x + (OR() - .5) * .6, hY(x, dz), OUT_Z - dz]); }
     const idx = []; for (let i = 0; i < pos.length / 6 - 1; i++){ const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
-    village.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color:'#2a3460', transparent:true, opacity:.55, side:THREE.DoubleSide }))); pts(refl, '#ffa050', .22, .45); }
+    riverM = new THREE.MeshBasicMaterial({ color:'#2a3460', transparent:true, opacity:.55, side:THREE.DoubleSide }); village.add(new THREE.Mesh(g, riverM)); pts(refl, '#ffa050', .22, .45); }
   // 斜面の森
   const FN = 320, fi = new THREE.InstancedMesh(new THREE.ConeGeometry(.16, .5, 7), std('#1f4438', { roughness:.9 }), FN), fs = new THREE.InstancedMesh(new THREE.ConeGeometry(.1, .18, 7), std('#eef2ff'), FN), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), ps = new THREE.Vector3(), sc = new THREE.Vector3(); let f = 0;
   for (let i = 0; i < 3000 && f < FN; i++){ const x = (OR() - .5) * 46, dz = 4.5 + OR() * 10; const y = terH(x, dz), s0 = .8 + OR() * 1.0;
@@ -332,7 +342,7 @@ nearGeo.setAttribute('position', new THREE.BufferAttribute(nearPos, 3)); const n
 // 窓の外側の桟につもった雪
 { const ls = new THREE.Mesh(new RoundedBoxGeometry(WW - .02, .07, .16, 3, .03), roofSnow); ls.position.set(WX, WY - WH / 2 + .03, bz - .24); outside.add(ls); }
 function outsideTime(night){ sky.material.map = night ? skyNightTex : skyDayTex; sky.material.needsUpdate = true; ridges[0].material.color.set(night ? '#ffffff' : '#c8d4ee'); ridges[1].material.color.set(night ? '#ffffff' : '#d8e0f2');
-  vLights.forEach(p => p.visible = night); village.children.forEach(c => { if (c.isInstancedMesh) c.material.color.set(night ? '#5a6080' : '#ffffff'); }); }
+  vLights.forEach(p => p.visible = night); village.children.forEach(c => { if (c.isInstancedMesh) c.material.color.set(night ? '#5a6080' : '#ffffff'); if (c.userData.house) c.visible = !night; }); if (riverM) riverM.color.set(night ? '#2a3460' : '#7f9cc4'); }
 function outsideTick(now){ const t = now / 1000;
   { const a = snowGeo.attributes.position; for (let i = 0; i < snowN; i++){ let y = a.getY(i) - .01 - (i % 3) * .003; if (y < .6) y = 5.6; a.setY(i, y); a.setX(i, a.getX(i) + Math.sin(t * 1.1 + i) * .0016); } a.needsUpdate = true; }
   { const a = nearGeo.attributes.position; for (let i = 0; i < nearN; i++){ let y = a.getY(i) - .016; if (y < .7) y = 4.2; a.setY(i, y); a.setX(i, a.getX(i) + Math.sin(t * .9 + i * 1.7) * .0026); } a.needsUpdate = true; }
@@ -1369,7 +1379,7 @@ function zoomTo(id){ const o = placed.find(x => x.userData.id === id) || gifts.f
   const dir = camera.position.clone().sub(p).normalize(), far = o.userData.gift ? 2.6 : 2.0; zoom = { t0:performance.now(), fromP:camera.position.clone(), fromL:camLook(), toP:p.clone().addScaledVector(dir, far), toL:p.clone().add(new THREE.Vector3(0, -far * .17, 0)), dur:650 }; zoomed = true; }
 // 窓をのぞく：窓をさわると、窓の前まで寄って外をながめる。どこかをさわると戻る
 let peek = false;
-function peekWindow(){ if (zoomed || view || !GARDEN()) return; /* 窓をのぞく機能もテスト中（ひろきの端末だけ） */ peek = true; village.visible = true; const px = WX, toP = new THREE.Vector3(px - .2, 3.2, OUT_Z - .6), toL = new THREE.Vector3(px, -16, OUT_Z - 27);
+function peekWindow(){ if (zoomed || view || !GARDEN()) return; /* 窓をのぞく機能もテスト中（ひろきの端末だけ） */ peek = true; village.visible = true; oldTrees.visible = false; const px = WX, toP = new THREE.Vector3(px - .2, 3.2, OUT_Z - .6), toL = new THREE.Vector3(px, -16, OUT_Z - 27);
   zoom = { t0:performance.now(), fromP:camera.position.clone(), fromL:camLook(), toP, toL, dur:800, fromF:camera.fov, toF:Math.min(78, 52 / Math.min(1, camera.aspect + .25)) }; zoomed = true; if (window.kajiToast && !editOn) setTimeout(() => { if (peek && !editOn) window.kajiToast('どこかをさわるともどるよ'); }, 900); }
 function zoomOut(){ if (!zoomed) return; zoomed = false; const wasPeek = peek; peek = false; if (wasPeek) setTimeout(() => { if (!peek) village.visible = false; }, 600); const keepP = camera.position.clone(), keepL = camLook(), keepF = camera.fov; camera.fov = 32; placeCamera(); const toP = camera.position.clone(); camera.position.copy(keepP); camera.lookAt(keepL); zoom = { t0:performance.now(), fromP:keepP, fromL:keepL, toP, toL:target.clone(), dur:550, end:true, ...(wasPeek ? { fromF:keepF, toF:32 } : {}) }; if (wasPeek){ camera.fov = keepF; camera.updateProjectionMatrix(); } }
 function stepZoom(now){ if (!zoom) return; const t = Math.min(1, (now - zoom.t0) / zoom.dur), k = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
