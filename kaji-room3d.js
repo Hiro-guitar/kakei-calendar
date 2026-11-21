@@ -364,8 +364,8 @@ const SL = buildSleigh(), sleigh = SL.root; sleigh.visible = false; sleigh.scale
 const trailN = 120, trailGeo = new THREE.BufferGeometry(), trailPos = new Float32Array(trailN * 3).fill(-99); trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
 const trail = new THREE.Points(trailGeo, new THREE.PointsMaterial({ color:'#ffe9a8', size:.09, transparent:true, opacity:.95, map:glowTex, depthWrite:false, blending:THREE.AdditiveBlending })); trail.visible = false; outside.add(trail);
 let trailI = 0, sleighBell = 0;
-/* そりの飛ぶ道：手前を横切ってから町へ降りていき、町の上を低くぐるっと回って、遠くの空へ帰っていく（x, 高さ, 窓からの奥行き） */
-const SLP = new THREE.CatmullRomCurve3([[-16, 2.2, 8], [-6, .4, 11], [3, -1.5, 15], [6, -5, 22], [4, -9, 30], [0, -12, 36], [8, -12.5, 44], [4, -12.5, 54], [-8, -12.5, 56], [-14, -12.5, 46], [-8, -12.5, 37], [2, -12.3, 38], [9, -12, 47], [3, -11, 60], [-4, -8, 72], [0, -3, 90], [6, 4, 115]].map(([x, y, d]) => new THREE.Vector3(WX + x, y, OUT_Z - d)), false, 'centripetal');
+/* そりの飛ぶ道：手前を横切ってから町へ降りていき、町の上を低くぐるっと回って、最後は町の中へ降りていく（x, 高さ, 窓からの奥行き） */
+const SLP = new THREE.CatmullRomCurve3([[-16, 2.2, 8], [-6, .4, 11], [3, -1.5, 15], [6, -5, 22], [4, -9, 30], [0, -12, 36], [8, -12.5, 44], [4, -12.5, 54], [-8, -12.5, 56], [-14, -12.5, 46], [-8, -12.5, 37], [2, -12.3, 38], [9, -12, 47], [5, -12.3, 57], [-1, -13, 63], [-4, 'L', 67]].map(([x, y, d]) => new THREE.Vector3(WX + x, y === 'L' ? terH(x, d) + .15 : y, OUT_Z - d)), false, 'centripetal');
 let slJump = true; const slGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:'#ffd890', transparent:true, opacity:0, depthWrite:false, blending:THREE.AdditiveBlending })); slGlow.scale.setScalar(1.6); slGlow.position.set(.4, .5, 0); sleigh.add(slGlow);
 const SLT = 30000, SLPER = 46000, slTan = new THREE.Vector3(), slTan2 = new THREE.Vector3(); sleigh.rotation.order = 'YZX';
 const sleighTick = () => { const now = performance.now(), on = isEve(); trail.visible = on; if (!on){ sleigh.visible = false; return; }
@@ -375,7 +375,7 @@ const sleighTick = () => { const now = performance.now(), on = isEve(); trail.vi
   // 向き・かたむきは急に変えず、なめらかに追いかける
   const R = sleigh.rotation, ease = k < .002 || slJump ? 1 : .12; let dy = yaw - R.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); R.y += dy * ease; R.z += (Math.atan2(slTan.y, hz) * .8 - R.z) * ease; R.x += (THREE.MathUtils.clamp(-turn * 14, -.5, .5) - R.x) * ease * .7; slJump = false;
   // 遠くへ行くと小さくなる（見失わないよう、ほんの少しだけ大きく＋光をまとう）
-  const dist = camera.position.distanceTo(pos), sc = 1.6; sleigh.scale.setScalar(sc); trail.material.size = .05 * sc + dist * .004; slGlow.material.opacity = THREE.MathUtils.clamp((dist - 14) / 20, 0, .8) * (isNight ? 1 : .5);
+  const dist = camera.position.distanceTo(pos), sc = 1.6; const land = Math.max(0, (k - .94) / .06); sleigh.scale.setScalar(sc * (1 - land * .85)); slGlow.scale.setScalar(1.6 + land * 1.5); trail.material.size = .05 * sc + dist * .004; slGlow.material.opacity = THREE.MathUtils.clamp((dist - 14) / 20, 0, .8) * (isNight ? 1 : .5);
   SL.animate(now);
   trailPos[trailI * 3] = x - slTan.x * .3 * sc + (Math.random() - .5) * .08 * sc; trailPos[trailI * 3 + 1] = y + .06 * sc + (Math.random() - .5) * .08 * sc; trailPos[trailI * 3 + 2] = z - slTan.z * .3 * sc; trailI = (trailI + 1) % trailN; trailGeo.attributes.position.needsUpdate = true;
   if (peek && now - sleighBell > SLPER * .8 && k > .05 && k < .2){ sleighBell = now; try { const c = window.kajiAudio && window.kajiAudio(); if (c) [1568, 1976, 2349, 1976, 1568].forEach((f, i) => { const o = c.createOscillator(), g = c.createGain(), t = c.currentTime + i * .11; o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05, t + .005); g.gain.exponentialRampToValueAtTime(.0005, t + .5); o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + .55); }); } catch (e) {} } };
