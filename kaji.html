@@ -859,6 +859,7 @@ const QI = (() => {
   const c = (b, inner) => `<svg viewBox="0 0 40 40">${inner}</svg>`;
   return {
     egg: c(0, `<ellipse cx="17" cy="23" rx="12" ry="9" fill="#5a5f6a"/><path d="M28 21 L38 17" stroke="#3a3f4a" stroke-width="3.4" stroke-linecap="round"/><path d="M10 22 C 8 15 15 13 18 16 C 22 12 28 17 24 22 C 22 27 12 28 10 22Z" fill="#fff"/><circle cx="17.5" cy="20.5" r="3.6" fill="#ffc83a"/><circle cx="16.4" cy="19.4" r="1" fill="#fff6c8"/>`),
+    mugicha: c(0, `<path d="M11 8 H 27 L 29 12 V 31 C 29 34 27 35 24 35 H 13 C 10 35 9 34 9 31 V 12 Z" fill="#eef6fa" stroke="#b8ccd8" stroke-width="1.2"/><path d="M10 17 H 28 V 31 C 28 33 26.5 34 24 34 H 13 C 11 34 10 33 10 31 Z" fill="#c8822e"/><path d="M10 17 H 28 V 19.5 H 10 Z" fill="#e0a050" opacity=".8"/><path d="M29 14 C 35 14 35 26 29 26" fill="none" stroke="#b8ccd8" stroke-width="2.4"/><rect x="10" y="5" width="18" height="4" rx="1.5" fill="#3a8a6a"/><path d="M15 20 L 14 6 M22 23 L 21 6" stroke="#f4ead8" stroke-width="1"/><rect x="12.5" y="21" width="6" height="7" rx="1.2" fill="#f4ead8" opacity=".85"/><path d="M13 12 V 15" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".8"/>`),
     onigiri: c(0, `<path d="M20 6 C 26 6 35 22 34 28 C 33 34 7 34 6 28 C 5 22 14 6 20 6Z" fill="#fff" stroke="#e0dcd2" stroke-width="1"/><rect x="11" y="23" width="18" height="11" rx="2" fill="#2f4a3a"/><circle cx="20" cy="15" r="2.4" fill="#e8586a"/>`),
     nabe: c(0, `<path d="M6 18 H 34 V 28 C 34 33 30 35 26 35 H 14 C 10 35 6 33 6 28Z" fill="#e85a4a"/><rect x="4" y="15.5" width="32" height="4" rx="2" fill="#c8402e"/><path d="M2 21 H 6 M34 21 H 38" stroke="#5a3a2a" stroke-width="3" stroke-linecap="round"/><path d="M14 13 C 13 10 16 9 15 6 M20 13 C 19 10 22 9 21 6 M26 13 C 25 10 28 9 27 6" stroke="#c8d4e0" stroke-width="1.8" fill="none" stroke-linecap="round"/><rect x="9" y="22" width="22" height="2" rx="1" fill="#fff" opacity=".3"/>`),
     pan: c(0, `<circle cx="17" cy="22" r="11" fill="#4a4f5a"/><circle cx="17" cy="22" r="8.5" fill="#6a707c"/><path d="M27 18 L 37 12" stroke="#a8703e" stroke-width="3.6" stroke-linecap="round"/><path d="M12 22 q 5 -5 10 0" stroke="#ffc83a" stroke-width="2.4" fill="none" stroke-linecap="round"/>`),
@@ -989,6 +990,10 @@ function migrateCatalog5(){ const st = settings(); if ((st.catalog || 0) >= 5 ||
   [['朝', 'egg'], ['昼', 'onigiri'], ['夜', 'nabe'], ['その他', 'dish']].forEach(([row, icon], ri) => [['洗う', `${row}の洗い物を洗う`], ['片づける', `${row}の食器を片づける`]].forEach(([act, name], ai) =>
     mk({ id:`c5_arai_${ri}_${ai}`, kind:'chore', name:row === 'その他' ? (ai ? 'その他の食器を片づける' : 'その他の洗い物を洗う') : name, owner:'any', slot:'any', freq:{ type:'daily' }, def:[], group:'grp_araimono', icon, row, act, order:base + ri * 2 + ai })));
   mk({ ...settings(), catalog:5 }); save(); return 1; }
+// 麦茶を作る（2026/11/22 追加）：ごはんのグループ、お米をたくの次に
+function migrateCatalog6(){ const st = settings(); if ((st.catalog || 0) >= 6 || (st.catalog || 0) < 5) return 0; const now = Date.now(); const mk = it => { it.updatedAt = now; S.items[it.id] = it; S.queue = S.queue.filter(q => q.id !== it.id); S.queue.push(it); };
+  const rc = S.items.c2_gohan_3; mk({ id:'c6_mugicha', kind:'chore', name:'麦茶を作る', owner:'any', slot:'any', freq:{ type:'daily' }, def:[], group:'grp_gohan', icon:'mugicha', row:'麦茶', act:'作る', order:(rc && rc.order != null ? rc.order : 0) + .5 });
+  mk({ ...settings(), catalog:6 }); save(); return 1; }
 function qbarHTML(){
   const logs = logsOn(dayKey(Date.now())), notes = unreadNotes();
   return `<button class="qmenu" data-act="menu" aria-label="メニュー"><span class="qi">${ICON_MENU}${notes ? '<em class="dot"></em>' : ''}</span><span class="ql">メニュー</span></button><div class="qscroll">` + groupsSorted().map(g => {
@@ -1081,7 +1086,7 @@ function renderGroup(){ const d = gdraft;
     <label class="f">アイコン</label>${iconPicker(d.icon, 'gicon')}
     <div class="row" style="margin-top:18px"><button class="btn ghost" style="flex:1" data-act="close">キャンセル</button><button class="btn go" style="flex:2" data-act="gsave">保存</button></div>
     ${!d._new && d.id !== 'grp_hoka' ? `<button class="btn danger wide" style="margin-top:10px" data-act="gdel">このグループを削除</button><p class="muted" style="font-size:11px;text-align:center">中の家事は「そのほか」に移るよ</p>` : ''}`); }
-const ICON_NAMES = { kanki:'換気', rice:'すいはんき', bowl:'ごはん', towel:'タオル', roller:'コロコロ', tatami:'たたみ', shoes:'くつ', bag_y:'黄色いゴミ袋', bag_g:'グレーのゴミ袋', canbin:'缶とビン', diaper:'オムツ', shampoo:'シャンプー', tp:'トイレットペーパー', refill:'つめかえ', kid:'こども', broom:'ほうき', shirt2:'子どもの服', egg:'たまご', onigiri:'おにぎり', nabe:'なべ', pan:'フライパン', dish:'お皿', washer:'洗濯機', shirt:'シャツ', bag:'かばん', tub:'おふろ', duck:'アヒル', trash:'ゴミ袋', vacuum:'掃除機', toilet:'トイレ', basket:'かご', pillow:'まくら', spark:'きらきら', plus:'プラス' };
+const ICON_NAMES = { mugicha:'麦茶', kanki:'換気', rice:'すいはんき', bowl:'ごはん', towel:'タオル', roller:'コロコロ', tatami:'たたみ', shoes:'くつ', bag_y:'黄色いゴミ袋', bag_g:'グレーのゴミ袋', canbin:'缶とビン', diaper:'オムツ', shampoo:'シャンプー', tp:'トイレットペーパー', refill:'つめかえ', kid:'こども', broom:'ほうき', shirt2:'子どもの服', egg:'たまご', onigiri:'おにぎり', nabe:'なべ', pan:'フライパン', dish:'お皿', washer:'洗濯機', shirt:'シャツ', bag:'かばん', tub:'おふろ', duck:'アヒル', trash:'ゴミ袋', vacuum:'掃除機', toilet:'トイレ', basket:'かご', pillow:'まくら', spark:'きらきら', plus:'プラス' };
 function iconPicker(cur, act){ return `<div class="ipick">${Object.keys(QI).filter(k => k !== 'plus').map(k => `<button class="${cur === k ? 'on' : ''}" data-act="${act}" data-v="${k}" aria-label="${ICON_NAMES[k] || k}">${QI[k]}</button>`).join('')}</div>`; }
 function renderQbar(){ const q = $('qbar'); if (!q) return; const on = S.me && tab === 'today'; q.style.display = on ? '' : 'none'; if (!on){ menuClose(); return; } const sc = q.querySelector('.qscroll'), x = sc ? sc.scrollLeft : 0; q.innerHTML = qbarHTML(); q.querySelector('.qscroll').scrollLeft = x; }
 
@@ -1199,7 +1204,7 @@ function renameKid(){ const K = (settings().names || {}).k; if (!K) return 0; le
 async function sync(){
   const ok = await pull();
   if (ok && !S.seeded) seedIfEmpty();
-  if (ok){ renameKid(); migrateCatalog2(); migrateCatalog3(); migrateCatalog4(); migrateCatalog5(); }
+  if (ok){ renameKid(); migrateCatalog2(); migrateCatalog3(); migrateCatalog4(); migrateCatalog5(); migrateCatalog6(); }
   await push();
   render();
 }
@@ -5368,7 +5373,7 @@ function gardenNotice(tries = 0){ if (!gardenOn()) return; try { if (localStorag
 /* ========== 起動 ========== */
 if (!S.url) seedIfEmpty();
 renameKid();
-if (!S.url){ migrateCatalog2(); migrateCatalog3(); migrateCatalog4(); migrateCatalog5(); }
+if (!S.url){ migrateCatalog2(); migrateCatalog3(); migrateCatalog4(); migrateCatalog5(); migrateCatalog6(); }
 render();
 if (S.url) sync();
 setTimeout(() => { try { if (S.items.settings && !all('lay').length) layMemo(null, settings()); } catch (e) {} }, 4000);
