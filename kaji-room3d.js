@@ -364,11 +364,11 @@ const SL = buildSleigh(), sleigh = SL.root; sleigh.visible = false; sleigh.scale
 const trailN = 120, trailGeo = new THREE.BufferGeometry(), trailPos = new Float32Array(trailN * 3).fill(-99); trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
 const trail = new THREE.Points(trailGeo, new THREE.PointsMaterial({ color:'#ffe9a8', size:.09, transparent:true, opacity:.95, map:glowTex, depthWrite:false, blending:THREE.AdditiveBlending })); trail.visible = false; outside.add(trail);
 let trailI = 0, sleighBell = 0;
-/* そりの飛ぶ道：手前を横切ってから町へ降りていき、町の上を低くぐるっと回って、最後は町の中へ降りていく（x, 高さ, 窓からの奥行き） */
-const SLP = new THREE.CatmullRomCurve3([[-16, 2.2, 8], [-6, .4, 11], [3, -1.5, 15], [6, -5, 22], [4, -9, 30], [0, -12, 36], [8, -12.5, 44], [4, -12.5, 54], [-8, -12.5, 56], [-14, -12.5, 46], [-8, -12.5, 37], [2, -12.3, 38], [9, -12, 47], [5, -12.3, 57], [-1, -12.8, 64], [-5, -13.3, 72], [-7, 'L', 82]].map(([x, y, d]) => new THREE.Vector3(WX + x, y === 'L' ? terH(x, d) + .15 : y, OUT_Z - d)), false, 'centripetal');
+/* そりの飛ぶ道：手前を横切ってから町へ降りていき、ゆるく蛇行しながら町の奥へまっすぐ進み、最後は町の中へ降りていく（x, 高さ, 窓からの奥行き） */
+const SLP = new THREE.CatmullRomCurve3([[-16, 2.2, 8], [-6, .4, 11], [2, -1, 14], [5, -4, 19], [3, -7.5, 26], [-1, -10.5, 33], [-4, -12, 40], [-1, -12.6, 47], [4, -12.8, 54], [2, -13, 61], [-3, -13.2, 68], [-5, -13.4, 76], [-4, 'L', 86]].map(([x, y, d]) => new THREE.Vector3(WX + x, y === 'L' ? terH(x, d) + .15 : y, OUT_Z - d)), false, 'centripetal');
 SLP.arcLengthDivisions = 4000; SLP.updateArcLengths(); /* 長い道なので細かく測って、速さのムラ（カクつき）をなくす */
 let slJump = true, slPrev = 0; const slGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:'#ffd890', transparent:true, opacity:0, depthWrite:false, blending:THREE.AdditiveBlending })); slGlow.scale.setScalar(1.6); slGlow.position.set(.4, .5, 0); sleigh.add(slGlow);
-const SLT = 34000, SLPER = 50000, slTan = new THREE.Vector3(), slTan2 = new THREE.Vector3(); sleigh.rotation.order = 'YZX';
+const SLT = 30000, SLPER = 46000, slTan = new THREE.Vector3(), slTan2 = new THREE.Vector3(); sleigh.rotation.order = 'YZX';
 const sleighTick = () => { const now = performance.now(), on = isEve(); trail.visible = on; if (!on){ sleigh.visible = false; return; }
   const p = (now % SLPER) / SLPER, k = window.KAJI_SLEIGH_K != null ? window.KAJI_SLEIGH_K : p * SLPER / SLT; if (k > 1){ sleigh.visible = false; slJump = true; return; } sleigh.visible = true;
   const pos = SLP.getPointAt(k); SLP.getTangentAt(k, slTan); SLP.getTangentAt(Math.min(1, k + .01), slTan2); const x = pos.x, y = pos.y, z = pos.z; sleigh.position.copy(pos);
