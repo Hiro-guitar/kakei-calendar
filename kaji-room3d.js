@@ -511,8 +511,8 @@ let trailI = 0, sleighBell = 0;
 /* そりの飛ぶ道：手前を横切ってから町へ降りていき、大きく蛇行しながら町へ向かい、最後は中心街のまんなかへ旋回しながら降りていく（x, 高さ, 窓からの奥行き） */
 // 毎回ちがう道：左右どちらかから手前を横切り、蛇行しながら町の奥へ（もどらない）、最後は中心街のどこかへ降りる
 function slRoute(seed){ const R = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)((seed * 48271) % 2147483646 + 1); R(); R(); const sd = R() < .5 ? -1 : 1, pts = [[-sd * 16, 2.2, 8], [-sd * 6, .3 + R() * .8, 11]];
-  const tx = -2 + (R() - .5) * 5, tz = 43 + R() * 6, N = 6 + ((R() * 4) | 0); let side = R() < .5 ? -1 : 1;
-  for (let i = 1; i <= N; i++){ const t = i / N, amp = (3 + R() * 7) * (1 - t * .75); side = -side; const dz = 11 + (tz - 3 - 11) * t + (R() - .5) * 1.5;
+  const tx = -2 + (R() - .5) * 5, tz = 43 + R() * 6, N = 12 + ((R() * 5) | 0); let side = R() < .5 ? -1 : 1;
+  for (let i = 1; i <= N; i++){ const t = i / N, amp = (6 + R() * 8) * (1 - t * .6); side = -side; const dz = 11 + (tz - 3 - 11) * t + (R() - .5) * 1.5;
     pts.push([tx * t + side * amp, .3 + (-13.2 - .3) * Math.pow(t, .85), dz]); }
   pts.push([tx, 'L', tz]); return pts.map(([x, y, d]) => new THREE.Vector3(WX + x, y === 'L' ? terH(x, d) + .15 : y, OUT_Z - d)); }
 let SLP = null, slCycle = -1; const slSetRoute = c => { slCycle = c; SLP = new THREE.CatmullRomCurve3(slRoute(c), false, 'centripetal'); SLP.arcLengthDivisions = 4000; SLP.updateArcLengths(); }; slSetRoute(0);
