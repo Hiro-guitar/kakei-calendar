@@ -343,7 +343,36 @@ let riverM = null; const village = new THREE.Group(); village.visible = false; o
   for (const z of [0]){ for (let i = 0; i < 26; i++){ const x = WX - 3.2 + i * .26 + (OR() - .5) * .02; const pk = new THREE.Mesh(new RoundedBoxGeometry(.07, .52, .04, 2, .015), fenceM); pk.position.set(x, .58 + .26, fz + z); pk.rotation.z = (OR() - .5) * .06; outside.add(pk); const cap = new THREE.Mesh(new THREE.SphereGeometry(.045, 8, 6), roofSnow); cap.scale.set(1, .5, .9); cap.position.set(x, .58 + .53, fz + z); outside.add(cap); }
     for (const y of [.2, .4]){ const rail = new THREE.Mesh(new RoundedBoxGeometry(6.8, .05, .035, 2, .012), fenceM); rail.position.set(WX, .58 + y, fz - .03); outside.add(rail); const sn = new THREE.Mesh(new RoundedBoxGeometry(6.8, .03, .05, 2, .012), roofSnow); sn.position.set(WX, .58 + y + .035, fz - .03); outside.add(sn); } } }
 // 雪の上の足あと
-{ const fpM = new THREE.MeshBasicMaterial({ color:'#9aa8c8', transparent:true, opacity:.45, depthWrite:false }); for (let i = 0; i < 16; i++){ const t = i / 16, x = WX - 2.6 + t * 4.4 + Math.sin(t * 5) * .2, z = OUT_Z - 2.6 - Math.sin(t * 3) * .5; for (const sd of [-1, 1]){ if ((i + (sd > 0 ? 1 : 0)) % 2) continue; const f = new THREE.Mesh(new THREE.CircleGeometry(.04, 10), fpM); f.scale.set(.7, 1.3, 1); f.rotation.x = -Math.PI / 2; f.rotation.z = -1.2; f.position.set(x, .66, z + sd * .05); outside.add(f); } } }
+/* 庭の雪の上の、動物の足あと（15パターンを日替わりで） */
+const FP_C = 'rgba(78,96,150,1)';
+const fpTex = draw => canvasTex(64, 64, (g, w) => { g.clearRect(0, 0, w, w); g.fillStyle = FP_C; g.strokeStyle = FP_C; const E = (x, y, rx, ry, a = 0) => { g.beginPath(); g.ellipse(x * w, y * w, rx * w, ry * w, a, 0, Math.PI * 2); g.fill(); }; draw(E, g, w); });
+const FPT = {
+  rabbit: [fpTex(E => { E(.36, .2, .08, .17, .1); E(.64, .2, .08, .17, -.1); E(.47, .62, .07, .08); E(.5, .84, .07, .08); }), .26, 'hop', .5],
+  squirrel: [fpTex(E => { E(.26, .26, .09, .13, .3); E(.74, .26, .09, .13, -.3); E(.4, .66, .06, .08); E(.6, .7, .06, .08); }), .16, 'hop', .34],
+  mouse: [fpTex((E, g, w) => { E(.38, .3, .06, .08); E(.62, .3, .06, .08); E(.4, .58, .045, .05); E(.6, .58, .045, .05); g.lineWidth = w * .03; g.beginPath(); g.moveTo(w * .5, w * .62); g.quadraticCurveTo(w * .56, w * .82, w * .5, w); g.stroke(); }), .08, 'hop', .1],
+  bird: [fpTex((E, g, w) => { g.lineWidth = w * .045; g.lineCap = 'round'; for (const ox of [.3, .7]){ g.beginPath(); g.moveTo(w * ox, w * .55); g.lineTo(w * ox, w * .85); g.moveTo(w * ox, w * .55); g.lineTo(w * (ox - .14), w * .25); g.moveTo(w * ox, w * .55); g.lineTo(w * ox, w * .18); g.moveTo(w * ox, w * .55); g.lineTo(w * (ox + .14), w * .25); g.stroke(); } }), .09, 'hop', .13],
+  fox: [fpTex(E => { E(.5, .62, .16, .14); for (const [x, y] of [[.34, .34], [.66, .34], [.42, .2], [.58, .2]]) E(x, y, .07, .08); }), .085, 'line', .2],
+  cat: [fpTex(E => { E(.5, .64, .2, .16); for (const [x, y] of [[.26, .4], [.42, .28], [.58, .28], [.74, .4]]) E(x, y, .08, .09); }), .07, 'walk', .17],
+  dog: [fpTex(E => { E(.5, .64, .18, .17); for (const [x, y] of [[.27, .4], [.42, .25], [.58, .25], [.73, .4]]) E(x, y, .085, .1); for (const [x, y] of [[.42, .1], [.58, .1]]) E(x, y, .03, .04); }), .1, 'walk', .25],
+  deer: [fpTex(E => { E(.38, .45, .12, .3, -.12); E(.62, .45, .12, .3, .12); E(.4, .85, .05, .05); E(.6, .85, .05, .05); }), .1, 'line', .3],
+  tanuki: [fpTex(E => { E(.5, .64, .17, .15); for (const [x, y] of [[.22, .44], [.34, .26], [.5, .2], [.66, .26], [.78, .44]]) E(x, y, .065, .08); }), .085, 'walk', .16],
+};
+const FP_PATTERNS = [[['rabbit', 1]], [['fox', 2]], [['bird', 3], ['bird', 4]], [['cat', 5]], [['deer', 6]], [['squirrel', 7]], [['tanuki', 8]], [['rabbit', 9], ['bird', 10]], [['fox', 11], ['mouse', 12]],
+  [['dog', 13]], [['deer', 14], ['rabbit', 15]], [['bird', 16], ['bird', 17], ['bird', 18]], [['cat', 19], ['bird', 20]], [['squirrel', 21], ['mouse', 22]], [['tanuki', 23], ['fox', 24]]];
+const fpGroup = new THREE.Group(); outside.add(fpGroup); const fpMats = {};
+function buildFootprints(idx){ while (fpGroup.children.length){ const c = fpGroup.children.pop(); c.geometry.dispose(); }
+  for (const [type, seed] of FP_PATTERNS[idx % FP_PATTERNS.length]){ const [tex, size, mode, stride] = FPT[type], R = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)(seed * 7919 + 13);
+    const mat = fpMats[type] || (fpMats[type] = new THREE.MeshBasicMaterial({ map:tex, transparent:true, opacity:.6, depthWrite:false, polygonOffset:true, polygonOffsetFactor:-2 }));
+    // 庭を横切る道すじ（はしからはしへ、ゆるく曲がる）
+    const side = R() < .5 ? -1 : 1, short = mode === 'hop' && size < .1, x0 = side * (short ? .6 + R() * 1.2 : 3.4), x1 = -side * (short ? .2 + R() * 1.4 : 3.4) , z0 = 1.4 + R() * 2.6, z1 = 1.4 + R() * 2.6, cx = (R() - .5) * 2.4, cz = 1.2 + R() * 3;
+    const P = t => { const u = 1 - t; return [u * u * x0 + 2 * u * t * cx + t * t * x1, u * u * z0 + 2 * u * t * cz + t * t * z1]; };
+    let len = 0, prev = P(0); const pts = [prev]; for (let i = 1; i <= 200; i++){ const p = P(i / 200); len += Math.hypot(p[0] - prev[0], p[1] - prev[1]); pts.push(p); prev = p; }
+    let acc = 0, k = 0, n = 0; const wob = mode === 'walk' ? .045 : mode === 'line' ? .012 : 0;
+    for (let i = 1; i < pts.length; i++){ const [ax, az] = pts[i - 1], [bx, bz] = pts[i], seg = Math.hypot(bx - ax, bz - az); acc += seg; if (acc < stride * (.85 + R() * .3)) continue; acc = 0; n++;
+      const dx = (bx - ax) / seg, dz = (bz - az) / seg, s = (n % 2 ? 1 : -1) * wob + (mode === 'hop' && type === 'bird' ? (R() - .5) * .05 : 0), x = bx - dz * s, z = bz + dx * s, wx = WX + x, wz = OUT_Z - z;
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(size * 1.2, size * 1.2), mat); m.rotation.set(-Math.PI / 2, 0, Math.atan2(dx, dz) + (type === 'bird' ? (R() - .5) * .5 : 0)); m.position.set(wx, Math.max(.55, terH(x, z)) + .012, wz); fpGroup.add(m); } } }
+const fpDay = () => { if (window.KAJI_FP != null) return window.KAJI_FP; const d = new Date(Date.now() - 4 * 36e5); return Math.floor(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / 864e5); };
+let fpCur = -1; const fpCheck = () => { const d = fpDay(); if (d !== fpCur){ fpCur = d; buildFootprints(((d % 15) + 15) % 15); } }; fpCheck();
 // 降る雪（遠く・近くの2層）
 const snowN = 320, snowGeo = new THREE.BufferGeometry(), snowPos = new Float32Array(snowN * 3); for (let i = 0; i < snowN; i++){ snowPos[i * 3] = WX + (Math.random() - .5) * 8; snowPos[i * 3 + 1] = .6 + Math.random() * 5; snowPos[i * 3 + 2] = OUT_Z - .3 - Math.random() * 8; }
 snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3)); const snowPts = new THREE.Points(snowGeo, new THREE.PointsMaterial({ color:'#ffffff', size:.06, transparent:true, opacity:.9, map:glowTex, depthWrite:false })); outside.add(snowPts);
@@ -351,7 +380,7 @@ const nearN = 40, nearGeo = new THREE.BufferGeometry(), nearPos = new Float32Arr
 nearGeo.setAttribute('position', new THREE.BufferAttribute(nearPos, 3)); const nearSnow = new THREE.Points(nearGeo, new THREE.PointsMaterial({ color:'#ffffff', size:.11, transparent:true, opacity:.85, map:glowTex, depthWrite:false })); outside.add(nearSnow);
 // 窓の外側の桟につもった雪
 { const ls = new THREE.Mesh(new RoundedBoxGeometry(WW - .02, .07, .16, 3, .03), roofSnow); ls.position.set(WX, WY - WH / 2 + .03, bz - .24); outside.add(ls); }
-function outsideTime(night){ sky.material.map = night ? skyNightTex : skyDayTex; sky.material.needsUpdate = true; ridges[0].material.color.set(night ? '#ffffff' : '#c8d4ee'); ridges[1].material.color.set(night ? '#ffffff' : '#d8e0f2');
+function outsideTime(night){ fpCheck(); sky.material.map = night ? skyNightTex : skyDayTex; sky.material.needsUpdate = true; ridges[0].material.color.set(night ? '#ffffff' : '#c8d4ee'); ridges[1].material.color.set(night ? '#ffffff' : '#d8e0f2');
   vLights.forEach(p => p.visible = night); village.children.forEach(c => { if (c.isInstancedMesh) c.material.color.set(night ? '#5a6080' : '#ffffff'); if (c.userData.house) c.visible = !night; }); if (riverM) riverM.color.set(night ? '#2a3460' : '#7f9cc4'); }
 function outsideTick(now){ const t = now / 1000;
   { const a = snowGeo.attributes.position; for (let i = 0; i < snowN; i++){ let y = a.getY(i) - .01 - (i % 3) * .003; if (y < .6) y = 5.6; a.setY(i, y); a.setX(i, a.getX(i) + Math.sin(t * 1.1 + i) * .0016); } a.needsUpdate = true; }
@@ -1399,7 +1428,7 @@ function zoomTo(id){ const o = placed.find(x => x.userData.id === id) || gifts.f
   const dir = camera.position.clone().sub(p).normalize(), far = o.userData.gift ? 2.6 : 2.0; zoom = { t0:performance.now(), fromP:camera.position.clone(), fromL:camLook(), toP:p.clone().addScaledVector(dir, far), toL:p.clone().add(new THREE.Vector3(0, -far * .17, 0)), dur:650 }; zoomed = true; }
 // 窓をのぞく：窓をさわると、窓の前まで寄って外をながめる。どこかをさわると戻る
 let peek = false;
-function peekWindow(){ if (zoomed || view || !GARDEN()) return; /* 窓をのぞく機能もテスト中（ひろきの端末だけ） */ peek = true; village.visible = true; oldTrees.visible = false; const px = WX, toP = new THREE.Vector3(px - .2, 3.2, OUT_Z - .6), toL = new THREE.Vector3(px, -16, OUT_Z - 27);
+function peekWindow(){ if (zoomed || view || !GARDEN()) return; /* 窓をのぞく機能もテスト中（ひろきの端末だけ） */ peek = true; village.visible = true; oldTrees.visible = false; fpCheck(); const px = WX, toP = new THREE.Vector3(px - .2, 3.2, OUT_Z - .6), toL = new THREE.Vector3(px, -16, OUT_Z - 27);
   zoom = { t0:performance.now(), fromP:camera.position.clone(), fromL:camLook(), toP, toL, dur:800, fromF:camera.fov, toF:Math.min(78, 52 / Math.min(1, camera.aspect + .25)) }; zoomed = true; if (window.kajiToast && !editOn) setTimeout(() => { if (peek && !editOn) window.kajiToast('どこかをさわるともどるよ'); }, 900); }
 function zoomOut(){ if (!zoomed) return; zoomed = false; const wasPeek = peek; peek = false; if (wasPeek) setTimeout(() => { if (!peek) village.visible = false; }, 600); const keepP = camera.position.clone(), keepL = camLook(), keepF = camera.fov; camera.fov = 32; placeCamera(); const toP = camera.position.clone(); camera.position.copy(keepP); camera.lookAt(keepL); zoom = { t0:performance.now(), fromP:keepP, fromL:keepL, toP, toL:target.clone(), dur:550, end:true, ...(wasPeek ? { fromF:keepF, toF:32 } : {}) }; if (wasPeek){ camera.fov = keepF; camera.updateProjectionMatrix(); } }
 function stepZoom(now){ if (!zoom) return; const t = Math.min(1, (now - zoom.t0) / zoom.dur), k = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
