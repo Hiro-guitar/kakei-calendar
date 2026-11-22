@@ -364,20 +364,91 @@ function fpPick(day){ const R = (s => () => (s = (s * 16807) % 2147483647) / 214
   const times = [0]; for (let i = 1; i < n; i++) times.push((2 + R() * 17) * 36e5); times.sort((a, b) => a - b);
   while (out.length < n){ const t = types[(R() * types.length) | 0]; if (t === 'bird' || out.filter(o => o[0] === t).length < (n > 6 ? 2 : 1)) out.push([t, ((R() * 1e6) | 0) + 1, times[out.length]]); } return out; }
 const fpNow = () => { if (window.KAJI_FPNOW != null) return window.KAJI_FPNOW; const d = new Date(); return ((d.getHours() + 20) % 24) * 36e5 + d.getMinutes() * 6e4 + d.getSeconds() * 1e3 + d.getMilliseconds(); };
-function fpUpdate(){ const now = fpNow(), rt = performance.now(); for (const m of fpGroup.children){ const u = m.userData; if (now < u.t){ m.visible = false; u.seen = 0; continue; }
-    // ちょうど来たところを見ていたら、1歩ずつ足あとがついていく
-    if (now - u.t < 60000 && !u.seen){ u.seen = rt - (now - u.t); } const since = u.seen ? rt - u.seen : 1e9; m.visible = since >= u.i * 350; } }
-function buildFootprints(day){ while (fpGroup.children.length){ const c = fpGroup.children.pop(); c.geometry.dispose(); }
-  for (const [type, seed, at] of fpPick(day)){ const [tex, size, mode, stride] = FPT[type], R = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)(seed * 7919 + 13);
+/* ===== 庭にやってくる動物（足あとをつけながら歩いて、通りすぎていく） ===== */
+function anLeg(g, mat, x, y, z, len, r){ const p = new THREE.Group(); p.position.set(x, y, z); g.add(p); addM(p, new THREE.CylinderGeometry(r, r * .8, len, 8), mat, 0, -len / 2, 0); addM(p, new THREE.SphereGeometry(r * 1.15, 8, 6), mat, 0, -len, r * .4); return p; }
+function anEyes(g, x, y, z, sep, r = .011){ const k = M('#16120e', { roughness:.25 }); for (const s of [-1, 1]) addM(g, new THREE.SphereGeometry(r, 10, 8), k, x + s * sep, y, z); }
+function anEar(g, mat, x, y, z, r, h, rz = 0, rx = 0){ addM(g, new THREE.ConeGeometry(r, h, 10), mat, x, y, z, rx, 0, rz); }
+const ANIMALS = {
+  fox(){ const g = new THREE.Group(), o = M('#d4722c', { roughness:.8 }), w = M('#f4ece0'), d = M('#3a2418'); const b = new THREE.Group(); g.add(b);
+    addM(b, new THREE.SphereGeometry(1, 20, 14), o, 0, .2, 0, 0, 0, 0, .085, .08, .17); addM(b, new THREE.SphereGeometry(1, 16, 12), w, 0, .18, .1, 0, 0, 0, .06, .06, .07);
+    const h = new THREE.Group(); h.position.set(0, .29, .17); b.add(h); addM(h, new THREE.SphereGeometry(.07, 18, 14), o); addM(h, new THREE.ConeGeometry(.045, .1, 14), w, 0, -.015, .08, Math.PI / 2); addM(h, new THREE.SphereGeometry(.013, 8, 6), d, 0, -.012, .13);
+    for (const s of [-1, 1]){ anEar(h, o, s * .04, .07, -.005, .028, .07, -s * .25); anEar(h, d, s * .046, .105, -.005, .012, .025, -s * .25); } anEyes(h, 0, .015, .06, .028);
+    const t = new THREE.Group(); t.position.set(0, .22, -.15); b.add(t); addM(t, new THREE.SphereGeometry(1, 14, 10), o, 0, -.02, -.1, -.5, 0, 0, .05, .05, .13); addM(t, new THREE.SphereGeometry(.035, 10, 8), w, 0, -.075, -.2);
+    const legs = [[-.05, .12], [.05, .12], [-.05, -.11], [.05, -.11]].map(([x, z]) => anLeg(b, d, x, .17, z, .15, .016)); return { g, b, legs, tail:t, head:h, mode:'walk', rate:2.6 }; },
+  cat(){ const g = new THREE.Group(), o = M('#a89a88', { roughness:.85 }), s2 = M('#6a5e50'), w = M('#f6f2ea'); const b = new THREE.Group(); g.add(b);
+    addM(b, new THREE.SphereGeometry(1, 18, 12), o, 0, .14, 0, 0, 0, 0, .065, .06, .13); for (let i = 0; i < 3; i++) addM(b, new THREE.TorusGeometry(.062, .008, 6, 16, Math.PI), s2, 0, .14, -.06 + i * .05, 0, Math.PI / 2, 0);
+    const h = new THREE.Group(); h.position.set(0, .22, .13); b.add(h); addM(h, new THREE.SphereGeometry(.06, 18, 14), o, 0, 0, 0, 0, 0, 0, 1.1, 1, 1); addM(h, new THREE.SphereGeometry(.03, 10, 8), w, 0, -.02, .045);
+    for (const s of [-1, 1]) anEar(h, o, s * .035, .055, 0, .022, .045, -s * .3); anEyes(h, 0, .01, .055, .024, .012); addM(h, new THREE.SphereGeometry(.008, 6, 4), M('#d88a8a'), 0, -.005, .065);
+    const t = new THREE.Group(); t.position.set(0, .17, -.12); b.add(t); addM(t, new THREE.CylinderGeometry(.011, .014, .16, 8), o, 0, .07, -.02, -.3);
+    const legs = [[-.035, .08], [.035, .08], [-.035, -.08], [.035, -.08]].map(([x, z]) => anLeg(b, o, x, .11, z, .11, .013)); return { g, b, legs, tail:t, head:h, mode:'walk', rate:2.6 }; },
+  dog(){ const g = new THREE.Group(), o = M('#d08a4a', { roughness:.85 }), w = M('#f8f0e2'), d = M('#2a1e16'); const b = new THREE.Group(); g.add(b);
+    addM(b, new THREE.SphereGeometry(1, 18, 12), o, 0, .19, 0, 0, 0, 0, .08, .075, .15); addM(b, new THREE.SphereGeometry(1, 14, 10), w, 0, .17, .07, 0, 0, 0, .06, .06, .07);
+    const h = new THREE.Group(); h.position.set(0, .28, .15); b.add(h); addM(h, new THREE.SphereGeometry(.068, 18, 14), o); addM(h, new THREE.SphereGeometry(.04, 12, 10), w, 0, -.02, .05, 0, 0, 0, 1, .8, 1.1); addM(h, new THREE.SphereGeometry(.013, 8, 6), d, 0, -.005, .095);
+    for (const s of [-1, 1]) anEar(h, o, s * .04, .065, -.005, .024, .05, -s * .2); anEyes(h, 0, .015, .06, .026);
+    const t = new THREE.Group(); t.position.set(0, .25, -.13); b.add(t); addM(t, new THREE.TorusGeometry(.035, .016, 8, 16, Math.PI * 1.5), o, 0, .03, 0, 0, Math.PI / 2, 0);
+    const legs = [[-.045, .1], [.045, .1], [-.045, -.1], [.045, -.1]].map(([x, z]) => anLeg(b, o, x, .15, z, .14, .017)); return { g, b, legs, tail:t, head:h, mode:'walk', rate:2.8 }; },
+  tanuki(){ const g = new THREE.Group(), o = M('#8a7a64', { roughness:.9 }), d = M('#2e2620'), w = M('#e8e0d0'); const b = new THREE.Group(); g.add(b);
+    addM(b, new THREE.SphereGeometry(1, 18, 12), o, 0, .17, 0, 0, 0, 0, .1, .09, .14);
+    const h = new THREE.Group(); h.position.set(0, .23, .14); b.add(h); addM(h, new THREE.SphereGeometry(.07, 18, 14), o, 0, 0, 0, 0, 0, 0, 1.15, .95, 1); for (const s of [-1, 1]) addM(h, new THREE.SphereGeometry(.03, 10, 8), d, s * .03, .005, .05, 0, 0, 0, 1.2, .8, .6);
+    addM(h, new THREE.SphereGeometry(.03, 10, 8), w, 0, -.02, .055); addM(h, new THREE.SphereGeometry(.012, 8, 6), d, 0, -.012, .085); for (const s of [-1, 1]) addM(h, new THREE.SphereGeometry(.018, 8, 6), d, s * .045, .055, -.01); anEyes(h, 0, .008, .075, .03, .009);
+    const t = new THREE.Group(); t.position.set(0, .15, -.13); b.add(t); addM(t, new THREE.SphereGeometry(1, 12, 10), o, 0, -.02, -.06, -.7, 0, 0, .04, .04, .08); addM(t, new THREE.SphereGeometry(.03, 10, 8), d, 0, -.06, -.12);
+    const legs = [[-.05, .08], [.05, .08], [-.05, -.08], [.05, -.08]].map(([x, z]) => anLeg(b, d, x, .1, z, .09, .02)); return { g, b, legs, tail:t, head:h, mode:'walk', rate:2.2 }; },
+  deer(){ const g = new THREE.Group(), o = M('#8a5a36', { roughness:.85 }), w = M('#f4ece0'), d = M('#2a1c14'), an = M('#d8c4a0'); const b = new THREE.Group(); g.add(b);
+    addM(b, new THREE.SphereGeometry(1, 20, 14), o, 0, .55, 0, 0, 0, 0, .11, .12, .26); addM(b, new THREE.SphereGeometry(.05, 10, 8), w, 0, .6, -.25);
+    addM(b, new THREE.CylinderGeometry(.04, .055, .26, 10), o, 0, .72, .2, .55); const h = new THREE.Group(); h.position.set(0, .86, .29); b.add(h);
+    addM(h, new THREE.SphereGeometry(.06, 16, 12), o, 0, 0, 0, 0, 0, 0, .9, .9, 1.1); addM(h, new THREE.ConeGeometry(.04, .1, 12), o, 0, -.02, .08, Math.PI / 2 + .3); addM(h, new THREE.SphereGeometry(.014, 8, 6), d, 0, -.045, .125);
+    for (const s of [-1, 1]){ addM(h, new THREE.SphereGeometry(1, 10, 8), o, s * .06, .04, -.02, 0, 0, s * .8, .035, .015, .02); const a = new THREE.Group(); a.position.set(s * .03, .05, -.01); a.rotation.z = -s * .35; h.add(a); addM(a, new THREE.CylinderGeometry(.007, .009, .16, 6), an, 0, .08, 0); addM(a, new THREE.CylinderGeometry(.005, .007, .07, 6), an, 0, .1, .03, .9); }
+    anEyes(h, 0, .015, .045, .035);
+    const legs = [[-.06, .17], [.06, .17], [-.06, -.17], [.06, -.17]].map(([x, z]) => anLeg(b, o, x, .48, z, .45, .014)); return { g, b, legs, head:h, mode:'walk', rate:1.7 }; },
+  rabbit(){ const g = new THREE.Group(), o = M('#efece6', { roughness:.95 }), p = M('#e8b8b0'); const b = new THREE.Group(); g.add(b);
+    addM(b, new THREE.SphereGeometry(1, 18, 12), o, 0, .09, 0, -.15, 0, 0, .075, .075, .1); addM(b, new THREE.SphereGeometry(.035, 10, 8), o, 0, .1, -.1);
+    const h = new THREE.Group(); h.position.set(0, .16, .08); b.add(h); addM(h, new THREE.SphereGeometry(.05, 16, 12), o, 0, 0, 0, 0, 0, 0, 1, .95, 1.1);
+    for (const s of [-1, 1]){ addM(h, new THREE.SphereGeometry(1, 10, 8), o, s * .022, .085, -.02, -.25, 0, -s * .15, .016, .06, .01); addM(h, new THREE.SphereGeometry(1, 10, 8), p, s * .022, .085, -.012, -.25, 0, -s * .15, .009, .045, .006); }
+    anEyes(h, 0, .012, .04, .03, .009); for (const s of [-1, 1]) addM(b, new THREE.SphereGeometry(1, 10, 8), o, s * .045, .03, -.03, 0, 0, 0, .025, .025, .05);
+    return { g, b, legs:[], head:h, mode:'hop', rate:2.2, hopH:.09 }; },
+  squirrel(){ const g = new THREE.Group(), o = M('#8a5a3a', { roughness:.85 }), w = M('#f0e6d6'); const b = new THREE.Group(); g.add(b);
+    addM(b, new THREE.SphereGeometry(1, 16, 12), o, 0, .05, 0, -.3, 0, 0, .035, .04, .055); addM(b, new THREE.SphereGeometry(.02, 8, 6), w, 0, .05, .035);
+    const h = new THREE.Group(); h.position.set(0, .09, .045); b.add(h); addM(h, new THREE.SphereGeometry(.028, 14, 10), o); for (const s of [-1, 1]) anEar(h, o, s * .015, .03, 0, .008, .022, -s * .2); anEyes(h, 0, .006, .022, .014, .006);
+    const t = new THREE.Group(); t.position.set(0, .05, -.05); b.add(t); addM(t, new THREE.TorusGeometry(.045, .022, 8, 16, Math.PI * 1.3), o, 0, .05, -.01, 0, Math.PI / 2, -.4);
+    return { g, b, legs:[], tail:t, head:h, mode:'hop', rate:2.8, hopH:.05 }; },
+  mouse(){ const g = new THREE.Group(), o = M('#8e8a84', { roughness:.9 }), p = M('#e8a8a8'); const b = new THREE.Group(); g.add(b); b.scale.setScalar(1.3);
+    addM(b, new THREE.SphereGeometry(1, 14, 10), o, 0, .022, 0, 0, 0, 0, .022, .02, .035); addM(b, new THREE.ConeGeometry(.014, .03, 10), o, 0, .025, .04, Math.PI / 2); addM(b, new THREE.SphereGeometry(.004, 6, 4), p, 0, .025, .056);
+    for (const s of [-1, 1]) addM(b, new THREE.SphereGeometry(.009, 8, 6), p, s * .012, .042, .022, 0, 0, 0, 1, 1, .4); anEyes(b, 0, .032, .038, .008, .003); addM(b, new THREE.CylinderGeometry(.0025, .0025, .06, 5), p, 0, .015, -.06, Math.PI / 2 - .2);
+    return { g, b, legs:[], mode:'hop', rate:4, hopH:.015 }; },
+  bird(){ const g = new THREE.Group(), b = new THREE.Group(); g.add(b); const bd = gdBird('#9a7050'); bd.rotation.y = -Math.PI / 2; bd.scale.setScalar(.9); b.add(bd); return { g, b, legs:[], mode:'hop', rate:3, hopH:.03 }; },
+};
+const fpTrails = [], fpOvKey = 'kaji_fp_ov';
+const fpOvLoad = day => { try { const o = JSON.parse(localStorage.getItem(fpOvKey) || '{}'); return o.d === day ? o.ov || {} : {}; } catch (e) { return {}; } };
+const fpOvSave = (day, i, t) => { try { const ov = fpOvLoad(day); ov[i] = t; localStorage.setItem(fpOvKey, JSON.stringify({ d:day, ov })); } catch (e) {} };
+function trailAt(tr, d){ const c = tr.cum, P = tr.pts; let lo = 0, hi = c.length - 1; d = Math.max(0, Math.min(tr.len, d)); while (hi - lo > 1){ const m = (lo + hi) >> 1; if (c[m] < d) lo = m; else hi = m; }
+  const f = (d - c[lo]) / Math.max(1e-6, c[hi] - c[lo]), x = P[lo][0] + (P[hi][0] - P[lo][0]) * f, z = P[lo][1] + (P[hi][1] - P[lo][1]) * f; return [x, z, P[hi][0] - P[lo][0], P[hi][1] - P[lo][1]]; }
+// 足あとは動物が通ったところから順につく。のぞいている間にちょうど通れば、動物の姿も見える
+function fpUpdate(){ const now = fpNow(); let pk = false; try { pk = peek; } catch (e) {}
+  for (const tr of fpTrails){ const el = (now - tr.t) / 1000, pre = tr.type === 'bird' ? tr.v * .9 : 0, d = el * tr.v - pre, live = el >= 0 && d < tr.len + pre && pk;
+    for (const p of tr.prints) p.m.visible = el >= 0 && p.d <= d;
+    if (live && !tr.A){ const A = ANIMALS[tr.type](); tr.A = A; outside.add(A.g); }
+    if (!live && tr.A){ outside.remove(tr.A.g); disposeG(tr.A.g); tr.A = null; }
+    if (tr.A) fpPose(tr, d); } }
+function fpPose(tr, d){ const A = tr.A, pre = tr.v * .9; let [x, z, dx, dz] = trailAt(tr, d), fly = 0;
+  if (tr.type === 'bird'){ if (d < 0) fly = -d / pre; else if (d > tr.len){ fly = (d - tr.len) / pre; const n = Math.hypot(dx, dz) || 1; x += dx / n * (d - tr.len); z += dz / n * (d - tr.len); } }
+  const gy = Math.max(.55, terH(x, z)); A.g.position.set(WX + x, gy + fly * 1.3, OUT_Z - z); A.g.rotation.y = Math.atan2(dx, -dz);
+  const ph = d / tr.stride * Math.PI;
+  if (A.mode === 'walk'){ const sw = Math.sin(ph); A.legs.forEach((l, i) => { l.rotation.x = (i === 0 || i === 3 ? sw : -sw) * .55; }); A.b.position.y = Math.abs(Math.cos(ph)) * .012; if (A.tail) A.tail.rotation.y = Math.sin(ph * .5) * .35; if (A.head) A.head.rotation.x = Math.sin(ph * 2) * .04; }
+  else { const fr = ((d / tr.stride) % 1 + 1) % 1, hp = fly > 0 ? 0 : Math.sin(fr * Math.PI); A.b.position.y = hp * A.hopH; A.b.rotation.x = hp > 0 ? -Math.cos(fr * Math.PI) * .2 : 0; if (A.tail) A.tail.rotation.x = Math.sin(fr * Math.PI * 2) * .15; } }
+// のぞいていると、しばらくして次の動物が少し早めにやってくる（見られるように）
+let fpEarlyT = 0; function fpEarly(){ clearTimeout(fpEarlyT); fpEarlyT = setTimeout(() => { if (!peek) return; const now = fpNow(), nx = fpTrails.filter(t => t.t > now).sort((a, b) => a.t - b.t)[0]; if (!nx) return; nx.t = now + 300; fpOvSave(fpCur, nx.idx, nx.t); }, 2500 + Math.random() * 5000); }
+function buildFootprints(day){ while (fpGroup.children.length){ const c = fpGroup.children.pop(); c.geometry.dispose(); } for (const tr of fpTrails) if (tr.A){ outside.remove(tr.A.g); disposeG(tr.A.g); } fpTrails.length = 0; const ov = fpOvLoad(day);
+  fpPick(day).forEach(([type, seed, at0], idx) => { const at = ov[idx] != null ? ov[idx] : at0; const [tex, size, mode, stride] = FPT[type], R = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)(seed * 7919 + 13);
     const mat = fpMats[type] || (fpMats[type] = new THREE.MeshBasicMaterial({ map:tex, transparent:true, opacity:.6, depthWrite:false, polygonOffset:true, polygonOffsetFactor:-2 }));
     // 庭を横切る道すじ（はしからはしへ、ゆるく曲がる）
-    const side = R() < .5 ? -1 : 1, short = mode === 'hop' && size < .1, x0 = side * (short ? .6 + R() * 1.2 : 3.4), x1 = -side * (short ? .2 + R() * 1.4 : 3.4) , z0 = 1.4 + R() * 2.6, z1 = 1.4 + R() * 2.6, cx = (R() - .5) * 2.4, cz = 1.2 + R() * 3;
+    const side = R() < .5 ? -1 : 1, short = type === 'bird', x0 = side * (short ? .6 + R() * 1.2 : 3.4), x1 = -side * (short ? .2 + R() * 1.4 : 3.4) , z0 = 1.4 + R() * 2.6, z1 = 1.4 + R() * 2.6, cx = (R() - .5) * 2.4, cz = 1.2 + R() * 3;
     const P = t => { const u = 1 - t; return [u * u * x0 + 2 * u * t * cx + t * t * x1, u * u * z0 + 2 * u * t * cz + t * t * z1]; };
-    let len = 0, prev = P(0); const pts = [prev]; for (let i = 1; i <= 200; i++){ const p = P(i / 200); len += Math.hypot(p[0] - prev[0], p[1] - prev[1]); pts.push(p); prev = p; }
+    let len = 0, prev = P(0); const pts = [prev], cum = [0]; for (let i = 1; i <= 200; i++){ const p = P(i / 200); len += Math.hypot(p[0] - prev[0], p[1] - prev[1]); pts.push(p); cum.push(len); prev = p; }
+    const tr = { type, idx, t:at, pts, cum, len, stride, v:stride * ({ walk:2.6, line:2.2, hop:2.4 })[mode] * (type === 'deer' ? .75 : type === 'mouse' ? 1.6 : 1), prints:[], A:null }; fpTrails.push(tr);
     let acc = 0, k = 0, n = 0; const wob = mode === 'walk' ? .045 : mode === 'line' ? .012 : 0;
     for (let i = 1; i < pts.length; i++){ const [ax, az] = pts[i - 1], [bx, bz] = pts[i], seg = Math.hypot(bx - ax, bz - az); acc += seg; if (acc < stride * (.85 + R() * .3)) continue; acc = 0; n++;
       const dx = (bx - ax) / seg, dz = (bz - az) / seg, s = (n % 2 ? 1 : -1) * wob + (mode === 'hop' && type === 'bird' ? (R() - .5) * .05 : 0), x = bx - dz * s, z = bz + dx * s, wx = WX + x, wz = OUT_Z - z;
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(size * 1.2, size * 1.2), mat); m.rotation.set(-Math.PI / 2, 0, Math.atan2(dx, dz) + (type === 'bird' ? (R() - .5) * .5 : 0)); m.position.set(wx, Math.max(.55, terH(x, z)) + .012, wz); m.userData = { t:at, i:n }; fpGroup.add(m); } } fpUpdate(); }
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(size * 1.2, size * 1.2), mat); m.rotation.set(-Math.PI / 2, 0, Math.atan2(dx, dz) + (type === 'bird' ? (R() - .5) * .5 : 0)); m.position.set(wx, Math.max(.55, terH(x, z)) + .012, wz); fpGroup.add(m); tr.prints.push({ m, d:cum[i] }); } }); fpUpdate(); }
 const fpDay = () => { if (window.KAJI_FP != null) return window.KAJI_FP; const d = new Date(Date.now() - 4 * 36e5); return Math.floor(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / 864e5); };
 let fpCur = -1; const fpCheck = () => { const d = fpDay(); if (d !== fpCur){ fpCur = d; buildFootprints(d); } else fpUpdate(); }; fpCheck();
 // 降る雪（遠く・近くの2層）
@@ -390,7 +461,7 @@ nearGeo.setAttribute('position', new THREE.BufferAttribute(nearPos, 3)); const n
 function outsideTime(night){ fpCheck(); sky.material.map = night ? skyNightTex : skyDayTex; sky.material.needsUpdate = true; ridges[0].material.color.set(night ? '#ffffff' : '#c8d4ee'); ridges[1].material.color.set(night ? '#ffffff' : '#d8e0f2');
   vLights.forEach(p => p.visible = night); village.children.forEach(c => { if (c.isInstancedMesh) c.material.color.set(night ? '#5a6080' : '#ffffff'); if (c.userData.house) c.visible = !night; }); if (riverM) riverM.color.set(night ? '#2a3460' : '#7f9cc4'); }
 let fpT = 0;
-function outsideTick(now){ const t = now / 1000; if (now - fpT > 250){ fpT = now; fpCheck(); }
+function outsideTick(now){ const t = now / 1000; if (peek || now - fpT > 250){ fpT = now; fpCheck(); }
   { const a = snowGeo.attributes.position; for (let i = 0; i < snowN; i++){ let y = a.getY(i) - .01 - (i % 3) * .003; if (y < .6) y = 5.6; a.setY(i, y); a.setX(i, a.getX(i) + Math.sin(t * 1.1 + i) * .0016); } a.needsUpdate = true; }
   { const a = nearGeo.attributes.position; for (let i = 0; i < nearN; i++){ let y = a.getY(i) - .016; if (y < .7) y = 4.2; a.setY(i, y); a.setX(i, a.getX(i) + Math.sin(t * .9 + i * 1.7) * .0026); } a.needsUpdate = true; }
   for (const lt of litTrees) lt.userData.bulbs.forEach((b, i) => { b.visible = Math.sin(t * 2.2 + i * 1.7) > -.6; }); if (village.visible) vLights.forEach((p, i) => { p.material.opacity = .78 + Math.sin(t * 3.1 + i * 1.7) * .17; }); }
@@ -1442,7 +1513,7 @@ function zoomTo(id){ const o = placed.find(x => x.userData.id === id) || gifts.f
   const dir = camera.position.clone().sub(p).normalize(), far = o.userData.gift ? 2.6 : 2.0; zoom = { t0:performance.now(), fromP:camera.position.clone(), fromL:camLook(), toP:p.clone().addScaledVector(dir, far), toL:p.clone().add(new THREE.Vector3(0, -far * .17, 0)), dur:650 }; zoomed = true; }
 // 窓をのぞく：窓をさわると、窓の前まで寄って外をながめる。どこかをさわると戻る
 let peek = false;
-function peekWindow(){ if (zoomed || view || !GARDEN()) return; /* 窓をのぞく機能もテスト中（ひろきの端末だけ） */ peek = true; village.visible = true; oldTrees.visible = false; fpCheck(); const px = WX, toP = new THREE.Vector3(px - .2, 3.2, OUT_Z - .6), toL = new THREE.Vector3(px, -16, OUT_Z - 27);
+function peekWindow(){ if (zoomed || view || !GARDEN()) return; /* 窓をのぞく機能もテスト中（ひろきの端末だけ） */ peek = true; village.visible = true; oldTrees.visible = false; fpCheck(); fpEarly(); const px = WX, toP = new THREE.Vector3(px - .2, 3.2, OUT_Z - .6), toL = new THREE.Vector3(px, -16, OUT_Z - 27);
   zoom = { t0:performance.now(), fromP:camera.position.clone(), fromL:camLook(), toP, toL, dur:800, fromF:camera.fov, toF:Math.min(78, 52 / Math.min(1, camera.aspect + .25)) }; zoomed = true; if (window.kajiToast && !editOn) setTimeout(() => { if (peek && !editOn) window.kajiToast('どこかをさわるともどるよ'); }, 900); }
 function zoomOut(){ if (!zoomed) return; zoomed = false; const wasPeek = peek; peek = false; if (wasPeek) setTimeout(() => { if (!peek) village.visible = false; }, 600); const keepP = camera.position.clone(), keepL = camLook(), keepF = camera.fov; camera.fov = 32; placeCamera(); const toP = camera.position.clone(); camera.position.copy(keepP); camera.lookAt(keepL); zoom = { t0:performance.now(), fromP:keepP, fromL:keepL, toP, toL:target.clone(), dur:550, end:true, ...(wasPeek ? { fromF:keepF, toF:32 } : {}) }; if (wasPeek){ camera.fov = keepF; camera.updateProjectionMatrix(); } }
 function stepZoom(now){ if (!zoom) return; const t = Math.min(1, (now - zoom.t0) / zoom.dur), k = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -1552,5 +1623,5 @@ function setSeason(ny){ ny = !!ny; if (ny === nyMode) return; nyMode = ny; if (n
   firBase.forEach(m => m.visible = !ny); for (const k of TREE_PARTS) if (mounted[k]) mounted[k].visible = !ny; if (mochi) mochi.group.visible = ny;
   slots.length = 0; (ny ? MOCHI_SLOTS : TREE_SLOTS).forEach(p => slots.push(p)); const L = lastList, G = lastGifts; clearAll(); sig = ''; if (L) sync(L, G || []); shadowsDirty = true; }
 const _mochi = (n = 14, sc = 1.6) => { const mb = makeMochibana(7); mb.group.scale.setScalar(sc); mb.branches.slice(0, n * 2).forEach((cv, i) => { if (i % 2) return; const o = mb.makers[(i / 2) % mb.makers.length](); o.scale.setScalar(1.25); mb.hang(o, cv.getPointAt(.55 + (i % 5) * .07), .05 + (i % 3) * .025); }); mb.group.traverse(m => { if (m.isMesh) m.castShadow = true; }); tree.visible = false; treeRoot.add(mb.group); shadowsDirty = true; };
-return { setView, viewReset, viewing:() => !!view, _view:(y, p, d) => { if (!view) return; view.yaw = y; view.pitch = p; if (d) view.dist = d; viewApply(); }, setSeason, _mochi, thumbGift, giftType:id => GIFT_TYPES[giftSeed(id) % GIFT_TYPES.length], setAdvBox, zoomTo, zoomOut, zoomed:() => zoomed, _dbg, _proj, sync, setRoom, snapshot, setEdit, editRotate, editRemove, autoPlace, peekGarden(){ if (view || !GARDEN()) return; if (zoomed && !peek){ zoomed = false; zoom = null; placeCamera(); } peekWindow(); }, peeking:() => peek, layoutOf, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize: refit };
+return { _fpInfo:() => { fpCheck(); return fpTrails.map(t => ({ type:t.type, t:t.t, len:t.len, v:t.v })); }, setView, viewReset, viewing:() => !!view, _view:(y, p, d) => { if (!view) return; view.yaw = y; view.pitch = p; if (d) view.dist = d; viewApply(); }, setSeason, _mochi, thumbGift, giftType:id => GIFT_TYPES[giftSeed(id) % GIFT_TYPES.length], setAdvBox, zoomTo, zoomOut, zoomed:() => zoomed, _dbg, _proj, sync, setRoom, snapshot, setEdit, editRotate, editRemove, autoPlace, peekGarden(){ if (view || !GARDEN()) return; if (zoomed && !peek){ zoomed = false; zoom = null; placeCamera(); } peekWindow(); }, peeking:() => peek, layoutOf, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize: refit };
 }
