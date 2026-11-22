@@ -358,11 +358,17 @@ const FPT = {
   tanuki: [fpTex(E => { E(.5, .64, .17, .15); for (const [x, y] of [[.22, .44], [.34, .26], [.5, .2], [.66, .26], [.78, .44]]) E(x, y, .065, .08); }), .085, 'walk', .16],
 };
 const fpGroup = new THREE.Group(); outside.add(fpGroup); const fpMats = {};
-// 日ごとに、9種類の動物から1〜3種類をランダムに選び、道すじもランダム（同じ日は同じ足あと）
-function fpPick(day){ const R = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)((day * 2654435761 >>> 0) % 2147483646 + 1); R(); R(); const types = Object.keys(FPT), n = R() < .45 ? 1 : R() < .75 ? 2 : 3, out = [];
-  while (out.length < n){ const t = types[(R() * types.length) | 0]; if (t === 'bird' || !out.some(o => o[0] === t)) out.push([t, (R() * 1e6) | 0 + 1]); } return out; }
+// 日ごとに、9種類の動物から4〜7匹をランダムに選び、道すじもランダム（同じ日は同じ足あと）。
+// 1日（朝4時〜）のうちに1匹ずつやってきて、足あとが少しずつ増えていく。朝いちばんの1匹は夜のうちに来たもの
+function fpPick(day){ const R = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)((day * 2654435761 >>> 0) % 2147483646 + 1); R(); R(); const types = Object.keys(FPT), n = 4 + ((R() * 4) | 0), out = [];
+  const times = [0]; for (let i = 1; i < n; i++) times.push((2 + R() * 17) * 36e5); times.sort((a, b) => a - b);
+  while (out.length < n){ const t = types[(R() * types.length) | 0]; if (t === 'bird' || out.filter(o => o[0] === t).length < (n > 6 ? 2 : 1)) out.push([t, ((R() * 1e6) | 0) + 1, times[out.length]]); } return out; }
+const fpNow = () => { if (window.KAJI_FPNOW != null) return window.KAJI_FPNOW; const d = new Date(); return ((d.getHours() + 20) % 24) * 36e5 + d.getMinutes() * 6e4 + d.getSeconds() * 1e3 + d.getMilliseconds(); };
+function fpUpdate(){ const now = fpNow(), rt = performance.now(); for (const m of fpGroup.children){ const u = m.userData; if (now < u.t){ m.visible = false; u.seen = 0; continue; }
+    // ちょうど来たところを見ていたら、1歩ずつ足あとがついていく
+    if (now - u.t < 60000 && !u.seen){ u.seen = rt - (now - u.t); } const since = u.seen ? rt - u.seen : 1e9; m.visible = since >= u.i * 350; } }
 function buildFootprints(day){ while (fpGroup.children.length){ const c = fpGroup.children.pop(); c.geometry.dispose(); }
-  for (const [type, seed] of fpPick(day)){ const [tex, size, mode, stride] = FPT[type], R = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)(seed * 7919 + 13);
+  for (const [type, seed, at] of fpPick(day)){ const [tex, size, mode, stride] = FPT[type], R = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)(seed * 7919 + 13);
     const mat = fpMats[type] || (fpMats[type] = new THREE.MeshBasicMaterial({ map:tex, transparent:true, opacity:.6, depthWrite:false, polygonOffset:true, polygonOffsetFactor:-2 }));
     // 庭を横切る道すじ（はしからはしへ、ゆるく曲がる）
     const side = R() < .5 ? -1 : 1, short = mode === 'hop' && size < .1, x0 = side * (short ? .6 + R() * 1.2 : 3.4), x1 = -side * (short ? .2 + R() * 1.4 : 3.4) , z0 = 1.4 + R() * 2.6, z1 = 1.4 + R() * 2.6, cx = (R() - .5) * 2.4, cz = 1.2 + R() * 3;
@@ -371,9 +377,9 @@ function buildFootprints(day){ while (fpGroup.children.length){ const c = fpGrou
     let acc = 0, k = 0, n = 0; const wob = mode === 'walk' ? .045 : mode === 'line' ? .012 : 0;
     for (let i = 1; i < pts.length; i++){ const [ax, az] = pts[i - 1], [bx, bz] = pts[i], seg = Math.hypot(bx - ax, bz - az); acc += seg; if (acc < stride * (.85 + R() * .3)) continue; acc = 0; n++;
       const dx = (bx - ax) / seg, dz = (bz - az) / seg, s = (n % 2 ? 1 : -1) * wob + (mode === 'hop' && type === 'bird' ? (R() - .5) * .05 : 0), x = bx - dz * s, z = bz + dx * s, wx = WX + x, wz = OUT_Z - z;
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(size * 1.2, size * 1.2), mat); m.rotation.set(-Math.PI / 2, 0, Math.atan2(dx, dz) + (type === 'bird' ? (R() - .5) * .5 : 0)); m.position.set(wx, Math.max(.55, terH(x, z)) + .012, wz); fpGroup.add(m); } } }
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(size * 1.2, size * 1.2), mat); m.rotation.set(-Math.PI / 2, 0, Math.atan2(dx, dz) + (type === 'bird' ? (R() - .5) * .5 : 0)); m.position.set(wx, Math.max(.55, terH(x, z)) + .012, wz); m.userData = { t:at, i:n }; fpGroup.add(m); } } fpUpdate(); }
 const fpDay = () => { if (window.KAJI_FP != null) return window.KAJI_FP; const d = new Date(Date.now() - 4 * 36e5); return Math.floor(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / 864e5); };
-let fpCur = -1; const fpCheck = () => { const d = fpDay(); if (d !== fpCur){ fpCur = d; buildFootprints(d); } }; fpCheck();
+let fpCur = -1; const fpCheck = () => { const d = fpDay(); if (d !== fpCur){ fpCur = d; buildFootprints(d); } else fpUpdate(); }; fpCheck();
 // 降る雪（遠く・近くの2層）
 const snowN = 320, snowGeo = new THREE.BufferGeometry(), snowPos = new Float32Array(snowN * 3); for (let i = 0; i < snowN; i++){ snowPos[i * 3] = WX + (Math.random() - .5) * 8; snowPos[i * 3 + 1] = .6 + Math.random() * 5; snowPos[i * 3 + 2] = OUT_Z - .3 - Math.random() * 8; }
 snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3)); const snowPts = new THREE.Points(snowGeo, new THREE.PointsMaterial({ color:'#ffffff', size:.06, transparent:true, opacity:.9, map:glowTex, depthWrite:false })); outside.add(snowPts);
@@ -383,7 +389,8 @@ nearGeo.setAttribute('position', new THREE.BufferAttribute(nearPos, 3)); const n
 { const ls = new THREE.Mesh(new RoundedBoxGeometry(WW - .02, .07, .16, 3, .03), roofSnow); ls.position.set(WX, WY - WH / 2 + .03, bz - .24); outside.add(ls); }
 function outsideTime(night){ fpCheck(); sky.material.map = night ? skyNightTex : skyDayTex; sky.material.needsUpdate = true; ridges[0].material.color.set(night ? '#ffffff' : '#c8d4ee'); ridges[1].material.color.set(night ? '#ffffff' : '#d8e0f2');
   vLights.forEach(p => p.visible = night); village.children.forEach(c => { if (c.isInstancedMesh) c.material.color.set(night ? '#5a6080' : '#ffffff'); if (c.userData.house) c.visible = !night; }); if (riverM) riverM.color.set(night ? '#2a3460' : '#7f9cc4'); }
-function outsideTick(now){ const t = now / 1000;
+let fpT = 0;
+function outsideTick(now){ const t = now / 1000; if (now - fpT > 250){ fpT = now; fpCheck(); }
   { const a = snowGeo.attributes.position; for (let i = 0; i < snowN; i++){ let y = a.getY(i) - .01 - (i % 3) * .003; if (y < .6) y = 5.6; a.setY(i, y); a.setX(i, a.getX(i) + Math.sin(t * 1.1 + i) * .0016); } a.needsUpdate = true; }
   { const a = nearGeo.attributes.position; for (let i = 0; i < nearN; i++){ let y = a.getY(i) - .016; if (y < .7) y = 4.2; a.setY(i, y); a.setX(i, a.getX(i) + Math.sin(t * .9 + i * 1.7) * .0026); } a.needsUpdate = true; }
   for (const lt of litTrees) lt.userData.bulbs.forEach((b, i) => { b.visible = Math.sin(t * 2.2 + i * 1.7) > -.6; }); if (village.visible) vLights.forEach((p, i) => { p.material.opacity = .78 + Math.sin(t * 3.1 + i * 1.7) * .17; }); }
