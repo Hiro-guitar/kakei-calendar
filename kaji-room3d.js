@@ -343,7 +343,7 @@ let riverM = null; const village = new THREE.Group(); village.visible = false; o
   for (const z of [0]){ for (let i = 0; i < 26; i++){ const x = WX - 3.2 + i * .26 + (OR() - .5) * .02; const pk = new THREE.Mesh(new RoundedBoxGeometry(.07, .52, .04, 2, .015), fenceM); pk.position.set(x, .58 + .26, fz + z); pk.rotation.z = (OR() - .5) * .06; outside.add(pk); const cap = new THREE.Mesh(new THREE.SphereGeometry(.045, 8, 6), roofSnow); cap.scale.set(1, .5, .9); cap.position.set(x, .58 + .53, fz + z); outside.add(cap); }
     for (const y of [.2, .4]){ const rail = new THREE.Mesh(new RoundedBoxGeometry(6.8, .05, .035, 2, .012), fenceM); rail.position.set(WX, .58 + y, fz - .03); outside.add(rail); const sn = new THREE.Mesh(new RoundedBoxGeometry(6.8, .03, .05, 2, .012), roofSnow); sn.position.set(WX, .58 + y + .035, fz - .03); outside.add(sn); } } }
 // 雪の上の足あと
-/* 庭の雪の上の、動物の足あと（15パターンを日替わりで） */
+/* 庭の雪の上の、動物の足あと（日替わりで、動物の組み合わせと道すじがランダム） */
 const FP_C = 'rgba(78,96,150,1)';
 const fpTex = draw => canvasTex(64, 64, (g, w) => { g.clearRect(0, 0, w, w); g.fillStyle = FP_C; g.strokeStyle = FP_C; const E = (x, y, rx, ry, a = 0) => { g.beginPath(); g.ellipse(x * w, y * w, rx * w, ry * w, a, 0, Math.PI * 2); g.fill(); }; draw(E, g, w); });
 const FPT = {
@@ -357,11 +357,12 @@ const FPT = {
   deer: [fpTex(E => { E(.38, .45, .12, .3, -.12); E(.62, .45, .12, .3, .12); E(.4, .85, .05, .05); E(.6, .85, .05, .05); }), .1, 'line', .3],
   tanuki: [fpTex(E => { E(.5, .64, .17, .15); for (const [x, y] of [[.22, .44], [.34, .26], [.5, .2], [.66, .26], [.78, .44]]) E(x, y, .065, .08); }), .085, 'walk', .16],
 };
-const FP_PATTERNS = [[['rabbit', 1]], [['fox', 2]], [['bird', 3], ['bird', 4]], [['cat', 5]], [['deer', 6]], [['squirrel', 7]], [['tanuki', 8]], [['rabbit', 9], ['bird', 10]], [['fox', 11], ['mouse', 12]],
-  [['dog', 13]], [['deer', 14], ['rabbit', 15]], [['bird', 16], ['bird', 17], ['bird', 18]], [['cat', 19], ['bird', 20]], [['squirrel', 21], ['mouse', 22]], [['tanuki', 23], ['fox', 24]]];
 const fpGroup = new THREE.Group(); outside.add(fpGroup); const fpMats = {};
-function buildFootprints(idx){ while (fpGroup.children.length){ const c = fpGroup.children.pop(); c.geometry.dispose(); }
-  for (const [type, seed] of FP_PATTERNS[idx % FP_PATTERNS.length]){ const [tex, size, mode, stride] = FPT[type], R = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)(seed * 7919 + 13);
+// 日ごとに、9種類の動物から1〜3種類をランダムに選び、道すじもランダム（同じ日は同じ足あと）
+function fpPick(day){ const R = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)((day * 2654435761 >>> 0) % 2147483646 + 1); R(); R(); const types = Object.keys(FPT), n = R() < .45 ? 1 : R() < .75 ? 2 : 3, out = [];
+  while (out.length < n){ const t = types[(R() * types.length) | 0]; if (t === 'bird' || !out.some(o => o[0] === t)) out.push([t, (R() * 1e6) | 0 + 1]); } return out; }
+function buildFootprints(day){ while (fpGroup.children.length){ const c = fpGroup.children.pop(); c.geometry.dispose(); }
+  for (const [type, seed] of fpPick(day)){ const [tex, size, mode, stride] = FPT[type], R = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)(seed * 7919 + 13);
     const mat = fpMats[type] || (fpMats[type] = new THREE.MeshBasicMaterial({ map:tex, transparent:true, opacity:.6, depthWrite:false, polygonOffset:true, polygonOffsetFactor:-2 }));
     // 庭を横切る道すじ（はしからはしへ、ゆるく曲がる）
     const side = R() < .5 ? -1 : 1, short = mode === 'hop' && size < .1, x0 = side * (short ? .6 + R() * 1.2 : 3.4), x1 = -side * (short ? .2 + R() * 1.4 : 3.4) , z0 = 1.4 + R() * 2.6, z1 = 1.4 + R() * 2.6, cx = (R() - .5) * 2.4, cz = 1.2 + R() * 3;
@@ -372,7 +373,7 @@ function buildFootprints(idx){ while (fpGroup.children.length){ const c = fpGrou
       const dx = (bx - ax) / seg, dz = (bz - az) / seg, s = (n % 2 ? 1 : -1) * wob + (mode === 'hop' && type === 'bird' ? (R() - .5) * .05 : 0), x = bx - dz * s, z = bz + dx * s, wx = WX + x, wz = OUT_Z - z;
       const m = new THREE.Mesh(new THREE.PlaneGeometry(size * 1.2, size * 1.2), mat); m.rotation.set(-Math.PI / 2, 0, Math.atan2(dx, dz) + (type === 'bird' ? (R() - .5) * .5 : 0)); m.position.set(wx, Math.max(.55, terH(x, z)) + .012, wz); fpGroup.add(m); } } }
 const fpDay = () => { if (window.KAJI_FP != null) return window.KAJI_FP; const d = new Date(Date.now() - 4 * 36e5); return Math.floor(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / 864e5); };
-let fpCur = -1; const fpCheck = () => { const d = fpDay(); if (d !== fpCur){ fpCur = d; buildFootprints(((d % 15) + 15) % 15); } }; fpCheck();
+let fpCur = -1; const fpCheck = () => { const d = fpDay(); if (d !== fpCur){ fpCur = d; buildFootprints(d); } }; fpCheck();
 // 降る雪（遠く・近くの2層）
 const snowN = 320, snowGeo = new THREE.BufferGeometry(), snowPos = new Float32Array(snowN * 3); for (let i = 0; i < snowN; i++){ snowPos[i * 3] = WX + (Math.random() - .5) * 8; snowPos[i * 3 + 1] = .6 + Math.random() * 5; snowPos[i * 3 + 2] = OUT_Z - .3 - Math.random() * 8; }
 snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3)); const snowPts = new THREE.Points(snowGeo, new THREE.PointsMaterial({ color:'#ffffff', size:.06, transparent:true, opacity:.9, map:glowTex, depthWrite:false })); outside.add(snowPts);
