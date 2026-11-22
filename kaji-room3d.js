@@ -367,24 +367,25 @@ const fpNow = () => { if (window.KAJI_FPNOW != null) return window.KAJI_FPNOW; c
 /* ===== 庭にやってくる動物（なめらかな体のライン・毛色・関節のある脚） ===== */
 // 背骨にそって太さを変えた輪をつないで、ひとつながりの体を作る（spine: [z, y, 横幅, 高さ, x]、しっぽ側→鼻先）
 const furTex = (() => { const t = canvasTex(128, 128, (g, w) => { g.fillStyle = '#808080'; g.fillRect(0, 0, w, w); for (let i = 0; i < 2600; i++){ const x = Math.random() * w, y = Math.random() * w, l = 3 + Math.random() * 7, v = 90 + Math.random() * 90 | 0; g.strokeStyle = `rgb(${v},${v},${v})`; g.lineWidth = .8 + Math.random(); g.beginPath(); g.moveTo(x, y); g.lineTo(x + (Math.random() - .5) * 2, y + l); g.stroke(); } }, [6, 3]); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; })();
-function loft(spine, col, seg = 20, sub = 6){ const V = (a, b, c) => new THREE.Vector3(a, b, c);
+function loft(spine, col, seg = 26, sub = 8){ const V = (a, b, c) => new THREE.Vector3(a, b, c);
   const C = new THREE.CatmullRomCurve3(spine.map(p => V(p[4] || 0, p[1], p[0]))), W = new THREE.CatmullRomCurve3(spine.map(p => V(p[2], p[3], 0))), N = (spine.length - 1) * sub + 1;
   const pos = [], cols = [], idx = [], uvs = [], c = new THREE.Color(), up0 = V(0, 1, 0);
   for (let i = 0; i < N; i++){ const t = i / (N - 1), p = C.getPoint(t), tg = C.getTangent(t), wh = W.getPoint(t); let up = Math.abs(tg.dot(up0)) > .92 ? V(0, 0, 1) : up0.clone();
     const sd = new THREE.Vector3().crossVectors(tg, up).normalize(), u2 = new THREE.Vector3().crossVectors(sd, tg).normalize();
-    for (let j = 0; j < seg; j++){ const a = j / seg * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a); pos.push(p.x + sd.x * ca * wh.x + u2.x * sa * wh.y, p.y + sd.y * ca * wh.x + u2.y * sa * wh.y, p.z + sd.z * ca * wh.x + u2.z * sa * wh.y); c.set(col(p.z, sa, ca, t, p.y)); const n = (furN(i * .37, j * .91) - .5) * .06; cols.push(c.r * (1 + n), c.g * (1 + n), c.b * (1 + n)); uvs.push(j / seg, t); } }
+    for (let j = 0; j < seg; j++){ const a = j / seg * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a); pos.push(p.x + sd.x * ca * wh.x + u2.x * sa * wh.y, p.y + sd.y * ca * wh.x + u2.y * sa * wh.y, p.z + sd.z * ca * wh.x + u2.z * sa * wh.y); c.set(col(p.z, sa, ca, t, p.y)); const n = 0; cols.push(c.r * (1 + n), c.g * (1 + n), c.b * (1 + n)); uvs.push(j / seg, t); } }
   for (let i = 0; i < N - 1; i++) for (let j = 0; j < seg; j++){ const a = i * seg + j, b = i * seg + (j + 1) % seg, d = a + seg, e = b + seg; idx.push(a, d, b, b, d, e); }
   for (const [ring, flip] of [[0, true], [N - 1, false]]){ const ci = pos.length / 3; let sx = 0, sy = 0, sz = 0; for (let j = 0; j < seg; j++){ sx += pos[(ring * seg + j) * 3]; sy += pos[(ring * seg + j) * 3 + 1]; sz += pos[(ring * seg + j) * 3 + 2]; }
     pos.push(sx / seg, sy / seg, sz / seg); cols.push(cols[ring * seg * 3], cols[ring * seg * 3 + 1], cols[ring * seg * 3 + 2]); uvs.push(.5, ring ? 1 : 0); for (let j = 0; j < seg; j++){ const a = ring * seg + j, b = ring * seg + (j + 1) % seg; flip ? idx.push(ci, b, a) : idx.push(ci, a, b); } }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); g.setIndex(idx); g.computeVertexNormals();
-  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors:true, roughness:.92, bumpMap:furTex, bumpScale:.0025 })); m.castShadow = true; return m; }
+  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors:true, roughness:.8 })); m.castShadow = true; return m; }
 const furN = (x, y) => { const v = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return v - Math.floor(v); };
 const mix = (a, b, t) => { const A = new THREE.Color(a), B = new THREE.Color(b); return A.lerp(B, Math.max(0, Math.min(1, t))).getHex(); };
 // 2つの関節がある脚（もも・すね・足先）。back=後ろ脚はかかとが後ろへ折れる
-function leg2(par, x, y, z, l1, l2, r1, r2, mat, back, foot){ const hip = new THREE.Group(); hip.position.set(x, y, z); par.add(hip);
-  // もも（体にとけこむ太い付け根）
-  addM(hip, new THREE.CylinderGeometry(r2 * 1.15, r1, l1, 12), mat, 0, -l1 / 2, 0); addM(hip, new THREE.SphereGeometry(1, 14, 10), mat, 0, l1 * .05, 0, 0, 0, 0, r1 * .95, l1 * .38, r1 * (back ? 1.35 : 1.1)); const knee = new THREE.Group(); knee.position.y = -l1; hip.add(knee);
-  addM(knee, new THREE.SphereGeometry(r2 * 1.15, 8, 6), mat); addM(knee, new THREE.CylinderGeometry(r2 * .8, r2 * 1.05, l2, 8), mat, 0, -l2 / 2, 0); addM(knee, new THREE.SphereGeometry(r2 * 1.25, 10, 6), foot || mat, 0, -l2, r2 * .7, 0, 0, 0, 1, .55, 1.7);
+function leg2(par, x, y, z, l1, l2, r1, r2, mat, back, foot){ const hip = new THREE.Group(); hip.position.set(x, y, z); par.add(hip); const c1 = '#' + mat.color.getHexString(), c2 = foot ? '#' + foot.color.getHexString() : c1;
+  // もも〜ひざ、ひざ〜足先を、なめらかにすぼまる1本ずつの形で（関節はまるくつながる）
+  hip.add(loft([[0, l1 * .25, r1 * .3, r1 * .3], [0, l1 * .12, r1 * .9, r1 * 1.05], [0, -l1 * .2, r1 * .95, r1 * 1.1], [0, -l1 * .6, (r1 + r2) * .55, (r1 + r2) * .6], [0, -l1 * .95, r2 * 1.1, r2 * 1.15], [0, -l1 * 1.06, r2 * .5, r2 * .5]], () => c1, 14, 5));
+  const knee = new THREE.Group(); knee.position.y = -l1; hip.add(knee);
+  knee.add(loft([[0, r2 * .9, r2 * .5, r2 * .5], [0, 0, r2 * 1.05, r2 * 1.1], [0, -l2 * .5, r2 * .85, r2 * .9], [0, -l2 * .85, r2 * .8, r2 * .85], [r2 * .4, -l2 * .98, r2 * 1.05, r2 * .7], [r2 * 1.5, -l2 - r2 * .1, r2 * .9, r2 * .45], [r2 * 2.1, -l2 - r2 * .1, r2 * .3, r2 * .25]], (zz, s2, ca, t) => t > .6 ? c2 : c1, 14, 5));
   hip.userData = { r0:back ? -.32 : .05, k0:back ? .62 : -.08, knee }; hip.rotation.x = hip.userData.r0; knee.rotation.x = hip.userData.k0; return hip; }
 function nose2(g, x, y, z, r){ addM(g, new THREE.SphereGeometry(r, 12, 8), M('#16100c', { roughness:.25 }), x, y, z, 0, 0, 0, 1.25, .8, .9); }
 function whisk(g, x, y, z, len, n = 3){ const m = new THREE.LineBasicMaterial({ color:'#f4f0e8', transparent:true, opacity:.75 }); for (const s of [-1, 1]) for (let i = 0; i < n; i++){ const a = (i - (n - 1) / 2) * .22, geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x + s * .006, y, z), new THREE.Vector3(x + s * len * Math.cos(a), y + len * Math.sin(a) * .6 - len * .08, z - len * .25)]); g.add(new THREE.Line(geo, m)); } }
@@ -399,7 +400,7 @@ const ANIMALS = {
     const lm = M(BL, { roughness:.85 }); const legs = [[-.045, .23, .09], [.045, .23, .09], [-.045, .22, -.15], [.045, .22, -.15]].map(([x, y, z], i) => leg2(b, x, y, z, .12, .11, i > 1 ? .035 : .025, .014, lm, i > 1));
     return { g, b, legs, head:h, mode:'walk' }; },
   cat(){ const g = new THREE.Group(), b = new THREE.Group(); g.add(b); const C1 = '#a49480', C2 = '#5e5040', WH = '#f4f0e8';
-    const col = (z, s) => s < -.35 && z > -.05 ? WH : mix(C1, C2, (Math.sin(z * 90 + s * 2) > .55 ? .45 : .08) * (s > -.2 ? 1 : .3) + s * .15 + furN(z, s) * .1);
+    const col = (z, s) => s < -.35 && z > -.05 ? WH : mix(C1, C2, Math.pow(Math.sin(z * 80 + s * 2) * .5 + .5, 3) * .5 * (s > -.2 ? 1 : .3) + s * .15);
     b.add(loft([[-.23, .4, .01, .01], [-.245, .33, .015, .015], [-.22, .25, .017, .017], [-.17, .19, .022, .022], [-.13, .17, .06, .065], [0, .18, .065, .07], [.1, .18, .06, .068], [.15, .22, .042, .048], [.19, .26, .056, .055], [.245, .255, .048, .043], [.275, .245, .022, .02], [.29, .242, .008, .008]], col));
     nose2(b, 0, .249, .291, .007); whisk(b, 0, .238, .285, .075); const h = new THREE.Group(); h.position.set(0, .265, .2); b.add(h); for (const s of [-1, 1]) ear2(h, s * .03, .035, -.01, .022, .045, C1, '#e8b8b0', -s * .3, -.1); eyes2(h, 0, .008, .05, .024, .012, '#6a7a20');
     const lm = M(C1, { roughness:.9 }); const legs = [[-.035, .145, .085], [.035, .145, .085], [-.035, .14, -.1], [.035, .14, -.1]].map(([x, y, z], i) => leg2(b, x, y, z, .075, .075, i > 1 ? .03 : .02, .012, lm, i > 1));
@@ -413,13 +414,13 @@ const ANIMALS = {
     return { g, b, legs, tail:tl, head:h, mode:'walk' }; },
   tanuki(){ const g = new THREE.Group(), b = new THREE.Group(); g.add(b); const GR = '#6e604c', LT = '#a89878', DK = '#2a221c';
     b.add(loft([[-.33, .14, .012, .012], [-.3, .14, .05, .05], [-.22, .16, .062, .062], [-.16, .19, .1, .1], [0, .21, .11, .11], [.1, .21, .1, .1], [.16, .23, .07, .07], [.2, .25, .075, .07], [.27, .24, .05, .045], [.31, .23, .02, .02], [.325, .228, .008, .008]],
-      (z, s, ca) => z < -.3 ? DK : z < -.17 ? (Math.sin(z * 60) > .3 ? DK : GR) : z > .31 ? DK : z > .2 && Math.abs(ca) > .55 && s > -.4 && s < .5 ? DK : z > .23 && s < -.1 ? LT : s < -.4 ? DK : mix(GR, LT, s * .5 + furN(z * 4, s) * .4)));
+      (z, s, ca) => z < -.3 ? DK : z < -.17 ? mix(GR, DK, Math.pow(Math.sin(z * 60) * .5 + .5, 2)) : z > .31 ? DK : z > .2 && Math.abs(ca) > .55 && s > -.4 && s < .5 ? DK : z > .23 && s < -.1 ? LT : s < -.4 ? DK : mix(GR, LT, s * .5 + furN(z * 4, s) * .4)));
     nose2(b, 0, .232, .327, .011); whisk(b, 0, .225, .31, .05, 2); const h = new THREE.Group(); h.position.set(0, .26, .23); b.add(h); for (const s of [-1, 1]) ear2(h, s * .04, .03, -.02, .02, .035, DK, null, -s * .3); eyes2(h, 0, .008, .055, .03, .01);
     const lm = M(DK, { roughness:.9 }); const legs = [[-.05, .16, .08], [.05, .16, .08], [-.055, .16, -.1], [.055, .16, -.1]].map(([x, y, z], i) => leg2(b, x, y, z, .075, .075, .03, .018, lm, i > 1));
     return { g, b, legs, head:h, mode:'walk' }; },
   deer(){ const g = new THREE.Group(), b = new THREE.Group(); g.add(b); const BR = '#76583f', LT = '#b49a7e', WH = '#f6f0e4', DK = '#2a1c14';
     b.add(loft([[-.32, .64, .025, .03], [-.28, .66, .1, .12], [-.1, .68, .12, .14], [.12, .68, .11, .14], [.21, .74, .06, .08], [.27, .86, .045, .05], [.3, .95, .05, .055], [.37, .96, .045, .045], [.45, .925, .026, .025], [.49, .912, .01, .01]],
-      (z, s, ca) => z > .475 ? DK : z < -.24 && s < .6 ? WH : s < -.45 ? LT : s > .15 && s < .85 && z > -.22 && z < .14 && furN(Math.round(z * 90), Math.round(ca * 22)) > .86 ? '#e8dcc8' : mix(BR, '#6a4224', s * .35 + furN(z * 5, s) * .2)));
+      (z, s, ca) => z > .475 ? DK : z < -.24 && s < .6 ? WH : s < -.45 ? LT : s > .15 && s < .85 && z > -.22 && z < .14 && (() => { const gz = z * 26, ga = Math.atan2(s, ca) * 3.2, cz = Math.round(gz), cg = Math.round(ga); return furN(cz, cg) > .55 && Math.hypot(gz - cz, ga - cg) < .3; })() ? '#e2d4bc' : mix(BR, '#6a4224', s * .35 + furN(z * 5, s) * .2)));
     const h = new THREE.Group(); h.position.set(0, .96, .33); b.add(h); for (const s of [-1, 1]) ear2(h, s * .05, .02, -.02, .025, .065, BR, '#e8d0b8', -s * 1.1, -.2);
     eyes2(h, 0, .01, .04, .04, .012); const an = M('#d8c4a0', { roughness:.6 });
     for (const s of [-1, 1]){ const a = new THREE.Group(); a.position.set(s * .025, .05, -.01); a.rotation.set(-.35, 0, -s * .3); h.add(a); addM(a, new THREE.CylinderGeometry(.006, .01, .2, 6), an, 0, .1, 0); addM(a, new THREE.CylinderGeometry(.004, .007, .08, 6), an, 0, .08, .025, .8); addM(a, new THREE.CylinderGeometry(.004, .006, .07, 6), an, 0, .17, .02, .9); }
