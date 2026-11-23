@@ -38,6 +38,8 @@ export const TREE_PARTS = ['wallpaper', 'flooring', 'topper', 'treelights', 'gar
 export const ADVENT = Array.from({ length:50 }, () => []); // 11/19〜12/25がクリスマス、12/26〜1/7が年末年始
 FIRST.forEach((s, i) => ADVENT[i].push(s + '_a')); { const rest = [...FIRST.map(s => s + '_b'), 'wallpaper_b', 'topper_b', 'flooring_b', 'garland_b', 'treelights_b', ...FIRST.map(s => s + '_c'), 'wallpaper_c', 'topper_c', 'flooring_c', 'garland_c', 'treelights_c']; rest.forEach((k, i) => ADVENT[15 + Math.floor(i * 21 / rest.length)].push(k)); } ADVENT[36].push('special_a');
 [[4, 'garden_c'], [10, 'garden_d'], [18, 'garden_e']].forEach(([i, k]) => ADVENT[i].push(k));
+// テーブル（物を置ける）は早めに：「テーブルとクッキー」ははじめから、「お茶のテーブル」は11日目に前倒し（2026/11/23）
+ADVENT[10].splice(ADVENT[10].indexOf('table_a'), 1); START_FURN.push('table_a'); ADVENT[20].splice(ADVENT[20].indexOf('table_b'), 1); ADVENT[10].unshift('table_b');
 ['wallpaper_d flooring_d', 'curtain_d', 'wall_d', 'table_d', 'sofa_d', 'lamp_d', 'lamp_e sill_d', 'wall_e', 'toys_d', 'outside_d', 'rug_d', 'treebase_d', 'special_b'].forEach((ks, i) => ADVENT[37 + i].push(...ks.split(' ')));
 export const KUJI_SKIP = [...START_FURN, ...ADVENT.flat()];
 export const advDate = (year, i) => new Date(year, 10, 19 + i);
@@ -1333,7 +1335,7 @@ function partBox(g, opt = {}){ g.updateMatrixWorld(true); const box = new THREE.
 function instBox(o){ if (o.rec.key === 'tree'){ const b = partBox(tree); const c = treeRoot.position, R0 = 1.02; b.expandByPoint(new THREE.Vector3(c.x - R0, 0, c.z - R0)); b.expandByPoint(new THREE.Vector3(c.x + R0, .9, c.z + R0)); return b; } return partBox(o.g); }
 function recDefault(key){ const it = FURN_BY[key]; if (!it) return null; const a = ANCHOR[it.slot]; if (GARDEN_SLOTS.includes(it.slot)) return { key, yard:1, x:a[0], z:a[2], r:0 }; if (WALL_SLOTS.includes(it.slot)) return { key, wall:'back', u:a[0], y:a[1] }; return { key, x:a[0], z:a[2], r:a[3] || 0 }; }
 /* 暖炉の上（棚板）には小さな家具を置ける。のせた家具は rec.on に暖炉のid、lx/lz に棚の上での位置を持つ */
-const hostTop = o => o && o.rec && o.rec.key.startsWith('fireplace_') ? { y:FPH + .12, x0:-.74, x1:.74, z0:.0, z1:.42 } : null;
+const hostTop = o => !o || !o.rec ? null : o.rec.key.startsWith('fireplace_') ? { y:FPH + .12, x0:-.74, x1:.74, z0:.0, z1:.42 } : (o.rec.key === 'table_a' || o.rec.key === 'table_b') ? { y:.655, x0:-.32, x1:.32, z0:-.32, z1:.32 } : null; // 暖炉の上・まるいテーブルの上に小物を置ける
 const riders = h => Object.values(inst).filter(p => p.rec.on && p.rec.on === h.rec.id);
 function canRide(o){ if (hostTop(o) || isRug(o) || o.rec.key === 'tree' || o.rec.wall) return false; const s = o.rec.on ? null : instBox(o).getSize(new THREE.Vector3()); if (!s) return true; return Math.min(s.x, s.z) <= .5 && Math.max(s.x, s.z) <= 1.1 && s.y <= 1.2; }
 function placeInst(o){ const r = o.rec;
