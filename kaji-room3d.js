@@ -12,12 +12,12 @@ export const FURN_SLOTS = [['wallpaper', '壁紙'], ['flooring', '床'], ['toppe
   ['shelf', '棚・時計'], ['sofa', 'ソファ・ベンチ'], ['lamp', 'あかり'], ['table', 'テーブル・いす'], ['rug', 'ラグ'], ['toys', 'おもちゃ'], ['treebase', 'ツリーの足もと'], ['special', 'クリスマスの特別'],
   ['plant', 'グリーン'], ['zakka', 'こもの'], ['seat', 'クッション・いす'], ['wall2', 'かべの小物'], ['xzakka', 'クリスマスのこもの'], ['xwall', 'クリスマスのかべかざり'], ['garden', '庭のもの'], ['xgarden', 'クリスマスの庭かざり']];
 const NAMES = {
-  wallpaper:['雪の結晶の赤い壁紙', 'ヒイラギのストライプ壁紙', '金の星のみどりの壁紙', '障子の壁紙'], flooring:['ジンジャークッキーの床', 'タータンチェックのじゅうたん', 'キャンディの市松タイル', 'たたみ'],
+  wallpaper:['雪の結晶の赤い壁紙', 'ヒイラギのストライプ壁紙', '金の星のみどりの壁紙', '障子の壁紙', 'クリーム色の壁紙'], flooring:['ジンジャークッキーの床', 'タータンチェックのじゅうたん', 'キャンディの市松タイル', 'たたみ', '木の床'],
   topper:['金の星', '雪の結晶', '赤いリボン'], treelights:['カラフルな電球', 'あたたかい白の電球', '雪玉ライト'], garland:['金のモール', '銀のモール', '赤と白のビーズ'],
   fireplace:['石の暖炉', 'レンガの暖炉', '白い暖炉'], stockings:['フェルトのくつした', 'ニットのくつした', 'チェックのくつした'], mantel:['ろうそくとくるみ割り人形', 'おかしの家とミニツリー', 'スノードームとランタン'],
   wall:['リース', '木の掛け時計', '雪の町の絵', 'しめ飾り', '富士の掛け軸'], curtain:['赤いチェックのカーテン', 'みどりのベルベットのカーテン', '白いレースのカーテン', '紅白幕'], wintop:['電飾', '星のガーランド', '雪の結晶のモビール'],
   sill:['ランタンと松ぼっくり', 'キャンドルの瓶', 'ポインセチアの鉢', '小さな鏡もちと梅'], outside:['雪だるま', '雪うさぎ', 'かまくら', '初日の出'], shelf:['食器棚', '本棚', '柱時計'], sofa:['赤いソファ', 'ひとりがけとサイドテーブル', '木のベンチ', '座布団'],
-  lamp:['フロアランプ', '燭台', 'ヒイラギの鉢', '行灯', '門松'], table:['テーブルとクッキー', 'お茶のテーブル', 'ロッキングチェア', 'こたつとみかん'], rug:['赤とみどりのラグ', 'まるい編みラグ', 'ふわふわの白いラグ', '青海波のラグ'],
+  lamp:['フロアランプ', '燭台', 'ヒイラギの鉢', '行灯', '門松'], table:['テーブルとクッキー', 'お茶のテーブル', 'ロッキングチェア', 'こたつとみかん'], rug:['赤とみどりのラグ', 'まるい編みラグ', 'ふわふわの白いラグ', '青海波のラグ', 'ベージュのラグ'],
   toys:['木馬', '汽車とスノードーム', 'くまのぬいぐるみ', '羽子板とこま'], treebase:['赤いツリースカート', '木のかご', '雪のじゅうたん', '赤い毛せん'], special:['金色のきらきら', '七草のかご'],
   plant:['モンステラ', 'サボテン', 'パキラ', 'ポトスのつり鉢', 'オリーブの木', '多肉植物の寄せ植え'], zakka:['つみき', '地球儀', '本の山', 'ラジオ', '金魚鉢', 'レコードプレーヤー', 'ねこのクッション'],
   xzakka:['そり', '汽車の置物', 'トナカイの置物', '大きなくるみ割り人形', 'おかしの家', 'サンタのブーツ', 'クリスマスのオルゴール', '大きなランタン', 'ポインセチアの大鉢', '天使の置物', 'プレゼントの山', '白いミニツリー'],
@@ -33,7 +33,7 @@ export const FLOOR_SLOTS = ['fireplace', 'shelf', 'sofa', 'lamp', 'table', 'toys
 // ふくびきで当たる家具（XKUJI はクリスマスふくびき：12/25までの期間限定）
 export const KUJI_SLOTS = ['plant', 'zakka', 'seat', 'wall2', 'garden'], XKUJI_SLOTS = ['xzakka', 'xwall', 'xgarden'];
 // 庭のもの：窓の外の庭に自由に置ける。はじめから持っているもの・アドベントで届くもの・ふくびきで当たるもの
-export const GARDEN_SLOTS = ['garden', 'xgarden'], START_FURN = ['garden_a', 'garden_b', 'xgarden_d'];
+export const GARDEN_SLOTS = ['garden', 'xgarden'], START_FURN = ['garden_a', 'garden_b', 'xgarden_d', 'wallpaper_e', 'flooring_e', 'rug_e'];
 export const TREE_PARTS = ['wallpaper', 'flooring', 'topper', 'treelights', 'garland']; // 1つめは最初から持っている
 export const ADVENT = Array.from({ length:50 }, () => []); // 11/19〜12/25がクリスマス、12/26〜1/7が年末年始
 FIRST.forEach((s, i) => ADVENT[i].push(s + '_a')); { const rest = [...FIRST.map(s => s + '_b'), 'wallpaper_b', 'topper_b', 'flooring_b', 'garland_b', 'treelights_b', ...FIRST.map(s => s + '_c'), 'wallpaper_c', 'topper_c', 'flooring_c', 'garland_c', 'treelights_c']; rest.forEach((k, i) => ADVENT[15 + Math.floor(i * 21 / rest.length)].push(k)); } ADVENT[36].push('special_a');
@@ -80,11 +80,14 @@ scene.environmentIntensity = .35;
 
 const camera = new THREE.PerspectiveCamera(32, VW() / VH(), .1, 320);
 const target = new THREE.Vector3(0, 1.5, -.6);
+// 部屋の大きさ（広くなると左右と手前に広がる。奥の壁・窓・庭の位置はそのまま）
+const RW0 = 4.6, RH = 7, bz = -2.7; let RW = RW0, FRONT = 4.2, RD = FRONT - bz, RZ = (bz + FRONT) / 2, ZMAX = 2.6, roomLv = 0, noTree = false;
+const LV_SIZE = lv => ({ RW:RW0 + .9 * lv, FRONT:4.2 + .7 * lv, ZMAX:2.6 + .7 * lv });
 function placeCamera(){
   const aspect = VW() / VH(), fov = THREE.MathUtils.degToRad(camera.fov);
-  const halfW = 4.6 / 2 + .3, distW = halfW / (Math.tan(fov / 2) * aspect);
+  const halfW = RW / 2 + .3, distW = halfW / (Math.tan(fov / 2) * aspect);
   // 横向き（横長の画面）では幅に合わせると近づきすぎるので、高さでも部屋がおさまる距離をとる
-  const distH = 4.6 / Math.tan(fov / 2), dist = Math.max(distW, distH), pitch = THREE.MathUtils.degToRad(43);
+  const distH = (4.6 + (FRONT - 4.2) * .9) / Math.tan(fov / 2), dist = Math.max(distW, distH), pitch = THREE.MathUtils.degToRad(43);
   camera.position.set(0, target.y + Math.sin(pitch) * dist, target.z + Math.cos(pitch) * dist);
   camera.aspect = aspect; camera.lookAt(target); const off = ((opts.shiftY || 0) + (aspect > 1 ? .1 : 0)) * VH(); /* 横向きは下のボタンにかくれないよう少し上へ */ camera.setViewOffset(VW(), VH(), 0, off, VW(), VH()); camera.updateProjectionMatrix();
 }
@@ -149,10 +152,12 @@ const glowTex = canvasTex(128, 128, (g, w) => { const r = g.createRadialGradient
 function glow(color, size, op = .9){ const s = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color, transparent:true, opacity:op, blending:THREE.AdditiveBlending, depthWrite:false })); s.scale.set(size, size, 1); return s; }
 
 /* ---------- 部屋：床・壁・腰板・巾木・窓（奥行きのある部屋） ---------- */
-const RW = 4.6, RH = 7, FRONT = 4.2, bz = -2.7, RD = FRONT - bz, RZ = (bz + FRONT) / 2;
 /* 床（3種）：ジンジャークッキーの板・赤とみどりのタータン・キャンディの市松 */
-const FLOOR_REP = { a:[2, 2 * RD / RW], b:[2.4, 2.4 * RD / RW], c:[2.2, 2.2 * RD / RW], d:[2.3, 2.3 * RD / RW / 1.4] };
+const FLOOR_B = { a:2, b:2.4, c:2.2, d:2.3, e:2.2 }, floorRep = kind => { const b = FLOOR_B[kind] || 2; return [b * RW / RW0, b * RD / RW0 / (kind === 'd' ? 1.4 : 1)]; };
 function floorTexOf(kind){ return canvasTex(512, 512, (g, w, h) => {
+  if (kind === 'e'){ // 木のフローリング（ナチュラル）
+    g.fillStyle = '#c89c6a'; g.fillRect(0, 0, w, h); const bw = 64; for (let c = 0; c < w / bw; c++){ let y = -((c * 97) % 220); while (y < h){ const L = 160 + ((c * 31 + y) % 140), sh = .9 + ((c * 17 + y * 3) % 23) / 23 * .16;
+      g.fillStyle = `rgb(${206 * sh | 0},${160 * sh | 0},${110 * sh | 0})`; g.fillRect(c * bw + 1, y + 1, bw - 2, L - 2); g.strokeStyle = 'rgba(120,80,40,.12)'; g.lineWidth = 1; for (let k = 0; k < 4; k++){ g.beginPath(); g.moveTo(c * bw + 8 + k * 13, y + 4); g.bezierCurveTo(c * bw + 12 + k * 13, y + L * .3, c * bw + 4 + k * 13, y + L * .7, c * bw + 9 + k * 13, y + L - 4); g.stroke(); } y += L; } } return; }
   if (kind === 'd'){ // たたみ：い草の目と黒いへり
     g.fillStyle = '#c8c070'; g.fillRect(0, 0, w, h); const mat = (x, y, mw, mh, vert) => { const gr = g.createLinearGradient(x, y, vert ? x + mw : x, vert ? y : y + mh); gr.addColorStop(0, '#d4cc82'); gr.addColorStop(1, '#bfb666'); g.fillStyle = gr; g.fillRect(x, y, mw, mh);
       g.strokeStyle = 'rgba(120,110,40,.35)'; g.lineWidth = 1.5; if (vert) for (let i = x + 4; i < x + mw; i += 5){ g.beginPath(); g.moveTo(i, y); g.lineTo(i, y + mh); g.stroke(); } else for (let i = y + 4; i < y + mh; i += 5){ g.beginPath(); g.moveTo(x, i); g.lineTo(x + mw, i); g.stroke(); }
@@ -169,16 +174,16 @@ function floorTexOf(kind){ return canvasTex(512, 512, (g, w, h) => {
   const n = 8, c = w / n; for (let i = 0; i < n; i++) for (let j = 0; j < n; j++){ const red = (i + j) % 2; g.fillStyle = red ? '#d8433a' : '#fff7ec'; g.beginPath(); g.roundRect ? g.roundRect(i * c + 2, j * c + 2, c - 4, c - 4, 8) : g.rect(i * c + 2, j * c + 2, c - 4, c - 4); g.fill();
     if (red){ g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 5; g.beginPath(); g.moveTo(i * c + 12, j * c + c - 12); g.lineTo(i * c + c - 12, j * c + 12); g.stroke(); } else { g.fillStyle = '#7cc4a8'; g.beginPath(); g.arc(i * c + c / 2, j * c + c / 2, 5, 0, 7); g.fill(); } }
   g.strokeStyle = 'rgba(160,90,70,.25)'; g.lineWidth = 3; for (let i = 0; i <= n; i++){ g.beginPath(); g.moveTo(i * c, 0); g.lineTo(i * c, h); g.stroke(); g.beginPath(); g.moveTo(0, i * c); g.lineTo(w, i * c); g.stroke(); }
-}, FLOOR_REP[kind] || FLOOR_REP.a); }
+}, floorRep(kind)); }
 const floorTex = floorTexOf('a');
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(RW, RD), std('#ffffff', { map:floorTex, roughness:.75 }));
-floor.rotation.x = -Math.PI / 2; floor.position.z = RZ; floor.receiveShadow = true; scene.add(floor);
 
 /* 壁紙（3種）：赤い北欧もよう・ヒイラギとキャンディのストライプ・みどりに金の星 */
 const flakeAt = (g, cx, cy, r, col, lw = 2.2) => { g.save(); g.translate(cx, cy); g.strokeStyle = col; g.lineWidth = lw; g.lineCap = 'round'; for (let k = 0; k < 6; k++){ g.rotate(Math.PI / 3); g.beginPath(); g.moveTo(0, 0); g.lineTo(0, -r); g.moveTo(0, -r * .55); g.lineTo(-r * .3, -r * .82); g.moveTo(0, -r * .55); g.lineTo(r * .3, -r * .82); g.stroke(); } g.restore(); };
 const starAt = (g, cx, cy, r, col) => { g.fillStyle = col; g.beginPath(); for (let i = 0; i < 10; i++){ const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r; g.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } g.closePath(); g.fill(); };
 const hollyAt = (g, cx, cy, s) => { g.save(); g.translate(cx, cy); g.scale(s, s); g.fillStyle = '#3d8a55'; for (const a of [-.6, .6]){ g.save(); g.rotate(a); g.beginPath(); g.ellipse(0, -9, 5, 10, 0, 0, 7); g.fill(); g.restore(); } g.fillStyle = '#d8303a'; for (const [x, y] of [[-3, 1], [3, 1], [0, -3]]){ g.beginPath(); g.arc(x, y, 3.4, 0, 7); g.fill(); } g.restore(); };
 function wallTexOf(kind){ return canvasTex(256, 256, (g, w, h) => {
+  if (kind === 'e'){ // クリーム色の無地（ほんのり織り目）
+    g.fillStyle = '#f4ecdc'; g.fillRect(0, 0, w, h); for (let i = 0; i < 1400; i++){ g.fillStyle = `rgba(${Math.random() < .5 ? '255,255,255' : '180,150,110'},.06)`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); } g.fillStyle = 'rgba(200,175,140,.08)'; for (let x = 0; x < w; x += 32) g.fillRect(x, 0, 1, h); return; }
   if (kind === 'd'){ // 障子：白い和紙に木の桟
     g.fillStyle = '#fbf6ea'; g.fillRect(0, 0, w, h); for (let i = 0; i < 300; i++){ g.strokeStyle = `rgba(170,140,90,${Math.random() * .1})`; const a = Math.random() * w, b = Math.random() * h; g.beginPath(); g.moveTo(a, b); g.lineTo(a + (Math.random() - .5) * 18, b + (Math.random() - .5) * 18); g.stroke(); }
     g.fillStyle = '#b8864a'; for (let x = 0; x < w; x += 64) g.fillRect(x, 0, 6, h); for (let y = 0; y < h; y += 85) g.fillRect(0, y, w, 6); g.fillStyle = 'rgba(255,255,255,.25)'; for (let x = 0; x < w; x += 64) g.fillRect(x + 1, 0, 2, h); return; }
@@ -193,29 +198,30 @@ function wallTexOf(kind){ return canvasTex(256, 256, (g, w, h) => {
 }, [5, 4]); }
 const wallTex = wallTexOf('a');
 const WX = -.05, WY = 2.45, WW = 1.24, WH = 1.44; // 窓の開口
-const backShape = new THREE.Shape(); backShape.moveTo(-RW / 2, 0); backShape.lineTo(RW / 2, 0); backShape.lineTo(RW / 2, RH); backShape.lineTo(-RW / 2, RH); backShape.closePath();
-{ const h = new THREE.Path(); h.moveTo(WX - WW / 2, WY - WH / 2); h.lineTo(WX - WW / 2, WY + WH / 2); h.lineTo(WX + WW / 2, WY + WH / 2); h.lineTo(WX + WW / 2, WY - WH / 2); h.closePath(); backShape.holes.push(h); }
-const backTex = wallTex.clone(); backTex.needsUpdate = true; backTex.repeat.set(5 / RW, 4 / RH);
-const sideWalls = [];
-const back = new THREE.Mesh(new THREE.ShapeGeometry(backShape), std('#ffffff', { map:backTex })); back.position.set(0, 0, bz); back.receiveShadow = true; scene.add(back);
-for (const s of [-1, 1]){ const t = wallTex.clone(); t.needsUpdate = true; t.repeat.set(5 * RD / RW, 4); const side = new THREE.Mesh(new THREE.PlaneGeometry(RD, RH), std('#ead2cc', { map:t })); sideWalls.push(side); side.rotation.y = -s * Math.PI / 2; side.position.set(s * RW / 2, RH / 2, RZ); side.receiveShadow = true; scene.add(side); }
 // 腰板と巾木（奥の壁と左右の壁）
 const wainMat = std('#efe2c8', { roughness:.7 }), trimMat = std('#7a4b2a', { roughness:.6 }), panelMat = std('#e4d4b4', { roughness:.7 }), railMat = std('#7a4b2a', { roughness:.5 }), baseMat = std('#7a4b2a', { roughness:.6 });
 /* 壁紙ごとの腰板（下の板・パネル・上の縁・巾木）の色 */
 // 腰板があるのは一部の壁紙だけ（null は巾木だけ）
-const WAIN = { a:null, b:null, c:['#8a5a32', '#9a6a3e', '#e0b84e', '#5a3a22'], d:['#a8763e', '#b8864a', '#6a3a1e', '#5a3420'] }, BASE = { a:'#6a3a22', b:'#7a4b2a', c:'#5a3a22', d:'#5a3420' }; const wainParts = [];
+const WAIN = { a:null, b:null, c:['#8a5a32', '#9a6a3e', '#e0b84e', '#5a3a22'], d:['#a8763e', '#b8864a', '#6a3a1e', '#5a3420'], e:null }, BASE = { a:'#6a3a22', b:'#7a4b2a', c:'#5a3a22', d:'#5a3420', e:'#b89068' }; const wainParts = [];
 function applyWain(kind){ const W = WAIN[kind]; wainParts.forEach(m => m.visible = !!W); baseMat.color.set(W ? W[3] : (BASE[kind] || BASE.a)); if (W){ wainMat.color.set(W[0]); panelMat.color.set(W[1]); railMat.color.set(W[2]); railMat.metalness = .35; railMat.needsUpdate = true; } shadowsDirty = true; }
 function wainscot(len, place){ const g = new THREE.Group(); const w = new THREE.Mesh(new RoundedBoxGeometry(len, 1.05, .08, 2, .02), wainMat); w.position.set(0, .525, .04); w.receiveShadow = true; g.add(w); wainParts.push(w);
   const n = Math.round(len / .76); for (let i = 0; i < n; i++){ const p = new THREE.Mesh(new RoundedBoxGeometry(.62, .62, .03, 2, .02), panelMat); p.position.set(-len / 2 + (i + .5) * len / n, .55, .09); g.add(p); wainParts.push(p); }
   const rail = new THREE.Mesh(new RoundedBoxGeometry(len, .07, .14, 2, .025), railMat); rail.position.set(0, 1.07, .07); g.add(rail); wainParts.push(rail);
   const base = new THREE.Mesh(new RoundedBoxGeometry(len, .14, .12, 2, .03), baseMat); base.position.set(0, .07, .06); base.receiveShadow = true; g.add(base); place(g); scene.add(g); return g; }
-const wainB = wainscot(RW, g => g.position.set(0, 0, bz));
-const wainS = [-1, 1].map(s => wainscot(RD, g => { g.position.set(s * RW / 2, 0, RZ); g.rotation.y = -s * Math.PI / 2; }));
-// 手前の壁：ながめるモードで手前を向いたときだけ出す
-const frontWall = new THREE.Mesh(new THREE.PlaneGeometry(RW, RH), std('#ead2cc', { map:(() => { const t = wallTex.clone(); t.needsUpdate = true; t.repeat.set(5, 4); return t; })() }));
-frontWall.rotation.y = Math.PI; frontWall.position.set(0, RH / 2, FRONT); frontWall.receiveShadow = true; frontWall.visible = false; scene.add(frontWall);
-const wainF = wainscot(RW, g => { g.position.set(0, 0, FRONT); g.rotation.y = Math.PI; }); wainF.visible = false;
-wainParts.forEach(m => m.visible = !!WAIN.a); baseMat.color.set(BASE.a);
+let floor, back, sideWalls = [], wainB, wainS = [], frontWall, wainF;
+const shellParts = [];
+function buildShell(){ for (const o of shellParts){ scene.remove(o); o.traverse(m => { if (m.geometry) m.geometry.dispose(); if (m.material && m.material.map) m.material.map.dispose(); }); } shellParts.length = 0; wainParts.length = 0; sideWalls = [];
+  const add = o => { scene.add(o); shellParts.push(o); return o; };
+  floor = add(new THREE.Mesh(new THREE.PlaneGeometry(RW, RD), std('#ffffff', { map:floorTexOf(floorKind), roughness:.75 }))); floor.rotation.x = -Math.PI / 2; floor.position.z = RZ; floor.receiveShadow = true;
+  const backShape = new THREE.Shape(); backShape.moveTo(-RW / 2, 0); backShape.lineTo(RW / 2, 0); backShape.lineTo(RW / 2, RH); backShape.lineTo(-RW / 2, RH); backShape.closePath();
+  { const h = new THREE.Path(); h.moveTo(WX - WW / 2, WY - WH / 2); h.lineTo(WX - WW / 2, WY + WH / 2); h.lineTo(WX + WW / 2, WY + WH / 2); h.lineTo(WX + WW / 2, WY - WH / 2); h.closePath(); backShape.holes.push(h); }
+  const wt = wallTexOf(wallKind), wc = wallKind === 'a' ? '#ead2cc' : '#ead8d0', T = (rx, ry) => { const t = wt.clone(); t.needsUpdate = true; t.repeat.set(rx, ry); return t; };
+  back = add(new THREE.Mesh(new THREE.ShapeGeometry(backShape), std('#ffffff', { map:T(5 / RW0, 4 / RH) }))); back.position.set(0, 0, bz); back.receiveShadow = true;
+  for (const s of [-1, 1]){ const side = add(new THREE.Mesh(new THREE.PlaneGeometry(RD, RH), std(wc, { map:T(5 * RD / RW0, 4) }))); sideWalls.push(side); side.rotation.y = -s * Math.PI / 2; side.position.set(s * RW / 2, RH / 2, RZ); side.receiveShadow = true; }
+  wainB = add(wainscot(RW, g => g.position.set(0, 0, bz))); wainS = [-1, 1].map(s => add(wainscot(RD, g => { g.position.set(s * RW / 2, 0, RZ); g.rotation.y = -s * Math.PI / 2; })));
+  frontWall = add(new THREE.Mesh(new THREE.PlaneGeometry(RW, RH), std(wc, { map:T(5 * RW / RW0, 4) }))); frontWall.rotation.y = Math.PI; frontWall.position.set(0, RH / 2, FRONT); frontWall.receiveShadow = true; frontWall.visible = false;
+  wainF = add(wainscot(RW, g => { g.position.set(0, 0, FRONT); g.rotation.y = Math.PI; })); wainF.visible = false; const W = WAIN[wallKind]; wainParts.forEach(m => m.visible = !!W); baseMat.color.set(W ? W[3] : (BASE[wallKind] || BASE.a)); if (W){ wainMat.color.set(W[0]); panelMat.color.set(W[1]); railMat.color.set(W[2]); } wt.dispose(); }
+let wallKind = 'a', floorKind = 'a'; buildShell();
 
 // 窓（壁にあいた穴）と、その向こうの雪の外
 const win = new THREE.Group(); win.position.set(WX, WY, bz); scene.add(win);
@@ -226,10 +232,8 @@ for (const [w, h, d, x, y] of [[WW, .02, .3, 0, WH / 2], [WW, .02, .3, 0, -WH / 
 const sill = new THREE.Mesh(new RoundedBoxGeometry(WW + .45, .09, .34, 2, .03), frameMat); sill.position.set(0, -WH / 2 - .17, .16); sill.castShadow = true; win.add(sill);
 const glassPane = new THREE.Mesh(new THREE.PlaneGeometry(WW, WH), new THREE.MeshPhysicalMaterial({ color:'#dfeeff', transparent:true, opacity:.12, roughness:.05, depthWrite:false })); glassPane.position.z = -.02; win.add(glassPane);
 // 外：空・雪の地面・木
-let wallKind = 'a', floorKind = 'a';
-function applyWall(kind){ kind = kind || 'a'; if (kind === wallKind) return; wallKind = kind; applyWain(kind); const t = wallTexOf(kind), bt = t.clone(); bt.needsUpdate = true; bt.repeat.set(5 / RW, 4 / RH); back.material.map.dispose(); back.material.map = bt; back.material.needsUpdate = true;
-  { const ft = t.clone(); ft.needsUpdate = true; ft.repeat.set(5, 4); frontWall.material.map.dispose(); frontWall.material.map = ft; frontWall.material.color.set('#ead8d0'); frontWall.material.needsUpdate = true; }
-  sideWalls.forEach(sw => { const st = t.clone(); st.needsUpdate = true; st.repeat.set(5 * RD / RW, 4); sw.material.map.dispose(); sw.material.map = st; sw.material.color.set('#ead8d0'); sw.material.needsUpdate = true; }); }
+function applyWall(kind){ kind = kind || 'a'; if (kind === wallKind) return; wallKind = kind; applyWain(kind); const t = wallTexOf(kind), wc = kind === 'a' ? '#ead2cc' : '#ead8d0', set = (m, rx, ry, col) => { const nt = t.clone(); nt.needsUpdate = true; nt.repeat.set(rx, ry); m.material.map.dispose(); m.material.map = nt; if (col) m.material.color.set(col); m.material.needsUpdate = true; };
+  set(back, 5 / RW0, 4 / RH); set(frontWall, 5 * RW / RW0, 4, wc); sideWalls.forEach(sw => set(sw, 5 * RD / RW0, 4, wc)); }
 function applyFloor(kind){ kind = kind || 'a'; if (kind === floorKind) return; floorKind = kind; floor.material.map.dispose(); floor.material.map = floorTexOf(kind); floor.material.needsUpdate = true; }
 const OUT_Z = bz - .02, outside = new THREE.Group(); scene.add(outside);
 /* ---------- 窓の外：雪の夜の住宅街（空・遠くの山・家なみ・もみの木・柵・街灯・足あと・降る雪） ---------- */
@@ -766,6 +770,9 @@ function toys(kind){ const g = new THREE.Group();
   return g; }
 
 /* ラグ（3種） */
+function plainRug(){ const g = new THREE.Group(), tex = canvasTex(256, 256, (c, w, h) => { c.fillStyle = '#e6d6bc'; c.fillRect(0, 0, w, h); for (let i = 0; i < 3000; i++){ const v = 200 + Math.random() * 40 | 0; c.fillStyle = `rgba(${v},${v - 14},${v - 34},.35)`; c.fillRect(Math.random() * w, Math.random() * h, 2, 2); } c.strokeStyle = '#cbb592'; c.lineWidth = 8; c.strokeRect(14, 14, w - 28, h - 28); });
+  const sh = new THREE.Shape(), w = 2.2, d = 1.5, r = .2; sh.moveTo(-w / 2 + r, -d / 2); sh.lineTo(w / 2 - r, -d / 2); sh.quadraticCurveTo(w / 2, -d / 2, w / 2, -d / 2 + r); sh.lineTo(w / 2, d / 2 - r); sh.quadraticCurveTo(w / 2, d / 2, w / 2 - r, d / 2); sh.lineTo(-w / 2 + r, d / 2); sh.quadraticCurveTo(-w / 2, d / 2, -w / 2, d / 2 - r); sh.lineTo(-w / 2, -d / 2 + r); sh.quadraticCurveTo(-w / 2, -d / 2, -w / 2 + r, -d / 2);
+  const m = addM(g, planarUV(new THREE.ExtrudeGeometry(sh, { depth:.03, bevelEnabled:true, bevelSize:.02, bevelThickness:.01, bevelSegments:2 })), M('#ffffff', { map:tex, roughness:.95 }), 0, 0, 0, -Math.PI / 2); m.castShadow = false; return g; }
 function rugItem(kind){ const g = new THREE.Group();
   if (kind === 'a'){ const tex = canvasTex(512, 512, (c, w, h) => { c.fillStyle = '#f3ead9'; c.fillRect(0, 0, w, h); c.fillStyle = '#3f8a52'; c.fillRect(28, 28, w - 56, h - 56); c.fillStyle = '#f3ead9'; c.fillRect(46, 46, w - 92, h - 92); c.fillStyle = '#c8352e'; for (let x = 70; x < w - 60; x += 44) for (let y = 70; y < h - 60; y += 44){ c.save(); c.translate(x, y); c.rotate(Math.PI / 4); c.fillRect(-8, -8, 16, 16); c.restore(); } c.strokeStyle = '#d9a441'; c.lineWidth = 6; c.strokeRect(16, 16, w - 32, h - 32); });
     const sh = new THREE.Shape(); const w = 2.4, d = 1.6, r = .18; sh.moveTo(-w / 2 + r, -d / 2); sh.lineTo(w / 2 - r, -d / 2); sh.quadraticCurveTo(w / 2, -d / 2, w / 2, -d / 2 + r); sh.lineTo(w / 2, d / 2 - r); sh.quadraticCurveTo(w / 2, d / 2, w / 2 - r, d / 2); sh.lineTo(-w / 2 + r, d / 2); sh.quadraticCurveTo(-w / 2, d / 2, -w / 2, d / 2 - r); sh.lineTo(-w / 2, -d / 2 + r); sh.quadraticCurveTo(-w / 2, -d / 2, -w / 2 + r, -d / 2);
@@ -1301,7 +1308,7 @@ const BUILD = {
   topper:k => treeTopper('abc'[k]), treelights:k => treeLights('abc'[k]), garland:k => treeGarland('abc'[k]),
   fireplace:k => fireplace(['stone', 'brick', 'white'][k]), stockings:k => stockings(['felt', 'knit', 'plaid'][k]), mantel:k => mantelTop('abc'[k]), wall:k => k === 3 ? nyShimekazari() : k === 4 ? nyKakejiku() : wallDeco('abc'[k]),
   curtain:k => curtains('abcd'[k]), wintop:k => winTop('abc'[k]), sill:k => k === 3 ? nySillKagami() : sillDeco('abc'[k]), outside:k => k === 3 ? nySunrise() : outsideDeco('abc'[k]), table:k => k === 3 ? nyKotatsu() : tableSpot('abc'[k]), toys:k => k === 3 ? nyToys() : toys('abc'[k]),
-  rug:k => k === 3 ? nyRug() : rugItem('abc'[k]), treebase:k => k === 3 ? nyMousen() : treeBase('abc'[k]), shelf:k => shelfSpot('abc'[k]), sofa:k => k === 3 ? nyZabuton() : sofaSpot('abc'[k]), lamp:k => k === 3 ? nyAndon() : k === 4 ? nyKadomatsu() : lampSpot('abc'[k]), special:k => k === 1 ? nyNanakusa() : sparkle(),
+  rug:k => k === 3 ? nyRug() : k === 4 ? plainRug() : rugItem('abc'[k]), treebase:k => k === 3 ? nyMousen() : treeBase('abc'[k]), shelf:k => shelfSpot('abc'[k]), sofa:k => k === 3 ? nyZabuton() : sofaSpot('abc'[k]), lamp:k => k === 3 ? nyAndon() : k === 4 ? nyKadomatsu() : lampSpot('abc'[k]), special:k => k === 1 ? nyNanakusa() : sparkle(),
   plant:k => kjScale([kjMonstera, kjCactus, kjPachira, kjPothos, kjOlive, kjSucculent][k](), 1.35), zakka:k => kjScale([kjBlocks, kjGlobe, kjBooks, kjRadio, kjFishbowl, kjRecord, kjCatCushion][k](), [1.6, 1.5, 1.5, 1.5, 1.7, 1.5, 1.4][k]), seat:k => kjScale([kjBeanbag, kjStool, kjCushions][k](), 1.25), wall2:k => kjScale([kjMirror, kjFlags, kjPhotos, kjSwag, kjMugShelf, kjHato][k](), 1.25),
   xzakka:k => [xkSled, xkTrain, xkReindeer, xkNutcracker, xkGingerHouse, xkBoot, xkMusicBox, xkLantern, xkPoinsettia, xkAngel, xkGiftPile, xkWhiteTree][k](), garden:k => kjScale([gdLantern, gdFeeder, gdWoodpile, gdSnowBear, gdLitPine, gdMailbox, gdBench, gdStreetLamp][k](), .85), xgarden:k => kjScale([gdReindeer, gdArch, gdSnowFamily, gdXTree][k](), .85),
   xwall:k => kjScale([xkHollyGarland, xkStockingGarland, xkCards, xkBells, xkPineWreath][k](), 1.1),
@@ -1321,7 +1328,7 @@ function placeItem(slot, key){ if (slot === 'wallpaper'){ applyWall(key ? key.sl
   const a = ANCHOR[slot]; g.position.set(a[0], a[1], a[2]); g.rotation.y = a[3] || 0;
   scene.add(g); mounted[slot] = g; }
 /* ===== 置き場所（床と壁の家具は自由に動かせる。同じ家具を2つ以上も） ===== */
-const GRID = .25, ZMAX = 2.6;
+const GRID = .25;
 const inst = {}; // id → { g, rec }
 /* 庭のもの：rec.yard=1。外の地面の上（窓の外のグループ）に置く */
 const isYardKey = k => !!(FURN_BY[k] && GARDEN_SLOTS.includes(FURN_BY[k].slot)), isYard = o => !!(o && o.rec && o.rec.yard);
@@ -1346,10 +1353,11 @@ function placeInst(o){ const r = o.rec;
   o.g.position.set(r.x, 0, r.z); o.g.rotation.y = r.r || 0; if (hostTop(o)) for (const p of riders(o)) placeInst(p); }
 function syncLayout(layout){ const want = new Map(), gOn = GARDEN(); hiddenYard = []; oldTrees.visible = !gOn; (layout || []).forEach(r => { if (!r || !r.id) return; if (r.yard && !gOn){ hiddenYard.push({ ...r }); return; } want.set(r.id, r); });
   for (const [id, o] of Object.entries(inst)) if (id !== 'tree' && (!want.has(id) || want.get(id).key !== o.rec.key)){ (o.g.parent || scene).remove(o.g); disposeG(o.g); delete inst[id]; }
-  for (const [id, r] of want){ if (r.key === 'tree'){ inst.tree = inst.tree || { g:treeRoot, rec:{ id:'tree', key:'tree', x:-1.15, z:-1.65 } }; inst.tree.rec = { ...r }; placeInst(inst.tree); continue; }
+  if (noTree) delete inst.tree;
+  for (const [id, r] of want){ if (r.key === 'tree'){ if (noTree) continue; inst.tree = inst.tree || { g:treeRoot, rec:{ id:'tree', key:'tree', x:-1.15, z:-1.65 } }; inst.tree.rec = { ...r }; placeInst(inst.tree); continue; }
     if (!FURN_BY[r.key]) continue; let o = inst[id]; if (!o){ const g = buildFurn(r.key); g.userData.inst = id; parentFor(r.key).add(g); o = inst[id] = { g, rec:{ ...r } }; } o.rec = { ...r }; placeInst(o); }
   for (const o of Object.values(inst)) if (o.rec.on) placeInst(o);
-  if (!inst.tree) inst.tree = { g:treeRoot, rec:{ id:'tree', key:'tree', x:treeRoot.position.x, z:treeRoot.position.z } }; }
+  if (!inst.tree && !noTree) inst.tree = { g:treeRoot, rec:{ id:'tree', key:'tree', x:treeRoot.position.x, z:treeRoot.position.z } }; }
 function layoutOf(){ return [...Object.values(inst).map(o => ({ ...o.rec })), ...hiddenYard.map(r => ({ ...r }))]; }
 function legacyLayout(sel){ const L = [{ id:'tree', key:'tree', x:-1.15, z:-1.65 }]; for (const slot of [...FLOOR_SLOTS, ...WALL_SLOTS]){ const k = sel[slot]; if (k && k !== 'none' && FURN_BY[k]) L.push({ id:slot + '_1', ...recDefault(k) }); } return L; }
 function setRoom(sel, layout){ sel = sel || {}; lastSel = sel; syncLayout(layout || legacyLayout(sel));
@@ -1388,7 +1396,7 @@ function autoPlace(key){ if (isYardKey(key) && !GARDEN()) return null; const id 
   const o = inst[id] = { g, rec:{ id, ...recDefault(key) } }; placeInst(o); if (boxOK(o)) return { ...o.rec };
   if (o.rec.yard){ if (yardNear(o)) return { ...o.rec }; g.parent.remove(g); delete inst[id]; return null; }
   if (o.rec.wall){ for (const W of ['back', 'left', 'right']) for (let y = 1.6; y < 3.4; y += .2) for (let u = -2; u <= 2; u += .2){ o.rec = { id, key, wall:W, u:+u.toFixed(2), y:+y.toFixed(2) }; placeInst(o); if (boxOK(o)) return { ...o.rec }; } }
-  else { const cand = []; for (let x = -2; x <= 2; x += GRID) for (let z = bz + .5; z <= ZMAX - .3; z += GRID) cand.push([x, z]); cand.sort((a, b) => Math.hypot(a[0] - .3, a[1] + .2) - Math.hypot(b[0] - .3, b[1] + .2));
+  else { const cand = []; for (let x = -(RW / 2 - .6); x <= RW / 2 - .6; x += GRID) for (let z = bz + .5; z <= ZMAX - .3; z += GRID) cand.push([x, z]); cand.sort((a, b) => Math.hypot(a[0] - .3, a[1] + .2) - Math.hypot(b[0] - .3, b[1] + .2));
     for (const rr of [o.rec.r || 0, 0, Math.PI / 2, Math.PI, -Math.PI / 2]) for (const [x, z] of cand){ o.rec = { id, key, x:+x.toFixed(3), z:+z.toFixed(3), r:rr }; placeInst(o); if (boxOK(o)) return { ...o.rec }; } }
   scene.remove(g); delete inst[id]; return null; }
 /* ===== もようがえモード：指でなぞって動かす ===== */
@@ -1473,6 +1481,12 @@ applyTime();
 /* ---------- 描画（必要なときだけ。電球と星のゆらぎは30fps） ---------- */
 renderer.shadowMap.autoUpdate = false;
 let last = 0, stopped = false;
+/* おうちの大きさと、ツリーのある部屋かどうか（2つめの部屋はツリーなし） */
+function setHouse(h = {}){ const lv = h.level | 0;
+  if (lv !== roomLv){ roomLv = lv; ({ RW, FRONT, ZMAX } = LV_SIZE(lv)); RD = FRONT - bz; RZ = (bz + FRONT) / 2; buildShell(); target.z = -.6 + (FRONT - 4.2) * .45;
+    Object.assign(key.shadow.camera, { left:-RW / 2 - 1.2, right:RW / 2 + 1.2, top:4.5 + (FRONT - 4.2), bottom:-2 }); key.shadow.camera.updateProjectionMatrix();
+    if (doorG){ scene.remove(doorG); doorG = null; } for (const o of Object.values(inst)) placeInst(o); if (!view && !zoomed) placeCamera(); if (view) viewApply(); }
+  const tr = h.tree !== false; if (tr !== !noTree){ noTree = !tr; treeRoot.visible = tr; if (noTree) delete inst.tree; } shadowsDirty = true; }
 /* オーナメントにズーム */
 let zoom = null, zoomed = false; const zLook = new THREE.Vector3();
 function camLook(){ const d = new THREE.Vector3(); camera.getWorldDirection(d); return camera.position.clone().addScaledVector(d, camera.position.distanceTo(target)); }
@@ -1555,13 +1569,14 @@ function furnTap(g){ let lamp = null; g.traverse(m => { if (!lamp && m.userData.
   let f = null; g.traverse(m => { if (!f && m.userData.onTap) f = m.userData.onTap; }); if (f){ f(); return; }
   const s0 = g.scale.clone(); animate(700, k => { const d = decay(k, 2); g.scale.set(s0.x * (1 + .06 * d), s0.y * (1 - .12 * d), s0.z * (1 + .06 * d)); }); }
 function tapAt(e){ const r = renderer.domElement.getBoundingClientRect(); v2.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); ray.setFromCamera(v2, camera);
-  const hit = ray.intersectObjects([...placed, ...gifts, ...(advBox.visible ? [advBox] : [])], true)[0];
+  const hit = noTree ? null : ray.intersectObjects([...placed, ...gifts, ...(advBox.visible ? [advBox] : [])], true)[0];
   // 窓をさわると外をのぞく（ツリーや家具が手前にないとき）
   if (!hit && win.visible && GARDEN()){ const wh = ray.intersectObject(win, true)[0]; if (wh){ const blk = ray.intersectObjects([treeRoot, ...Object.values(inst).filter(o => o.rec.key !== 'tree').map(o => o.g)], true)[0]; if (!blk || blk.distance > wh.distance){ peekWindow(); return; } } }
   // 家具をさわると、ちょっと動く（ツリーより手前にあるときだけ）
-  if (!hit){ const fs = [...Object.values(inst).filter(o => o.rec.key !== 'tree').map(o => o.g), ...Object.values(mounted).filter(m => m && m.visible && m.parent !== tree)], fh = ray.intersectObjects(fs, true)[0], th = ray.intersectObject(treeRoot, true)[0];
+  if (!hit){ const fs = [...Object.values(inst).filter(o => o.rec.key !== 'tree').map(o => o.g), ...Object.values(mounted).filter(m => m && m.visible && m.parent !== tree)], fh = ray.intersectObjects(fs, true)[0], th = noTree ? null : ray.intersectObject(treeRoot, true)[0];
     if (fh && (!th || fh.distance < th.distance)){ let o = fh.object; while (o.parent && !fs.includes(o)) o = o.parent; furnTap(o); return; } }
   if (hit){ let o = hit.object; while (o && !o.userData.id) o = o.parent; if (o){ if (o.userData.orn) o.userData.swing = performance.now(); else { o.scale.setScalar(.85 * (o.userData.base || 1)); appear.push({ o, t0:performance.now() - 120 }); } opts.onTap && opts.onTap(o.userData.id, !!o.userData.gift); return; } }
+  if (noTree) return;
   { const r2 = renderer.domElement.getBoundingClientRect(), tc = new THREE.Vector3(); treeRoot.getWorldPosition(tc); let best = null, bd = 30;
     for (const o of placed){ const w = new THREE.Vector3(); o.children[0].getWorldPosition(w); const toCam = camera.position.clone().sub(tc), toO = w.clone().sub(tc); toCam.y = 0; toO.y = 0; if (toCam.dot(toO) < 0) continue;
       const v = w.clone().project(camera), sx = r2.left + (v.x + 1) / 2 * r2.width, sy = r2.top + (1 - v.y) / 2 * r2.height, d = Math.hypot(sx - e.clientX, sy - e.clientY); if (d < bd){ bd = d; best = o; } }
@@ -1592,5 +1607,5 @@ function setSeason(ny){ ny = !!ny; if (ny === nyMode) return; nyMode = ny; if (n
   firBase.forEach(m => m.visible = !ny); for (const k of TREE_PARTS) if (mounted[k]) mounted[k].visible = !ny; if (mochi) mochi.group.visible = ny;
   slots.length = 0; (ny ? MOCHI_SLOTS : TREE_SLOTS).forEach(p => slots.push(p)); const L = lastList, G = lastGifts; clearAll(); sig = ''; if (L) sync(L, G || []); shadowsDirty = true; }
 const _mochi = (n = 14, sc = 1.6) => { const mb = makeMochibana(7); mb.group.scale.setScalar(sc); mb.branches.slice(0, n * 2).forEach((cv, i) => { if (i % 2) return; const o = mb.makers[(i / 2) % mb.makers.length](); o.scale.setScalar(1.25); mb.hang(o, cv.getPointAt(.55 + (i % 5) * .07), .05 + (i % 3) * .025); }); mb.group.traverse(m => { if (m.isMesh) m.castShadow = true; }); tree.visible = false; treeRoot.add(mb.group); shadowsDirty = true; };
-return { _anPos:() => { const tr = fpTrails.find(t => t.A); if (!tr) return null; const v = tr.A.g.position.clone(); v.y += .15; v.project(camera); return [(v.x + 1) / 2 * VW(), (1 - v.y) / 2 * VH()]; }, _fpInfo:() => { fpCheck(); return fpTrails.map(t => ({ type:t.type, t:t.t, len:t.len, v:t.v })); }, setView, viewReset, viewing:() => !!view, _view:(y, p, d) => { if (!view) return; view.yaw = y; view.pitch = p; if (d) view.dist = d; viewApply(); }, setSeason, _mochi, thumbGift, giftType:id => GIFT_TYPES[giftSeed(id) % GIFT_TYPES.length], setAdvBox, zoomTo, zoomOut, zoomed:() => zoomed, _dbg, _proj, sync, setRoom, snapshot, setEdit, editRotate, editRemove, autoPlace, peekGarden(){ if (view || !GARDEN()) return; if (zoomed && !peek){ zoomed = false; zoom = null; placeCamera(); } peekWindow(); }, peeking:() => peek, layoutOf, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize: refit };
+return { setHouse, _anPos:() => { const tr = fpTrails.find(t => t.A); if (!tr) return null; const v = tr.A.g.position.clone(); v.y += .15; v.project(camera); return [(v.x + 1) / 2 * VW(), (1 - v.y) / 2 * VH()]; }, _fpInfo:() => { fpCheck(); return fpTrails.map(t => ({ type:t.type, t:t.t, len:t.len, v:t.v })); }, setView, viewReset, viewing:() => !!view, _view:(y, p, d) => { if (!view) return; view.yaw = y; view.pitch = p; if (d) view.dist = d; viewApply(); }, setSeason, _mochi, thumbGift, giftType:id => GIFT_TYPES[giftSeed(id) % GIFT_TYPES.length], setAdvBox, zoomTo, zoomOut, zoomed:() => zoomed, _dbg, _proj, sync, setRoom, snapshot, setEdit, editRotate, editRemove, autoPlace, peekGarden(){ if (view || !GARDEN()) return; if (zoomed && !peek){ zoomed = false; zoom = null; placeCamera(); } peekWindow(); }, peeking:() => peek, layoutOf, frontSlot:pickSlot, thumbFurn, ornScreen, ornRot, setNight(n){ if (n !== isNight){ isNight = n; applyTime(); } }, pause(p){ stopped = p; }, resize: refit };
 }

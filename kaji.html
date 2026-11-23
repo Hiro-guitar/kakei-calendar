@@ -256,6 +256,7 @@ img[data-fk]:not([src]){visibility:hidden}
 .kjmsg{margin:8px 0 6px;font-weight:800;color:#5a4a3a}.kjmsg b{font-size:22px;color:#c8352e;margin:0 3px}.kjdots{display:flex;gap:6px;justify-content:center;margin-bottom:14px}.kjdots i{width:12px;height:12px;border-radius:50%;background:#eadfca}.kjdots i.on{background:#e7b84a;box-shadow:0 0 0 2px #f6e2a8}
 .kjbtn{min-width:200px}.kjbtn:disabled{opacity:.45}.kjprize img{width:170px;height:170px;margin-top:6px;animation:kjpop .5s cubic-bezier(.3,1.6,.5,1)}@keyframes kjpop{from{transform:scale(.3);opacity:0}}.kjname{display:block;font-size:18px;margin:2px 0 6px}.kjbtns{display:flex;gap:8px;justify-content:center;margin-top:10px}
 .xside{margin-left:auto;display:flex;gap:20px;padding-right:4px}
+.hrow{display:flex;gap:8px;flex-wrap:wrap;margin:-12px 0 8px}.hchip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px 6px 8px;border:0;border-radius:999px;background:rgba(255,248,232,.92);box-shadow:var(--sh-lift);font-size:12px;font-weight:800;color:var(--navy)}.hchip svg{width:18px;height:18px}.hchip.pend{background:#fff1c8}.hchip.pend svg{animation:hmr 1.2s ease-in-out infinite;transform-origin:20% 80%}@keyframes hmr{0%,60%,100%{transform:rotate(0)}30%{transform:rotate(-22deg)}}.hnew .hbig svg{width:64px;height:64px}
 .xbtn small{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:3px;font-size:9px;font-weight:900;color:#fff8e8;white-space:nowrap;text-shadow:0 1px 2px rgba(60,20,10,.7);letter-spacing:-.02em}
 .xbtn{position:relative;display:flex;align-items:center;width:38px;height:38px;justify-content:center;padding:0;border:0;border-radius:50%;background:var(--cream);box-shadow:var(--sh-lift);font-weight:800;color:var(--navy);white-space:nowrap}
 .xbtn svg{width:24px;height:24px}.xbtn .bdg{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#d8403a;color:#fff;font-size:11px;line-height:18px;text-align:center;box-shadow:0 0 0 2px #fff8e8;animation:pop .5s}
@@ -4744,7 +4745,7 @@ function viewToday(){
   LIST_HTML = html;
   const vw = Math.min(innerWidth, 660), Hpx = innerHeight, k = 360 / vw, Hs = Math.round(Hpx * k), pad = Math.round(222 * k), topUi = Math.round(196 * k);
   const cur = currentSlot(), curLeft = cur ? due.filter(c => (c.slot || 'any') === cur && !logs.some(l => l.choreId === c.id)).length : 0, curLabel = cur ? SLOTS.find(x => x[0] === cur)[1] : '';
-  return `<div class="xfull ${ROOM_FAIL ? '' : 'r3'}"><div class="xfull-svg">${ROOM_FAIL ? treeSVG(wl, 'full', { H:Hs, pad, maxTh:Hs - pad - topUi }) : ''}</div><div class="xfull-top"><div class="xchips" style="margin:0 0 20px"><button class="listhandle" data-act="listopen"><i></i><span>${appDate().getMonth() + 1}/${appDate().getDate()}（${WD[appDate().getDay()]}）の記録</span><small>${logs.length}件</small>${logs.some(l => l.by !== S.me && !l.both && !l.thanks) ? `<span class="lhheart">${ICO.heartO}</span>` : ''}</button>${advChips()}</div></div></div>`;
+  return `<div class="xfull ${ROOM_FAIL ? '' : 'r3'}"><div class="xfull-svg">${ROOM_FAIL ? treeSVG(wl, 'full', { H:Hs, pad, maxTh:Hs - pad - topUi }) : ''}</div><div class="xfull-top"><div class="xchips" style="margin:0 0 20px"><button class="listhandle" data-act="listopen"><i></i><span>${appDate().getMonth() + 1}/${appDate().getDate()}（${WD[appDate().getDay()]}）の記録</span><small>${logs.length}件</small>${logs.some(l => l.by !== S.me && !l.both && !l.thanks) ? `<span class="lhheart">${ICO.heartO}</span>` : ''}</button>${advChips()}</div>${houseChip()}</div></div>`;
 }
 let LIST_HTML = '', LISTOPEN = false;
 /* ===== アドベント（11/19〜12/25、毎日ひとつ家具が届く。家事とは関係なし） ===== */
@@ -4790,6 +4791,33 @@ const ICO = {
 };
 const ICON_VIEW = `<svg viewBox="0 0 24 24"><path d="M12 2.2 L 21.4 9.4 H 2.6Z" fill="#c8604a" stroke="#a8483a" stroke-width=".8" stroke-linejoin="round"/><circle cx="12" cy="7" r="1.3" fill="#ffe9a8"/><rect x="3.6" y="9.4" width="16.8" height="12.4" rx="1" fill="#a8703e"/><rect x="5" y="10.6" width="6.4" height="4.8" fill="#f8c8cc"/><rect x="12.6" y="10.6" width="6.4" height="4.8" fill="#cfe9dc"/><rect x="5" y="16.4" width="14" height="4.2" fill="#fbe9c8"/><rect x="6.2" y="11.6" width="2" height="1.8" rx=".3" fill="#bfe4ff"/><path d="M14.6 15.4 v -2.6 h 2.4 v 2.6" fill="#f6cc3a"/><circle cx="15.8" cy="12.4" r=".9" fill="#f6cc3a"/><rect x="6.2" y="18.6" width="4.4" height="2" rx=".7" fill="#5aa98c"/><rect x="6.2" y="17.6" width="1" height="3" rx=".4" fill="#5aa98c"/><rect x="9.6" y="17.6" width="1" height="3" rx=".4" fill="#5aa98c"/><path d="M15.6 20.6 l 1.6 -3.4 l 1.6 3.4Z" fill="#3f8a5a"/><rect x="3.6" y="15.4" width="16.8" height="1" fill="#a8703e"/><rect x="11.4" y="10.4" width="1.2" height="5.2" fill="#a8703e"/></svg>`;
 const ICON_MY = `<svg viewBox="0 0 24 24"><path d="M3 12 L12 4 L21 12" stroke="#a8703e" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="5.5" y="11" width="13" height="10" rx="1.5" fill="#f2c14e"/><rect x="10" y="15" width="4" height="6" fill="#c8862a"/><circle cx="18" cy="6.5" r="1.6" fill="#d8403a"/></svg>`;
+/* ===== おうちの増築：ふたりの家事の記録の合計で、部屋が広くなる・部屋が増える =====
+   節目に届いた夜に工事をして、つぎの朝4時に完成。1つめの部屋は3回広がり、そのあと2つめの部屋ができて、それも3回広がる */
+const HOUSE_T = [100, 250, 450, 700, 1000, 1400, 1900]; // 0〜2：1つめを広く／3：2つめの部屋ができる／4〜6：2つめを広く
+const HOUSE_DONE = ['1つめの部屋がひとまわり広くなったよ', '1つめの部屋がもうひとまわり広くなったよ', '1つめの部屋がいちばん広くなったよ', 'あたらしい部屋ができたよ', 'あたらしい部屋がひとまわり広くなったよ', 'あたらしい部屋がもうひとまわり広くなったよ', 'あたらしい部屋がいちばん広くなったよ'];
+const next4 = t => { const d = new Date(t - 4 * 36e5); d.setHours(0, 0, 0, 0); return d.getTime() + 864e5 + 4 * 36e5; };
+let HOUSE_C = null;
+function house(){ const L = all('log'), sig = L.length + ':' + Math.floor(Date.now() / 6e4); if (HOUSE_C && HOUSE_C.sig === sig) return HOUSE_C;
+  const ats = L.map(l => l.updatedAt && l.updatedAt > (l.at || 0) ? Math.min(l.updatedAt, Date.now()) : (l.at || 0)).sort((a, b) => a - b), now = Date.now(); let done = 0, pending = null;
+  HOUSE_T.forEach((t, i) => { if (ats.length < t) return; const eff = next4(ats[t - 1]); if (eff <= now && done === i) done = i + 1; else if (!pending) pending = { i, eff }; });
+  const nextT = HOUSE_T.find(t => t > ats.length);
+  return HOUSE_C = { sig, n:ats.length, done, pending, left:nextT ? nextT - ats.length : 0, r1:Math.min(3, done), r2:done >= 4, r2lv:Math.max(0, Math.min(3, done - 4)) }; }
+const curRoom = () => { try { return house().r2 && localStorage.getItem('kaji_room') === '2' ? 2 : 1; } catch (e) { return 1; } };
+const R2_ROOM = { wallpaper:'wallpaper_e', flooring:'flooring_e' }, R2_LAYOUT = [{ id:'rug_r2', key:'rug_e', x:0, z:.5, r:0 }];
+const RK = () => curRoom() === 2 ? ['room2', 'layout2'] : ['room', 'layout'];
+function roomOf(st = settings()){ const [a, b] = RK(); return curRoom() === 2 ? { room:st[a] || R2_ROOM, layout:st[b] || R2_LAYOUT } : { room:st[a] || {}, layout:st[b] || null }; }
+function houseApply(r = ROOM){ if (!r || !r.setHouse) return; const h = house(), two = curRoom() === 2; r.setHouse({ level:two ? h.r2lv : h.r1, tree:!two }); }
+const ICON_HAMMER = `<svg viewBox="0 0 24 24"><path d="M13.5 6.5 L 18 2 L 22 6 L 17.5 10.5Z" fill="#8a8e98"/><path d="M12.5 7.5 L 16.5 11.5 L 6 22 L 2 18Z" fill="#c8864a"/><path d="M13.5 6.5 L 17.5 10.5 L 16.5 11.5 L 12.5 7.5Z" fill="#6a6e78"/></svg>`;
+function houseChip(){ if (ROOM_FAIL) return ''; const h = house(), two = h.r2;
+  const pend = h.pending ? `<div class="hchip pend">${ICON_HAMMER}<span>おうちの工事中…<b>あしたの朝</b>に完成するよ</span></div>` : '';
+  const sw = two ? `<button class="hchip rsw" data-act="roomswitch">${ICON_VIEW}<span>${curRoom() === 2 ? '1つめの部屋へ' : '2つめの部屋へ'}</span></button>` : '';
+  return pend || sw ? `<div class="hrow">${pend}${sw}</div>` : ''; }
+// 完成したら1回だけお知らせ
+function houseNotice(){ const h = house(); let seen = 0; try { seen = +(localStorage.getItem('kaji_house_seen') || 0); } catch (e) {} if (h.done <= seen){ if (h.done < seen) try { localStorage.setItem('kaji_house_seen', String(h.done)); } catch (e) {} return; }
+  if (document.getElementById('sheet').classList.contains('open')) return; try { localStorage.setItem('kaji_house_seen', String(h.done)); } catch (e) {}
+  const msg = HOUSE_DONE[h.done - 1] || 'おうちが広くなったよ', isNew = h.done === 4;
+  openSheet(`<div class="iconnew hnew"><div class="hbig">${isNew ? ICON_VIEW : ICON_HAMMER}</div><b>${msg}</b><p class="muted">ふたりで記録した家事が ${h.n}件 になったよ。${h.done < HOUSE_T.length ? `つぎの工事まで、あと${HOUSE_T[h.done] - h.n > 0 ? HOUSE_T[h.done] - h.n : 0}件。` : 'これでおうちは完成！'}</p>
+    ${isNew ? `<p class="muted">上の「2つめの部屋へ」で行き来できるよ。壁紙や家具は、もようがえで好きにしてね</p><button class="btn go" style="width:100%;padding:13px" data-act="roomgo2">見に行く</button>` : `<button class="btn go" style="width:100%;padding:13px" data-act="close">見てみる</button>`}</div>`); chime('thanks'); }
 function advChips(){ if (ROOM_FAIL) return ''; const b = advBadge();
   return `<span class="xside">${advToday() >= 0 && (advToday() < ADV_N || advLeft() > 0) ? `<button class="xbtn" data-act="advent" aria-label="${nyNow() ? 'おしょうがつボックス' : 'アドベントカレンダー'}">${nyNow() ? ICON_ADV_NY : ICON_ADV}<small>${nyNow() ? 'おしょうがつ' : 'アドベント'}</small>${b ? `<span class="bdg">${b}</span>` : ''}</button>` : ''}<button class="xbtn" data-act="kuji" aria-label="ふくびき">${ICON_KUJI}<small>ふくびき</small>${kujiLeft() ? `<span class="bdg">${kujiLeft()}</span>` : ''}</button><button class="xbtn" data-act="moyou" aria-label="もようがえ">${ICON_MY}<small>もようがえ</small></button></span>`; }
 let RMOD = null; const rmod = () => RMOD ? Promise.resolve(RMOD) : import('./kaji-room3d.js').then(m => (RMOD = m));
@@ -4819,17 +4847,17 @@ function confetti(n = 46){ const cols = ['#e0473b', '#f2c14e', '#3d8a55', '#ffff
 function advOpen(i){ const O = advOpened(), L = (Array.isArray(i) ? i : [i]).filter(j => advCan(j) && !O.has(j)); if (!L.length) return; rmod().then(m => { const keys = L.flatMap(j => m.ADVENT[j]).filter(seeKey(m));
   const cell = L.length === 1 ? document.querySelector(`.ad.can[data-i="${L[0]}"]`) : null; if (L.length > 1) document.querySelectorAll('.ad.can').forEach(c => { c.classList.remove('can'); c.classList.add('opening'); }); if (cell){ cell.classList.remove('can'); cell.classList.add('opening'); }
   chime('bell');
-  setTimeout(() => { const st = settings(), adv = [...new Set([...(st.adv || []), ...L])].sort((a, b) => a - b), room = { ...(st.room || {}) };
-    let layout = st.layout ? st.layout.slice() : (ROOM ? ROOM.layoutOf() : null);
+  setTimeout(() => { const st = settings(), adv = [...new Set([...(st.adv || []), ...L])].sort((a, b) => a - b), [RA, LB] = RK(), room = { ...roomOf(st).room };
+    let layout = roomOf(st).layout ? roomOf(st).layout.slice() : (ROOM ? ROOM.layoutOf() : null);
     keys.forEach(k => { const slot = m.FURN_BY[k].slot; if (layout && (m.GARDEN_SLOTS || []).includes(slot)){ const r = ROOM && ROOM.autoPlace(k); if (r) layout.push(r); return; } if (layout && (m.FLOOR_SLOTS.includes(slot) || m.WALL_SLOTS.includes(slot))){ const j = layout.findIndex(r => r.key && r.key.startsWith(slot + '_')); if (j >= 0) layout[j] = { ...layout[j], key:k }; else { const r = ROOM.autoPlace(k); if (r) layout.push(r); } } else room[slot] = k; });
-    put({ ...st, adv, room, ...(layout ? { layout } : {}) });
+    put({ ...st, adv, [RA]:room, ...(layout ? { [LB]:layout } : {}) });
     const HOLLY = `<svg viewBox="0 0 46 46" class="holly HL"><path d="M6 20 C 10 12 16 14 18 6 C 20 12 26 12 24 20 C 30 18 32 24 26 28 C 18 30 12 28 6 20Z" fill="#3d8a55"/><path d="M14 30 C 16 36 22 34 24 40 C 26 34 32 34 30 28 C 36 26 34 20 28 22" fill="#2f7346"/><circle cx="22" cy="24" r="3.6" fill="#d8303a"/><circle cx="27" cy="26" r="3.2" fill="#e0473b"/><circle cx="24" cy="29" r="3" fill="#c8252e"/></svg>`;
     const nyo = L[0] >= ADV_XMAS, snow = Array.from({ length:16 }, (_, k) => `<span class="sn" style="left:${(k * 37) % 100}%;--dx:${(k % 5 - 2) * 12}px;animation-duration:${5 + (k % 4)}s;animation-delay:-${(k * 0.7) % 5}s;font-size:${8 + (k % 3) * 3}px;${nyo ? `color:${k % 2 ? '#f49aac' : '#fbe0e6'}` : ''}">${nyo ? '✿' : '❄'}</span>`).join('');
     openSheet(`<div class="aopen ${nyo ? 'nyopen' : ''}">${snow}${(nyo ? PINE_SVG : HOLLY).replace('HL', 'l')}${(nyo ? PINE_SVG : HOLLY).replace('HL', 'r')}<span class="tag">${L.length > 1 ? `${L.length}日分のプレゼント` : `${md(advDay(L[0]))} のプレゼント`}</span><div class="stage"><div class="item ${keys.length > 2 ? 'many' : keys.length > 1 ? 'two' : ''}">${keys.map(fimg).join('')}</div><div class="gbox"><i></i><b></b></div></div><div class="nm">${keys.length > 3 ? `${esc(m.FURN_BY[keys[0]].name)} ほか ${keys.length - 1}こ` : keys.map(k => m.FURN_BY[k].name).join('と')}</div><div class="msg">おへやに飾ったよ</div><button class="btn go" style="margin-top:14px;padding:10px 24px" data-act="advent">ボックスにもどる</button></div>`);
     fillFurn(); setTimeout(() => chime('thanks'), 800); }, cell || L.length > 1 ? 750 : 0); }); }
 function unlockedFurn(m){ const o = advOpened(), u = new Map(); m.ADVENT.forEach((keys, i) => keys.forEach(k => u.set(k, i))); const kj = kujiOwned(); return { has:k => (m.TREE_PARTS.includes(m.FURN_BY[k].slot) && k.endsWith('_a')) || (m.START_FURN || []).includes(k) || o.has(u.get(k)) || kj.has(k), kuji:k => kj.has(k), day:k => advDay(u.get(k)) }; }
-function moyouSheet(){ rmod().then(m => { const U = unlockedFurn(m), room = settings().room || {};
-  const layout = settings().layout || (ROOM ? ROOM.layoutOf() : []), cntK = k => layout.filter(r => r.key === k).length;
+function moyouSheet(){ rmod().then(m => { const U = unlockedFurn(m), room = roomOf().room;
+  const layout = roomOf().layout || (ROOM ? ROOM.layoutOf() : []), cntK = k => layout.filter(r => r.key === k).length;
   const secs = m.FURN_SLOTS.map(([slot, label]) => { const items = m.FURN_ITEMS.filter(it => it.slot === slot);
     if ((m.GARDEN_SLOTS || []).includes(slot) && !gardenOn()) return '';
     if (m.FLOOR_SLOTS.includes(slot) || m.WALL_SLOTS.includes(slot) || (m.GARDEN_SLOTS || []).includes(slot)){
@@ -4851,7 +4879,7 @@ function roomView(on){ if (!ROOM) return; if (on && roomEditing) roomEdit(false)
 function renderEditbar(){ let b = $('editbar'); if (!b){ b = document.createElement('div'); b.id = 'editbar'; document.body.appendChild(b); } if (!roomEditing){ b.style.display = 'none'; return; } b.style.display = '';
   const s2 = roomSel, canRot = s2 && !s2.wall && s2.key !== 'tree', canRm = s2 && s2.key !== 'tree', yard = !!(ROOM.peeking && ROOM.peeking());
   b.innerHTML = `<div class="ebmsg">${s2 ? (s2.key === 'tree' ? 'ツリーをなぞって動かしてね' : s2.wall ? 'なぞって壁の上を動かしてね' : 'なぞって動かしてね') : yard ? '動かしたい庭のものをなぞってね' : '動かしたい家具をなぞってね'}</div><div class="ebbtn">${gardenOn() ? `<button data-act="egarden">${yard ? 'おへや' : '庭'}</button>` : ''}<button data-act="erot" ${canRot ? '' : 'disabled'}>↻ まわす</button><button data-act="erm" ${canRm ? '' : 'disabled'}>しまう</button><button class="go" data-act="eend">おわる</button></div>`; }
-function setFurn(slot, key){ const st = settings(), room = { ...(st.room || {}) }; if (key) room[slot] = key; else if (['topper', 'treelights', 'garland'].includes(slot)) room[slot] = 'none'; else delete room[slot]; put({ ...st, room }); }
+function setFurn(slot, key){ const st = settings(), [RA] = RK(), room = { ...roomOf(st).room }; if (key) room[slot] = key; else if (['topper', 'treelights', 'garland'].includes(slot)) room[slot] = 'none'; else delete room[slot]; put({ ...st, [RA]:room }); }
 
 /* ===== 3Dの部屋 ===== */
 let ROOM = null, ROOM_FAIL = false, ROOM_LOADING = false, ORN3D = null, ORN3D_FAIL = false;
@@ -4881,18 +4909,18 @@ const WT3 = {};
 function fillWeekTree(){ const box = document.querySelector('.wt3[data-day]'); if (!box) return; const day = box.dataset.day, img = box.querySelector('img');
   const dl = logsOn(day).slice().sort((a, b) => a.at - b.at), lay = layFor(day), sigk = day + '|' + dl.map(l => l.id + (l.thanks ? '+' : '')).join(',') + '|' + laySig(lay);
   if (WT3[sigk]){ img.src = WT3[sigk]; return; } box.classList.add('loading');
-  ensureRoom().then(r => { if (!r || !box.isConnected) return; r.setRoom(lay.room || {}, lay.layout); setTimeout(() => { try { const u = r.snapshot(dl.map(orn3d), dl.filter(l => l.thanks).map(l => ({ id:l.id })), 720, 860, inNY(new Date(day + 'T12:00').getTime())); r.setRoom(settings().room || {}, settings().layout); WT3[sigk] = u; if (box.isConnected){ img.src = u; box.classList.remove('loading'); } } catch (e) { console.warn(e); } }, 60); }); }
+  ensureRoom().then(r => { if (!r || !box.isConnected) return; if (r.setHouse) r.setHouse({ level:house().r1, tree:true }); r.setRoom(lay.room || {}, lay.layout); setTimeout(() => { try { const u = r.snapshot(dl.map(orn3d), dl.filter(l => l.thanks).map(l => ({ id:l.id })), 720, 860, inNY(new Date(day + 'T12:00').getTime())); houseApply(r); { const R = roomOf(); r.setRoom(R.room, R.layout); } WT3[sigk] = u; if (box.isConnected){ img.src = u; box.classList.remove('loading'); } } catch (e) { console.warn(e); } }, 60); }); }
 function syncRoom(){
   const el = $('room3d'), on = document.body.classList.contains('xfullmode') && !ROOM_FAIL;
   el.style.display = on ? '' : 'none'; if (ROOM) ROOM.pause(!on); if (!on) return;
   const logs = logsOn(dayKey(Date.now())).slice().sort((a, b) => a.at - b.at), hr = new Date().getHours();
-  const doSync = () => { ROOM.setNight(hr >= 17 || hr < 6); if (ROOM.setSeason) ROOM.setSeason(inNY(Date.now())); if (!roomEditing) ROOM.setRoom(settings().room || {}, settings().layout); ROOM.sync(logs.map(orn3d), logs.filter(l => l.thanks).map(l => ({ id:l.id }))); if (ROOM.setAdvBox) ROOM.setAdvBox(!roomEditing && advLeft() > 0); };
+  const doSync = () => { ROOM.setNight(hr >= 17 || hr < 6); if (ROOM.setSeason) ROOM.setSeason(inNY(Date.now())); houseApply(); if (!roomEditing){ const R = roomOf(); ROOM.setRoom(R.room, R.layout); } ROOM.sync(logs.map(orn3d), logs.filter(l => l.thanks).map(l => ({ id:l.id }))); if (ROOM.setAdvBox) ROOM.setAdvBox(!roomEditing && advLeft() > 0); };
   if (ROOM){ ROOM.resize(); doSync(); return; }
   ensureRoom().then(r => { if (r) doSync(); });
 }
 let ROOM_P = null;
 function ensureRoom(){ if (ROOM) return Promise.resolve(ROOM); if (ROOM_FAIL) return Promise.resolve(null); if (ROOM_P) return ROOM_P; const el = $('room3d'); ROOM_LOADING = true;
-  return ROOM_P = import('./kaji-room3d.js').then(m => { RMOD = m; ROOM = m.mountRoom(el, { shiftY:.01, garden:gardenOn, onLongPress:() => { if (roomEditing) return; roomEdit(true); try { navigator.vibrate && navigator.vibrate(12); } catch (e) {} }, onLayout:L => { const st = settings(); put({ ...st, layout:L }); }, onSelect:info => { roomSel = info; renderEditbar(); }, rot:treeMem().rot, onRot:r => { const t = treeMem(); t.rot = r; treeSave(t); }, onTap:(id, gift) => { if (id === 'advbox'){ chime('bell'); setTimeout(advSheet, 250); return; } if (!gift) return; chime('do'); setTimeout(() => ornSheet(id, gift), 250); }, onZoomTap:() => closeSheet(), onTree:() => chime('do'), onSpin:() => { try { localStorage.setItem('kaji_spun', '1'); } catch (e) {} } }); try { if (!localStorage.getItem('kaji_spun')) setTimeout(() => toast('ツリーは指でくるっと回せるよ'), 1500); else if (advBadge() && !localStorage.getItem('kaji_advhint')){ localStorage.setItem('kaji_advhint', '1'); setTimeout(() => toast('アドベントのとびらがあいてるよ'), 1500); } } catch (e) {} ROOM_LOADING = false; return ROOM; })
+  return ROOM_P = import('./kaji-room3d.js').then(m => { RMOD = m; ROOM = m.mountRoom(el, { shiftY:.01, garden:gardenOn, onLongPress:() => { if (roomEditing) return; roomEdit(true); try { navigator.vibrate && navigator.vibrate(12); } catch (e) {} }, onLayout:L => { const st = settings(), [, LB] = RK(); put({ ...st, [LB]:L }); }, onSelect:info => { roomSel = info; renderEditbar(); }, rot:treeMem().rot, onRot:r => { const t = treeMem(); t.rot = r; treeSave(t); }, onTap:(id, gift) => { if (id === 'advbox'){ chime('bell'); setTimeout(advSheet, 250); return; } if (!gift) return; chime('do'); setTimeout(() => ornSheet(id, gift), 250); }, onZoomTap:() => closeSheet(), onTree:() => chime('do'), onSpin:() => { try { localStorage.setItem('kaji_spun', '1'); } catch (e) {} } }); try { if (!localStorage.getItem('kaji_spun')) setTimeout(() => toast('ツリーは指でくるっと回せるよ'), 1500); else if (advBadge() && !localStorage.getItem('kaji_advhint')){ localStorage.setItem('kaji_advhint', '1'); setTimeout(() => toast('アドベントのとびらがあいてるよ'), 1500); } } catch (e) {} ROOM_LOADING = false; return ROOM; })
     .catch(e => { console.warn(e); ROOM_FAIL = true; ROOM_LOADING = false; render(); return null; });
 }
 /* オーナメントの説明 */
@@ -5206,10 +5234,11 @@ document.addEventListener('click', e => {
     case 'kuji': menuClose && menuClose(); kujiSheet(); break;
     case 'kujidraw': kujiDraw(); break;
     case 'kujimode': kujiMode = el.dataset.v; kujiSheet(); break;
-    case 'furnadd': { if (!ROOM) break; const k = el.dataset.key, r = ROOM.autoPlace(k); if (!r){ toast('置ける場所がないみたい'); break; } const st = settings(), L = (st.layout || ROOM.layoutOf().filter(x => x.id !== r.id)).concat([r]); put({ ...st, layout:L }); closeSheet(); roomEdit(true); if (r.yard){ ROOM.peekGarden(); renderEditbar(); } toast(r.yard ? '庭に置いたよ。なぞって動かしてね' : 'なぞって好きな場所に動かしてね'); break; }
+    case 'furnadd': { if (!ROOM) break; const k = el.dataset.key, r = ROOM.autoPlace(k); if (!r){ toast('置ける場所がないみたい'); break; } const st = settings(), [, LB] = RK(), L = (roomOf(st).layout || ROOM.layoutOf().filter(x => x.id !== r.id)).filter(x => x.id !== r.id).concat([r]); put({ ...st, [LB]:L }); closeSheet(); roomEdit(true); if (r.yard){ ROOM.peekGarden(); renderEditbar(); } toast(r.yard ? '庭に置いたよ。なぞって動かしてね' : 'なぞって好きな場所に動かしてね'); break; }
     case 'iconcopy': { const u = setupURL(), done = () => { toast('コピーしたよ'); el.textContent = 'コピーしたよ ✓'; };
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(u).then(done).catch(() => prompt('このURLをコピーしてね', u)); else prompt('このURLをコピーしてね', u); if (S.url) sync(); break; }
     case 'iconlater': try { localStorage.setItem('kaji_iconsnooze', String(Date.now() + 864e5)); } catch (e) {} closeSheet(); break;
+    case 'roomswitch': case 'roomgo2': { try { localStorage.setItem('kaji_room', (el.dataset.act === 'roomgo2' || curRoom() === 1) ? '2' : '1'); } catch (e) {} closeSheet(); if (ROOM && ROOM.peeking && ROOM.peeking()) ROOM.zoomOut(); render(); syncRoom(); toast(curRoom() === 2 ? '2つめの部屋だよ' : '1つめの部屋だよ'); break; }
     case 'gardengo': closeSheet(); setTimeout(() => { if (ROOM && ROOM.peekGarden) ROOM.peekGarden(); }, 350); break;
     case 'icondone': try { localStorage.setItem('kaji_iconver', ICON_VER); } catch (e) {} closeSheet(); break;
     case 'menu': { const m = $('menupop'); if (m && m.classList.contains('open')) menuClose(); else menuOpen(); break; }
@@ -5375,7 +5404,7 @@ function iconNotice(force){ let v = ''; try { v = localStorage.getItem('kaji_ico
     <button class="btn go" style="width:100%;padding:13px" data-act="iconcopy">URLをコピー</button>
     <div style="display:flex;gap:8px;width:100%;margin-top:8px"><button class="btn ghost" style="flex:1;white-space:nowrap;padding:11px 0" data-act="iconlater">あとで</button><button class="btn ghost" style="flex:1;white-space:nowrap;padding:11px 0" data-act="icondone">もう追加した</button></div></div>`); }
 /* 庭のお知らせ（はじめて開いたときに1回だけ） */
-const gardenOn = () => S.me === 'h'; // 庭はテスト中：ひろきの端末だけ
+const gardenOn = () => S.me === 'h' && curRoom() === 1; // 庭はテスト中：ひろきの端末だけ
 const gardenKey = (m, k) => (m.GARDEN_SLOTS || []).includes((m.FURN_BY[k] || {}).slot), seeKey = m => k => gardenOn() || !gardenKey(m, k);
 function gardenNotice(tries = 0){ if (!gardenOn()) return; try { if (localStorage.getItem('kaji_garden_seen')) return; } catch (e) { return; } if (!S.me) return;
   if ($('sheet').classList.contains('open') || roomEditing || tab !== 'today'){ if (tries < 40) setTimeout(() => gardenNotice(tries + 1), 4000); return; }
@@ -5395,6 +5424,7 @@ setTimeout(() => { try { if (S.items.settings && !all('lay').length) layMemo(nul
 if (pushOK() && isStandalone()) pushHere().then(() => { if (tab === 'settings') render(); }).catch(() => {});
 setTimeout(() => iconNotice(false), 1800);
 setTimeout(() => gardenNotice(), 3200);
+setTimeout(() => houseNotice(), 4200); setInterval(() => { if (!document.hidden) houseNotice(); }, 6e4);
 </script>
 </body>
 </html>
