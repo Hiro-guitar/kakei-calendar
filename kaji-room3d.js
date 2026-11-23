@@ -335,10 +335,11 @@ let riverM = null; const village = new THREE.Group(); village.visible = false; o
     const idx = []; for (let i = 0; i < pos.length / 6 - 1; i++){ const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
     riverM = new THREE.MeshBasicMaterial({ color:'#2a3460', transparent:true, opacity:.55, side:THREE.DoubleSide }); village.add(new THREE.Mesh(g, riverM)); pts(refl, '#ffa050', .22, .45); }
   // 斜面の森
-  const FN = 320, fi = new THREE.InstancedMesh(new THREE.ConeGeometry(.16, .5, 7), std('#1f4438', { roughness:.9 }), FN), fs = new THREE.InstancedMesh(new THREE.ConeGeometry(.1, .18, 7), std('#eef2ff'), FN), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), ps = new THREE.Vector3(), sc = new THREE.Vector3(); let f = 0;
-  for (let i = 0; i < 3000 && f < FN; i++){ const x = (OR() - .5) * 46, dz = 4.5 + OR() * 10; const y = terH(x, dz), s0 = .8 + OR() * 1.0;
-    m4.compose(ps.set(WX + x, y + .22 * s0, OUT_Z - dz), q, sc.set(s0, s0, s0)); fi.setMatrixAt(f, m4); m4.compose(ps.set(WX + x, y + .4 * s0, OUT_Z - dz), q, sc.set(s0, s0, s0)); fs.setMatrixAt(f, m4); f++; }
-  fi.count = fs.count = f; village.add(fi, fs); }
+  // 庭の下の急な斜面は、背の高い針葉樹の林でおおう（庭の雪と町の雪が地続きに見えて、町がミニチュアっぽくなるのを防ぐ）
+  const FN = 420, fi = new THREE.InstancedMesh(new THREE.ConeGeometry(.55, 2.4, 8), std('#1c3e33', { roughness:.9 }), FN), fs = new THREE.InstancedMesh(new THREE.ConeGeometry(.2, .5, 8), std('#eef2ff'), FN), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), ps = new THREE.Vector3(), sc = new THREE.Vector3(); let f = 0;
+  for (let i = 0; i < 6000 && f < FN; i++){ const x = (OR() - .5) * 50, dz = 5.6 + OR() * 4; const y = terH(x, dz), top = 3.0 - .44 * (dz - .6) + (OR() - .3) * .7, hh = top - y; if (hh < .7) continue; const s0 = hh / 2.4;
+    m4.compose(ps.set(WX + x, y + 1.1 * s0, OUT_Z - dz), q, sc.set(s0, s0 * (.9 + OR() * .3), s0)); fi.setMatrixAt(f, m4); m4.compose(ps.set(WX + x, y + 2.1 * s0, OUT_Z - dz), q, sc.set(s0, s0, s0)); fs.setMatrixAt(f, m4); f++; }
+  fi.count = fs.count = f; fi.userData.forest = fs.userData.forest = true; village.add(fi, fs); }
 // 手前の木の柵（雪がのっている）
 { const fenceM = std('#8a6a4e', { roughness:.85 }); const fz = OUT_Z - 4.3;
   for (const z of [0]){ for (let i = 0; i < 26; i++){ const x = WX - 3.2 + i * .26 + (OR() - .5) * .02; const pk = new THREE.Mesh(new RoundedBoxGeometry(.07, .52, .04, 2, .015), fenceM); pk.position.set(x, .58 + .26, fz + z); pk.rotation.z = (OR() - .5) * .06; outside.add(pk); const cap = new THREE.Mesh(new THREE.SphereGeometry(.045, 8, 6), roofSnow); cap.scale.set(1, .5, .9); cap.position.set(x, .58 + .53, fz + z); outside.add(cap); }
@@ -411,7 +412,7 @@ nearGeo.setAttribute('position', new THREE.BufferAttribute(nearPos, 3)); const n
 // 窓の外側の桟につもった雪
 { const ls = new THREE.Mesh(new RoundedBoxGeometry(WW - .02, .07, .16, 3, .03), roofSnow); ls.position.set(WX, WY - WH / 2 + .03, bz - .24); outside.add(ls); }
 function outsideTime(night){ fpCheck(); sky.material.map = night ? skyNightTex : skyDayTex; sky.material.needsUpdate = true; ridges[0].material.color.set(night ? '#ffffff' : '#c8d4ee'); ridges[1].material.color.set(night ? '#ffffff' : '#d8e0f2');
-  vLights.forEach(p => p.visible = night); village.children.forEach(c => { if (c.isInstancedMesh) c.material.color.set(night ? '#5a6080' : '#ffffff'); if (c.userData.house) c.visible = !night; }); if (riverM) riverM.color.set(night ? '#2a3460' : '#7f9cc4'); }
+  vLights.forEach(p => p.visible = night); village.children.forEach(c => { if (c.isInstancedMesh && c.userData.forest){ c.material.color.set(c === village.children.find(x => x.userData.forest) ? (night ? '#16302a' : '#2a5446') : (night ? '#8a94b8' : '#f4f6fc')); return; } if (c.isInstancedMesh) c.material.color.set(night ? '#5a6080' : '#ffffff'); if (c.userData.house) c.visible = !night; }); if (riverM) riverM.color.set(night ? '#2a3460' : '#7f9cc4'); }
 let fpT = 0;
 function outsideTick(now){ const t = now / 1000; if (peek || now - fpT > 250){ fpT = now; fpCheck(); }
   { const a = snowGeo.attributes.position; for (let i = 0; i < snowN; i++){ let y = a.getY(i) - .01 - (i % 3) * .003; if (y < .6) y = 5.6; a.setY(i, y); a.setX(i, a.getX(i) + Math.sin(t * 1.1 + i) * .0016); } a.needsUpdate = true; }
@@ -1466,9 +1467,11 @@ function zoomTo(id){ const o = placed.find(x => x.userData.id === id) || gifts.f
   const dir = camera.position.clone().sub(p).normalize(), far = o.userData.gift ? 2.6 : 2.0; zoom = { t0:performance.now(), fromP:camera.position.clone(), fromL:camLook(), toP:p.clone().addScaledVector(dir, far), toL:p.clone().add(new THREE.Vector3(0, -far * .17, 0)), dur:650 }; zoomed = true; }
 // 窓をのぞく：窓をさわると、窓の前まで寄って外をながめる。どこかをさわると戻る
 let peek = false;
-function peekWindow(){ if (zoomed || view || !GARDEN()) return; /* 窓をのぞく機能もテスト中（ひろきの端末だけ） */ peek = true; village.visible = true; oldTrees.visible = false; fpCheck(); fpEarly(); const px = WX, toP = new THREE.Vector3(px - .2, 3.2, OUT_Z - .6), toL = new THREE.Vector3(px, -16, OUT_Z - 27);
+// 遠くほどかすむ空気（町が遠く、大きく見えるように）。のぞいている間だけ
+const peekFog = new THREE.FogExp2('#1c2648', .012);
+function peekWindow(){ if (zoomed || view || !GARDEN()) return; /* 窓をのぞく機能もテスト中（ひろきの端末だけ） */ peek = true; peekFog.color.set(isNight ? '#1c2446' : '#cfd9e8'); scene.fog = peekFog; village.visible = true; oldTrees.visible = false; fpCheck(); fpEarly(); const px = WX, toP = new THREE.Vector3(px - .2, 3.2, OUT_Z - .6), toL = new THREE.Vector3(px, -16, OUT_Z - 27);
   zoom = { t0:performance.now(), fromP:camera.position.clone(), fromL:camLook(), toP, toL, dur:800, fromF:camera.fov, toF:Math.min(78, 52 / Math.min(1, camera.aspect + .25)) }; zoomed = true; if (window.kajiToast && !editOn) setTimeout(() => { if (peek && !editOn) window.kajiToast('どこかをさわるともどるよ'); }, 900); }
-function zoomOut(){ if (!zoomed) return; zoomed = false; const wasPeek = peek; peek = false; if (wasPeek) setTimeout(() => { if (!peek) village.visible = false; }, 600); const keepP = camera.position.clone(), keepL = camLook(), keepF = camera.fov; camera.fov = 32; placeCamera(); const toP = camera.position.clone(); camera.position.copy(keepP); camera.lookAt(keepL); zoom = { t0:performance.now(), fromP:keepP, fromL:keepL, toP, toL:target.clone(), dur:550, end:true, ...(wasPeek ? { fromF:keepF, toF:32 } : {}) }; if (wasPeek){ camera.fov = keepF; camera.updateProjectionMatrix(); } }
+function zoomOut(){ if (!zoomed) return; zoomed = false; const wasPeek = peek; peek = false; if (wasPeek) scene.fog = null; if (wasPeek) setTimeout(() => { if (!peek) village.visible = false; }, 600); const keepP = camera.position.clone(), keepL = camLook(), keepF = camera.fov; camera.fov = 32; placeCamera(); const toP = camera.position.clone(); camera.position.copy(keepP); camera.lookAt(keepL); zoom = { t0:performance.now(), fromP:keepP, fromL:keepL, toP, toL:target.clone(), dur:550, end:true, ...(wasPeek ? { fromF:keepF, toF:32 } : {}) }; if (wasPeek){ camera.fov = keepF; camera.updateProjectionMatrix(); } }
 function stepZoom(now){ if (!zoom) return; const t = Math.min(1, (now - zoom.t0) / zoom.dur), k = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   camera.position.lerpVectors(zoom.fromP, zoom.toP, k); zLook.lerpVectors(zoom.fromL, zoom.toL, k); camera.lookAt(zLook); if (zoom.toF){ camera.fov = zoom.fromF + (zoom.toF - zoom.fromF) * k; camera.updateProjectionMatrix(); } if (t >= 1){ if (zoom.end) placeCamera(); zoom = null; } }
 function frame(now){
