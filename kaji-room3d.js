@@ -336,10 +336,17 @@ let riverM = null; const village = new THREE.Group(); village.visible = false; o
     riverM = new THREE.MeshBasicMaterial({ color:'#2a3460', transparent:true, opacity:.55, side:THREE.DoubleSide }); village.add(new THREE.Mesh(g, riverM)); pts(refl, '#ffa050', .22, .45); }
   // 斜面の森
   // 庭の下の急な斜面は、背の高い針葉樹の林でおおう（庭の雪と町の雪が地続きに見えて、町がミニチュアっぽくなるのを防ぐ）
-  const FN = 420, fi = new THREE.InstancedMesh(new THREE.ConeGeometry(.55, 2.4, 8), std('#1c3e33', { roughness:.9 }), FN), fs = new THREE.InstancedMesh(new THREE.ConeGeometry(.2, .5, 8), std('#eef2ff'), FN), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), ps = new THREE.Vector3(), sc = new THREE.Vector3(); let f = 0;
-  for (let i = 0; i < 6000 && f < FN; i++){ const x = (OR() - .5) * 50, dz = 5.6 + OR() * 4; const y = terH(x, dz), top = 3.0 - .44 * (dz - .6) + (OR() - .3) * .7, hh = top - y; if (hh < .7) continue; const s0 = hh / 2.4;
-    m4.compose(ps.set(WX + x, y + 1.1 * s0, OUT_Z - dz), q, sc.set(s0, s0 * (.9 + OR() * .3), s0)); fi.setMatrixAt(f, m4); m4.compose(ps.set(WX + x, y + 2.1 * s0, OUT_Z - dz), q, sc.set(s0, s0, s0)); fs.setMatrixAt(f, m4); f++; }
-  fi.count = fs.count = f; fi.userData.forest = fs.userData.forest = true; village.add(fi, fs); }
+  // 段々に枝が重なったもみの木（とがった円すいではなく、垂れた枝の段と雪の積もった上面）
+  const firGeo = (() => { const pr = [[0, 0], [.07, 0], [.07, .18]], T = 5; for (let k = 0; k < T; k++){ const t = k / T, y0 = .18 + t * 1.9, r = .62 * (1 - t * .78), hh = 1.9 / T;
+      pr.push([r, y0 + hh * .05], [r * .93, y0 + hh * .2], [r * .28, y0 + hh * .95]); } pr.push([0, 2.25]);
+    const g = new THREE.LatheGeometry(pr.map(([x, y]) => new THREE.Vector2(x, y)), 11), P = g.attributes.position, c = new Float32Array(P.count * 3), col = new THREE.Color();
+    for (let i = 0; i < P.count; i++){ const x = P.getX(i), y = P.getY(i), z = P.getZ(i), a = Math.atan2(z, x), w = 1 + Math.sin(a * 5 + y * 7) * .1; P.setX(i, x * w); P.setZ(i, z * w); } g.computeVertexNormals();
+    const N = g.attributes.normal; for (let i = 0; i < P.count; i++){ const snow = N.getY(i) > .45 && P.getY(i) > .25; col.set(snow ? '#f2f5fb' : P.getY(i) < .2 ? '#3a2a20' : '#1d4034'); c[i * 3] = col.r; c[i * 3 + 1] = col.g; c[i * 3 + 2] = col.b; }
+    g.setAttribute('color', new THREE.BufferAttribute(c, 3)); return g; })();
+  const FN = 360, fi = new THREE.InstancedMesh(firGeo, new THREE.MeshStandardMaterial({ vertexColors:true, roughness:.9 }), FN), fs = new THREE.InstancedMesh(new THREE.BufferGeometry(), std('#fff'), 1), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), ps = new THREE.Vector3(), sc = new THREE.Vector3(), e3 = new THREE.Euler(); let f = 0;
+  for (let i = 0; i < 6000 && f < FN; i++){ const x = (OR() - .5) * 50, dz = 5.6 + OR() * 4; const y = terH(x, dz), top = 2.9 - .44 * (dz - .6) + (OR() - .4) * .45, hh = top - y; if (hh < .7) continue; const s0 = hh / 2.25, wd = s0 * (1.05 + OR() * .35);
+    q.setFromEuler(e3.set(0, OR() * 6.28, 0)); m4.compose(ps.set(WX + x, y - .1, OUT_Z - dz), q, sc.set(wd, s0, wd)); fi.setMatrixAt(f, m4); f++; }
+  fs.count = 0; fi.count = fs.count = f; fi.userData.forest = fs.userData.forest = true; village.add(fi, fs); }
 // 手前の木の柵（雪がのっている）
 { const fenceM = std('#8a6a4e', { roughness:.85 }); const fz = OUT_Z - 4.3;
   for (const z of [0]){ for (let i = 0; i < 26; i++){ const x = WX - 3.2 + i * .26 + (OR() - .5) * .02; const pk = new THREE.Mesh(new RoundedBoxGeometry(.07, .52, .04, 2, .015), fenceM); pk.position.set(x, .58 + .26, fz + z); pk.rotation.z = (OR() - .5) * .06; outside.add(pk); const cap = new THREE.Mesh(new THREE.SphereGeometry(.045, 8, 6), roofSnow); cap.scale.set(1, .5, .9); cap.position.set(x, .58 + .53, fz + z); outside.add(cap); }
@@ -412,7 +419,7 @@ nearGeo.setAttribute('position', new THREE.BufferAttribute(nearPos, 3)); const n
 // 窓の外側の桟につもった雪
 { const ls = new THREE.Mesh(new RoundedBoxGeometry(WW - .02, .07, .16, 3, .03), roofSnow); ls.position.set(WX, WY - WH / 2 + .03, bz - .24); outside.add(ls); }
 function outsideTime(night){ fpCheck(); sky.material.map = night ? skyNightTex : skyDayTex; sky.material.needsUpdate = true; ridges[0].material.color.set(night ? '#ffffff' : '#c8d4ee'); ridges[1].material.color.set(night ? '#ffffff' : '#d8e0f2');
-  vLights.forEach(p => p.visible = night); village.children.forEach(c => { if (c.isInstancedMesh && c.userData.forest){ c.material.color.set(c === village.children.find(x => x.userData.forest) ? (night ? '#16302a' : '#2a5446') : (night ? '#8a94b8' : '#f4f6fc')); return; } if (c.isInstancedMesh) c.material.color.set(night ? '#5a6080' : '#ffffff'); if (c.userData.house) c.visible = !night; }); if (riverM) riverM.color.set(night ? '#2a3460' : '#7f9cc4'); }
+  vLights.forEach(p => p.visible = night); village.children.forEach(c => { if (c.isInstancedMesh && c.userData.forest){ c.material.color.set(night ? '#7a84a8' : '#ffffff'); return; } if (c.isInstancedMesh) c.material.color.set(night ? '#5a6080' : '#ffffff'); if (c.userData.house) c.visible = !night; }); if (riverM) riverM.color.set(night ? '#2a3460' : '#7f9cc4'); }
 let fpT = 0;
 function outsideTick(now){ const t = now / 1000; if (peek || now - fpT > 250){ fpT = now; fpCheck(); }
   { const a = snowGeo.attributes.position; for (let i = 0; i < snowN; i++){ let y = a.getY(i) - .01 - (i % 3) * .003; if (y < .6) y = 5.6; a.setY(i, y); a.setX(i, a.getX(i) + Math.sin(t * 1.1 + i) * .0016); } a.needsUpdate = true; }
