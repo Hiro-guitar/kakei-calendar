@@ -8,16 +8,26 @@ const smin = (a, b, k) => { const h = Math.max(k - Math.abs(a - b), 0) / k; retu
 // 太さが変わる筒（根元 r1 → 先 r2）
 function sdCone(p, a, b, r1, r2){ const bax = b[0] - a[0], bay = b[1] - a[1], baz = b[2] - a[2], pax = p[0] - a[0], pay = p[1] - a[1], paz = p[2] - a[2];
   const h = Math.max(0, Math.min(1, (pax * bax + pay * bay + paz * baz) / (bax * bax + bay * bay + baz * baz))); const dx = pax - bax * h, dy = pay - bay * h, dz = paz - baz * h; return Math.sqrt(dx * dx + dy * dy + dz * dz) - (r1 + (r2 - r1) * h); }
+// 胴〜首をひとつながりの筒で（断面は楕円、太さは少しずつ変わる）。節ができないよう、細かく区切った中心線に沿って測る
+function makeTube(ctrl){ const C = new THREE.CatmullRomCurve3(ctrl.map(c => V3(c[4] || 0, c[1], c[0]))), R = new THREE.CatmullRomCurve3(ctrl.map(c => V3(c[2], c[3], 0))), N = (ctrl.length - 1) * 8, pts = [];
+  for (let i = 0; i <= N; i++){ const t = i / N, p = C.getPoint(t), r = R.getPoint(t), seg = Math.min(ctrl.length - 2, Math.floor(t * (ctrl.length - 1))), f = t * (ctrl.length - 1) - seg; pts.push({ x:p.x, y:p.y, z:p.z, rx:r.x, ry:r.y, b0:ctrl[seg][5], b1:ctrl[seg + 1][5], f, tag:(f < .5 ? ctrl[seg] : ctrl[seg + 1])[6] }); } return pts; }
+function tubeHit(p, T){ let best = 1e9, bi = 0, bh = 0;
+  for (let i = 0; i < T.length - 1; i++){ const a = T[i], b = T[i + 1], bx = b.x - a.x, by = b.y - a.y, bz = b.z - a.z, L2 = bx * bx + by * by + bz * bz, h = Math.max(0, Math.min(1, ((p[0] - a.x) * bx + (p[1] - a.y) * by + (p[2] - a.z) * bz) / L2));
+    const cx = a.x + bx * h, cy = a.y + by * h, cz = a.z + bz * h, rx = a.rx + (b.rx - a.rx) * h, ry = a.ry + (b.ry - a.ry) * h, L = Math.sqrt(L2), tx = bx / L, ty = by / L, tz = bz / L;
+    let dx = p[0] - cx, dy = p[1] - cy, dz = p[2] - cz; const al = dx * tx + dy * ty + dz * tz; // 横（x）と、進む向きに直交する上向き成分に分ける
+    const ux = -ty * tx, uy = 1 - ty * ty, uz = -ty * tz, uL = Math.hypot(ux, uy, uz) || 1, up = (dx * ux + dy * uy + dz * uz) / uL, side = dx, along = al;
+    const e = Math.sqrt((side / rx) ** 2 + (up / ry) ** 2 + (along / Math.min(rx, ry)) ** 2 * (h > 0 && h < 1 ? 0 : 1)), d = (e - 1) * Math.min(rx, ry);
+    if (d < best){ best = d; bi = i; bh = h; } } return [best, bi, bh]; }
 function sdEll(p, c, r){ const x = (p[0] - c[0]) / r[0], y = (p[1] - c[1]) / r[1], z = (p[2] - c[2]) / r[2], k0 = Math.sqrt(x * x + y * y + z * z), x1 = x / r[0], y1 = y / r[1], z1 = z / r[2], k1 = Math.sqrt(x1 * x1 + y1 * y1 + z1 * z1); return k1 > 1e-9 ? k0 * (k0 - 1) / k1 : -Math.min(...r); }
 
 /* ===== 形（プリミティブの集まり）から、皮膚・骨・重みを作る ===== */
 function buildSkin(spec){
   const P = spec.prims, K = spec.k, n = P.length;
-  const dist = (p, i) => { const q = P[i]; return q.t === 'c' ? sdCone(p, q.a, q.b, q.r1, q.r2) : sdEll(p, q.c, q.r); };
+  const dist = (p, i) => { const q = P[i]; return q.t === 'c' ? sdCone(p, q.a, q.b, q.r1, q.r2) : q.t === 'u' ? tubeHit(p, q.T)[0] : sdEll(p, q.c, q.r); };
   const sdf = p => { let d = 1e9; for (let i = 0; i < n; i++){ const di = dist(p, i); d = smin(d, di, P[i].k ?? K); } return d; };
   // 範囲
   let mn = [1e9, 1e9, 1e9], mx = [-1e9, -1e9, -1e9]; const grow = (pt, r) => { for (let j = 0; j < 3; j++){ mn[j] = Math.min(mn[j], pt[j] - r); mx[j] = Math.max(mx[j], pt[j] + r); } };
-  for (const q of P){ if (q.t === 'c'){ grow(q.a, q.r1); grow(q.b, q.r2); } else grow(q.c, Math.max(...q.r)); }
+  for (const q of P){ if (q.t === 'c'){ grow(q.a, q.r1); grow(q.b, q.r2); } else if (q.t === 'u'){ for (const t of q.T) grow([t.x, t.y, t.z], Math.max(t.rx, t.ry)); } else grow(q.c, Math.max(...q.r)); }
   const pad = K + .01; mn = mn.map(v => v - pad); mx = mx.map(v => v + pad); const ext = Math.max(mx[0] - mn[0], mx[1] - mn[1], mx[2] - mn[2]), h = ext / (spec.res || 72);
   const NX = Math.ceil((mx[0] - mn[0]) / h) + 1, NY = Math.ceil((mx[1] - mn[1]) / h) + 1, NZ = Math.ceil((mx[2] - mn[2]) / h) + 1, F = new Float32Array(NX * NY * NZ), id = (i, j, k) => i + NX * (j + NY * k);
   for (let k = 0; k < NZ; k++) for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) F[id(i, j, k)] = sdf([mn[0] + i * h, mn[1] + j * h, mn[2] + k * h]);
@@ -43,9 +53,11 @@ function buildSkin(spec){
   // 骨の重み・部位・色
   const bones = spec.bones, bi = Object.fromEntries(bones.map((b, i) => [b.name, i])), sk = new Uint16Array(nv * 4), sw = new Float32Array(nv * 4), col = new Float32Array(nv * 3), c3 = new THREE.Color(), sig = spec.sig || K * .45;
   for (let v = 0; v < nv; v++){ const p = [pos[v * 3], pos[v * 3 + 1], pos[v * 3 + 2]], ds = []; let dm = 1e9, best = 0; for (let i = 0; i < n; i++){ const d = dist(p, i); ds.push(d); if (d < dm){ dm = d; best = i; } }
-    const acc = new Map(); for (let i = 0; i < n; i++){ const w = Math.exp(-(ds[i] - dm) / sig); if (w < .002) continue; const b = bi[P[i].bone]; acc.set(b, (acc.get(b) || 0) + w); }
+    const acc = new Map(); let tubeTag = ''; for (let i = 0; i < n; i++){ const w = Math.exp(-(ds[i] - dm) / sig); if (w < .002) continue;
+      if (P[i].t === 'u'){ const [, si, sh] = tubeHit(p, P[i].T), a = P[i].T[si], b = P[i].T[si + 1], f = a.f + (b.f - a.f) * sh, f2 = b.f < a.f ? 1 : f; const k0 = bi[a.b0], k1 = bi[a.b1], wb = f2 * f2 * (3 - 2 * f2); acc.set(k0, (acc.get(k0) || 0) + w * (1 - wb)); acc.set(k1, (acc.get(k1) || 0) + w * wb); if (i === best) tubeTag = (sh < .5 ? a : b).tag; continue; }
+      const b = bi[P[i].bone]; acc.set(b, (acc.get(b) || 0) + w); }
     const top = [...acc.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4), tot = top.reduce((s, x) => s + x[1], 0); top.forEach(([b, w], j) => { sk[v * 4 + j] = b; sw[v * 4 + j] = w / tot; });
-    c3.set(spec.color(p, P[best].tag || '', [nrm[v * 3], nrm[v * 3 + 1], nrm[v * 3 + 2]])); col[v * 3] = c3.r; col[v * 3 + 1] = c3.g; col[v * 3 + 2] = c3.b; }
+    c3.set(spec.color(p, (P[best].t === 'u' ? tubeTag : P[best].tag) || '', [nrm[v * 3], nrm[v * 3 + 1], nrm[v * 3 + 2]])); col[v * 3] = c3.r; col[v * 3 + 1] = c3.g; col[v * 3 + 2] = c3.b; }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.BufferAttribute(nrm, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
   g.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(sk, 4)); g.setAttribute('skinWeight', new THREE.Float32BufferAttribute(sw, 4)); g.setIndex(idx); g.computeBoundingSphere(); return g; }
 
@@ -64,10 +76,10 @@ function quadruped(a){
   const bones = [], prims = [], B = (name, parent, p) => bones.push({ name, parent, p });
   B('root', null, [0, 0, 0]); B('hip', 'root', [0, a.hip[1], a.hip[0]]); B('chest', 'hip', [0, a.chest[1], a.chest[0]]);
   // 胴（腰〜胸の間に、ふくらみを持った楕円を何個か）
-  for (const [z, y, rx, ry, rz, bone, tag] of a.torso) prims.push({ t:'e', c:[0, y, z], r:[rx, ry, rz], bone, tag:tag || 'body' });
+  if (a.body) prims.push({ t:'u', T:makeTube(a.body), k:a.bodyK }); else for (const [z, y, rx, ry, rz, bone, tag] of a.torso) prims.push({ t:'e', c:[0, y, z], r:[rx, ry, rz], bone, tag:tag || 'body' });
   // 首と頭
   const nk = a.neck; B('neck', 'chest', [0, nk[0][1], nk[0][0]]); B('neck2', 'neck', [0, nk[1][1], nk[1][0]]); B('head', 'neck2', [0, a.head.j[1], a.head.j[0]]);
-  for (let i = 0; i < nk.length - 1; i++) prims.push({ t:'c', a:[0, nk[i][1], nk[i][0]], b:[0, nk[i + 1][1], nk[i + 1][0]], r1:nk[i][2], r2:nk[i + 1][2], bone:i ? 'neck2' : 'neck', tag:'neck' });
+  if (!a.body) for (let i = 0; i < nk.length - 1; i++) prims.push({ t:'c', a:[0, nk[i][1], nk[i][0]], b:[0, nk[i + 1][1], nk[i + 1][0]], r1:nk[i][2], r2:nk[i + 1][2], bone:i ? 'neck2' : 'neck', tag:'neck' });
   for (const [z, y, rx, ry, rz, tag] of a.head.parts) prims.push({ t:'e', c:[0, y, z], r:[rx, ry, rz], bone:'head', tag:tag || 'head' });
   for (const [z1, y1, r1, z2, y2, r2, tag] of a.head.cones || []) prims.push({ t:'c', a:[0, y1, z1], b:[0, y2, z2], r1, r2, bone:'head', tag:tag || 'muzzle' });
   for (const s of [-1, 1]) for (const [x1, y1, z1, r1, x2, y2, z2, r2, tag] of a.head.pair || []) prims.push({ t:'c', a:[s * x1, y1, z1], b:[s * x2, y2, z2], r1, r2, bone:'head', tag:tag || 'ear', k:a.head.pairK });
@@ -112,9 +124,10 @@ const DEFS = {
       tail:[[-.24, .32, .035], [-.33, .31, .058], [-.43, .29, .07], [-.53, .27, .062], [-.62, .255, .03], [-.66, .25, .008]], tailK:.07,
       front:{ x:.04, j:[[.12, .3, .028], [.135, .17, .014], [.127, .045, .009], [.15, .006, .009]], m:[.12, .26], mr:[.034, .075, .05], k:.014 },
       hind:{ x:.044, j:[[-.16, .3, .032], [-.11, .17, .017], [-.2, .055, .01], [-.178, .006, .009]], m:[-.15, .23], mr:[.04, .085, .065], mx:1.05, k:.014 } };
+    a.body = [[-.24, .31, .04, .045, 0, 'hip', 'hip'], [-.18, .315, .066, .08, 0, 'hip', 'hip'], [-.06, .31, .07, .085, 0, 'hip', 'belly'], [.06, .315, .073, .095, 0, 'chest', 'chest'], [.14, .32, .07, .095, 0, 'chest', 'chest'], [.2, .355, .052, .058, 0, 'neck', 'neck'], [.25, .38, .045, .047, 0, 'neck2', 'neck'], [.28, .395, .04, .04, 0, 'head', 'head']];
     const q = quadruped(a), OR = '#c2622a', RD = '#a54a1c', WH = '#f2ebe0', BL = '#231711';
     return { ...q, k:.045, res:120, fur:{ n:7, len:.011, den:900, shade:.62 },
-      color:(p, tag, n) => tag === 'tail' ? (p[2] < -.54 ? WH : mix(OR, RD, n[1] * .4 + .3)) : tag === 'foot' || (tag === 'leg' && p[1] < .15) ? BL : tag === 'muzzle' ? (p[2] > .415 ? BL : n[1] < .2 ? WH : OR) : tag === 'cheek' && n[1] < .3 ? WH : (tag === 'chest' || tag === 'neck') && n[1] < -.2 ? WH : tag === 'belly' && n[1] < -.7 ? '#e8dccc' : tag === 'head' && n[1] < -.3 ? WH : mix(OR, RD, n[1] * .45 + furN(p[0] * 9, p[1] * 9, p[2] * 9) * .15),
+      color:(p, tag, n) => tag === 'tail' ? (p[2] < -.54 ? WH : mix(OR, RD, n[1] * .4 + .3)) : tag === 'foot' || (tag === 'leg' && p[1] < .15) ? BL : tag === 'muzzle' ? (p[2] > .415 ? BL : n[1] < .2 ? WH : OR) : tag === 'cheek' && n[1] < .3 ? WH : (tag === 'neck' && n[1] < -.2) || (tag === 'chest' && n[1] < -.45 && Math.abs(n[0]) < .6) ? WH : tag === 'belly' && n[1] < -.75 ? '#e8dccc' : tag === 'head' && n[1] < -.3 ? WH : mix(OR, RD, n[1] * .45 + furN(p[0] * 9, p[1] * 9, p[2] * 9) * .15),
       extras:(bs) => { eyesOn(bs.head, .05, .03, .062, .011, '#3a2208'); noseOn(bs.head, -.02, .153, .011); for (const s of [-1, 1]) earOn(bs.head, s * .032, .05, .005, .027, .07, OR, BL, -s * .28, -.2, s * .3); },
       gait:'walk' }; },
   cat(){ const a = { hip:[-.12, .2], chest:[.1, .21],
@@ -123,9 +136,10 @@ const DEFS = {
       tail:[[-.16, .21, .014], [-.24, .2, .012], [-.31, .24, .011], [-.34, .31, .01], [-.33, .36, .009], [-.31, .38, .005]], tailK:.012,
       front:{ x:.032, j:[[.1, .19, .022], [.11, .11, .012], [.105, .025, .009], [.12, .005, .009]], m:[.1, .17], mr:[.026, .048, .036], k:.012 },
       hind:{ x:.035, j:[[-.12, .19, .026], [-.08, .11, .014], [-.15, .04, .009], [-.13, .005, .009]], m:[-.12, .16], mr:[.032, .058, .046], k:.012 } };
+    a.body = [[-.17, .2, .03, .035, 0, 'hip', 'hip'], [-.12, .205, .052, .06, 0, 'hip', 'hip'], [-.02, .198, .056, .062, 0, 'hip', 'belly'], [.08, .205, .056, .066, 0, 'chest', 'chest'], [.13, .215, .05, .06, 0, 'chest', 'chest'], [.17, .245, .04, .042, 0, 'neck', 'neck'], [.2, .27, .034, .035, 0, 'neck2', 'neck'], [.215, .28, .03, .03, 0, 'head', 'head']];
     const q = quadruped(a), C1 = '#a8957c', C2 = '#5c4c3c', WH = '#f2eee6';
     return { ...q, k:.035, res:104, fur:{ n:7, len:.006, den:1500, shade:.66 },
-      color:(p, tag, n) => (tag === 'muzzle' || tag === 'cheek') && n[1] < .4 || (tag === 'chest' && n[1] < -.3) || (tag === 'foot') ? WH : mix(C1, C2, Math.pow(Math.sin(p[2] * 110 + p[1] * 30 + Math.abs(p[0]) * 40) * .5 + .5, 4) * .38 * (n[1] > -.3 ? 1 : .2) + n[1] * .15 + furN(p[0] * 20, p[1] * 20, p[2] * 20) * .08),
+      color:(p, tag, n) => (tag === 'muzzle' || tag === 'cheek') && n[1] < .4 || (tag === 'chest' && n[1] < -.55) || (tag === 'foot') ? WH : mix(C1, C2, Math.pow(Math.sin(p[2] * 80 + furN(Math.round(p[2] * 40), Math.round(p[1] * 30)) * 2 + Math.abs(p[0]) * 25) * .5 + .5, 4) * .28 * (n[1] > -.3 ? 1 : .2) + n[1] * .15 + furN(p[0] * 20, p[1] * 20, p[2] * 20) * .08),
       extras:(bs) => { eyesOn(bs.head, .022, .015, .062, .0095, '#7a8418'); noseOn(bs.head, -.004, .086, .006); for (const s of [-1, 1]) earOn(bs.head, s * .03, .036, -.005, .022, .045, C1, '#e8b4ac', -s * .3, -.1, s * .25); whisk(bs.head, -.008, .078, .07); }, gait:'walk' }; },
   dog(){ const a = { hip:[-.15, .3], chest:[.13, .31],
       torso:[[-.14, .3, .07, .082, .12, 'hip'], [0, .29, .075, .087, .12, 'hip', 'belly'], [.12, .31, .078, .097, .09, 'chest', 'chest']],
@@ -133,6 +147,7 @@ const DEFS = {
       tail:[[-.19, .37, .024], [-.215, .43, .03], [-.17, .47, .03], [-.12, .445, .018], [-.105, .425, .008]], tailK:.03,
       front:{ x:.042, j:[[.13, .29, .03], [.14, .16, .016], [.13, .04, .012], [.15, .006, .012]], m:[.13, .26], mr:[.034, .072, .05], k:.014 },
       hind:{ x:.046, j:[[-.16, .29, .032], [-.11, .16, .018], [-.19, .05, .012], [-.17, .006, .012]], m:[-.15, .235], mr:[.036, .072, .056], k:.014 } };
+    a.body = [[-.21, .31, .04, .045, 0, 'hip', 'hip'], [-.15, .305, .07, .08, 0, 'hip', 'hip'], [-.03, .295, .074, .085, 0, 'hip', 'belly'], [.08, .305, .077, .095, 0, 'chest', 'chest'], [.15, .32, .072, .093, 0, 'chest', 'chest'], [.2, .37, .055, .058, 0, 'neck', 'neck'], [.235, .405, .05, .05, 0, 'neck2', 'neck'], [.25, .42, .045, .045, 0, 'head', 'head']];
     const q = quadruped(a), RD = '#c47838', DK = '#a05a26', CR = '#f2e4c8';
     return { ...q, k:.04, res:98, fur:{ n:7, len:.008, den:1200, shade:.66 },
       color:(p, tag, n) => tag === 'muzzle' ? (p[2] > .36 ? '#1a1410' : CR) : tag === 'cheek' && n[1] < .5 ? CR : (tag === 'chest' || tag === 'neck') && n[1] < -.1 ? CR : tag === 'belly' && n[1] < -.5 ? CR : (tag === 'foot' || (tag === 'leg' && Math.abs(p[0]) < .04)) ? CR : tag === 'tail' && n[1] < -.2 ? CR : mix(RD, DK, n[1] * .4 + furN(p[0] * 11, p[1] * 11, p[2] * 11) * .12),
@@ -143,6 +158,7 @@ const DEFS = {
       tail:[[-.16, .23, .04], [-.23, .2, .052], [-.29, .165, .048], [-.325, .145, .02]], tailK:.05,
       front:{ x:.045, j:[[.08, .18, .026], [.085, .1, .016], [.08, .03, .012], [.095, .006, .012]], m:[.08, .16], mr:[.03, .05, .04], k:.012 },
       hind:{ x:.05, j:[[-.11, .18, .03], [-.07, .1, .018], [-.12, .035, .012], [-.105, .006, .012]], m:[-.1, .15], mr:[.035, .06, .05], k:.012 } };
+    a.body = [[-.16, .21, .05, .055, 0, 'hip', 'hip'], [-.1, .205, .088, .093, 0, 'hip', 'hip'], [0, .205, .094, .098, 0, 'hip', 'belly'], [.08, .212, .088, .094, 0, 'chest', 'chest'], [.13, .23, .07, .075, 0, 'neck', 'neck'], [.17, .25, .058, .058, 0, 'neck2', 'neck'], [.195, .262, .052, .052, 0, 'head', 'head']];
     const q = quadruped(a), GR = '#6e604c', LT = '#b8a88a', DK = '#221c16';
     return { ...q, k:.045, res:96, fur:{ n:8, len:.016, den:900, shade:.55 },
       color:(p, tag, n) => tag === 'foot' || tag === 'leg' || (tag === 'thigh' && p[1] < .13) ? DK : tag === 'muzzle' ? (p[2] > .29 ? DK : LT) : (tag === 'cheek' || tag === 'head') && Math.hypot(Math.abs(p[0]) - .034, p[1] - .272, p[2] - .248) < .028 ? DK : tag === 'cheek' ? LT : tag === 'tail' ? (p[2] < -.3 ? DK : mix(GR, DK, Math.pow(Math.sin(p[2] * 70) * .5 + .5, 2) * .5)) : (tag === 'chest' && n[1] < -.2) ? DK : mix(GR, LT, n[1] * .35 + .2 + furN(p[0] * 13, p[1] * 13, p[2] * 13) * .35),
@@ -153,6 +169,7 @@ const DEFS = {
       tail:[[-.46, .79, .032], [-.5, .75, .026], [-.51, .72, .01]], tailK:.03,
       front:{ x:.07, j:[[.2, .66, .05], [.22, .38, .022], [.21, .1, .014], [.225, .005, .016]], m:[.2, .62], mr:[.05, .12, .08], k:.016 },
       hind:{ x:.075, j:[[-.38, .68, .06], [-.3, .42, .028], [-.42, .16, .016], [-.405, .005, .016]], m:[-.36, .6], mr:[.06, .14, .1], k:.016 } };
+    a.body = [[-.46, .74, .05, .06, 0, 'hip', 'hip'], [-.38, .73, .105, .12, 0, 'hip', 'hip'], [-.15, .71, .115, .13, 0, 'hip', 'belly'], [.08, .72, .12, .145, 0, 'chest', 'chest'], [.2, .74, .105, .13, 0, 'chest', 'chest'], [.28, .84, .07, .075, 0, 'neck', 'neck'], [.34, .98, .06, .062, 0, 'neck2', 'neck'], [.37, 1.06, .055, .056, 0, 'head', 'head']];
     const q = quadruped(a), BR = '#6e5a46', LT = '#a89480', WH = '#f2ece2', DK = '#2a2018';
     return { ...q, k:.06, res:104, fur:{ n:6, len:.007, den:900, shade:.7 },
       color:(p, tag, n) => tag === 'foot' && p[1] < .035 ? DK : tag === 'muzzle' && p[2] > .58 ? DK : tag === 'tail' ? (n[1] > .2 ? DK : WH) : (tag === 'hip' && p[2] < -.44 && Math.abs(n[0]) < .7 && n[1] > -.5) ? WH : (tag === 'belly' || tag === 'chest') && n[1] < -.5 ? LT : tag === 'leg' || tag === 'foot' ? '#8a7460' : mix(BR, '#54442f', n[1] * .4 + furN(p[0] * 7, p[1] * 7, p[2] * 7) * .1),
@@ -166,6 +183,7 @@ const DEFS = {
       tail:[[-.15, .15, .026], [-.17, .15, .024], [-.18, .15, .01]], tailK:.03,
       front:{ x:.03, j:[[.08, .1, .018], [.1, .06, .012], [.11, .02, .009], [.13, .005, .008]], m:[.08, .09], mr:[.02, .036, .03], k:.01 },
       hind:{ x:.05, j:[[-.07, .12, .03], [-.01, .07, .024], [-.12, .03, .014], [.0, .006, .012]], m:[-.06, .09], mr:[.042, .06, .07], k:.012 } };
+    a.body = [[-.15, .14, .05, .05, 0, 'hip', 'hip'], [-.08, .13, .07, .075, 0, 'hip', 'hip'], [0, .12, .066, .07, 0, 'hip', 'belly'], [.07, .12, .056, .062, 0, 'chest', 'chest'], [.11, .145, .045, .045, 0, 'neck', 'neck'], [.14, .17, .04, .04, 0, 'neck2', 'neck'], [.155, .18, .039, .039, 0, 'head', 'head']];
     const q = quadruped(a), WH = '#f4f2ee', GY = '#dcd8d0';
     return { ...q, k:.04, res:92, fur:{ n:8, len:.01, den:1100, shade:.72 },
       color:(p, tag, n) => tag === 'muzzle' && p[2] > .233 ? '#c89a98' : mix(WH, GY, n[1] * .35 + furN(p[0] * 15, p[1] * 15, p[2] * 15) * .25),
@@ -177,6 +195,7 @@ const DEFS = {
       tail:[[-.06, .07, .014], [-.1, .085, .03], [-.12, .13, .04], [-.1, .18, .04], [-.065, .2, .03], [-.045, .19, .01]], tailK:.05,
       front:{ x:.016, j:[[.045, .06, .01], [.055, .035, .007], [.06, .012, .005], [.07, .003, .005]], m:[.045, .055], mr:[.01, .018, .015], k:.006 },
       hind:{ x:.026, j:[[-.03, .065, .016], [0, .04, .012], [-.045, .015, .007], [0, .003, .006]], m:[-.03, .05], mr:[.02, .028, .032], k:.008 } };
+    a.body = [[-.06, .068, .02, .022, 0, 'hip', 'hip'], [-.03, .07, .035, .04, 0, 'hip', 'hip'], [.01, .07, .034, .038, 0, 'hip', 'belly'], [.045, .078, .03, .035, 0, 'chest', 'chest'], [.07, .092, .024, .024, 0, 'neck', 'neck'], [.085, .108, .021, .021, 0, 'head', 'head']];
     const q = quadruped(a), BR = '#8a7262', RD = '#94705a', WH = '#f0e8dc';
     return { ...q, k:.022, res:86, fur:{ n:7, len:.006, den:2200, shade:.62 },
       color:(p, tag, n) => (tag === 'chest' || tag === 'belly' || tag === 'neck' || tag === 'cheek') && n[1] < -.25 ? WH : tag === 'leg' || tag === 'foot' || tag === 'upper' ? RD : tag === 'tail' ? mix(BR, '#5a4638', .3 + furN(p[0] * 40, p[1] * 40, p[2] * 40) * .5) : mix(BR, '#6a5444', n[1] * .4 + furN(p[0] * 30, p[1] * 30, p[2] * 30) * .2),
@@ -188,6 +207,7 @@ const DEFS = {
       tail:[[-.04, .02, .004], [-.07, .012, .003], [-.1, .01, .0026], [-.13, .014, .0022]], tailK:.004,
       front:{ x:.009, j:[[.025, .018, .005], [.028, .01, .0038], [.03, .004, .003], [.035, .0025, .003]], m:[.025, .02], mr:[.006, .01, .01], k:.004 },
       hind:{ x:.012, j:[[-.02, .02, .007], [-.01, .012, .005], [-.025, .004, .0035], [-.012, .0025, .003]], m:[-.02, .018], mr:[.008, .012, .014], k:.004 } };
+    a.body = [[-.04, .024, .012, .012, 0, 'hip', 'hip'], [-.02, .026, .019, .019, 0, 'hip', 'hip'], [0, .025, .019, .018, 0, 'hip', 'belly'], [.025, .025, .016, .016, 0, 'chest', 'chest'], [.042, .03, .012, .012, 0, 'neck', 'neck'], [.05, .032, .012, .012, 0, 'head', 'head']];
     const q = quadruped(a), OR = '#a8724a', WH = '#f2ece4', PK = '#d8a8a0';
     return { ...q, k:.01, res:104, sig:.004, fur:{ n:5, len:.0025, den:4000, shade:.7 },
       color:(p, tag, n) => tag === 'tail' || tag === 'foot' ? PK : n[1] < -.3 ? WH : tag === 'muzzle' && p[2] > .082 ? PK : mix(OR, '#7a5236', n[1] * .4),
