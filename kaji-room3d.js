@@ -419,13 +419,15 @@ const ANIMALS = {
     const lm = M(DK, { roughness:.9 }); const legs = [[-.05, .16, .08], [.05, .16, .08], [-.055, .16, -.1], [.055, .16, -.1]].map(([x, y, z], i) => leg2(b, x, y, z, .075, .075, .03, .018, lm, i > 1));
     return { g, b, legs, head:h, mode:'walk' }; },
   deer(){ const g = new THREE.Group(), b = new THREE.Group(); g.add(b); const BR = '#76583f', LT = '#b49a7e', WH = '#f6f0e4', DK = '#2a1c14';
-    b.add(loft([[-.32, .64, .025, .03], [-.28, .66, .1, .12], [-.1, .68, .12, .14], [.12, .68, .11, .14], [.21, .74, .06, .08], [.27, .86, .045, .05], [.3, .95, .05, .055], [.37, .96, .045, .045], [.45, .925, .026, .025], [.49, .912, .01, .01]],
-      (z, s, ca) => z > .475 ? DK : z < -.24 && s < .6 ? WH : s < -.45 ? LT : s > .15 && s < .85 && z > -.22 && z < .14 && (() => { const gz = z * 26, ga = Math.atan2(s, ca) * 3.2, cz = Math.round(gz), cg = Math.round(ga); return furN(cz, cg) > .55 && Math.hypot(gz - cz, ga - cg) < .3; })() ? '#e2d4bc' : mix(BR, '#6a4224', s * .35 + furN(z * 5, s) * .2)));
-    const h = new THREE.Group(); h.position.set(0, .96, .33); b.add(h); for (const s of [-1, 1]) ear2(h, s * .05, .02, -.02, .025, .065, BR, '#e8d0b8', -s * 1.1, -.2);
-    eyes2(h, 0, .01, .04, .04, .012); const an = M('#d8c4a0', { roughness:.6 });
-    for (const s of [-1, 1]){ const a = new THREE.Group(); a.position.set(s * .025, .05, -.01); a.rotation.set(-.35, 0, -s * .3); h.add(a); addM(a, new THREE.CylinderGeometry(.006, .01, .2, 6), an, 0, .1, 0); addM(a, new THREE.CylinderGeometry(.004, .007, .08, 6), an, 0, .08, .025, .8); addM(a, new THREE.CylinderGeometry(.004, .006, .07, 6), an, 0, .17, .02, .9); }
-    const lm = M(BR, { roughness:.9 }); const legs = [[-.06, .62, .16], [.06, .62, .16], [-.065, .62, -.2], [.065, .62, -.2]].map(([x, y, z], i) => leg2(b, x, y, z, .3, .3, i > 1 ? .055 : .04, .015, lm, i > 1, M('#241a14', { roughness:.4 })));
-    return { g, b, legs, head:h, mode:'walk' }; },
+    // がっしりした胴と太い首、脚は体の下にまっすぐ（細長い脚が広がると虫のように見えるため）
+    b.add(loft([[-.43, .57, .03, .035], [-.39, .59, .12, .14], [-.22, .61, .15, .17], [.04, .61, .145, .17], [.2, .62, .125, .155], [.29, .69, .075, .095], [.34, .8, .058, .068], [.37, .9, .056, .06], [.44, .915, .05, .048], [.52, .885, .028, .026], [.56, .875, .01, .01]],
+      (z, s, ca) => z > .545 ? DK : z < -.33 && s < .6 ? WH : s < -.45 ? LT : z > .34 && s < -.55 ? '#c8b498' : s > .2 && s < .85 && z > -.3 && z < .16 && (() => { const gz = z * 22, ga = Math.atan2(s, ca) * 3, cz = Math.round(gz), cg = Math.round(ga); return furN(cz, cg) > .6 && Math.hypot(gz - cz, ga - cg) < .24; })() ? '#a8906e' : mix(BR, '#5e4430', s * .35)));
+    const h = new THREE.Group(); h.position.set(0, .925, .4); b.add(h); for (const s of [-1, 1]) ear2(h, s * .055, .015, -.02, .026, .07, BR, '#e8d0b8', -s * 1.15, -.2);
+    eyes2(h, 0, .005, .045, .043, .012); nose2(h, 0, -.035, .165, .014); const an = M('#d8c4a0', { roughness:.6 });
+    for (const s of [-1, 1]){ const a = new THREE.Group(); a.position.set(s * .028, .045, -.01); a.rotation.set(-.4, 0, -s * .32); h.add(a); addM(a, new THREE.CylinderGeometry(.007, .011, .22, 6), an, 0, .11, 0); addM(a, new THREE.CylinderGeometry(.005, .008, .09, 6), an, 0, .09, .028, .8); addM(a, new THREE.CylinderGeometry(.004, .007, .08, 6), an, 0, .19, .022, .9); }
+    const lm = M(BR, { roughness:.9 }), hf = M('#241a14', { roughness:.4 });
+    const legs = [[-.07, .6, .19], [.07, .6, .19], [-.075, .6, -.3], [.075, .6, -.3]].map(([x, y, z], i) => { const l = leg2(b, x, y, z, .27, .31, i > 1 ? .08 : .06, .017, lm, i > 1, hf); l.userData.r0 = i > 1 ? -.1 : .03; l.userData.k0 = i > 1 ? .24 : -.04; l.rotation.x = l.userData.r0; l.userData.knee.rotation.x = l.userData.k0; return l; });
+    return { g, b, legs, head:h, mode:'walk', swing:.24, kneeAmp:.32 }; },
   rabbit(){ const g = new THREE.Group(), b = new THREE.Group(); g.add(b); const WH = '#f2f0ea', GY = '#d8d4cc';
     b.add(loft([[-.14, .1, .018, .018], [-.12, .11, .065, .075], [-.05, .135, .085, .095], [.04, .135, .065, .075], [.08, .165, .045, .05], [.11, .19, .05, .052], [.16, .19, .04, .038], [.19, .18, .02, .018], [.2, .178, .006, .006]], (z, s) => z > .195 ? '#c8a0a0' : mix(WH, GY, s * .6 + furN(z, s) * .2)));
     whisk(b, 0, .176, .195, .055); const h = new THREE.Group(); h.position.set(0, .2, .14); b.add(h); eyes2(h, 0, .005, .025, .03, .01);
@@ -467,7 +469,7 @@ function fpPose(tr, d){ const A = tr.A, pre = tr.v * .9; let [x, z, dx, dz] = tr
   if (tr.type === 'bird'){ if (d < 0) fly = -d / pre; else if (d > tr.len){ fly = (d - tr.len) / pre; const n = Math.hypot(dx, dz) || 1; x += dx / n * (d - tr.len); z += dz / n * (d - tr.len); } }
   const gy = Math.max(.55, terH(x, z)); A.g.position.set(WX + x, gy + fly * 1.3, OUT_Z - z); A.g.rotation.y = Math.atan2(dx, -dz);
   const ph = d / tr.stride * Math.PI;
-  if (A.mode === 'walk'){ A.legs.forEach((l, i) => { const p = ph + (i === 0 || i === 3 ? 0 : Math.PI), u = l.userData; l.rotation.x = u.r0 + Math.sin(p) * .42; u.knee.rotation.x = u.k0 + Math.max(0, Math.cos(p)) * .55; });
+  if (A.mode === 'walk'){ A.legs.forEach((l, i) => { const p = ph + (i === 0 || i === 3 ? 0 : Math.PI), u = l.userData; l.rotation.x = u.r0 + Math.sin(p) * (A.swing || .42); u.knee.rotation.x = u.k0 + Math.max(0, Math.cos(p)) * (A.kneeAmp || .55); });
     A.b.position.y = Math.abs(Math.cos(ph)) * .008; A.b.rotation.z = Math.sin(ph) * .02; if (A.tail) A.tail.rotation.y = Math.sin(ph * .5) * .3; if (A.head) A.head.rotation.x = Math.sin(ph * 2) * .035; }
   else { const fr = ((d / tr.stride) % 1 + 1) % 1, hp = fly > 0 ? 0 : Math.sin(fr * Math.PI); A.b.position.y = hp * A.hopH; A.b.rotation.x = hp > 0 ? -Math.cos(fr * Math.PI) * .22 : 0;
     if (A.hind) A.hind.forEach(t => { t.rotation.x = hp > 0 ? Math.cos(fr * Math.PI) * .8 : 0; }); if (A.fr) A.fr.forEach(l => { l.rotation.x = l.userData.r0 - (hp > 0 ? Math.sin(fr * Math.PI * 2) * .6 : 0); }); if (A.tail) A.tail.rotation.x = Math.sin(fr * Math.PI * 2) * .15; } }
