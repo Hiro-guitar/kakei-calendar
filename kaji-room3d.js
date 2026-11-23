@@ -338,13 +338,17 @@ let riverM = null; const village = new THREE.Group(); village.visible = false; o
   // 庭の下の急な斜面は、背の高い針葉樹の林でおおう（庭の雪と町の雪が地続きに見えて、町がミニチュアっぽくなるのを防ぐ）
   // 段々に枝が重なったもみの木（とがった円すいではなく、垂れた枝の段と雪の積もった上面）
   // やさしいもみの木（ゆるい段々で、先はまるく。とがらせない）
-  const firGeo = (() => { const pr = [[0, 0], [.06, 0], [.06, .12]], M = 30; for (let i = 0; i <= M; i++){ const t = i / M, y = .12 + t * 1.9, env = .66 * Math.pow(1 - t, 1.1) * Math.min(1, t / .06 + .55), tier = (t * 4.2) % 1, sc = .84 + .16 * Math.sin(Math.PI * Math.pow(tier, .6)), tip = t > .88 ? Math.sqrt(Math.max(0, 1 - ((t - .88) / .12) ** 2)) * .08 : 0, r = Math.max(env * sc, tip); pr.push([Math.max(.001, r), y]); }
-    const g = new THREE.LatheGeometry(pr.map(([x, y]) => new THREE.Vector2(x, y)), 26), P = g.attributes.position, c = new Float32Array(P.count * 3), col = new THREE.Color();
-    for (let i = 0; i < P.count; i++){ const x = P.getX(i), y = P.getY(i), z = P.getZ(i), a = Math.atan2(z, x), w = 1 + Math.sin(a * 4 + y * 5) * .06 + Math.sin(a * 9 - y * 3) * .03; P.setX(i, x * w); P.setZ(i, z * w); } g.computeVertexNormals();
-    const N = g.attributes.normal; for (let i = 0; i < P.count; i++){ const y = P.getY(i), up = N.getY(i), snow = up + Math.sin(Math.atan2(P.getZ(i), P.getX(i)) * 6 + y * 9) * .15 > .4; col.set(y < .14 ? '#4a3626' : snow ? '#f2f5fb' : '#2a5242'); c[i * 3] = col.r; c[i * 3 + 1] = col.g; c[i * 3 + 2] = col.b; }
+  // ころんとした段々の木（ゲームの木のように、ふっくらした3段のスカートに、雪がのる。幹が少し見える）
+  const firGeo = (() => { const pr = [[0, 0], [.11, 0], [.1, .32]], T = [[.62, .3, .7], [.5, .78, .62], [.36, 1.22, .62]];
+    T.forEach(([r, y0, h], k) => { pr.push([r * .4, y0 + .02], [r * .8, y0 - .03], [r * .98, y0 + .02], [r, y0 + .09], [r * .9, y0 + .16], [r * .68, y0 + .3], [r * .5, y0 + h * .55], [r * .42, y0 + h * .7]); if (k === T.length - 1) pr.push([r * .26, y0 + h * .9], [r * .1, y0 + h * .99], [0, y0 + h]); });
+    const g = new THREE.LatheGeometry(pr.map(([x, y]) => new THREE.Vector2(x, y)), 22), P = g.attributes.position, c = new Float32Array(P.count * 3), col = new THREE.Color(); g.computeVertexNormals();
+    // 輪郭の点ごとに色を決める：幹は茶色、各段のふくらんだすそは緑、上の面には雪（ふちは少しゆらぐ）
+    const N = g.attributes.normal, kind = pr.map((_, j) => j < 3 ? 0 : j >= 3 + T.length * 8 ? 2 : [1, 1, 1, 1, 1, 3, 3, 2][(j - 3) % 8]);
+    for (let i = 0; i < P.count; i++){ const j = i % pr.length, a = Math.atan2(P.getZ(i), P.getX(i)), k = kind[j], wav = Math.sin(a * 6 + j) > .2;
+      col.set(k === 0 ? '#6a4630' : k === 2 ? (wav || j >= 3 + T.length * 8 ? '#f4f7fc' : '#e2ecea') : k === 3 ? '#3b7a48' : N.getY(i) < -.3 ? '#2c5e38' : '#3b7a48'); c[i * 3] = col.r; c[i * 3 + 1] = col.g; c[i * 3 + 2] = col.b; }
     g.setAttribute('color', new THREE.BufferAttribute(c, 3)); return g; })();
-  const FN = 360, fi = new THREE.InstancedMesh(firGeo, new THREE.MeshStandardMaterial({ vertexColors:true, roughness:.9 }), FN), fs = new THREE.InstancedMesh(new THREE.BufferGeometry(), std('#fff'), 1), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), ps = new THREE.Vector3(), sc = new THREE.Vector3(), e3 = new THREE.Euler(); let f = 0;
-  for (let i = 0; i < 6000 && f < FN; i++){ const x = (OR() - .5) * 50, dz = 5.6 + OR() * 4; const y = terH(x, dz), top = 2.9 - .44 * (dz - .6) + (OR() - .4) * .45, hh = top - y; if (hh < .7) continue; const s0 = hh / 2.02, wd = s0 * (1.0 + OR() * .3);
+  const FN = 260, fi = new THREE.InstancedMesh(firGeo, new THREE.MeshStandardMaterial({ vertexColors:true, roughness:.9 }), FN), fs = new THREE.InstancedMesh(new THREE.BufferGeometry(), std('#fff'), 1), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), ps = new THREE.Vector3(), sc = new THREE.Vector3(), e3 = new THREE.Euler(); let f = 0;
+  for (let i = 0; i < 6000 && f < FN; i++){ const x = (OR() - .5) * 50, dz = 5.6 + OR() * 4; const y = terH(x, dz), top = 2.9 - .44 * (dz - .6) + (OR() - .4) * .45, hh = top - y; if (hh < .7) continue; const s0 = hh / 1.84, wd = s0 * (.95 + OR() * .2);
     q.setFromEuler(e3.set(0, OR() * 6.28, 0)); m4.compose(ps.set(WX + x, y - .1, OUT_Z - dz), q, sc.set(wd, s0, wd)); fi.setMatrixAt(f, m4); f++; }
   fs.count = 0; fi.count = fs.count = f; fi.userData.forest = fs.userData.forest = true; village.add(fi, fs); }
 // 手前の木の柵（雪がのっている）
