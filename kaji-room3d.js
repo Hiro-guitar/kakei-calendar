@@ -611,7 +611,7 @@ function thumbGift(id){ const key = 'gift:' + (GIFT_TYPES[giftSeed(id) % GIFT_TY
   thC.position.copy(c).addScaledVector(new THREE.Vector3(.35, .55, 1).normalize(), r / Math.sin(THREE.MathUtils.degToRad(14))); thC.lookAt(c); thR.render(thS, thC); const url = thR.domElement.toDataURL('image/png'); thS.remove(g); disposeG(g); return thCache[key] = url; }
 
 // アドベントの開けていない箱：ツリーの足もと、正面でぴょこぴょこ
-const advBox = (() => { const g = new THREE.Group(), w = .44, h = .38, d = .4;
+const advBox = (() => { const G = new THREE.Group(), g = new THREE.Group(), w = .44, h = .38, d = .4; G.add(g); G.userData.xmas = g;
   const box = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 3, .04), std('#ffffff', { map:wrapTex('#2f7a4a', '#f6d36a', 'dot'), roughness:.55 })); box.position.y = h / 2; box.castShadow = true; g.add(box);
   const rm = std('#d8303a', { roughness:.4, metalness:.1 });
   const r1 = new THREE.Mesh(new RoundedBoxGeometry(w + .014, h + .014, .07, 2, .012), rm); r1.position.y = h / 2; g.add(r1);
@@ -619,7 +619,16 @@ const advBox = (() => { const g = new THREE.Group(), w = .44, h = .38, d = .4;
   for (const s of [-1, 1]){ const t = new THREE.Mesh(new THREE.TorusGeometry(.075, .026, 8, 16), rm); t.position.set(s * .07, h + .055, 0); t.rotation.set(0, Math.PI / 2, s * .5); t.scale.set(1, 1.25, .8); g.add(t); }
   const star = new THREE.Mesh(new THREE.ExtrudeGeometry((() => { const sh = new THREE.Shape(); for (let i = 0; i < 10; i++){ const a = Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? .035 : .08; i ? sh.lineTo(Math.cos(a) * r, Math.sin(a) * r) : sh.moveTo(Math.cos(a) * r, Math.sin(a) * r); } return sh; })(), { depth:.02, bevelEnabled:false }), std('#f2c14e', { roughness:.3, metalness:.5, emissive:'#7a5a10', emissiveIntensity:.4 }));
   star.position.set(0, h / 2, d / 2 + .02); g.add(star);
-  g.position.set(.05, 0, 1.08); g.rotation.y = -.15; g.userData.id = 'advbox'; g.userData.gift = true; g.visible = false; treeRoot.add(g); return g; })();
+  // お正月は福袋（赤い袋を金のひもでしばって、「福」の札）
+  const f = new THREE.Group(); f.visible = false; G.add(f); G.userData.ny = f; const red = std('#c8302c', { roughness:.75 }), gold = std('#e0b040', { roughness:.35, metalness:.45 });
+  const bag = new THREE.LatheGeometry([[0, 0], [.16, .005], [.24, .06], [.26, .16], [.22, .27], [.12, .33], [.075, .36], [.09, .4], [.15, .45], [.13, .48], [.04, .47], [0, .46]].map(([r, y]) => new THREE.Vector2(r, y)), 40), bp = bag.attributes.position;
+  for (let i = 0; i < bp.count; i++){ const x = bp.getX(i), y = bp.getY(i), z = bp.getZ(i), a = Math.atan2(z, x), k = y > .34 ? 1 + Math.sin(a * 9) * .12 : 1 + Math.sin(a * 5 + y * 8) * .03; bp.setX(i, x * k); bp.setZ(i, z * k); } bag.computeVertexNormals();
+  const bm = new THREE.Mesh(bag, std('#ffffff', { map:canvasTex(256, 128, (c, W, H) => { c.fillStyle = '#c8302c'; c.fillRect(0, 0, W, H); c.strokeStyle = 'rgba(242,193,78,.55)'; c.lineWidth = 3; for (let x = 0; x < W; x += 32) for (let y = 12; y < H; y += 32){ c.beginPath(); c.arc(x + (y / 32 % 2) * 16, y, 9, 0, 7); c.stroke(); } }), roughness:.75 })); bm.castShadow = true; f.add(bm);
+  const rope = new THREE.Mesh(new THREE.TorusGeometry(.085, .016, 8, 28), gold); rope.rotation.x = Math.PI / 2; rope.position.y = .355; f.add(rope);
+  for (const s2 of [-1, 1]){ const t = new THREE.Mesh(new THREE.TorusGeometry(.05, .014, 8, 16), gold); t.position.set(s2 * .07, .37, .07); t.rotation.set(0, s2 * .5, s2 * .6); f.add(t); const tail = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, .14, 8), gold); tail.position.set(s2 * .04, .3, .09); tail.rotation.z = s2 * .35; f.add(tail); }
+  const tag = new THREE.Mesh(new RoundedBoxGeometry(.19, .23, .01, 2, .01), std('#ffffff', { map:canvasTex(128, 160, (c, W, H) => { c.fillStyle = '#fbf6ea'; c.fillRect(0, 0, W, H); c.strokeStyle = '#c8302c'; c.lineWidth = 6; c.strokeRect(8, 8, W - 16, H - 16); c.fillStyle = '#1a1410'; c.font = 'bold 92px serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('福', W / 2, H / 2 + 4); }), roughness:.8 }));
+  tag.position.set(0, .17, .27); tag.rotation.x = -.15; f.add(tag);
+  G.position.set(.05, 0, 1.08); G.rotation.y = -.15; G.userData.id = 'advbox'; G.userData.gift = true; G.visible = false; treeRoot.add(G); return G; })();
 function setAdvBox(on){ advBox.visible = !!on; shadowsDirty = true; }
 
 /* ---------- 家具（アドベントで手に入る。場所ごとに3種類から選べる） ---------- */
@@ -1603,7 +1612,7 @@ function buildMochi(){ if (mochi) return; mochi = makeMochibana(7); const S = 1.
   // 縁起物をつるす場所：大きな枝は外側の垂れたところ、小枝は先のほう
   MOCHI_SLOTS = []; mochi.branches.forEach((cv, i) => (i % 3 === 0 ? [.45, .6, .74, .88] : [.5, .92]).forEach(t => { const q = cv.getPointAt(t).multiplyScalar(S), rr = Math.hypot(q.x, q.z) || 1; MOCHI_SLOTS.push(q.add(new THREE.Vector3(q.x / rr * .08, -.04, q.z / rr * .08))); }));
   const w = MOCHI_SLOTS.map((p, i) => [p, Math.abs(Math.atan2(p.x, p.z)) + ((i * 7919) % 100) / 45]); w.sort((a, b) => a[1] - b[1]); MOCHI_SLOTS = w.map(a => a[0]); }
-function setSeason(ny){ ny = !!ny; if (ny === nyMode) return; nyMode = ny; if (ny) buildMochi();
+function setSeason(ny){ ny = !!ny; if (ny === nyMode) return; nyMode = ny; if (ny) buildMochi(); advBox.userData.xmas.visible = !ny; advBox.userData.ny.visible = ny;
   firBase.forEach(m => m.visible = !ny); for (const k of TREE_PARTS) if (mounted[k]) mounted[k].visible = !ny; if (mochi) mochi.group.visible = ny;
   slots.length = 0; (ny ? MOCHI_SLOTS : TREE_SLOTS).forEach(p => slots.push(p)); const L = lastList, G = lastGifts; clearAll(); sig = ''; if (L) sync(L, G || []); shadowsDirty = true; }
 const _mochi = (n = 14, sc = 1.6) => { const mb = makeMochibana(7); mb.group.scale.setScalar(sc); mb.branches.slice(0, n * 2).forEach((cv, i) => { if (i % 2) return; const o = mb.makers[(i / 2) % mb.makers.length](); o.scale.setScalar(1.25); mb.hang(o, cv.getPointAt(.55 + (i % 5) * .07), .05 + (i % 3) * .025); }); mb.group.traverse(m => { if (m.isMesh) m.castShadow = true; }); tree.visible = false; treeRoot.add(mb.group); shadowsDirty = true; };
