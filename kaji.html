@@ -1001,9 +1001,14 @@ function migrateCatalog6(){ const st = settings(); if ((st.catalog || 0) >= 6 ||
 // こどもの家事を追加（2026/11/23）：着替え・歯みがき・絵本・寝かしつけ（こどもグループの末尾に）
 function migrateCatalog7(){ const st = settings(); if ((st.catalog || 0) >= 7 || (st.catalog || 0) < 6) return 0; const now = Date.now(); const mk = it => { it.updatedAt = now; S.items[it.id] = it; S.queue = S.queue.filter(q => q.id !== it.id); S.queue.push(it); };
   const base = Math.max(0, ...all('chore').filter(c => c.group === 'grp_yusa').map(c => c.order ?? 0)) + 1;
-  [['kigae', 'こどもの着替え', 'kigae'], ['hamigaki', 'こどもの歯みがき', 'hamigaki'], ['ehon', '絵本の読み聞かせ', 'ehon'], ['nenne', 'こどもの寝かしつけ', 'nenne']].forEach(([k, name, icon], i) =>
+  [['kigae', '着替え', 'kigae'], ['hamigaki', '歯みがき', 'hamigaki'], ['ehon', '絵本の読み聞かせ', 'ehon'], ['nenne', '寝かしつけ', 'nenne']].forEach(([k, name, icon], i) =>
     mk({ id:'c7_' + k, kind:'chore', name, owner:'any', slot:'any', freq:{ type:'daily' }, def:[], group:'grp_yusa', icon, order:base + i }));
   mk({ ...settings(), catalog:7 }); save(); return 1; }
+// こどもグループの家事名から「こども」を外す（2026/11/23）
+function migrateCatalog8(){ const st = settings(); if ((st.catalog || 0) >= 8 || (st.catalog || 0) < 7) return 0; const now = Date.now(); const mk = it => { it.updatedAt = now; S.items[it.id] = it; S.queue = S.queue.filter(q => q.id !== it.id); S.queue.push(it); };
+  const RN = { 'こどもの支度':'支度', 'こどもをお風呂に入れる':'お風呂に入れる', 'こどもの保湿':'保湿', 'こどもの着替え':'着替え', 'こどもの歯みがき':'歯みがき', 'こどもに絵本を読む':'絵本の読み聞かせ', 'こどもの寝かしつけ':'寝かしつけ' };
+  all('chore').filter(c => c.group === 'grp_yusa' && RN[c.name]).forEach(c => mk({ ...c, name:RN[c.name] }));
+  mk({ ...settings(), catalog:8 }); save(); return 1; }
 function qbarHTML(){
   const logs = logsOn(dayKey(Date.now())), notes = unreadNotes();
   return `<button class="qmenu" data-act="menu" aria-label="メニュー"><span class="qi">${ICON_MENU}${notes ? '<em class="dot"></em>' : ''}</span><span class="ql">メニュー</span></button><div class="qscroll">` + groupsSorted().map(g => {
@@ -1214,7 +1219,7 @@ function renameKid(){ const K = (settings().names || {}).k; if (!K) return 0; le
 async function sync(){
   const ok = await pull();
   if (ok && !S.seeded) seedIfEmpty();
-  if (ok){ renameKid(); migrateCatalog2(); migrateCatalog3(); migrateCatalog4(); migrateCatalog5(); migrateCatalog6(); migrateCatalog7(); }
+  if (ok){ renameKid(); migrateCatalog2(); migrateCatalog3(); migrateCatalog4(); migrateCatalog5(); migrateCatalog6(); migrateCatalog7(); migrateCatalog8(); }
   await push();
   render();
 }
@@ -5383,7 +5388,7 @@ function gardenNotice(tries = 0){ if (!gardenOn()) return; try { if (localStorag
 /* ========== 起動 ========== */
 if (!S.url) seedIfEmpty();
 renameKid();
-if (!S.url){ migrateCatalog2(); migrateCatalog3(); migrateCatalog4(); migrateCatalog5(); migrateCatalog6(); migrateCatalog7(); }
+if (!S.url){ migrateCatalog2(); migrateCatalog3(); migrateCatalog4(); migrateCatalog5(); migrateCatalog6(); migrateCatalog7(); migrateCatalog8(); }
 render();
 if (S.url) sync();
 setTimeout(() => { try { if (S.items.settings && !all('lay').length) layMemo(null, settings()); } catch (e) {} }, 4000);
