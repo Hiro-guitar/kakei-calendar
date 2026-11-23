@@ -769,7 +769,8 @@ const devHouse = () => { try { const v = localStorage.getItem('kaji_dev_house');
 function devPanel(){ const real = (() => { const k = localStorage.getItem('kaji_dev_house'); localStorage.removeItem('kaji_dev_house'); HOUSE_C = null; const h = house(); if (k != null) localStorage.setItem('kaji_dev_house', k); HOUSE_C = null; return h; })(), d = devHouse();
   const lab = ['最初の部屋', '1つめ・1回広く', '1つめ・2回広く', '1つめ・最大', '2つめの部屋ができる', '2つめ・1回広く', '2つめ・2回広く', '2つめ・最大'];
   return `<h2>かいはつ</h2><div class="panel"><p class="hint" style="margin-top:0">いまの記録の合計：<b>${real.n}件</b>（おうちの段階：${lab[real.done]}${real.pending ? '・工事中' : ''}）</p>
-    <p class="hint">おうちの段階を試しに見る（この端末の見た目だけ）</p><div class="row" style="flex-wrap:wrap;gap:6px">${lab.map((t, i) => `<button class="btn small ${d === i ? 'go' : 'ghost'}" data-act="devhouse" data-v="${i}">${t}</button>`).join('')}<button class="btn small ${d == null ? 'go' : 'ghost'}" data-act="devhouse" data-v="">ふつうにもどす</button></div></div>`; }
+    <p class="hint">おうちの段階を試しに見る（この端末の見た目だけ）</p><div class="row" style="flex-wrap:wrap;gap:6px">${lab.map((t, i) => `<button class="btn small ${d === i ? 'go' : 'ghost'}" data-act="devhouse" data-v="${i}">${t}</button>`).join('')}<button class="btn small ${d == null ? 'go' : 'ghost'}" data-act="devhouse" data-v="">ふつうにもどす</button></div>
+    <p class="hint">季節を試しに見る（今日をその日に見立てる・この端末の見た目だけ）</p><div class="row" style="flex-wrap:wrap;gap:6px">${[['', 'ふつう'], ['eve', 'クリスマスイブ'], ['xmas', 'クリスマス'], ['nye', '大みそか'], ['ny', '元日'], ['ny3', '1月3日']].map(([v, t]) => `<button class="btn small ${devSeason() === v ? 'go' : 'ghost'}" data-act="devseason" data-v="${v}">${t}</button>`).join('')}</div></div>`; }
 function pushPanel(){
   let h = `<h2>つうち</h2><div class="panel">`;
   if (!pushOK() || !isStandalone()) h += `<p class="hint" style="margin:0">ホーム画面に追加したアプリから開くと、相手が家事を入れたときなどに通知を受け取れるよ（iOS 16.4以降）</p>`;
@@ -4309,7 +4310,10 @@ function gardenSVG(logs, big){
 /* ===== クリスマス：ツリーとオーナメント ===== */
 // 部屋で過ごす季節：11/15〜1/7（12/26からは年末年始で、ツリーのかわりに餅花）
 const XMAS_FROM = [11, 15], XMAS_TO = [1, 7], NY_FROM = [12, 26];
-const mdv = ts => { const d = appDate(ts); return (d.getMonth() + 1) * 100 + d.getDate(); };
+// 開発モードの「季節を試しに見る」：今日の日付だけを、イブ・元日などに見立てる（この端末の見た目だけ）
+const devSeason = () => { try { return S.me === 'h' ? localStorage.getItem('kaji_dev_season') || '' : ''; } catch (e) { return ''; } }, DEV_MD = { eve:1224, xmas:1225, nye:1231, ny:101, ny3:103 };
+const mdv = ts => { const ds = devSeason(); if (ds && DEV_MD[ds] && dayKey(ts) === dayKey(Date.now())) return DEV_MD[ds]; const d = appDate(ts); return (d.getMonth() + 1) * 100 + d.getDate(); };
+window.KAJI_EVE = (() => { try { return localStorage.getItem('kaji_dev_season') === 'eve' || undefined; } catch (e) { return undefined; } })();
 function inXmas(ts){ const v = mdv(ts); return v >= XMAS_FROM[0] * 100 + XMAS_FROM[1] || v <= XMAS_TO[0] * 100 + XMAS_TO[1]; }
 function inNY(ts){ const v = mdv(ts); return v >= NY_FROM[0] * 100 + NY_FROM[1] || v <= XMAS_TO[0] * 100 + XMAS_TO[1]; }
 const isEngi = k => !!(ORN[k] && ORN[k].c === '福かざり');
@@ -5245,6 +5249,7 @@ document.addEventListener('click', e => {
     case 'iconcopy': { const u = setupURL(), done = () => { toast('コピーしたよ'); el.textContent = 'コピーしたよ ✓'; };
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(u).then(done).catch(() => prompt('このURLをコピーしてね', u)); else prompt('このURLをコピーしてね', u); if (S.url) sync(); break; }
     case 'iconlater': try { localStorage.setItem('kaji_iconsnooze', String(Date.now() + 864e5)); } catch (e) {} closeSheet(); break;
+    case 'devseason': { try { if (el.dataset.v) localStorage.setItem('kaji_dev_season', el.dataset.v); else localStorage.removeItem('kaji_dev_season'); } catch (e) {} toast('切り替えたよ。読みこみなおすね'); setTimeout(() => location.reload(), 700); break; }
     case 'devhouse': { try { if (el.dataset.v === '') localStorage.removeItem('kaji_dev_house'); else localStorage.setItem('kaji_dev_house', el.dataset.v); } catch (e) {} HOUSE_C = null; el.parentNode.querySelectorAll('button').forEach(b => b.classList.toggle('go', b === el)); el.parentNode.querySelectorAll('button').forEach(b => b.classList.toggle('ghost', b !== el)); render(); syncRoom(); toast('おうちの段階を切り替えたよ'); break; }
     case 'roomswitch': case 'roomgo2': { try { localStorage.setItem('kaji_room', (el.dataset.act === 'roomgo2' || curRoom() === 1) ? '2' : '1'); } catch (e) {} closeSheet(); if (ROOM && ROOM.peeking && ROOM.peeking()) ROOM.zoomOut(); render(); syncRoom(); toast(curRoom() === 2 ? '2つめの部屋だよ' : '1つめの部屋だよ'); break; }
     case 'gardengo': closeSheet(); setTimeout(() => { if (ROOM && ROOM.peekGarden) ROOM.peekGarden(); }, 350); break;
