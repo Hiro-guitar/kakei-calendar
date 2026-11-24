@@ -1405,7 +1405,7 @@ function yardOK(o, b){ if (b.min.x < YB.x0 || b.max.x > YB.x1 || b.min.z < YB.z0
 function yardNear(o){ const b0 = instBox(o), x0 = o.rec.x, z0 = o.rec.z, cand = []; for (let dx = -5; dx <= 5.001; dx += GRID) for (let dz = -3.5; dz <= 3.501; dz += GRID) cand.push([dx, dz]); cand.sort((a, c) => Math.hypot(a[0], a[1]) - Math.hypot(c[0], c[1]));
   for (const [dx, dz] of cand){ const b = b0.clone().translate(new THREE.Vector3(dx, 0, dz)); if (!yardOK(o, b)) continue; o.rec = { ...o.rec, x:+(x0 + dx).toFixed(3), z:+(z0 + dz).toFixed(3) }; placeInst(o); return true; } return false; }
 function boxOK(o){ const b = instBox(o); if (isYard(o)) return yardOK(o, b); if (o.rec.wall){ const W = o.rec.wall; if (b.max.y > RH - .1 || b.min.y < 1.12) return false;
-    if (W === 'back'){ if (b.min.x < -RW / 2 + .05 || b.max.x > RW / 2 - .05) return false; if (b.max.x > WX - WW / 2 - .12 && b.min.x < WX + WW / 2 + .12 && b.max.y > WY - WH / 2 - .25) return false; }
+    if (W === 'back'){ if (b.min.x < -RW / 2 + .05 || b.max.x > RW / 2 - .05) return false; if (b.max.x > WX - WW / 2 - .12 && b.min.x < WX + WW / 2 + .12 && b.max.y > WY - WH / 2 - .25 && b.min.y < WY + WH / 2 + .14) return false; } // 窓に重ならなければ、窓の上や横にも掛けられる
     else if (b.min.z < bz + .05 || b.max.z > ZMAX) return false;
     for (const p of Object.values(inst)) if (p !== o && p.rec.wall === W && b.intersectsBox(instBox(p).expandByScalar(-.02))) return false; return true; }
   const shrink = x => x.expandByScalar(-.06);
@@ -1436,7 +1436,10 @@ function markSel(bad){ if (!sel){ selMark.visible = false; return; } const b = i
 function pickInst(e){ const r = cv.getBoundingClientRect(); v2.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); ray.setFromCamera(v2, camera);
   const objs = Object.values(inst).filter(o => isYard(o) === !!peek).map(o => o.g); const hits = ray.intersectObjects(objs, true).filter(h => !(h.object.material && (h.object.material.map === blobTex || h.object.material.blending === THREE.AdditiveBlending)));
   // ラグは他の家具より後回し
-  hits.sort((a, b) => { const ra = rootInst(a.object), rb = rootInst(b.object); return (ra && isRug(ra) ? 1 : 0) - (rb && isRug(rb) ? 1 : 0) || a.distance - b.distance; }); const h = hits[0]; return h ? rootInst(h.object) : null; }
+  hits.sort((a, b) => { const ra = rootInst(a.object), rb = rootInst(b.object); return (ra && isRug(ra) ? 1 : 0) - (rb && isRug(rb) ? 1 : 0) || a.distance - b.distance; }); const h = hits[0], hi = h ? rootInst(h.object) : null;
+  // ガーランドのような細い壁かざりは、すき間をさわっても取れるように、まわりの箱で当たりを見る（何もない所・ラグをさわったとき）
+  if (!peek && (!hi || isRug(hi))){ let best = null, bd = 1e9; const pt = new THREE.Vector3(); for (const o of Object.values(inst)){ if (!o.rec.wall) continue; const b = instBox(o).expandByScalar(.07); if (ray.ray.intersectBox(b, pt)){ const dd = pt.distanceTo(ray.ray.origin); if (dd < bd){ bd = dd; best = o; } } } if (best) return best; }
+  return hi; }
 function rootInst(m){ let o = m; while (o && !o.userData.inst) o = o.parent; return o ? inst[o.userData.inst] : null; }
 const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), yardPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -YY);
 function hitPlane(e, plane){ const r = cv.getBoundingClientRect(); v2.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); ray.setFromCamera(v2, camera); const p = new THREE.Vector3(); return ray.ray.intersectPlane(plane, p) ? p : null; }
