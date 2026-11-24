@@ -397,17 +397,18 @@ function fpUpdate(){ const now = fpNow(); let pk = false; try { pk = peek; } cat
     // 庭のまんなかあたりで足を止めて、5分くらいのんびりしてから、また歩いて出ていく
     let d, idle = -1; if (el < tA) d = el * tr.v - pre; else if (el < tA + FP_STAY){ d = dS; idle = el - tA; } else d = dS + (el - tA - FP_STAY) * tr.v;
     const live = el >= 0 && d < tr.len + pre && pk;
-    for (const p of tr.prints) p.m.visible = el >= 0 && p.d <= d;
-    if (live && !tr.A){ const A = buildAnimal(tr.type); const bx = new THREE.Box3().setFromObject(A.g), sz = bx.getSize(new THREE.Vector3()); const sh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), anShadowM); sh.rotation.x = -Math.PI / 2; sh.scale.set(sz.x * 1.6 + .04, sz.z * 1.15 + .02, 1); sh.position.y = .006; A.g.add(sh); tr.A = A; outside.add(A.g); }
+    for (const p of tr.prints) p.m.visible = el >= 0 && p.d <= d; for (const p of tr.iprints || []) p.m.visible = el >= tA + p.t;
+    if (live && !tr.A){ const A = buildAnimal(tr.type); A.g.traverse(o => { o.castShadow = false; }); const bx = new THREE.Box3().setFromObject(A.g), sz = bx.getSize(new THREE.Vector3()); const sh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), anShadowM); sh.rotation.x = -Math.PI / 2; sh.scale.set(sz.x * 1.6 + .04, sz.z * 1.15 + .02, 1); sh.position.y = .006; A.g.add(sh); tr.A = A; outside.add(A.g); }
     if (!live && tr.A){ outside.remove(tr.A.g); disposeKeep(tr.A.g); tr.A = null; }
     if (tr.A) fpPose(tr, d, idle); } }
 const FP_STAY = 300;
+// 滞在中のうろうろ（時間 t での位置のずれと、動いているかどうか）。足あとの事前計算と動物の動きで同じ式を使う
+function wander(tr, t){ const fade = Math.min(1, t / 6, (FP_STAY - t) / 6), w = tr.ws, R0 = (tr.type === 'deer' ? .5 : tr.type === 'bird' || tr.type === 'mouse' ? .18 : .32) * Math.max(0, fade);
+  const f = u => [R0 * (Math.sin(u * .11 + w) * .7 + Math.sin(u * .047 + w * 2) * .5), R0 * (Math.sin(u * .083 + w * 3) * .6 + Math.sin(u * .031 + w) * .4)], [ox, oz] = f(t), [x2, z2] = f(t + .4), vx = x2 - ox, vz = z2 - oz;
+  return { ox, oz, vx, vz, sp:Math.hypot(vx, vz) / .4, moving:Math.sin(t * .21 + w) > .15 || fade < 1 }; }
 function fpPose(tr, d, idle = -1){ const A = tr.A, pre = tr.v * .9; let [x, z, dx, dz] = trailAt(tr, d), fly = 0;
   if (idle >= 0){ // のんびり：あたりを見まわす・少しうろうろ・地面をくんくん（小鳥はついばむ）。最初と最後はなめらかに歩きにつなぐ
-    const fade = Math.min(1, idle / 6, (FP_STAY - idle) / 6), w = tr.ws, t = idle, R0 = (tr.type === 'deer' ? .5 : tr.type === 'bird' || tr.type === 'mouse' ? .18 : .32) * fade;
-    const ox = R0 * (Math.sin(t * .11 + w) * .7 + Math.sin(t * .047 + w * 2) * .5), oz = R0 * (Math.sin(t * .083 + w * 3) * .6 + Math.sin(t * .031 + w) * .4);
-    const t2 = t + .4, vx = R0 * (Math.sin(t2 * .11 + w) * .7 + Math.sin(t2 * .047 + w * 2) * .5) - ox, vz = R0 * (Math.sin(t2 * .083 + w * 3) * .6 + Math.sin(t2 * .031 + w) * .4) - oz, sp = Math.hypot(vx, vz) / .4;
-    const moving = Math.sin(t * .21 + w) > .15 || fade < 1, gx = x + ox, gz = z + oz, heading = moving && sp > .004 ? Math.atan2(vx, -vz) : null;
+    const w = tr.ws, t = idle, { ox, oz, vx, vz, sp, moving } = wander(tr, t), gx = x + ox, gz = z + oz, heading = moving && sp > .004 ? Math.atan2(vx, -vz) : null;
     if (tr.hd == null) tr.hd = Math.atan2(dx, -dz); const hTarget = heading == null ? tr.hd : heading; let dh = hTarget - tr.hd; dh = Math.atan2(Math.sin(dh), Math.cos(dh)); tr.hd += dh * .06;
     if (moving){ tr.ip = (tr.ip || 0) + sp * .35; } const gy = Math.max(.55, terH(gx, gz)); A.g.position.set(WX + gx, gy, OUT_Z - gz); A.g.rotation.y = tr.hd;
     const ph = (tr.ip || 0) / tr.stride * Math.PI, fr = (((tr.ip || 0) / tr.stride) % 1 + 1) % 1, hp = moving ? Math.sin(fr * Math.PI) : 0; A.anim(ph, fr, hp);
@@ -432,7 +433,12 @@ function buildFootprints(day){ while (fpGroup.children.length){ const c = fpGrou
     let acc = 0, k = 0, n = 0; const wob = mode === 'walk' ? .045 : mode === 'line' ? .012 : 0;
     for (let i = 1; i < pts.length; i++){ const [ax, az] = pts[i - 1], [bx, bz] = pts[i], seg = Math.hypot(bx - ax, bz - az); acc += seg; if (acc < stride * (.85 + R() * .3)) continue; acc = 0; n++;
       const dx = (bx - ax) / seg, dz = (bz - az) / seg, s = (n % 2 ? 1 : -1) * wob + (mode === 'hop' && type === 'bird' ? (R() - .5) * .05 : 0), x = bx - dz * s, z = bz + dx * s, wx = WX + x, wz = OUT_Z - z;
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(size * 1.2, size * 1.2), mat); m.rotation.set(-Math.PI / 2, 0, Math.atan2(-dx, dz) + (type === 'bird' ? (R() - .5) * .5 : 0)); m.position.set(wx, Math.max(.55, terH(x, z)) + .012, wz); fpGroup.add(m); tr.prints.push({ m, d:cum[i] }); } }); fpUpdate(); }
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(size * 1.2, size * 1.2), mat); m.rotation.set(-Math.PI / 2, 0, Math.atan2(-dx, dz) + (type === 'bird' ? (R() - .5) * .5 : 0)); m.position.set(wx, Math.max(.55, terH(x, z)) + .012, wz); fpGroup.add(m); tr.prints.push({ m, d:cum[i] }); }
+    // 滞在中にうろうろした分の足あとも、前もって計算しておく（その時刻になったら見える）
+    tr.iprints = []; { const [bx0, bz0] = trailAt(tr, tr.len * tr.sf); let accI = 0, nI = 0, px = 0, pz = 0;
+      for (let t = 0; t <= FP_STAY; t += .2){ const W = wander(tr, t); if (W.moving){ accI += Math.hypot(W.ox - px, W.oz - pz); } px = W.ox; pz = W.oz; if (!W.moving || accI < stride) continue; accI = 0; nI++;
+        const L = Math.hypot(W.vx, W.vz) || 1, ddx = W.vx / L, ddz = W.vz / L, sd = (nI % 2 ? 1 : -1) * wob, x = bx0 + W.ox - ddz * sd, z = bz0 + W.oz + ddx * sd;
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(size * 1.2, size * 1.2), mat); m.rotation.set(-Math.PI / 2, 0, Math.atan2(-ddx, ddz)); m.position.set(WX + x, Math.max(.55, terH(x, z)) + .012, OUT_Z - z); fpGroup.add(m); tr.iprints.push({ m, t }); } } }); fpUpdate(); }
 const fpDay = () => { if (window.KAJI_FP != null) return window.KAJI_FP; const d = new Date(Date.now() - 4 * 36e5); return Math.floor(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / 864e5); };
 let fpCur = -1; const fpCheck = () => { const d = fpDay(); if (d !== fpCur){ fpCur = d; buildFootprints(d); } else fpUpdate(); }; fpCheck();
 // 降る雪（遠く・近くの2層）
