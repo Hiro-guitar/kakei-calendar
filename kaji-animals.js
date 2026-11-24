@@ -246,4 +246,6 @@ export function buildAnimal(type){ const def = DEFS[type](), A = assemble(def, d
   // 小鳥：両足でちょんちょん。頭をちょこちょこ、しっぽをぴくっと
   function bird(fr, hp){ bs.root.position.y = hp * (def.hopH || .03); bs.body.rotation.x = hp > 0 ? -Math.cos(fr * Math.PI) * .15 : 0; bs.head.rotation.x = Math.sin(fr * Math.PI * 2) * .15; bs.tail.rotation.x = hp > 0 ? .3 * Math.sin(fr * Math.PI) : 0; }
   const mode = def.gait === 'walk' ? 'walk' : 'hop'; if (mode === 'walk') walk(0); else (def.gait === 'bird' ? bird : hop)(0, 0);
-  return { g, mode, hopH:def.hopH || 0, anim:(ph, fr, hp) => mode === 'walk' ? walk(ph) : (def.gait === 'bird' ? bird(fr, hp) : hop(fr, hp)) }; }
+  // 首をふる・うつむく（のんびりしている時用）。y：左右、p：下向き
+  const look = (y, p) => { if (bs.neck){ bs.neck.rotation.y = y * .45; if (p) bs.neck.rotation.x = p * .6; } bs.head.rotation.y = y * .55; if (p) bs.head.rotation.x = p * .5; };
+  return { g, mode, hopH:def.hopH || 0, look, anim:(ph, fr, hp) => mode === 'walk' ? walk(ph) : (def.gait === 'bird' ? bird(fr, hp) : hop(fr, hp)) }; }

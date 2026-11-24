@@ -393,15 +393,29 @@ function trailAt(tr, d){ const c = tr.cum, P = tr.pts; let lo = 0, hi = c.length
   const f = (d - c[lo]) / Math.max(1e-6, c[hi] - c[lo]), x = P[lo][0] + (P[hi][0] - P[lo][0]) * f, z = P[lo][1] + (P[hi][1] - P[lo][1]) * f; return [x, z, P[hi][0] - P[lo][0], P[hi][1] - P[lo][1]]; }
 // 足あとは動物が通ったところから順につく。のぞいている間にちょうど通れば、動物の姿も見える
 function fpUpdate(){ const now = fpNow(); let pk = false; try { pk = peek; } catch (e) {}
-  for (const tr of fpTrails){ const el = (now - tr.t) / 1000, pre = tr.type === 'bird' ? tr.v * .9 : 0, d = el * tr.v - pre, live = el >= 0 && d < tr.len + pre && pk;
+  for (const tr of fpTrails){ const el = (now - tr.t) / 1000, pre = tr.type === 'bird' ? tr.v * .9 : 0, dS = tr.len * tr.sf, tA = (dS + pre) / tr.v;
+    // 庭のまんなかあたりで足を止めて、5分くらいのんびりしてから、また歩いて出ていく
+    let d, idle = -1; if (el < tA) d = el * tr.v - pre; else if (el < tA + FP_STAY){ d = dS; idle = el - tA; } else d = dS + (el - tA - FP_STAY) * tr.v;
+    const live = el >= 0 && d < tr.len + pre && pk;
     for (const p of tr.prints) p.m.visible = el >= 0 && p.d <= d;
     if (live && !tr.A){ const A = buildAnimal(tr.type); const bx = new THREE.Box3().setFromObject(A.g), sz = bx.getSize(new THREE.Vector3()); const sh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), anShadowM); sh.rotation.x = -Math.PI / 2; sh.scale.set(sz.x * 1.6 + .04, sz.z * 1.15 + .02, 1); sh.position.y = .006; A.g.add(sh); tr.A = A; outside.add(A.g); }
     if (!live && tr.A){ outside.remove(tr.A.g); disposeKeep(tr.A.g); tr.A = null; }
-    if (tr.A) fpPose(tr, d); } }
-function fpPose(tr, d){ const A = tr.A, pre = tr.v * .9; let [x, z, dx, dz] = trailAt(tr, d), fly = 0;
+    if (tr.A) fpPose(tr, d, idle); } }
+const FP_STAY = 300;
+function fpPose(tr, d, idle = -1){ const A = tr.A, pre = tr.v * .9; let [x, z, dx, dz] = trailAt(tr, d), fly = 0;
+  if (idle >= 0){ // のんびり：あたりを見まわす・少しうろうろ・地面をくんくん（小鳥はついばむ）。最初と最後はなめらかに歩きにつなぐ
+    const fade = Math.min(1, idle / 6, (FP_STAY - idle) / 6), w = tr.ws, t = idle, R0 = (tr.type === 'deer' ? .5 : tr.type === 'bird' || tr.type === 'mouse' ? .18 : .32) * fade;
+    const ox = R0 * (Math.sin(t * .11 + w) * .7 + Math.sin(t * .047 + w * 2) * .5), oz = R0 * (Math.sin(t * .083 + w * 3) * .6 + Math.sin(t * .031 + w) * .4);
+    const t2 = t + .4, vx = R0 * (Math.sin(t2 * .11 + w) * .7 + Math.sin(t2 * .047 + w * 2) * .5) - ox, vz = R0 * (Math.sin(t2 * .083 + w * 3) * .6 + Math.sin(t2 * .031 + w) * .4) - oz, sp = Math.hypot(vx, vz) / .4;
+    const moving = Math.sin(t * .21 + w) > .15 || fade < 1, gx = x + ox, gz = z + oz, heading = moving && sp > .004 ? Math.atan2(vx, -vz) : null;
+    if (tr.hd == null) tr.hd = Math.atan2(dx, -dz); const hTarget = heading == null ? tr.hd : heading; let dh = hTarget - tr.hd; dh = Math.atan2(Math.sin(dh), Math.cos(dh)); tr.hd += dh * .06;
+    if (moving){ tr.ip = (tr.ip || 0) + sp * .35; } const gy = Math.max(.55, terH(gx, gz)); A.g.position.set(WX + gx, gy, OUT_Z - gz); A.g.rotation.y = tr.hd;
+    const ph = (tr.ip || 0) / tr.stride * Math.PI, fr = (((tr.ip || 0) / tr.stride) % 1 + 1) % 1, hp = moving ? Math.sin(fr * Math.PI) : 0; A.anim(ph, fr, hp);
+    if (A.look){ const sniff = !moving && Math.sin(t * .17 + w * 5) > .4, peck = tr.type === 'bird' && !moving && Math.sin(t * 2.3) > .6; const ly = moving ? 0 : Math.sin(t * .35 + w) * .7, lp = sniff ? .45 : peck ? .7 : 0; tr.ly = (tr.ly || 0) + (ly - (tr.ly || 0)) * .08; tr.lp = (tr.lp || 0) + (lp - (tr.lp || 0)) * (peck ? .4 : .08); A.look(tr.ly, tr.lp); } return; }
+  tr.hd = null;
   if (tr.type === 'bird'){ if (d < 0) fly = -d / pre; else if (d > tr.len){ fly = (d - tr.len) / pre; const n = Math.hypot(dx, dz) || 1; x += dx / n * (d - tr.len); z += dz / n * (d - tr.len); } }
   const gy = Math.max(.55, terH(x, z)); A.g.position.set(WX + x, gy + fly * 1.3, OUT_Z - z); A.g.rotation.y = Math.atan2(dx, -dz);
-  const ph = d / tr.stride * Math.PI, fr = ((d / tr.stride) % 1 + 1) % 1, hp = fly > 0 ? 0 : Math.sin(fr * Math.PI); A.anim(ph, fr, hp); }
+  const ph = d / tr.stride * Math.PI, fr = ((d / tr.stride) % 1 + 1) % 1, hp = fly > 0 ? 0 : Math.sin(fr * Math.PI); A.anim(ph, fr, hp); if (A.look) A.look(0, 0); }
 // のぞいていると、しばらくして次の動物が少し早めにやってくる（見られるように）
 let fpEarlyT = 0; function fpEarly(){ clearTimeout(fpEarlyT); fpEarlyT = setTimeout(() => { if (!peek) return; const now = fpNow(), nx = fpTrails.filter(t => t.t > now).sort((a, b) => a.t - b.t)[0]; if (!nx) return; nx.t = now + 300; fpOvSave(fpCur, nx.idx, nx.t); }, 2500 + Math.random() * 5000);
   // 次に来る動物の形は先に作っておく（来た瞬間にカクッとしないように）
@@ -414,7 +428,7 @@ function buildFootprints(day){ while (fpGroup.children.length){ const c = fpGrou
     const side = R() < .5 ? -1 : 1, short = type === 'bird', x0 = side * (short ? .6 + R() * 1.2 : 3.4), x1 = -side * (short ? .2 + R() * 1.4 : 3.4) , z0 = 1.4 + R() * 2.6, z1 = 1.4 + R() * 2.6, cx = (R() - .5) * 2.4, cz = 1.2 + R() * 3;
     const P = t => { const u = 1 - t; return [u * u * x0 + 2 * u * t * cx + t * t * x1, u * u * z0 + 2 * u * t * cz + t * t * z1]; };
     let len = 0, prev = P(0); const pts = [prev], cum = [0]; for (let i = 1; i <= 200; i++){ const p = P(i / 200); len += Math.hypot(p[0] - prev[0], p[1] - prev[1]); pts.push(p); cum.push(len); prev = p; }
-    const tr = { type, idx, t:at, pts, cum, len, stride, v:stride * ({ walk:2.6, line:2.2, hop:2.4 })[mode] * (type === 'deer' ? .75 : type === 'mouse' ? 1.6 : 1), prints:[], A:null }; fpTrails.push(tr);
+    const tr = { type, idx, t:at, pts, cum, len, stride, v:stride * ({ walk:2.6, line:2.2, hop:2.4 })[mode] * (type === 'deer' ? .75 : type === 'mouse' ? 1.6 : 1), prints:[], A:null, sf:.38 + R() * .22, ws:R() * 100 }; fpTrails.push(tr);
     let acc = 0, k = 0, n = 0; const wob = mode === 'walk' ? .045 : mode === 'line' ? .012 : 0;
     for (let i = 1; i < pts.length; i++){ const [ax, az] = pts[i - 1], [bx, bz] = pts[i], seg = Math.hypot(bx - ax, bz - az); acc += seg; if (acc < stride * (.85 + R() * .3)) continue; acc = 0; n++;
       const dx = (bx - ax) / seg, dz = (bz - az) / seg, s = (n % 2 ? 1 : -1) * wob + (mode === 'hop' && type === 'bird' ? (R() - .5) * .05 : 0), x = bx - dz * s, z = bz + dx * s, wx = WX + x, wz = OUT_Z - z;
