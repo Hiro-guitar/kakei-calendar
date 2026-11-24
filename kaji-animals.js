@@ -140,7 +140,7 @@ const DEFS = {
     const q = quadruped(a), C1 = '#a8957c', C2 = '#5c4c3c', WH = '#f2eee6';
     return { ...q, k:.035, res:104, fur:{ n:7, len:.006, den:1500, shade:.66 },
       color:(p, tag, n) => (tag === 'muzzle' || tag === 'cheek') && n[1] < .4 || (tag === 'chest' && n[1] < -.55) || (tag === 'foot') ? WH : mix(C1, C2, Math.pow(Math.sin(p[2] * 80 + furN(Math.round(p[2] * 40), Math.round(p[1] * 30)) * 2 + Math.abs(p[0]) * 25) * .5 + .5, 4) * .28 * (n[1] > -.3 ? 1 : .2) + n[1] * .15 + furN(p[0] * 20, p[1] * 20, p[2] * 20) * .08),
-      extras:(bs) => { eyesOn(bs.head, .022, .015, .062, .0095, '#7a8418'); noseOn(bs.head, -.004, .086, .006); for (const s of [-1, 1]) earOn(bs.head, s * .03, .036, -.005, .022, .045, C1, '#e8b4ac', -s * .3, -.1, s * .25); whisk(bs.head, -.008, .078, .07); }, gait:'walk' }; },
+      extras:(bs) => { eyesOn(bs.head, .02, .021, .072, .014, '#a8ae2a'); for (const s2 of [-1, 1]){ const pu = new THREE.Mesh(new THREE.SphereGeometry(.0042, 10, 8), new THREE.MeshBasicMaterial({ color:'#0a0806' })); pu.scale.set(.55, 1.5, .5); pu.position.set(s2 * .021, .021, .0857); bs.head.add(pu); } noseOn(bs.head, -.004, .088, .006); for (const s of [-1, 1]) earOn(bs.head, s * .03, .036, -.005, .022, .045, C1, '#e8b4ac', -s * .3, -.1, s * .25); whisk(bs.head, -.008, .078, .07); }, gait:'walk' }; },
   dog(){ const a = { hip:[-.15, .3], chest:[.13, .31],
       torso:[[-.14, .3, .07, .082, .12, 'hip'], [0, .29, .075, .087, .12, 'hip', 'belly'], [.12, .31, .078, .097, .09, 'chest', 'chest']],
       neck:[[.17, .35, .056], [.21, .39, .05], [.24, .42, .048]], head:{ j:[.24, .42], parts:[[.265, .43, .06, .056, .058], [.3, .415, .045, .04, .04, 'cheek']], cones:[[.3, .418, .036, .365, .405, .017, 'muzzle']] },
