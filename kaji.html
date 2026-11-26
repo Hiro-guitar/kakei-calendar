@@ -1024,6 +1024,13 @@ function migrateCatalog9(){ const st = settings(); if ((st.catalog || 0) >= 9 ||
   const base = Math.max(0, ...all('chore').filter(c => c.group === 'grp_yusa').map(c => c.order ?? 0)) + 1;
   mk({ id:'c9_sanpo', kind:'chore', name:'お散歩', owner:'any', slot:'any', freq:{ type:'daily' }, def:[], group:'grp_yusa', icon:'sanpo', order:base });
   mk({ ...settings(), catalog:9 }); save(); return 1; }
+// 洗い物は朝・昼・夜に分けず、ひとつにまとめる（2026/11/26）
+function migrateCatalog10(){ const st = settings(); if ((st.catalog || 0) >= 10 || (st.catalog || 0) < 9) return 0; const now = Date.now(); const mk = it => { it.updatedAt = now; S.items[it.id] = it; S.queue = S.queue.filter(q => q.id !== it.id); S.queue.push(it); };
+  // 朝・昼・夜の行はなくす（これまでの記録はそのまま残る）
+  for (let ri = 0; ri < 3; ri++) for (let ai = 0; ai < 2; ai++){ const c = S.items[`c5_arai_${ri}_${ai}`]; if (c && !c.deleted) mk({ ...c, deleted:true }); }
+  // 「その他」の行を、ただの「洗い物」に
+  [['洗う', '洗い物を洗う'], ['片づける', '食器を片づける']].forEach(([act, name], ai) => { const c = S.items[`c5_arai_3_${ai}`]; if (c && !c.deleted) mk({ ...c, name, row:'洗い物', act, icon:'dish' }); });
+  mk({ ...settings(), catalog:10 }); save(); return 1; }
 function qbarHTML(){
   const logs = logsOn(dayKey(Date.now())), notes = unreadNotes();
   return `<button class="qmenu" data-act="menu" aria-label="メニュー"><span class="qi">${ICON_MENU}${notes ? '<em class="dot"></em>' : ''}</span><span class="ql">メニュー</span></button><div class="qscroll">` + groupsSorted().map(g => {
@@ -1234,7 +1241,7 @@ function renameKid(){ const K = (settings().names || {}).k; if (!K) return 0; le
 async function sync(){
   const ok = await pull();
   if (ok && !S.seeded) seedIfEmpty();
-  if (ok){ renameKid(); migrateCatalog2(); migrateCatalog3(); migrateCatalog4(); migrateCatalog5(); migrateCatalog6(); migrateCatalog7(); migrateCatalog8(); migrateCatalog9(); }
+  if (ok){ renameKid(); migrateCatalog2(); migrateCatalog3(); migrateCatalog4(); migrateCatalog5(); migrateCatalog6(); migrateCatalog7(); migrateCatalog8(); migrateCatalog9(); migrateCatalog10(); }
   await push();
   render();
 }
@@ -5437,7 +5444,7 @@ function gardenNotice(tries = 0){ if (!gardenOn()) return; try { if (localStorag
 /* ========== 起動 ========== */
 if (!S.url) seedIfEmpty();
 renameKid();
-if (!S.url){ migrateCatalog2(); migrateCatalog3(); migrateCatalog4(); migrateCatalog5(); migrateCatalog6(); migrateCatalog7(); migrateCatalog8(); migrateCatalog9(); }
+if (!S.url){ migrateCatalog2(); migrateCatalog3(); migrateCatalog4(); migrateCatalog5(); migrateCatalog6(); migrateCatalog7(); migrateCatalog8(); migrateCatalog9(); migrateCatalog10(); }
 render();
 if (S.url) sync();
 setTimeout(() => { try { if (S.items.settings && !all('lay').length) layMemo(null, settings()); } catch (e) {} }, 4000);
